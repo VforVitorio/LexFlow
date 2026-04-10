@@ -1,0 +1,70 @@
+name: Feature Request
+description: Proponer una nueva funcionalidad o mejora
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por proponer una mejora para LexFlow. Describe tu idea con el mayor detalle posible.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o necesidad
+      description: Que problema resuelve esta feature? Que necesidad cubre?
+      placeholder: "Actualmente no hay forma de filtrar leyes por fecha de publicacion..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solucion propuesta
+      description: Describe como te imaginas la solucion.
+      placeholder: "Anadir un parametro `date_from` y `date_to` al endpoint de busqueda..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Has pensado en otras formas de resolver esto?
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Componente relacionado
+      options:
+        - API
+        - Grafo
+        - Chat
+        - Dashboards
+        - Frontend
+        - Core / Parsers
+        - Distribucion / Packaging
+        - Otro
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Fase del roadmap
+      description: En que fase del ROADMAP.md encajaria esta feature?
+      options:
+        - "Fase 1 — API base"
+        - "Fase 2 — Grafo"
+        - "Fase 3 — Chat"
+        - "Fase 4 — Dashboards"
+        - "Fase 5 — Frontend"
+        - "Fase 6 — Producto"
+        - "Fase 7 — Busqueda semantica"
+        - "No estoy seguro"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Mockups, referencias, ejemplos de otros proyectos, etc.

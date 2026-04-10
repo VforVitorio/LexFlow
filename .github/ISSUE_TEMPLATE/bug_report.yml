@@ -1,0 +1,89 @@
+name: Bug Report
+description: Reportar un error o comportamiento inesperado
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportar este bug. Rellena la informacion necesaria para que podamos investigarlo.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripcion del bug
+      description: Describe de forma clara que esta fallando.
+      placeholder: "Al intentar buscar una ley por nombre, la API devuelve un error 500..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamiento esperado
+      description: Que esperabas que pasara.
+      placeholder: "La API deberia devolver una lista de leyes que coincidan con el termino de busqueda."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamiento actual
+      description: Que paso realmente.
+      placeholder: "La API devuelve un error 500 con traceback de KeyError."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      description: Pasos minimos para reproducir el error.
+      placeholder: |
+        1. Arrancar el servidor con `uv run python main.py`
+        2. Hacer GET a `/laws?search=proteccion`
+        3. Ver el error en la respuesta
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Componente afectado
+      options:
+        - API
+        - Grafo
+        - Chat
+        - Dashboards
+        - Frontend
+        - Core / Parsers
+        - CI/CD
+        - Otro
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Version de Python
+      placeholder: "3.12.x"
+
+  - type: input
+    id: os
+    attributes:
+      label: Sistema operativo
+      placeholder: "Windows 11 / macOS 15 / Ubuntu 24.04"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs o tracebacks relevantes
+      description: Pega aqui cualquier output de error.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Cualquier otra informacion que pueda ayudar.

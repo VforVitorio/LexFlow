@@ -1,0 +1,63 @@
+name: Epic
+description: Agrupar un conjunto de tareas relacionadas bajo un objetivo comun
+title: "[Epic]: "
+labels: ["epic"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Las epics agrupan issues relacionados bajo un objetivo comun. Usa este template para planificar bloques grandes de trabajo.
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: Que se quiere conseguir con esta epic?
+      placeholder: "Implementar el sistema de busqueda semantica con embeddings..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto y motivacion
+      description: Por que es importante? Que problema de alto nivel resuelve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tareas / Issues incluidos
+      description: Lista de tareas o issues que forman parte de esta epic.
+      placeholder: |
+        - [ ] #12 — Parser de metadatos de leyes
+        - [ ] #13 — Modelo Pydantic para Version
+        - [ ] #14 — Endpoint de diff
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: Criterio de completado
+      description: Como sabremos que esta epic esta terminada?
+      placeholder: "Todos los issues listados arriba estan cerrados y los tests pasan."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Fase del roadmap
+      options:
+        - "Fase 0 — Fundacion"
+        - "Fase 1 — API base"
+        - "Fase 2 — Grafo"
+        - "Fase 3 — Chat"
+        - "Fase 4 — Dashboards"
+        - "Fase 5 — Frontend"
+        - "Fase 6 — Producto"
+        - "Fase 7 — Busqueda semantica"
+    validations:
+      required: true
