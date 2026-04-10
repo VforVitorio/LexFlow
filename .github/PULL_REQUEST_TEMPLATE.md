@@ -1,6 +1,6 @@
-## Descripcion
+## Descripción
 
-<!-- Que hace este PR? Por que es necesario? -->
+<!-- ¿Qué hace este PR? ¿Por qué es necesario? -->
 
 ## Issue relacionado
 
@@ -11,19 +11,19 @@
 - [ ] Bug fix
 - [ ] Nueva feature
 - [ ] Refactoring (sin cambio funcional)
-- [ ] Documentacion
+- [ ] Documentación
 - [ ] CI/CD
 - [ ] Otro: ___
 
 ## Checklist
 
-- [ ] He leido la [guia de contribucion](../CONTRIBUTING.md)
-- [ ] Mi codigo sigue las convenciones del proyecto
-- [ ] He anadido tests que cubren mis cambios
+- [ ] He leído la [guía de contribución](../CONTRIBUTING.md)
+- [ ] Mi código sigue las convenciones del proyecto
+- [ ] He añadido tests que cubren mis cambios
 - [ ] Todos los tests pasan (`uv run pytest`)
 - [ ] El linter pasa (`uv run ruff check .`)
 - [ ] El formatter pasa (`uv run ruff format --check .`)
-- [ ] He actualizado la documentacion si es necesario
+- [ ] He actualizado la documentación si es necesario
 
 ## Capturas o evidencia (si aplica)
 
@@ -31,4 +31,4 @@
 
 ## Notas para el reviewer
 
-<!-- Algo que deberia tener en cuenta quien revise este PR? -->
+<!-- ¿Algo que debería tener en cuenta quien revise este PR? -->

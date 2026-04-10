@@ -6,13 +6,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Gracias por reportar este bug. Rellena la informacion necesaria para que podamos investigarlo.
+        Gracias por reportar este bug. Rellena la información necesaria para que podamos investigarlo.
 
   - type: textarea
     id: description
     attributes:
-      label: Descripcion del bug
-      description: Describe de forma clara que esta fallando.
+      label: Descripción del bug
+      description: Describe de forma clara qué está fallando.
       placeholder: "Al intentar buscar una ley por nombre, la API devuelve un error 500..."
     validations:
       required: true
@@ -21,8 +21,8 @@ body:
     id: expected
     attributes:
       label: Comportamiento esperado
-      description: Que esperabas que pasara.
-      placeholder: "La API deberia devolver una lista de leyes que coincidan con el termino de busqueda."
+      description: Qué esperabas que pasara.
+      placeholder: "La API debería devolver una lista de leyes que coincidan con el término de búsqueda."
     validations:
       required: true
 
@@ -30,7 +30,7 @@ body:
     id: actual
     attributes:
       label: Comportamiento actual
-      description: Que paso realmente.
+      description: Qué pasó realmente.
       placeholder: "La API devuelve un error 500 con traceback de KeyError."
     validations:
       required: true
@@ -39,7 +39,7 @@ body:
     id: steps
     attributes:
       label: Pasos para reproducir
-      description: Pasos minimos para reproducir el error.
+      description: Pasos mínimos para reproducir el error.
       placeholder: |
         1. Arrancar el servidor con `uv run python main.py`
         2. Hacer GET a `/laws?search=proteccion`
@@ -66,7 +66,7 @@ body:
   - type: input
     id: python-version
     attributes:
-      label: Version de Python
+      label: Versión de Python
       placeholder: "3.12.x"
 
   - type: input
@@ -79,11 +79,11 @@ body:
     id: logs
     attributes:
       label: Logs o tracebacks relevantes
-      description: Pega aqui cualquier output de error.
+      description: Pega aquí cualquier output de error.
       render: shell
 
   - type: textarea
     id: context
     attributes:
       label: Contexto adicional
-      description: Cualquier otra informacion que pueda ayudar.
+      description: Cualquier otra información que pueda ayudar.
