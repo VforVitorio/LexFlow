@@ -1,12 +1,12 @@
 # Roadmap de LexFlow
 
-Este documento describe las fases de desarrollo planificadas para LexFlow, desde los cimientos hasta la distribucion como producto final.
+Este documento describe las fases de desarrollo planificadas para LexFlow, desde los cimientos hasta la distribución como producto final.
 
-Cada fase agrupa trabajo por area funcional. Las fases no son estrictamente secuenciales: pueden solaparse, pero cada una tiene criterios claros de "hecho".
+Cada fase agrupa trabajo por área funcional. Las fases no son estrictamente secuenciales: pueden solaparse, pero cada una tiene criterios claros de "hecho".
 
 ---
 
-## Fase 0 — Fundacion del proyecto
+## Fase 0 — Fundación del proyecto
 
 **Objetivo:** Tener el repositorio, CI/CD y flujo de desarrollo listos para que cualquier persona pueda contribuir.
 
@@ -17,28 +17,28 @@ Cada fase agrupa trabajo por area funcional. Las fases no son estrictamente secu
 | README, CONTRIBUTING, CODE_OF_CONDUCT | Hecho |
 | Issue templates y PR template | Hecho |
 | GitHub Actions (test, lint, typecheck) | Hecho |
-| Proteccion de ramas (main, dev) | Hecho |
+| Protección de ramas (main, dev) | Hecho |
 | Rama `dev` creada y configurada | Hecho |
 
-**Criterio de completado:** Un contribuidor externo puede clonar, instalar, ejecutar tests y abrir un PR sin friccion.
+**Criterio de completado:** Un contribuidor externo puede clonar, instalar, ejecutar tests y abrir un PR sin fricción.
 
 ---
 
-## Fase 1 — API base y nucleo de datos
+## Fase 1 — API base y núcleo de datos
 
-**Objetivo:** Parsear el repositorio legalize-es y exponerlo a traves de una API REST funcional.
+**Objetivo:** Parsear el repositorio legalize-es y exponerlo a través de una API REST funcional.
 
 | Tarea | Estado |
 |-------|--------|
-| Parser de Markdown para leyes (titulo, articulos, secciones, metadatos) | Pendiente |
-| Modelos Pydantic para Ley, Articulo, Version, Referencia | Pendiente |
+| Parser de Markdown para leyes (título, artículos, secciones, metadatos) | Pendiente |
+| Modelos Pydantic para Ley, Artículo, Versión, Referencia | Pendiente |
 | Clonar/sincronizar legalize-es como submódulo o fuente de datos | Pendiente |
-| Endpoints CRUD: listado de leyes, detalle, articulos | Pendiente |
-| Endpoint de versiones historicas (git log por ley) | Pendiente |
+| Endpoints CRUD: listado de leyes, detalle, artículos | Pendiente |
+| Endpoint de versiones históricas (git log por ley) | Pendiente |
 | Endpoint de diffs entre versiones | Pendiente |
-| Busqueda por texto (full-text search) | Pendiente |
-| Tests de integracion para todos los endpoints | Pendiente |
-| Documentacion OpenAPI pulida | Pendiente |
+| Búsqueda por texto (full-text search) | Pendiente |
+| Tests de integración para todos los endpoints | Pendiente |
+| Documentación OpenAPI pulida | Pendiente |
 
 **Criterio de completado:** `GET /laws`, `GET /laws/{id}`, `GET /laws/{id}/articles`, `GET /laws/{id}/versions`, `GET /laws/{id}/diff` funcionan contra datos reales de legalize-es.
 
@@ -50,14 +50,14 @@ Cada fase agrupa trabajo por area funcional. Las fases no son estrictamente secu
 
 | Tarea | Estado |
 |-------|--------|
-| Extraccion de referencias cruzadas entre leyes | Pendiente |
-| Modelo de grafo con NetworkX (nodos: leyes, articulos; aristas: referencias) | Pendiente |
+| Extracción de referencias cruzadas entre leyes | Pendiente |
+| Modelo de grafo con NetworkX (nodos: leyes, artículos; aristas: referencias) | Pendiente |
 | Algoritmos de relevancia y clustering | Pendiente |
 | Endpoints de grafo: vecinos, caminos, subgrafos | Pendiente |
-| Componente Reflex para visualizacion interactiva del grafo | Pendiente |
-| Filtros por tematica, estado, periodo, tipo de relacion | Pendiente |
+| Componente Reflex para visualización interactiva del grafo | Pendiente |
+| Filtros por temática, estado, período, tipo de relación | Pendiente |
 | Panel lateral de detalle al hacer clic en un nodo | Pendiente |
-| Colores y tamanos de nodo segun propiedades (estado, categoria, ano) | Pendiente |
+| Colores y tamaños de nodo según propiedades (estado, categoría, año) | Pendiente |
 | Tests unitarios del modelo de grafo | Pendiente |
 
 **Criterio de completado:** Un usuario puede navegar visualmente el grafo, hacer clic en una ley y ver sus relaciones con otras normas.
@@ -70,32 +70,32 @@ Cada fase agrupa trabajo por area funcional. Las fases no son estrictamente secu
 
 | Tarea | Estado |
 |-------|--------|
-| Integracion con Ollama (modelos locales) | Pendiente |
-| Integracion con LM Studio | Pendiente |
-| Integracion con APIs externas (OpenAI, Anthropic, Google) | Pendiente |
+| Integración con Ollama (modelos locales) | Pendiente |
+| Integración con LM Studio | Pendiente |
+| Integración con APIs externas (OpenAI, Anthropic, Google) | Pendiente |
 | Selector de modelo en la interfaz | Pendiente |
 | Servidor MCP con FastMCP exponiendo herramientas de la API | Pendiente |
-| Tools: buscar ley, obtener articulo, ver diff, consultar grafo, estadisticas | Pendiente |
+| Tools: buscar ley, obtener artículo, ver diff, consultar grafo, estadísticas | Pendiente |
 | Interfaz de chat en Reflex | Pendiente |
 | Historial de conversaciones | Pendiente |
 | Tests de las herramientas MCP | Pendiente |
 
-**Criterio de completado:** Un usuario puede preguntar "Que cambio en la Ley de Proteccion de Datos en 2024?" y el chat responde consultando la API real.
+**Criterio de completado:** Un usuario puede preguntar "¿Qué cambió en la Ley de Protección de Datos en 2024?" y el chat responde consultando la API real.
 
 ---
 
-## Fase 4 — Dashboards de analitica y compliance
+## Fase 4 — Dashboards de analítica y compliance
 
-**Objetivo:** Paneles visuales para seguimiento legislativo y analisis de tendencias.
+**Objetivo:** Paneles visuales para seguimiento legislativo y análisis de tendencias.
 
 | Tarea | Estado |
 |-------|--------|
 | Dashboard de compliance: normas por sector, alertas, seguimiento | Pendiente |
-| Dashboard analitico: reformas por ano, leyes mas modificadas | Pendiente |
-| Graficos Plotly integrados en Reflex | Pendiente |
-| Visualizacion de densidad de relaciones | Pendiente |
-| Evolucion historica del sistema legal | Pendiente |
-| Filtros interactivos y exportacion de datos | Pendiente |
+| Dashboard analítico: reformas por año, leyes más modificadas | Pendiente |
+| Gráficos Plotly integrados en Reflex | Pendiente |
+| Visualización de densidad de relaciones | Pendiente |
+| Evolución histórica del sistema legal | Pendiente |
+| Filtros interactivos y exportación de datos | Pendiente |
 | Tests de los componentes de dashboard | Pendiente |
 
 **Criterio de completado:** Un analista puede ver tendencias legislativas y un compliance officer puede seguir normas relevantes para su sector.
@@ -108,22 +108,22 @@ Cada fase agrupa trabajo por area funcional. Las fases no son estrictamente secu
 
 | Tarea | Estado |
 |-------|--------|
-| Layout principal: navegacion, sidebar, areas de contenido | Pendiente |
-| Pagina de inicio / landing | Pendiente |
-| Pagina de explorador de leyes (listado + detalle) | Pendiente |
-| Pagina del grafo interactivo | Pendiente |
-| Pagina de chat | Pendiente |
-| Paginas de dashboards | Pendiente |
-| Busqueda global | Pendiente |
-| Tema visual basado en el design system (Space Grotesk, paleta purpura/azul) | Pendiente |
+| Layout principal: navegación, sidebar, áreas de contenido | Pendiente |
+| Página de inicio / landing | Pendiente |
+| Página de explorador de leyes (listado + detalle) | Pendiente |
+| Página del grafo interactivo | Pendiente |
+| Página de chat | Pendiente |
+| Páginas de dashboards | Pendiente |
+| Búsqueda global | Pendiente |
+| Tema visual basado en el design system (Space Grotesk, paleta púrpura/azul) | Pendiente |
 | Responsive design | Pendiente |
-| Accesibilidad basica (ARIA, contraste, navegacion por teclado) | Pendiente |
+| Accesibilidad básica (ARIA, contraste, navegación por teclado) | Pendiente |
 
-**Criterio de completado:** La aplicacion web es navegable, visualmente consistente y funcional en escritorio y movil.
+**Criterio de completado:** La aplicación web es navegable, visualmente consistente y funcional en escritorio y móvil.
 
 ---
 
-## Fase 6 — Producto: empaquetado y distribucion
+## Fase 6 — Producto: empaquetado y distribución
 
 **Objetivo:** Que cualquier persona pueda descargar y usar LexFlow sin instalar nada.
 
@@ -133,44 +133,44 @@ Cada fase agrupa trabajo por area funcional. Las fases no son estrictamente secu
 | Instalador Windows (.exe / .msi) | Pendiente |
 | Instalador macOS (.dmg) | Pendiente |
 | Paquete Linux (.AppImage / .deb) | Pendiente |
-| Docker Compose para despliegue en servidor (opcion tecnica) | Pendiente |
+| Docker Compose para despliegue en servidor (opción técnica) | Pendiente |
 | GitHub Releases con artefactos por plataforma | Pendiente |
-| CI/CD para build automatico de releases | Pendiente |
-| Pagina de descargas o landing page publica | Pendiente |
-| Auto-actualizacion o mecanismo de notificacion de nuevas versiones | Pendiente |
-| Documentacion de usuario final (no tecnica) | Pendiente |
+| CI/CD para build automático de releases | Pendiente |
+| Página de descargas o landing page pública | Pendiente |
+| Auto-actualización o mecanismo de notificación de nuevas versiones | Pendiente |
+| Documentación de usuario final (no técnica) | Pendiente |
 
-**Criterio de completado:** Un usuario no tecnico puede descargar LexFlow desde GitHub, hacer doble clic y empezar a usarlo.
+**Criterio de completado:** Un usuario no técnico puede descargar LexFlow desde GitHub, hacer doble clic y empezar a usarlo.
 
 ---
 
-## Fase 7 — Busqueda semantica y RAG avanzado
+## Fase 7 — Búsqueda semántica y RAG avanzado
 
-**Objetivo:** Ir mas alla de la busqueda por texto plano con embeddings y retrieval aumentado.
+**Objetivo:** Ir más allá de la búsqueda por texto plano con embeddings y retrieval aumentado.
 
 | Tarea | Estado |
 |-------|--------|
-| Generacion de embeddings para articulos y secciones | Pendiente |
-| Indice vectorial (FAISS, ChromaDB o similar) | Pendiente |
-| Endpoint de busqueda semantica | Pendiente |
+| Generación de embeddings para artículos y secciones | Pendiente |
+| Índice vectorial (FAISS, ChromaDB o similar) | Pendiente |
+| Endpoint de búsqueda semántica | Pendiente |
 | RAG pipeline para el chatbot | Pendiente |
 | Re-ranking de resultados | Pendiente |
 | Tests de calidad de retrieval | Pendiente |
 
-**Criterio de completado:** Las busquedas devuelven resultados semanticamente relevantes, no solo coincidencias textuales.
+**Criterio de completado:** Las búsquedas devuelven resultados semánticamente relevantes, no solo coincidencias textuales.
 
 ---
 
 ## Futuro abierto
 
-Estas son ideas que podrian explorarse en fases posteriores:
+Estas son ideas que podrían explorarse en fases posteriores:
 
 - **Base de datos de grafos** (Neo4j) para reemplazar NetworkX a escala
 - **Notificaciones push** de cambios legislativos
-- **API publica** para que terceros integren datos legales
-- **Plugins** para que la comunidad aada fuentes de datos (DOUE, BOE historico)
-- **Internacionalizacion** para legislacion de otros paises
-- **App movil** nativa o PWA
+- **API pública** para que terceros integren datos legales
+- **Plugins** para que la comunidad añada fuentes de datos (DOUE, BOE histórico)
+- **Internacionalización** para legislación de otros países
+- **App móvil** nativa o PWA
 
 ---
 

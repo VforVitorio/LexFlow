@@ -2,10 +2,10 @@
   <img src="assets/lexflow-banner.jpeg" alt="LexFlow" width="700" />
 </p>
 
-<h3 align="center">Legislacion espanola, viva y navegable.</h3>
+<h3 align="center">Legislación española, viva y navegable.</h3>
 
 <p align="center">
-  Plataforma open source para explorar, analizar y consultar legislacion espanola mediante grafos de conocimiento, IA y dashboards interactivos.
+  Plataforma open source para explorar, analizar y consultar legislación española mediante grafos de conocimiento, IA y dashboards interactivos.
 </p>
 
 <p align="center">
@@ -17,29 +17,29 @@
 
 ---
 
-## Que es LexFlow
+## Qué es LexFlow
 
-LexFlow transforma el repositorio [legalize-es](https://github.com/legalize-dev/legalize-es) — una coleccion de leyes espanolas en Markdown versionada con Git — en una plataforma interactiva con cuatro capas:
+LexFlow transforma el repositorio [legalize-es](https://github.com/legalize-dev/legalize-es) — una colección de leyes españolas en Markdown versionada con Git — en una plataforma interactiva con cuatro capas:
 
-| Capa | Descripcion |
+| Capa | Descripción |
 |------|-------------|
-| **API REST** | Endpoints FastAPI para leyes, articulos, versiones, diffs, busqueda y estadisticas |
-| **Grafo interactivo** | Visualizacion tipo Obsidian de relaciones entre normas, articulos y referencias |
-| **Chat legal** | Chatbot con acceso a herramientas reales via MCP (Ollama, LM Studio, OpenAI, Anthropic, Google) |
-| **Dashboards** | Paneles de compliance y analitica legislativa con Plotly |
+| **API REST** | Endpoints FastAPI para leyes, artículos, versiones, diffs, búsqueda y estadísticas |
+| **Grafo interactivo** | Visualización tipo Obsidian de relaciones entre normas, artículos y referencias |
+| **Chat legal** | Chatbot con acceso a herramientas reales vía MCP (Ollama, LM Studio, OpenAI, Anthropic, Google) |
+| **Dashboards** | Paneles de compliance y analítica legislativa con Plotly |
 
 Todo construido en **Python puro** (backend + frontend con [Reflex](https://reflex.dev)), pensado para ser descargado y usado por cualquier persona — sin necesidad de Docker, terminales ni dependencias.
 
 ---
 
-## Inicio rapido
+## Inicio rápido
 
 ### Requisitos
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) (gestor de paquetes recomendado)
 
-### Instalacion
+### Instalación
 
 ```bash
 # Clonar el repositorio
@@ -53,9 +53,9 @@ uv sync --all-extras
 uv run python main.py
 ```
 
-La API estara disponible en `http://localhost:8000`. Documentacion interactiva en `/docs`.
+La API estará disponible en `http://localhost:8000`. Documentación interactiva en `/docs`.
 
-> **Nota:** En futuras versiones LexFlow se distribuira como aplicacion de escritorio descargable (`.exe`, `.dmg`, `.AppImage`) para que no necesites instalar nada.
+> **Nota:** En futuras versiones LexFlow se distribuirá como aplicación de escritorio descargable (`.exe`, `.dmg`, `.AppImage`) para que no necesites instalar nada.
 
 ---
 
@@ -65,24 +65,24 @@ La API estara disponible en `http://localhost:8000`. Documentacion interactiva e
 LexFlow/
 ├── src/lexflow/
 │   ├── api/          # FastAPI — endpoints REST
-│   ├── core/         # Modelos de dominio, parsers, logica de negocio
+│   ├── core/         # Modelos de dominio, parsers, lógica de negocio
 │   ├── chat/         # Chatbot legal con MCP tools
 │   ├── graph/        # Grafo de conocimiento (NetworkX)
-│   ├── dashboards/   # Paneles analiticos (Plotly + Reflex)
-│   └── utils/        # Configuracion, logging, helpers
+│   ├── dashboards/   # Paneles analíticos (Plotly + Reflex)
+│   └── utils/        # Configuración, logging, helpers
 ├── tests/            # Test suite
-├── docs/             # Documentacion del proyecto
-├── assets/           # Imagenes y recursos estaticos
+├── docs/             # Documentación del proyecto
+├── assets/           # Imágenes y recursos estáticos
 ├── .github/          # CI/CD, issue templates, PR template
 ├── main.py           # Punto de entrada
-└── pyproject.toml    # Configuracion del proyecto
+└── pyproject.toml    # Configuración del proyecto
 ```
 
 ---
 
-## Stack tecnologico
+## Stack tecnológico
 
-| Componente | Tecnologia |
+| Componente | Tecnología |
 |------------|------------|
 | Backend | FastAPI, Pydantic, Uvicorn |
 | Frontend | Reflex |
@@ -103,30 +103,30 @@ Consulta el [ROADMAP.md](ROADMAP.md) completo para ver todas las fases, hitos y 
 **Resumen de fases:**
 
 1. **Cimientos** — API base, parseo de leyes, modelos de dominio
-2. **Grafo** — Construccion y visualizacion del grafo de relaciones legales
+2. **Grafo** — Construcción y visualización del grafo de relaciones legales
 3. **Chat** — Chatbot legal con herramientas MCP conectadas a la API
-4. **Dashboards** — Paneles de compliance y analitica legislativa
-5. **Producto** — Empaquetado como app de escritorio, instaladores, distribucion
+4. **Dashboards** — Paneles de compliance y analítica legislativa
+5. **Producto** — Empaquetado como app de escritorio, instaladores, distribución
 
 ---
 
 ## Contribuir
 
-Las contribuciones son bienvenidas. Lee la [guia de contribucion](CONTRIBUTING.md) antes de empezar.
+Las contribuciones son bienvenidas. Lee la [guía de contribución](CONTRIBUTING.md) antes de empezar.
 
-**Flujo rapido:**
+**Flujo rápido:**
 
 1. Abre o busca un [issue](https://github.com/VforVitorio/LexFlow/issues)
 2. Crea una rama desde `dev` (`feat/xxx` o `fix/xxx`)
-3. Desarrolla y anade tests
+3. Desarrolla y añade tests
 4. Abre PR hacia `dev`
 5. Review y merge (sin squash)
 
 ---
 
-## Creditos
+## Créditos
 
-Este proyecto existe gracias a [legalize-es](https://github.com/legalize-dev/legalize-es), el repositorio open source que recopila y versiona legislacion espanola en Markdown. LexFlow construye sobre esa base para convertirla en una plataforma interactiva completa.
+Este proyecto existe gracias a [legalize-es](https://github.com/legalize-dev/legalize-es), el repositorio open source que recopila y versiona legislación española en Markdown. LexFlow construye sobre esa base para convertirla en una plataforma interactiva completa.
 
 ---
 
