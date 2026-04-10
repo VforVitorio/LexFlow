@@ -1,31 +1,31 @@
-# Guia de contribucion a LexFlow
+# Guía de contribución a LexFlow
 
-Gracias por tu interes en contribuir a LexFlow. Esta guia describe como participar en el proyecto de forma efectiva.
+Gracias por tu interés en contribuir a LexFlow. Esta guía describe cómo participar en el proyecto de forma efectiva.
 
 ---
 
 ## Antes de empezar
 
-1. Lee el [README](README.md) para entender que es LexFlow.
-2. Revisa el [ROADMAP](ROADMAP.md) para ver en que fase esta el proyecto.
-3. Lee el [Codigo de conducta](CODE_OF_CONDUCT.md).
-4. Busca en los [issues abiertos](https://github.com/VforVitorio/LexFlow/issues) para ver si alguien ya esta trabajando en lo que quieres hacer.
+1. Lee el [README](README.md) para entender qué es LexFlow.
+2. Revisa el [ROADMAP](ROADMAP.md) para ver en qué fase está el proyecto.
+3. Lee el [Código de conducta](CODE_OF_CONDUCT.md).
+4. Busca en los [issues abiertos](https://github.com/VforVitorio/LexFlow/issues) para ver si alguien ya está trabajando en lo que quieres hacer.
 
 ---
 
 ## Flujo de trabajo
 
-LexFlow usa un flujo de ramas basado en `dev` como rama de integracion y `main` como rama estable.
+LexFlow usa un flujo de ramas basado en `dev` como rama de integración y `main` como rama estable.
 
 ### Ramas
 
-| Rama | Proposito |
+| Rama | Propósito |
 |------|-----------|
 | `main` | Rama protegida. Solo recibe PRs desde `dev`. Siempre estable. |
-| `dev` | Rama de integracion. Aqui se mergean todas las features y fixes. |
+| `dev` | Rama de integración. Aquí se mergean todas las features y fixes. |
 | `feat/nombre` | Ramas de feature. Se crean desde `dev`. |
 | `fix/nombre` | Ramas de bugfix. Se crean desde `dev`. |
-| `docs/nombre` | Ramas de documentacion. Se crean desde `dev`. |
+| `docs/nombre` | Ramas de documentación. Se crean desde `dev`. |
 
 ### Proceso paso a paso
 
@@ -37,7 +37,7 @@ LexFlow usa un flujo de ramas basado en `dev` como rama de integracion y `main` 
    git checkout -b feat/mi-feature
    ```
 3. **Desarrolla** en tu rama. Haz commits claros y frecuentes.
-4. **Anade tests** para cualquier funcionalidad nueva.
+4. **Añade tests** para cualquier funcionalidad nueva.
 5. **Verifica** que todo pasa:
    ```bash
    uv run pytest
@@ -52,22 +52,22 @@ LexFlow usa un flujo de ramas basado en `dev` como rama de integracion y `main` 
 7. **Abre un Pull Request** hacia `dev` (nunca directamente a `main`).
 8. **Espera review** y responde a los comentarios.
 9. **Merge** — se hace sin squash para mantener el historial completo.
-10. **Borra la rama** despues del merge.
+10. **Borra la rama** después del merge.
 
 ---
 
-## Convenciones de codigo
+## Convenciones de código
 
 ### Estilo
 
 - **Formatter:** Ruff (configurado en pyproject.toml)
 - **Linter:** Ruff
 - **Type checker:** mypy en modo strict
-- **Longitud de linea:** 120 caracteres
+- **Longitud de línea:** 120 caracteres
 
 ### Commits
 
-Usa mensajes de commit descriptivos en **ingles** y en imperativo:
+Usa mensajes de commit descriptivos en **inglés** y en imperativo:
 
 ```
 Add markdown parser for law titles
@@ -77,30 +77,30 @@ Update NetworkX graph builder to handle circular references
 
 Formato recomendado:
 ```
-<tipo>: <descripcion corta>
+<tipo>: <descripción corta>
 
-<cuerpo opcional con mas contexto>
+<cuerpo opcional con más contexto>
 ```
 
 Tipos: `Add`, `Fix`, `Update`, `Remove`, `Refactor`, `Test`, `Docs`, `CI`.
 
 ### Nombres
 
-- **Archivos y modulos:** snake_case (`law_parser.py`)
+- **Archivos y módulos:** snake_case (`law_parser.py`)
 - **Clases:** PascalCase (`LawArticle`)
 - **Funciones y variables:** snake_case (`parse_law_title`)
 - **Constantes:** UPPER_SNAKE_CASE (`MAX_SEARCH_RESULTS`)
 
 ### Tests
 
-- Ubicacion: carpeta `tests/` con estructura espejo de `src/`
+- Ubicación: carpeta `tests/` con estructura espejo de `src/`
 - Framework: pytest
-- Naming: `test_<modulo>.py` con funciones `test_<que_se_prueba>`
-- Los tests de integracion deben funcionar contra datos reales (sin mocks de base de datos)
+- Naming: `test_<módulo>.py` con funciones `test_<qué_se_prueba>`
+- Los tests de integración deben funcionar contra datos reales (sin mocks de base de datos)
 
 ---
 
-## Configuracion del entorno de desarrollo
+## Configuración del entorno de desarrollo
 
 ```bash
 # Clonar
@@ -125,10 +125,10 @@ uv run mypy src/
 
 Usa la [plantilla de bug report](https://github.com/VforVitorio/LexFlow/issues/new?template=bug_report.yml) e incluye:
 
-- Que esperabas que pasara
-- Que paso realmente
+- Qué esperabas que pasara
+- Qué pasó realmente
 - Pasos para reproducir
-- Version de Python y sistema operativo
+- Versión de Python y sistema operativo
 
 ---
 
@@ -137,22 +137,22 @@ Usa la [plantilla de bug report](https://github.com/VforVitorio/LexFlow/issues/n
 Usa la [plantilla de feature request](https://github.com/VforVitorio/LexFlow/issues/new?template=feature_request.yml) e incluye:
 
 - Problema que resuelve
-- Solucion propuesta
+- Solución propuesta
 - Alternativas consideradas
 
 ---
 
-## Primera contribucion
+## Primera contribución
 
 Si es tu primera vez contribuyendo, busca issues etiquetados con:
 
 - `good first issue` — tareas sencillas para empezar
 - `help wanted` — tareas donde se necesita ayuda
 
-No dudes en preguntar en el issue si algo no esta claro. Preferimos una pregunta a un PR que va en la direccion equivocada.
+No dudes en preguntar en el issue si algo no está claro. Preferimos una pregunta a un PR que va en la dirección equivocada.
 
 ---
 
 ## Licencia
 
-Al contribuir a LexFlow, aceptas que tus contribuciones se distribuiran bajo la [licencia Apache 2.0](LICENSE).
+Al contribuir a LexFlow, aceptas que tus contribuciones se distribuirán bajo la [licencia Apache 2.0](LICENSE).

@@ -1,27 +1,27 @@
 name: Epic
-description: Agrupar un conjunto de tareas relacionadas bajo un objetivo comun
+description: Agrupar un conjunto de tareas relacionadas bajo un objetivo común
 title: "[Epic]: "
 labels: ["epic"]
 body:
   - type: markdown
     attributes:
       value: |
-        Las epics agrupan issues relacionados bajo un objetivo comun. Usa este template para planificar bloques grandes de trabajo.
+        Las epics agrupan issues relacionados bajo un objetivo común. Usa este template para planificar bloques grandes de trabajo.
 
   - type: textarea
     id: objective
     attributes:
       label: Objetivo
-      description: Que se quiere conseguir con esta epic?
-      placeholder: "Implementar el sistema de busqueda semantica con embeddings..."
+      description: ¿Qué se quiere conseguir con esta epic?
+      placeholder: "Implementar el sistema de búsqueda semántica con embeddings..."
     validations:
       required: true
 
   - type: textarea
     id: context
     attributes:
-      label: Contexto y motivacion
-      description: Por que es importante? Que problema de alto nivel resuelve?
+      label: Contexto y motivación
+      description: ¿Por qué es importante? ¿Qué problema de alto nivel resuelve?
     validations:
       required: true
 
@@ -32,7 +32,7 @@ body:
       description: Lista de tareas o issues que forman parte de esta epic.
       placeholder: |
         - [ ] #12 — Parser de metadatos de leyes
-        - [ ] #13 — Modelo Pydantic para Version
+        - [ ] #13 — Modelo Pydantic para Versión
         - [ ] #14 — Endpoint de diff
     validations:
       required: true
@@ -41,8 +41,8 @@ body:
     id: done
     attributes:
       label: Criterio de completado
-      description: Como sabremos que esta epic esta terminada?
-      placeholder: "Todos los issues listados arriba estan cerrados y los tests pasan."
+      description: ¿Cómo sabremos que esta epic está terminada?
+      placeholder: "Todos los issues listados arriba están cerrados y los tests pasan."
     validations:
       required: true
 
@@ -51,13 +51,13 @@ body:
     attributes:
       label: Fase del roadmap
       options:
-        - "Fase 0 — Fundacion"
+        - "Fase 0 — Fundación"
         - "Fase 1 — API base"
         - "Fase 2 — Grafo"
         - "Fase 3 — Chat"
         - "Fase 4 — Dashboards"
         - "Fase 5 — Frontend"
         - "Fase 6 — Producto"
-        - "Fase 7 — Busqueda semantica"
+        - "Fase 7 — Búsqueda semántica"
     validations:
       required: true

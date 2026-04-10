@@ -12,17 +12,17 @@ body:
     id: problem
     attributes:
       label: Problema o necesidad
-      description: Que problema resuelve esta feature? Que necesidad cubre?
-      placeholder: "Actualmente no hay forma de filtrar leyes por fecha de publicacion..."
+      description: ¿Qué problema resuelve esta feature? ¿Qué necesidad cubre?
+      placeholder: "Actualmente no hay forma de filtrar leyes por fecha de publicación..."
     validations:
       required: true
 
   - type: textarea
     id: solution
     attributes:
-      label: Solucion propuesta
-      description: Describe como te imaginas la solucion.
-      placeholder: "Anadir un parametro `date_from` y `date_to` al endpoint de busqueda..."
+      label: Solución propuesta
+      description: Describe cómo te imaginas la solución.
+      placeholder: "Añadir un parámetro `date_from` y `date_to` al endpoint de búsqueda..."
     validations:
       required: true
 
@@ -30,7 +30,7 @@ body:
     id: alternatives
     attributes:
       label: Alternativas consideradas
-      description: Has pensado en otras formas de resolver esto?
+      description: ¿Has pensado en otras formas de resolver esto?
 
   - type: dropdown
     id: component
@@ -43,7 +43,7 @@ body:
         - Dashboards
         - Frontend
         - Core / Parsers
-        - Distribucion / Packaging
+        - Distribución / Packaging
         - Otro
     validations:
       required: true
@@ -52,7 +52,7 @@ body:
     id: phase
     attributes:
       label: Fase del roadmap
-      description: En que fase del ROADMAP.md encajaria esta feature?
+      description: ¿En qué fase del ROADMAP.md encajaría esta feature?
       options:
         - "Fase 1 — API base"
         - "Fase 2 — Grafo"
@@ -60,7 +60,7 @@ body:
         - "Fase 4 — Dashboards"
         - "Fase 5 — Frontend"
         - "Fase 6 — Producto"
-        - "Fase 7 — Busqueda semantica"
+        - "Fase 7 — Búsqueda semántica"
         - "No estoy seguro"
 
   - type: textarea
