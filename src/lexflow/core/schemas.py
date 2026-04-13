@@ -122,3 +122,57 @@ class ErrorResponse(BaseModel):
     error: str
     message: str
     detail: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Graph
+# ---------------------------------------------------------------------------
+
+
+class GraphNeighborsResponse(BaseModel):
+    """Response for the graph neighbors endpoint."""
+
+    law_id: str
+    neighbors: list[str]
+    count: int
+
+
+class GraphNodeData(BaseModel):
+    """Minimal node representation for subgraph responses."""
+
+    id: str
+    title: str | None = None
+    rank: str | None = None
+    status: str | None = None
+
+
+class GraphEdgeData(BaseModel):
+    """Edge representation for subgraph responses."""
+
+    source: str
+    target: str
+    source_article: str | None = None
+
+
+class GraphSubgraphResponse(BaseModel):
+    """Response for the subgraph endpoint."""
+
+    nodes: list[GraphNodeData]
+    edges: list[GraphEdgeData]
+
+
+class GraphStatsResponse(BaseModel):
+    """High-level statistics about the knowledge graph."""
+
+    node_count: int
+    edge_count: int
+    density: float
+    weakly_connected_components: int
+
+
+class GraphTopItem(BaseModel):
+    """A law ranked by PageRank score."""
+
+    law_id: str
+    score: float
+    title: str | None = None
