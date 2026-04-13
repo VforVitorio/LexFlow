@@ -1,4 +1,5 @@
 """Base interface for all LexFlow chat providers."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -21,7 +22,7 @@ class ChatProvider(ABC):
     async def list_models(self) -> list[str]: ...
 
     @abstractmethod
-    async def stream_chat(
+    def stream_chat(
         self,
         messages: list[ChatMessage],
         model: str,

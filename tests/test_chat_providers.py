@@ -27,9 +27,7 @@ async def test_ollama_list_models_success() -> None:
     """OllamaProvider.list_models should return model names from the client response."""
     with patch("ollama.AsyncClient") as mock_client_cls:
         mock_client = MagicMock()
-        mock_client.list = AsyncMock(
-            return_value={"models": [{"name": "llama3"}, {"name": "mistral"}]}
-        )
+        mock_client.list = AsyncMock(return_value={"models": [{"name": "llama3"}, {"name": "mistral"}]})
         mock_client_cls.return_value = mock_client
 
         from lexflow.chat.providers.ollama import OllamaProvider

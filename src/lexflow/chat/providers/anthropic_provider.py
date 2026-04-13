@@ -1,8 +1,9 @@
 """Anthropic chat provider for LexFlow."""
+
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 import anthropic
 
@@ -30,7 +31,7 @@ class AnthropicProvider(ChatProvider):
         self,
         messages: list[ChatMessage],
         model: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncGenerator[str, None]:
         """Stream chat completions from Anthropic, yielding text chunks."""
         # Separate system message (Anthropic uses a top-level system param)
         system_parts: list[str] = []
@@ -55,5 +56,5 @@ class AnthropicProvider(ChatProvider):
                     yield text
         except anthropic.RateLimitError as exc:
             raise ChatProviderError(f"Anthropic rate limit exceeded: {exc}") from exc
-        except anthropic.AuthenticationStatusError as exc:
+        except anthropic.AuthenticationError as exc:
             raise ChatProviderError(f"Anthropic authentication failed: {exc}") from exc

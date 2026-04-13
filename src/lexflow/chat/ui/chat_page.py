@@ -106,8 +106,8 @@ def chat_page() -> rx.Component:
                 on_change=ChatState.set_input,
                 on_key_down=lambda key: rx.cond(
                     key == "Enter",
-                    ChatState.send_message(),
-                    rx.noop(),  # type: ignore[attr-defined]
+                    ChatState.send_message(),  # type: ignore[call-arg]
+                    rx.noop(),
                 ),
                 placeholder="Escribe tu pregunta legal...",
                 flex="1",

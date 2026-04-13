@@ -76,7 +76,7 @@ class ChatState(rx.State):
         except Exception:
             self.available_models = []
 
-    async def send_message(self) -> AsyncIterator[None]:  # type: ignore[override]
+    async def send_message(self) -> AsyncIterator[None]:
         """Send the current input as a user message and stream the response."""
         user_text = self.input_value.strip()
         if not user_text or self.is_streaming:

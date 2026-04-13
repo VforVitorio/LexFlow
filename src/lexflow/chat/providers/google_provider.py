@@ -1,8 +1,9 @@
 """Google Gemini chat provider for LexFlow."""
+
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 from google import genai
 
@@ -36,7 +37,7 @@ class GoogleProvider(ChatProvider):
         self,
         messages: list[ChatMessage],
         model: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncGenerator[str, None]:
         """Stream chat completions from Google Gemini, yielding text chunks."""
         # Convert ChatMessage list to Google Content format
         contents: list[genai.types.ContentDict] = []
@@ -47,7 +48,7 @@ class GoogleProvider(ChatProvider):
         try:
             async for chunk in await self._client.aio.models.generate_content_stream(
                 model=model,
-                contents=contents,  # type: ignore[arg-type]
+                contents=contents,
             ):
                 if chunk.text:
                     yield chunk.text
