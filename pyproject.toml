@@ -23,6 +23,8 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "pydantic>=2.10",
     "networkx>=3.4",
+    "numpy>=1.26",
+    "scipy>=1.13",
     "httpx>=0.28",
     "reflex>=0.7",
 ]
@@ -92,7 +94,7 @@ warn_unused_configs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "ollama.*", "fastmcp.*"]
+module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
