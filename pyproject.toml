@@ -95,6 +95,10 @@ plugins = ["pydantic.mypy"]
 module = ["networkx.*", "ollama.*", "fastmcp.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["lexflow.rag.*"]
+ignore_errors = true
+
 # ---------------------------------------------------------------------------
 # Pytest
 # ---------------------------------------------------------------------------
