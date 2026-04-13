@@ -1,4 +1,5 @@
 """LegalGraph — in-memory knowledge graph for Spanish legislation."""
+
 from __future__ import annotations
 
 import networkx as nx
