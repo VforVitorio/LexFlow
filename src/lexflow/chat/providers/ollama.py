@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 import ollama
 
@@ -20,12 +20,16 @@ class OllamaProvider(ChatProvider):
         try:
             client = ollama.AsyncClient(host=self._host)
             response = await client.list()
-            models = response.get("models", []) if isinstance(response, dict) else []
+            models: list[dict[str, str]] = response.get("models", []) if isinstance(response, dict) else []
             return [m["name"] for m in models if "name" in m]
         except Exception as exc:
             raise ChatProviderError("ollama", str(exc)) from exc
 
-    async def stream_chat(self, messages: list[ChatMessage], model: str) -> AsyncIterator[str]:  # type: ignore[override]
+    async def stream_chat(
+        self,
+        messages: list[ChatMessage],
+        model: str,
+    ) -> AsyncGenerator[str, None]:
         """Stream a chat completion from Ollama."""
         try:
             client = ollama.AsyncClient(host=self._host)

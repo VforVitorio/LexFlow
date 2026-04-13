@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
+from typing import cast
 
 import openai
+from openai import AsyncStream
+from openai.types.chat import ChatCompletionChunk
 
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
 
@@ -27,14 +30,17 @@ class LMStudioProvider(ChatProvider):
         self,
         messages: list[ChatMessage],
         model: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncGenerator[str, None]:
         """Stream chat completions from LM Studio, yielding text chunks."""
         openai_messages = [{"role": m.role, "content": m.content} for m in messages]
         try:
-            stream = await self._client.chat.completions.create(
-                model=model,
-                messages=openai_messages,  # type: ignore[arg-type]
-                stream=True,
+            stream = cast(
+                AsyncStream[ChatCompletionChunk],
+                await self._client.chat.completions.create(
+                    model=model,
+                    messages=openai_messages,  # type: ignore[arg-type]
+                    stream=True,
+                ),
             )
             async for chunk in stream:
                 yield chunk.choices[0].delta.content or ""
