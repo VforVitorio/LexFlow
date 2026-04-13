@@ -22,7 +22,7 @@ class ChatProvider(ABC):
     async def list_models(self) -> list[str]: ...
 
     @abstractmethod
-    def stream_chat(
+    async def stream_chat(
         self,
         messages: list[ChatMessage],
         model: str,
