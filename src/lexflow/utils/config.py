@@ -20,12 +20,16 @@ class Settings:
         LEXFLOW_PAGE_SIZE — default page size for paginated endpoints
         LEXFLOW_PAGE_SIZE_MAX — maximum allowed page size
         LEXFLOW_LOG_LEVEL — logging level
+        LEXFLOW_OLLAMA_URL — base URL for the Ollama API
+        LEXFLOW_LMSTUDIO_URL — base URL for the LM Studio API
     """
 
     data_path: Path
     page_size_default: int
     page_size_max: int
     log_level: str
+    ollama_base_url: str
+    lmstudio_base_url: str
 
 
 def _build_settings() -> Settings:
@@ -38,6 +42,8 @@ def _build_settings() -> Settings:
         page_size_default=int(os.environ.get("LEXFLOW_PAGE_SIZE", "20")),
         page_size_max=int(os.environ.get("LEXFLOW_PAGE_SIZE_MAX", "100")),
         log_level=os.environ.get("LEXFLOW_LOG_LEVEL", "INFO"),
+        ollama_base_url=os.environ.get("LEXFLOW_OLLAMA_URL", "http://localhost:11434"),
+        lmstudio_base_url=os.environ.get("LEXFLOW_LMSTUDIO_URL", "http://localhost:1234/v1"),
     )
 
 
