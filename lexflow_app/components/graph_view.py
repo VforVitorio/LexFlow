@@ -1,6 +1,7 @@
 """Reflex graph visualization component."""
-
 from __future__ import annotations
+
+from typing import Any
 
 import httpx
 import reflex as rx
@@ -32,7 +33,7 @@ class GraphVizState(rx.State):
                 resp.raise_for_status()
                 # Store raw subgraph data for local rendering
                 self.figure_json = resp.text
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             self.error = str(exc)
         finally:
             self.loading = False

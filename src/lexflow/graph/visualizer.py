@@ -1,5 +1,4 @@
 """Convert a LegalGraph subgraph to a Plotly network figure."""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
@@ -20,7 +19,7 @@ def _layout_positions(g: nx.DiGraph) -> dict[str, tuple[float, float]]:
 
 
 def subgraph_to_figure(
-    graph: LegalGraph,
+    graph: "LegalGraph",
     center_id: str,
     depth: int = 1,
     width: int = 800,
@@ -67,7 +66,7 @@ def subgraph_to_figure(
     node_y = [pos[n][1] for n in g.nodes() if n in pos]
     node_ids = [n for n in g.nodes() if n in pos]
     node_attrs = [g.nodes[n] for n in node_ids]
-    node_text = [f"{n}<br>{attrs.get('title', '')[:60]}" for n, attrs in zip(node_ids, node_attrs, strict=False)]
+    node_text = [f"{n}<br>{attrs.get('title', '')[:60]}" for n, attrs in zip(node_ids, node_attrs)]
     node_colors = ["#e63946" if n == center_id else "#457b9d" for n in node_ids]
 
     node_trace = go.Scatter(
