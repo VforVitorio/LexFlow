@@ -32,7 +32,7 @@ class NodeDetailState(rx.State):
                 )
                 resp.raise_for_status()
                 self.law_data = resp.json()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.error = str(exc)
         finally:
             self.loading = False
