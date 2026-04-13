@@ -56,10 +56,10 @@ class LegalGraph:
         return self._g.subgraph(nodes).copy()
 
     def node_count(self) -> int:
-        return self._g.number_of_nodes()
+        return int(self._g.number_of_nodes())
 
     def edge_count(self) -> int:
-        return self._g.number_of_edges()
+        return int(self._g.number_of_edges())
 
     @property
     def graph(self) -> nx.DiGraph:
