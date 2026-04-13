@@ -41,6 +41,10 @@ dashboards = [
 packaging = [
     "pyinstaller>=6.0",
 ]
+rag = [
+    "sentence-transformers>=2.2",
+    "faiss-cpu>=1.7",
+]
 dev = [
     "pytest>=8.3",
     "pytest-asyncio>=0.25",
@@ -92,7 +96,7 @@ warn_unused_configs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "ollama.*", "fastmcp.*"]
+module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*", "scipy.*", "faiss.*", "sentence_transformers.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
