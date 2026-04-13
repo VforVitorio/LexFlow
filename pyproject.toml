@@ -94,7 +94,7 @@ warn_unused_configs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "ollama.*", "fastmcp.*"]
+module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
