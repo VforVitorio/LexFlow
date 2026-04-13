@@ -70,8 +70,7 @@ def get_subgraph(
         for n in sub.nodes
     ]
     edges = [
-        GraphEdgeData(source=u, target=v, source_article=sub.edges[u, v].get("source_article"))
-        for u, v in sub.edges
+        GraphEdgeData(source=u, target=v, source_article=sub.edges[u, v].get("source_article")) for u, v in sub.edges
     ]
     return GraphSubgraphResponse(nodes=nodes, edges=edges)
 
