@@ -1,10 +1,14 @@
 """OpenAI chat provider for LexFlow."""
+
 from __future__ import annotations
 
 import os
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
+from typing import cast
 
 import openai
+from openai import AsyncStream
+from openai.types.chat import ChatCompletionChunk
 
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
 
@@ -30,14 +34,17 @@ class OpenAIProvider(ChatProvider):
         self,
         messages: list[ChatMessage],
         model: str,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncGenerator[str, None]:
         """Stream chat completions from OpenAI, yielding text chunks."""
         openai_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
         try:
-            stream = await self._client.chat.completions.create(
-                model=model,
-                messages=openai_messages,  # type: ignore[arg-type]
-                stream=True,
+            stream = cast(
+                AsyncStream[ChatCompletionChunk],
+                await self._client.chat.completions.create(
+                    model=model,
+                    messages=openai_messages,  # type: ignore[arg-type]
+                    stream=True,
+                ),
             )
             async for chunk in stream:
                 delta = chunk.choices[0].delta if chunk.choices else None

@@ -1,4 +1,5 @@
 """FastMCP server exposing LexFlow legal tools to AI assistants."""
+
 from __future__ import annotations
 
 import logging
