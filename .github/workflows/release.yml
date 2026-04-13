@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: lexflow-linux-x86_64
+            executable: dist/lexflow
+          - os: windows-latest
+            artifact_name: lexflow-windows-x86_64.exe
+            executable: dist/lexflow.exe
+          - os: macos-latest
+            artifact_name: lexflow-macos-x86_64
+            executable: dist/lexflow
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - run: uv python install 3.12
+
+      - run: uv sync --extra packaging --extra dev
+
+      - name: Build executable
+        run: uv run python packaging/build.py
+
+      - name: Compute checksum (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: sha256sum ${{ matrix.executable }} > ${{ matrix.executable }}.sha256
+
+      - name: Compute checksum (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          $hash = Get-FileHash ${{ matrix.executable }} -Algorithm SHA256
+          "$($hash.Hash)  ${{ matrix.executable }}" | Out-File -FilePath "${{ matrix.executable }}.sha256"
+        shell: pwsh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            ${{ matrix.executable }}
+            ${{ matrix.executable }}.sha256
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
