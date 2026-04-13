@@ -1,5 +1,8 @@
 """Graph algorithms: PageRank, community detection, shortest path."""
+
 from __future__ import annotations
+
+from typing import cast
 
 import networkx as nx
 
@@ -10,7 +13,7 @@ def pagerank(graph: LegalGraph, alpha: float = 0.85) -> dict[str, float]:
     """Compute PageRank scores for all law nodes."""
     if graph.node_count() == 0:
         return {}
-    return nx.pagerank(graph.graph, alpha=alpha)
+    return cast(dict[str, float], nx.pagerank(graph.graph, alpha=alpha))
 
 
 def top_laws(graph: LegalGraph, n: int = 10) -> list[tuple[str, float]]:
@@ -21,7 +24,7 @@ def top_laws(graph: LegalGraph, n: int = 10) -> list[tuple[str, float]]:
 
 def shortest_path(graph: LegalGraph, source: str, target: str) -> list[str]:
     """Return shortest directed path between two laws. Raises nx.NetworkXNoPath if none."""
-    return nx.shortest_path(graph.graph, source=source, target=target)
+    return cast(list[str], nx.shortest_path(graph.graph, source=source, target=target))
 
 
 def community_detection(graph: LegalGraph) -> dict[str, int]:

@@ -1,4 +1,5 @@
 """Graph cache: serialize/deserialize LegalGraph to JSON with hash-based invalidation."""
+
 from __future__ import annotations
 
 import json
@@ -46,7 +47,7 @@ def load_graph(cache_path: Path) -> tuple[LegalGraph, str] | None:
             return None
         g = nx.node_link_graph(data["graph"], directed=True)
         graph = LegalGraph()
-        graph._g = g  # type: ignore[attr-defined]
+        graph._g = g
         return graph, data["hash"]
     except Exception as exc:
         logger.warning("Could not load graph cache: %s", exc)
