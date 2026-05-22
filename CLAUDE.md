@@ -249,6 +249,15 @@ When the long task finishes (or the harness notifies you), resume the original f
 
 This rule applies to **any** wait, not only PRs.
 
+### Fire and check, never block
+
+Reinforces the rule above with concrete mechanics — broken often enough that it earns its own headline.
+
+- **Never run a synchronous wait command** (`until ...; do sleep; done`, `gh pr checks --watch`, `wait`, blocking `Start-Sleep` loops) **as the only thing the agent is doing**. Lance the watcher in the background OR poll once and move on. Watchers tie up the shell, prevent any other tool call from running, and freeze progress even after every check has gone green.
+- **Poll once → act on what you see → do something else.** After dispatching the next useful task, come back and poll again. Do not chain three sleeps in a row.
+- **When all required checks are green, merge immediately.** Don't keep polling "to be sure". If the merge command later fails because something flipped, fix the new failure — that takes 30 seconds. Pre-emptive waiting costs 30 minutes.
+- **When the next task needs the result of the wait**, schedule the wait in background (`run_in_background: true`), do other work, and rely on the harness's completion notification. The notification IS the signal to come back; the agent does not need to poll the queue itself.
+
 ---
 
 ## 9. Tooling notes
@@ -294,6 +303,7 @@ For deep React work, install from `claudemarketplaces.com`: `vercel-labs/agent-s
 - **2026-05-22** — `gh api -F restrictions=` (string vacío) rechaza el payload de branch protection con HTTP 422. Causa: la API espera `null`, no `""`. Fix: pasar el payload completo como JSON con `--input -`.
 - **2026-05-22** — Borrar `.venv` con un `python.exe` que apunta a un intérprete inexistente (miniconda movida/desinstalada) provoca `uv` exit 103. Causa: `.venv\Scripts\python.exe` en Windows es un launcher, no un binario; queda huérfano si el target original ya no existe. Fix: `Remove-Item -Recurse -Force .venv` y `uv venv --python 3.12` antes de `uv sync`. Limpiar también `$env:VIRTUAL_ENV` si apunta a un venv viejo.
 - **2026-05-22** — `ci.yml` job `typecheck` instalaba `--extra dev` y fallaba `import-not-found` para `openai`, `anthropic`, `google.genai`, `plotly` en cuanto una PR tocaba `chat/` o `dashboards/`. Causa: mypy resuelve tipos solo si las deps están instaladas, y `--extra dev` deja fuera los extras `chat` y `dashboards`. Fix: `uv sync --all-extras --frozen` en el job typecheck (igual que el job test). Aplica a cualquier proyecto donde el árbol de extras es relevante para la superficie tipada.
+- **2026-05-22** — Bloquearse en un `until ...; sleep; done` esperando a que CI termine, incluso cuando todos los checks ya estaban verdes, paró el progreso durante minutos. Causa: el comando síncrono ata la shell y la única "señal" disponible queda dentro del bucle. Fix: lanzar el watcher en background (`run_in_background: true`) Y/O hacer una sola poll y mover otra tarea por delante; cuando todos los checks queden verdes, MERGEAR YA — no seguir "asegurándose". Codificado en CLAUDE.md §8 "Fire and check, never block".
 
 <!-- añadir nuevas entradas arriba de esta línea -->
 
