@@ -85,8 +85,12 @@ jobs:
           cache-dependency-glob: "uv.lock"
           python-version: "3.12"
 
+      # Mypy needs every imported third-party package on the path to resolve
+      # types. The src/lexflow/chat module imports `openai`/`anthropic`/`google.genai`
+      # (chat extra) and src/lexflow/dashboards uses plotly (dashboards extra),
+      # so we install --all-extras even though it is heavier than --extra dev.
       - name: Install dependencies
-        run: uv sync --extra dev --frozen
+        run: uv sync --all-extras --frozen
 
       # Mypy is incremental: re-runs only re-analyse files whose source
       # has changed since the last successful run. The key includes both
