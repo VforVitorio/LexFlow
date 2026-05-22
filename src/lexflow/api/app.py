@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
 from lexflow.api.routers import articles, laws, search, versions
+from lexflow.api.routers.graph import router as graph_router
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ app.include_router(laws.router, prefix="/api/v1")
 app.include_router(articles.router, prefix="/api/v1")
 app.include_router(versions.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
+app.include_router(graph_router, prefix="/api/v1")
 
 
 @app.get("/health")
