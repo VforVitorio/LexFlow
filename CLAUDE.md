@@ -233,7 +233,25 @@ Every logical step uses exactly five cells, in order: markdown context → helpe
 
 ---
 
-## 8. Tooling notes
+## 8. Workflow rules
+
+### Long-running work — never just wait
+
+When something the agent triggered is taking time (CI run, `uv sync`, a long test suite, a remote PR check, a `gh pr merge --auto`), do **not** sit idle polling it. Use the wait window for useful work:
+
+- prepare the next branch's rebase or conflict survey
+- read the next issue's body and lay out the implementation
+- update memory or `MEMORY.md` with what was learned
+- batch any small follow-ups (gitignore tweaks, doc fixes, label updates)
+- run local checks (`pytest`, `ruff`, `mypy`) on something that will need them next
+
+When the long task finishes (or the harness notifies you), resume the original flow. The only thing that should block on a wait is the *next* action that strictly needs that wait's result. If a PR sits without updating for an unusually long time (no CI activity, no reviewers, no auto-merge progress), surface it explicitly to the user — do not silently re-poll.
+
+This rule applies to **any** wait, not only PRs.
+
+---
+
+## 9. Tooling notes
 
 - **uv venv**: only the project's `.venv` is supported. If a system `VIRTUAL_ENV` env var points elsewhere, uv warns and ignores it. Do not commit `.venv/`.
 - **code-review-graph cache**: skills like `explore-codebase`, `debug-issue`, `refactor-safely`, `review-changes` build a local `graph.db` under `.code-review-graph/`. This folder is gitignored; the file contains absolute paths and is not portable. Regenerate locally as needed.
@@ -242,7 +260,7 @@ Every logical step uses exactly five cells, in order: markdown context → helpe
 
 ---
 
-## 9. Recommended Claude Code skills
+## 10. Recommended Claude Code skills
 
 When working on this repo, prefer these skills (most are already available in session):
 
@@ -259,7 +277,7 @@ For deep React work, install from `claudemarketplaces.com`: `vercel-labs/agent-s
 
 ---
 
-## 10. Lecciones aprendidas (errores que no se repiten)
+## 11. Lecciones aprendidas (errores que no se repiten)
 
 **Regla**: cuando un error real se corrige (un comando roto, un path incorrecto, una librería mal usada, una regresión introducida, una convención mal aplicada), se añade aquí UNA línea con la lección. Nunca se borran entradas; si una regla queda obsoleta, se añade una nueva marcando la anterior como `(superseded by YYYY-MM-DD)`.
 
@@ -280,7 +298,7 @@ For deep React work, install from `claudemarketplaces.com`: `vercel-labs/agent-s
 
 ---
 
-## 11. Related documents
+## 12. Related documents
 
 - `ROADMAP.md` — phase-by-phase plan.
 - `CONTRIBUTING.md` — branch flow, PR process.
