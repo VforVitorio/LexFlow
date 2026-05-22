@@ -1,3 +1,9 @@
 [submodule "data/legalize-es"]
 	path = data/legalize-es
 	url = https://github.com/legalize-dev/legalize-es.git
+	# legalize-es has 70K+ commits across ~12K laws. A full clone is hundreds
+	# of MB and takes minutes; with `shallow = true`, `git submodule update`
+	# fetches only the tip (~50 MB). Local dev: `git submodule update --init`
+	# inherits this; if you need full history (e.g. for the LawVersion / diff
+	# endpoints), run `git submodule update --depth 0 data/legalize-es` once.
+	shallow = true
