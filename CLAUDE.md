@@ -293,6 +293,7 @@ For deep React work, install from `claudemarketplaces.com`: `vercel-labs/agent-s
 
 - **2026-05-22** — `gh api -F restrictions=` (string vacío) rechaza el payload de branch protection con HTTP 422. Causa: la API espera `null`, no `""`. Fix: pasar el payload completo como JSON con `--input -`.
 - **2026-05-22** — Borrar `.venv` con un `python.exe` que apunta a un intérprete inexistente (miniconda movida/desinstalada) provoca `uv` exit 103. Causa: `.venv\Scripts\python.exe` en Windows es un launcher, no un binario; queda huérfano si el target original ya no existe. Fix: `Remove-Item -Recurse -Force .venv` y `uv venv --python 3.12` antes de `uv sync`. Limpiar también `$env:VIRTUAL_ENV` si apunta a un venv viejo.
+- **2026-05-22** — `ci.yml` job `typecheck` instalaba `--extra dev` y fallaba `import-not-found` para `openai`, `anthropic`, `google.genai`, `plotly` en cuanto una PR tocaba `chat/` o `dashboards/`. Causa: mypy resuelve tipos solo si las deps están instaladas, y `--extra dev` deja fuera los extras `chat` y `dashboards`. Fix: `uv sync --all-extras --frozen` en el job typecheck (igual que el job test). Aplica a cualquier proyecto donde el árbol de extras es relevante para la superficie tipada.
 
 <!-- añadir nuevas entradas arriba de esta línea -->
 
