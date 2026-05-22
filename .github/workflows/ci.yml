@@ -38,7 +38,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          submodules: recursive
+          # actions/checkout does not honour `shallow = true` in .gitmodules
+          # natively, so we skip it here and clone the submodule manually
+          # below with an explicit `--depth 1`. Avoids pulling 70K+ commits
+          # of legalize-es history (~hundreds of MB) on every CI run.
+          submodules: false
+
+      - name: Shallow-clone legalize-es submodule
+        run: git submodule update --init --depth 1 --recursive
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
