@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────────────────────────────
+ * LexFlow CSS tokens.
+ * The HSL channel triples here are consumed by tailwind.config.ts via
+ * `hsl(var(--token) / <alpha-value>)`. Flip light/dark on <html data-theme>.
+ * ───────────────────────────────────────────────────────────────────── */
+
+:root,
+[data-theme='light'] {
+  --bg:            232 30% 99%;
+  --surface:       232 25% 97%;
+  --surface-2:     232 22% 94%;
+  --border:        232 18% 88%;
+  --border-strong: 232 18% 78%;
+  --muted-fg:      232 12% 45%;
+  --fg:            232 35% 12%;
+
+  --primary-soft:  232 88% 96%;
+  --amber-soft:    38 100% 94%;
+  --success-soft:  152 60% 94%;
+  --danger-soft:   354 90% 96%;
+
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg:            232 30% 7%;
+  --surface:       232 28% 10%;
+  --surface-2:     232 25% 14%;
+  --border:        232 22% 22%;
+  --border-strong: 232 22% 32%;
+  --muted-fg:      232 15% 65%;
+  --fg:            232 18% 95%;
+
+  --primary-soft:  232 60% 18%;
+  --amber-soft:    36 60% 16%;
+  --success-soft:  152 40% 14%;
+  --danger-soft:   354 50% 18%;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html, body, #root { height: 100%; }
+
+  body {
+    font-family: theme('fontFamily.sans');
+    font-feature-settings: 'cv02', 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: hsl(var(--bg) / 0); /* override below */
+    background: hsl(232 72% 52% / 0.25);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: theme('fontFamily.display');
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  /* Always-visible focus rings on keyboard navigation. Never `outline:none`. */
+  :focus-visible {
+    outline: 2px solid hsl(232 72% 52%);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Skip link — visible on focus only */
+  .skip-link {
+    @apply absolute left-3 top-3 z-50 -translate-y-20 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-2 transition-transform;
+  }
+  .skip-link:focus-visible { @apply translate-y-0; }
+}
+
+@layer components {
+  /* Mono caps label, used for section headers + small meta */
+  .label-caps {
+    @apply text-[11px] font-semibold uppercase tracking-[0.04em] text-muted;
+  }
+
+  /* Reading column for law detail */
+  .reading-col {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Custom thin scrollbars on dense surfaces */
+  .scrollbar-thin::-webkit-scrollbar { width: 10px; height: 10px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border-strong));
+    border-radius: 8px;
+    border: 2px solid hsl(var(--bg));
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-fg) / 0.6); }
+
+  /* Diff line highlights — used by DiffViewer */
+  .diff-add { background: hsl(152 60% 40% / 0.10); }
+  .diff-del { background: hsl(354 70% 50% / 0.10); }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty  { text-wrap: pretty; }
+}
+
+/* Respect reduced-motion: kill non-essential animation */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
