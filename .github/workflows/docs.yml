@@ -1,0 +1,58 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Stage docs/ for deployment
+        run: |
+          mkdir -p _site
+          cp -R docs/. _site/
+          # Add a .nojekyll marker so GitHub Pages does not run Jekyll on the
+          # output (we ship raw HTML + JSX + CSS that should be served as-is).
+          touch _site/.nojekyll
+
+      - name: Inject current release version
+        run: |
+          VERSION=$(grep -m1 '^version' pyproject.toml | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$VERSION" ]; then
+            echo "Could not read version from pyproject.toml"
+            exit 1
+          fi
+          echo "Injecting version: ${VERSION}"
+          find _site -type f \( -name "*.jsx" -o -name "*.js" -o -name "*.html" -o -name "*.md" -o -name "*.css" \) \
+            -exec sed -i "s/__DOCS_VERSION__/${VERSION}/g" {} +
+
+      - name: Configure git identity for gh-pages push
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
+          publish_branch: gh-pages
+          force_orphan: true
+          full_commit_message: "deploy(docs): publish ${{ github.sha }}"

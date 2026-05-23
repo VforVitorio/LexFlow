@@ -6,55 +6,110 @@ on:
   pull_request:
     branches: [main, dev]
 
+# Cancel any in-flight CI for the same ref when a newer push lands. Keeps
+# the queue from piling up when release-please pushes back-to-back PR
+# refreshes (which previously stranded multiple runs in "queued").
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# Notes on dependency strategy across the three jobs:
+#   - All three jobs enable uv's built-in cache (`enable-cache: true`) and
+#     key it off `uv.lock`. The cache only invalidates when the resolved
+#     graph actually changes — cosmetic edits to pyproject.toml (re-ordering,
+#     tool config, comments) reuse the wheel store.
+#   - All sync calls use `--frozen` to skip resolution entirely and just
+#     install the locked versions. Faster than letting uv re-resolve on
+#     every run, and guarantees CI sees exactly what the developer
+#     committed.
+#   - setup-uv installs Python via the `python-version` input.
+#   - `lint` does NOT call `uv sync`. Ruff is the only tool it needs, so
+#     `uvx ruff` runs it as an ephemeral tool.
+#   - `typecheck` calls `uv sync --extra dev` (mypy lives in the dev extra).
+#     It also caches `.mypy_cache/` so incremental runs only re-check files
+#     whose hash actually changed.
+#   - `test` keeps `uv sync --all-extras` because the suite may touch chat
+#     and dashboards code paths that need every extra installed.
 
 jobs:
   test:
-    name: Tests
+    name: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
-          submodules: recursive
+          # actions/checkout does not honour `shallow = true` in .gitmodules
+          # natively, so we skip it here and clone the submodule manually
+          # below with an explicit `--depth 1`. Avoids pulling 70K+ commits
+          # of legalize-es history (~hundreds of MB) on every CI run.
+          submodules: false
 
-      - uses: astral-sh/setup-uv@v4
+      - name: Shallow-clone legalize-es submodule
+        run: git submodule update --init --depth 1 --recursive
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.12"
 
-      - run: uv python install 3.12
+      - name: Install dependencies
+        run: uv sync --all-extras --frozen
 
-      - run: uv sync --all-extras
-
-      - run: uv run pytest -v --tb=short
+      - name: Run tests
+        run: uv run pytest -v
 
   lint:
-    name: Lint & Format
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
-      - run: uv sync --extra dev
+      - name: Ruff check
+        run: uvx ruff check .
 
-      - run: uv run ruff check .
-
-      - run: uv run ruff format --check .
+      - name: Ruff format check
+        run: uvx ruff format --check .
 
   typecheck:
-    name: Type Check
+    name: typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.12"
 
-      - run: uv sync --all-extras
+      # Mypy needs every imported third-party package on the path to resolve
+      # types. The src/lexflow/chat module imports `openai`/`anthropic`/`google.genai`
+      # (chat extra) and src/lexflow/dashboards uses plotly (dashboards extra),
+      # so we install --all-extras even though it is heavier than --extra dev.
+      - name: Install dependencies
+        run: uv sync --all-extras --frozen
 
-      - run: uv run mypy src/
+      # Mypy is incremental: re-runs only re-analyse files whose source
+      # has changed since the last successful run. The key includes both
+      # pyproject.toml (mypy config) and every file under src/lexflow/ so
+      # the cache invalidates whenever the analysed surface actually moves.
+      - name: Cache mypy
+        uses: actions/cache@v4
+        with:
+          path: .mypy_cache
+          key: mypy-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'src/lexflow/**') }}
+          restore-keys: |
+            mypy-${{ runner.os }}-
+
+      - name: Mypy
+        run: uv run mypy src/lexflow/

@@ -6,7 +6,7 @@ readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"
 authors = [{ name = "VforVitorio" }]
-keywords = ["legislation", "legal-tech", "spain", "fastapi", "knowledge-graph", "ai", "open-source"]
+keywords = ["legislation", "legal-tech", "spain", "fastapi", "react", "knowledge-graph", "ai", "open-source"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Framework :: FastAPI",
@@ -22,9 +22,11 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "pydantic>=2.10",
+    "pydantic-settings>=2.7",
     "networkx>=3.4",
+    "numpy>=1.26",
+    "scipy>=1.13",
     "httpx>=0.28",
-    "reflex>=0.7",
 ]
 
 [project.optional-dependencies]
@@ -92,7 +94,7 @@ warn_unused_configs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "ollama.*", "fastmcp.*"]
+module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
