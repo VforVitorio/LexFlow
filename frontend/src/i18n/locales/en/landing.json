@@ -138,6 +138,25 @@
     { "name": "Standalone distribution", "desc": "PyInstaller binaries: .exe · .dmg · .AppImage. Docker done.", "status": "progress" },
     { "name": "Semantic search & RAG", "desc": "Embeddings, vector index, retrieval-augmented chat.", "status": "planned" }
   ],
+  "authors": {
+    "eyebrow": "Behind the project",
+    "title": "The people who build it.",
+    "sub": "LexFlow is the open-source work of two people. If the direction of the project interests you, or you'd like to contribute, their GitHub profile is where the code lives.",
+    "list": [
+      {
+        "login": "VforVitorio",
+        "name": "Víctor",
+        "role": "Author · architecture · backend + frontend",
+        "bio": "Owns the architecture, maintains the repository, writes most of the FastAPI backend and React frontend, and coordinates release notes."
+      },
+      {
+        "login": "Santisoutoo",
+        "name": "Santiago",
+        "role": "Contributor · co-maintainer",
+        "bio": "Co-maintainer on the project. Assigned to every active epic, contributes PR reviews and strengthens the graph and chat code."
+      }
+    ]
+  },
   "ctaEyebrow": "Try it locally",
   "ctaTitle": "Spin it up in under a minute.",
   "ctaSub": "Clone the repo, install with uv, and the full API is live at localhost:8000 with interactive docs. Star the project to follow along.",

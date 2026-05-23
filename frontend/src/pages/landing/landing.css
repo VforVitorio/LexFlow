@@ -1273,3 +1273,147 @@
 }
 .landing-root .powered-by-logo:hover { opacity: 1; color: hsl(var(--fg)); }
 .landing-root .powered-by-logo svg { flex-shrink: 0; }
+
+/* -------------------------------------------------------------------------- */
+/* Authors section                                                            */
+/* -------------------------------------------------------------------------- */
+/* Borrowed from f1stratlab-web "About author" pattern (F12 in the scout      */
+/* report): round avatar with a soft indigo ring, hover-lift card with an     */
+/* indigo wash and a subtle border tint. Two columns on desktop, stacked on   */
+/* mobile.                                                                    */
+
+.landing-root .authors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.landing-root .author-card {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  box-shadow: 0 1px 2px hsl(232 30% 10% / 0.06);
+  transition:
+    border-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 200ms cubic-bezier(0.2, 0, 0, 1),
+    transform 200ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 200ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.landing-root .author-card:hover {
+  border-color: hsl(var(--border-strong));
+  background: hsl(var(--surface-2) / 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px -8px hsl(232 30% 10% / 0.12);
+}
+
+.landing-root .author-avatar-wrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, hsl(232 72% 52% / 0.18), hsl(38 95% 56% / 0.12));
+}
+
+.landing-root .author-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  object-fit: cover;
+  background: hsl(var(--surface-2));
+}
+
+.landing-root .author-body {
+  min-width: 0;
+}
+
+.landing-root .author-name {
+  font-family: var(--font-display, 'Space Grotesk'), system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: hsl(var(--fg));
+}
+
+.landing-root .author-role {
+  margin-top: 2px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: hsl(var(--muted-fg));
+}
+
+.landing-root .author-bio {
+  margin: 10px 0 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: hsl(var(--muted-fg));
+}
+
+.landing-root .author-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.landing-root .author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--bg));
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--fg));
+  text-decoration: none;
+  transition:
+    border-color 180ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 180ms cubic-bezier(0.2, 0, 0, 1),
+    color 180ms cubic-bezier(0.2, 0, 0, 1),
+    transform 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.landing-root .author-link:hover {
+  border-color: hsl(232 70% 52% / 0.45);
+  background: hsl(232 88% 96% / 0.6);
+  color: hsl(232 72% 36%);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .landing-root .author-link:hover {
+  background: hsl(232 60% 22% / 0.4);
+  color: hsl(232 88% 88%);
+}
+
+.landing-root .author-link svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* On small viewports stack avatar above body. */
+@media (max-width: 480px) {
+  .landing-root .author-card {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .landing-root .author-avatar-wrap {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .author-card,
+  .landing-root .author-link {
+    transition: none;
+  }
+}

@@ -19,7 +19,7 @@ export function Hero() {
           </h1>
           <p className="hero-sub">{t('hero.sub')}</p>
           <div className="hero-cta">
-            <Link className="btn btn-primary btn-lg" to="/dashboards">
+            <Link className="btn btn-primary btn-lg" to="/home">
               {t('hero.ctaPrimary')}
               <IconArrow />
             </Link>

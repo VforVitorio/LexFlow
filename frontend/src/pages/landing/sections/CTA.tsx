@@ -15,7 +15,7 @@ export function CTA() {
           <h2>{t('ctaTitle')}</h2>
           <p>{t('ctaSub')}</p>
           <div className="cta-actions">
-            <Link className="btn btn-primary btn-lg" to="/dashboards">
+            <Link className="btn btn-primary btn-lg" to="/home">
               {t('ctaPrimary')}
               <IconArrow />
             </Link>
