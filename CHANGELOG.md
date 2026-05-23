@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/VforVitorio/LexFlow/compare/v0.4.2...v0.5.0) (2026-05-23)
+
+
+### Features
+
+* **landing:** pin navbar, working scroll-spy, mobile sweep, ES/EN copy rewrite ([750b0ba](https://github.com/VforVitorio/LexFlow/commit/750b0bace1e994b241ff515568d315abb55bccf0))
+* **landing:** pin the navbar, get scroll-spy working, mobile sweep, ES/EN copy ([3c9156e](https://github.com/VforVitorio/LexFlow/commit/3c9156e0651499f4622b92d963e4f5d25db2f482))
+
 ## [0.4.2](https://github.com/VforVitorio/LexFlow/compare/v0.4.1...v0.4.2) (2026-05-23)
 
 
