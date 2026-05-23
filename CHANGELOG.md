@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/VforVitorio/LexFlow/compare/v0.4.0...v0.4.1) (2026-05-23)
+
+
+### Refactoring
+
+* extract marketing landing into standalone landing/ project ([13e049d](https://github.com/VforVitorio/LexFlow/commit/13e049da9c9755ab75226c1547b31a10e4596f6b))
+
 ## [0.4.0](https://github.com/VforVitorio/LexFlow/compare/v0.3.0...v0.4.0) (2026-05-23)
 
 
