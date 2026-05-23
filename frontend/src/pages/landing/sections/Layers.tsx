@@ -1,5 +1,4 @@
 import { type ReactNode, Fragment } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Lang } from '@/i18n';
 import { ApiFeature, type LayerCopy } from '../mocks/ApiFeature';
@@ -8,9 +7,6 @@ import { ChatMockup } from '../mocks/ChatMockup';
 import { DashboardMockup } from '../mocks/DashboardMockup';
 
 interface Props { lang: Lang; }
-
-// Each non-API feature card links its mockup to the matching in-app surface.
-const FEATURE_ROUTES = ['/explorer', '/graph', '/chat', '/dashboards'] as const;
 
 function renderBold(str: string): ReactNode[] {
   return str.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
@@ -30,6 +26,10 @@ export function Layers({ lang }: Props) {
   const { t } = useTranslation('landing');
   const layers = t('layers', { returnObjects: true }) as unknown as LayerCopy[];
 
+  // Feature cards are illustrative, not navigational. A single explicit
+  // "Try the demo" CTA in the hero / nav / CTA section is the only way into
+  // the SPA — clicking on a mockup here would land the visitor in a stubbed
+  // page (GraphPage / ChatPage running on mock data) and confuse them.
   return (
     <section id="layers">
       <div className="lf-container">
@@ -42,7 +42,6 @@ export function Layers({ lang }: Props) {
         <div className="features">
           {layers.map((l, i) => {
             if (i === 0) return <ApiFeature key={i} layer={l} lang={lang} />;
-            const route = FEATURE_ROUTES[i];
             return (
               <article key={i} className={`feature${i % 2 ? ' reverse' : ''}`}>
                 <div className="feature-copy">
@@ -53,13 +52,10 @@ export function Layers({ lang }: Props) {
                   <ul className="feature-bullets">
                     {l.bullets.map((b, j) => <li key={j}>{b}</li>)}
                   </ul>
-                  {l.linkLabel && (
-                    <Link to={route} className="feature-link">{l.linkLabel}</Link>
-                  )}
                 </div>
-                <Link to={route} className="feature-art-link" aria-label={l.title}>
+                <div className="feature-art-wrap" aria-hidden="true">
                   <LayerArt idx={i} lang={lang} />
-                </Link>
+                </div>
               </article>
             );
           })}

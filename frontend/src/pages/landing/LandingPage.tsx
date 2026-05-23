@@ -10,6 +10,7 @@ import { PoweredBy } from './sections/PoweredBy';
 import { Stack } from './sections/Stack';
 import { Roadmap } from './sections/Roadmap';
 import { CTA } from './sections/CTA';
+import { Authors } from './sections/Authors';
 import { Footer } from './sections/Footer';
 import './landing.css';
 
@@ -44,6 +45,7 @@ export function LandingPage() {
         <PoweredBy />
         <Stack />
         <Roadmap />
+        <Authors />
         <CTA />
       </main>
       <Footer />

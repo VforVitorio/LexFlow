@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import type { Lang } from '@/i18n';
 import { ENDPOINTS } from './apiEndpoints';
 import { ApiMockup } from './ApiMockup';
@@ -10,6 +9,7 @@ export interface LayerCopy {
   title: string;
   body: string;
   bullets: string[];
+  /** Deprecated — left in the i18n schema for parity. Feature cards no longer link into the SPA. */
   linkLabel?: string;
 }
 
@@ -45,11 +45,6 @@ export function ApiFeature({ layer, lang }: Props) {
             </button>
           ))}
         </div>
-        {layer.linkLabel && (
-          <Link to="/explorer" className="feature-link">
-            {layer.linkLabel}
-          </Link>
-        )}
       </div>
       <div className="feature-art">
         <ApiMockup lang={lang} activeIdx={active} />

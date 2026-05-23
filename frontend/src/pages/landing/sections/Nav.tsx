@@ -47,7 +47,7 @@ export function Nav() {
           <a className="icon-btn" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub">
             <IconGitHub />
           </a>
-          <Link className="btn btn-primary" to="/dashboards" style={{ marginLeft: 4 }}>
+          <Link className="btn btn-primary" to="/home" style={{ marginLeft: 4 }}>
             {t('nav.cta')}
             <IconArrow />
           </Link>
