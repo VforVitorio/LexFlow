@@ -1,6 +1,28 @@
 /* LexFlow landing — ported from claude.ai/design handoff (project/landing/styles.css + mocks.css).
    Every rule is scoped under .landing-root so it cannot leak into the app shell. */
 
+/* ------------------------------------------------------------------------- */
+/* Motion tokens (#161)                                                      */
+/* ------------------------------------------------------------------------- */
+/* One easing curve site-wide, four durations. New animation work must read  */
+/* from these tokens instead of inlining `transition: ... 120ms ease` so the */
+/* whole landing feels like one product.                                     */
+
+.landing-root {
+  /* Easing — f1stratlab's `0.2, 0, 0, 1` curve. Decelerates fast then       */
+  /* lingers; reads as "calm" instead of "snappy".                           */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* Spring-flavoured bounce reserved for "interesting" feedback (active     */
+  /* tab, palette open). Keep usage rare.                                    */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Durations. Each one has ONE job — pick by intent, not by feel.          */
+  --dur-micro: 180ms;   /* hover, focus, tiny state flips                    */
+  --dur-quick: 320ms;   /* nav underline slide, tab swaps                    */
+  --dur-medium: 600ms;  /* fold-in chips, accent bars                        */
+  --dur-slow: 900ms;    /* scroll reveals, large entrances                   */
+}
+
 .landing-root {
   background: hsl(var(--bg));
   color: hsl(var(--fg));
@@ -183,25 +205,49 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   border: 1px solid transparent;
-  transition: transform 120ms cubic-bezier(.2,.7,.3,1), background 120ms, border-color 120ms, box-shadow 120ms;
+  transition: transform var(--dur-micro) var(--ease-out),
+              background var(--dur-micro) var(--ease-out),
+              border-color var(--dur-micro) var(--ease-out),
+              box-shadow var(--dur-micro) var(--ease-out);
   white-space: nowrap;
 }
 .landing-root .btn:hover { transform: translateY(-1px); }
-.landing-root .btn:active { transform: translateY(0); }
+.landing-root .btn:active { transform: scale(0.98); }
 
+/* #153 — layered shadow + lift (light theme). Two stacked shadows: a 1px   */
+/* ring keeps the button readable on hover, the soft drop-glow grows from   */
+/* 24px to 32px to communicate the press affordance.                        */
 .landing-root .btn-primary {
   background: hsl(var(--violet-500));
   color: white;
-  box-shadow: 0 1px 0 hsl(var(--violet-600)) inset, 0 8px 24px -8px hsl(var(--violet-500) / 0.5);
+  box-shadow:
+    0 0 0 1px hsl(var(--violet-600) / 0.45) inset,
+    0 0 0 1px hsl(var(--violet-300) / 0.25),
+    0 8px 24px -6px hsl(var(--violet-500) / 0.45);
 }
-.landing-root .btn-primary:hover { background: hsl(var(--violet-600)); }
+.landing-root .btn-primary:hover {
+  background: hsl(var(--violet-600));
+  box-shadow:
+    0 0 0 1px hsl(var(--violet-700) / 0.55) inset,
+    0 0 0 1px hsl(var(--violet-300) / 0.45),
+    0 12px 32px -6px hsl(var(--violet-500) / 0.55);
+}
 
 [data-theme='dark'] .landing-root .btn-primary {
   background: hsl(var(--violet-400));
   color: hsl(245 40% 8%);
-  box-shadow: 0 0 0 1px hsl(var(--violet-300) / 0.4) inset, 0 8px 28px -6px hsl(var(--violet-400) / 0.45);
+  box-shadow:
+    0 0 0 1px hsl(var(--violet-300) / 0.45) inset,
+    0 0 0 1px hsl(var(--violet-300) / 0.25),
+    0 8px 28px -6px hsl(var(--violet-400) / 0.45);
 }
-[data-theme='dark'] .landing-root .btn-primary:hover { background: hsl(var(--violet-300)); }
+[data-theme='dark'] .landing-root .btn-primary:hover {
+  background: hsl(var(--violet-300));
+  box-shadow:
+    0 0 0 1px hsl(var(--violet-200) / 0.6) inset,
+    0 0 0 1px hsl(var(--violet-200) / 0.5),
+    0 12px 36px -6px hsl(var(--violet-400) / 0.55);
+}
 
 .landing-root .btn-secondary {
   background: hsl(var(--surface));
@@ -233,6 +279,27 @@
   width: 6px; height: 6px; border-radius: 999px;
   background: hsl(var(--violet-500));
   box-shadow: 0 0 12px hsl(var(--violet-500) / 0.6);
+  /* #154 — breathing dot. Subtle pulse to communicate "live content".      */
+  animation: lf-pulse-dot 1.8s ease-in-out infinite;
+}
+/* #154 — section eyebrow hairline bar. A 24px gradient stroke after the   */
+/* uppercase caption gives each section title editorial polish without an  */
+/* extra DOM node.                                                          */
+.landing-root .section-eyebrow .label-caps::after {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  margin-left: 10px;
+  vertical-align: middle;
+  background: linear-gradient(to right, hsl(var(--violet-500) / 0.6), transparent);
+}
+@keyframes lf-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.42; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .section-eyebrow .dot { animation: none; }
 }
 .landing-root .section-title {
   font-size: clamp(28px, 4vw, 44px);
@@ -257,6 +324,38 @@
   padding: 80px 0 64px;
   overflow: hidden;
 }
+
+/* #150 — Halo + masked grid backdrop. Two pointer-events-none layers      */
+/* behind the hero copy. The halo is a soft radial gradient anchored to    */
+/* the top centre. The grid is a 64×64 lattice masked with a radial        */
+/* gradient so it only appears in the centre and dissolves to the edges —  */
+/* hints at "data / structure" without any image asset.                     */
+.landing-root .hero-halo,
+.landing-root .hero-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.landing-root .hero-halo {
+  background: radial-gradient(ellipse 120% 80% at 50% 0%,
+    hsl(var(--violet-500) / 0.22),
+    transparent 70%);
+}
+[data-theme='light'] .landing-root .hero-halo {
+  background: radial-gradient(ellipse 120% 80% at 50% 0%,
+    hsl(var(--violet-500) / 0.12),
+    transparent 70%);
+}
+.landing-root .hero-grid-lines {
+  background-image:
+    linear-gradient(to right,  hsl(var(--fg) / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--fg) / 0.05) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 25%, transparent 78%);
+          mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 25%, transparent 78%);
+}
+.landing-root .hero > .lf-container { position: relative; z-index: 1; }
 .landing-root .hero-grid {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
@@ -292,11 +391,45 @@
 }
 [data-theme='dark'] .landing-root .hero-badge .pill { color: hsl(38 95% 72%); }
 
+/* #154 — pulsing 6px dot embedded in the status pill. Breathes opacity     */
+/* 1 → 0.4 → 1 every 1.8 s. Pure currentColor so it inherits the pill's    */
+/* amber tint and adapts to dark mode automatically.                        */
+.landing-root .hero-badge .pill .pulse-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+  margin-right: 6px;
+  vertical-align: middle;
+  animation: lf-pulse-dot 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .hero-badge .pill .pulse-dot { animation: none; }
+}
+
 .landing-root .hero h1 {
   font-size: clamp(40px, 6.4vw, 72px);
   line-height: 0.98;
   letter-spacing: -0.035em;
   text-wrap: balance;
+}
+/* #150 — first half of the H1 also gradient-clipped. On dark mode it is a */
+/* vertical white-to-lilac fade; on light mode an indigo-to-slate fade.    */
+/* Together with the `.accent` second line, the headline reads as one      */
+/* continuous beam of light rather than two flat colours.                  */
+.landing-root .hero h1 .lead {
+  background: linear-gradient(180deg, hsl(var(--fg)) 0%, hsl(var(--fg) / 0.78) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme='light'] .landing-root .hero h1 .lead {
+  background: linear-gradient(180deg, hsl(var(--fg)) 0%, hsl(232 35% 22%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .landing-root .hero h1 .accent {
   background: linear-gradient(102deg,
@@ -436,6 +569,31 @@
   border-radius: 20px;
   overflow: hidden;
   position: relative;
+  /* #155 — resting card has a soft drop + an inset highlight at the top so */
+  /* it reads as a slightly lifted surface.                                  */
+  box-shadow:
+    0 2px 10px hsl(232 30% 10% / 0.05),
+    inset 0 1px 0 hsl(var(--fg) / 0.04);
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+/* #155 — hover: brighten the surface, deepen the border, swap to a 40px   */
+/* drop. All on the same single easing curve so the card feels like the   */
+/* same product as the buttons (#153).                                      */
+.landing-root .feature:hover {
+  border-color: hsl(var(--border-strong));
+  background-color: hsl(var(--surface-2) / 0.55);
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 40px -8px hsl(232 30% 10% / 0.15),
+    inset 0 1px 0 hsl(var(--fg) / 0.06);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .feature { transition: none; }
+  .landing-root .feature:hover { transform: none; }
 }
 .landing-root .feature.reverse { grid-template-columns: 1.15fr 1fr; }
 .landing-root .feature.reverse .feature-copy { order: 2; }
@@ -1417,3 +1575,355 @@
     transition: none;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* #160 — Mobile hint nudge                                                   */
+/* -------------------------------------------------------------------------- */
+/* Small floating "→" badge that nudges twice and fades. Hints to phone       */
+/* users that an SVG / mockup is wider than the viewport and can be panned.   */
+/* Attach with the .lf-hint class on any wrapper.                              */
+
+.landing-root .lf-hint {
+  position: relative;
+}
+@media (max-width: 760px) {
+  .landing-root .lf-hint::after {
+    content: '→';
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: hsl(var(--violet-500) / 0.85);
+    color: white;
+    font-size: 16px;
+    line-height: 1;
+    pointer-events: none;
+    box-shadow: 0 0 18px hsl(var(--violet-500) / 0.55);
+    animation:
+      lf-hint-nudge 1.4s ease-in-out 2,
+      lf-hint-fade 0.5s ease 3.6s forwards;
+  }
+}
+@keyframes lf-hint-nudge {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(8px); }
+}
+@keyframes lf-hint-fade {
+  to { opacity: 0; visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .lf-hint::after {
+    animation: lf-hint-fade 0.3s ease 1s forwards;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* #159 — Terminal-chrome block + copy button                                 */
+/* -------------------------------------------------------------------------- */
+/* macOS-style chrome (three dots + label) on top of a mono pre block, with  */
+/* a copy button in the upper-right that scales on press.                     */
+
+.landing-root .lf-term {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface-2));
+  box-shadow:
+    0 2px 10px hsl(232 30% 10% / 0.06),
+    inset 0 1px 0 hsl(var(--fg) / 0.04);
+}
+.landing-root .lf-term-chrome {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  background: hsl(var(--bg) / 0.6);
+  border-bottom: 1px solid hsl(var(--border));
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .lf-term-chrome .lf-term-dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.landing-root .lf-term-chrome .lf-term-dots span {
+  width: 9px; height: 9px; border-radius: 999px;
+  background: hsl(var(--border-strong));
+}
+.landing-root .lf-term-chrome .lf-term-dots span:nth-child(1) { background: hsl(354 70% 60%); }
+.landing-root .lf-term-chrome .lf-term-dots span:nth-child(2) { background: hsl(36 95% 60%); }
+.landing-root .lf-term-chrome .lf-term-dots span:nth-child(3) { background: hsl(152 60% 50%); }
+.landing-root .lf-term-chrome .lf-term-title { letter-spacing: 0.02em; }
+.landing-root .lf-term-chrome .lf-term-spacer { flex: 1; }
+.landing-root .lf-term-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 6px;
+  background: hsl(var(--surface));
+  color: hsl(var(--muted-fg));
+  cursor: pointer;
+  transition:
+    background var(--dur-micro) var(--ease-out),
+    color var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.landing-root .lf-term-copy:hover {
+  background: hsl(var(--bg));
+  color: hsl(var(--fg));
+  border-color: hsl(var(--border-strong));
+}
+.landing-root .lf-term-copy:active { transform: scale(0.94); }
+.landing-root .lf-term-copy[data-copied='true'] {
+  color: hsl(152 60% 45%);
+  border-color: hsl(152 60% 45% / 0.45);
+}
+.landing-root .lf-term-body {
+  padding: 18px 20px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: hsl(var(--fg) / 0.92);
+  overflow-x: auto;
+  white-space: pre;
+}
+.landing-root .lf-term-body .c-comment { color: hsl(var(--muted-fg) / 0.7); }
+.landing-root .lf-term-body .c-cmd     { color: hsl(var(--violet-300, var(--violet-500))); }
+.landing-root .lf-term-body .c-str     { color: hsl(152 50% 55%); }
+.landing-root .lf-term-body .c-flag    { color: hsl(36 75% 55%); }
+[data-theme='light'] .landing-root .lf-term-body { color: hsl(var(--fg)); }
+[data-theme='light'] .landing-root .lf-term-body .c-cmd { color: hsl(232 70% 36%); }
+
+/* -------------------------------------------------------------------------- */
+/* #151 — Nav scroll-spy moving underline                                     */
+/* -------------------------------------------------------------------------- */
+/* The .nav-links is relatively positioned and contains an absolutely        */
+/* positioned .nav-underline span. Nav.tsx measures the active link and      */
+/* writes the matching `translateX` + width on inline style.                  */
+
+.landing-root .nav-links {
+  position: relative;
+}
+.landing-root .nav-links .nav-underline {
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  height: 2px;
+  border-radius: 999px;
+  background: hsl(var(--violet-500));
+  box-shadow: 0 0 8px hsl(var(--violet-500) / 0.55);
+  transition:
+    transform var(--dur-quick) var(--ease-out),
+    width var(--dur-quick) var(--ease-out),
+    opacity var(--dur-quick) var(--ease-out);
+  pointer-events: none;
+  /* Default transform so the span doesn't visually jump on first measure. */
+  transform: translateX(0);
+}
+.landing-root .nav-links a[aria-current='true'],
+.landing-root .nav-links a.active {
+  color: hsl(var(--fg));
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .nav-links .nav-underline { transition: opacity var(--dur-micro) var(--ease-out); }
+}
+
+/* -------------------------------------------------------------------------- */
+/* #156 — Stack rows: F8 detail-panel idiom adapted                           */
+/* -------------------------------------------------------------------------- */
+/* The Stack section keeps its two-column layout (backend / frontend) but    */
+/* each row picks up the f1stratlab detail-row treatment on hover:           */
+/* - a 3px indigo bar scales in from the left                                */
+/* - the row indents 4px                                                     */
+/* - background washes with a 6% indigo tint                                 */
+
+.landing-root .stack-row {
+  position: relative;
+  transition:
+    transform var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out);
+}
+.landing-root .stack-row::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 999px;
+  background: hsl(var(--violet-500));
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--dur-quick) var(--ease-out);
+}
+.landing-root .stack-row:hover {
+  transform: translateX(4px);
+  background-color: hsl(var(--violet-500) / 0.06);
+}
+.landing-root .stack-row:hover::before { transform: scaleY(1); }
+.landing-root .stack-row:hover .k { color: hsl(var(--fg)); }
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .stack-row,
+  .landing-root .stack-row::before { transition: none; }
+  .landing-root .stack-row:hover { transform: none; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* #158 — Chat mockup typewriter / streaming / chip-in                        */
+/* -------------------------------------------------------------------------- */
+
+.landing-root .lf-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  background: hsl(var(--violet-500));
+  animation: lf-caret-blink 0.95s steps(1) infinite;
+}
+@keyframes lf-caret-blink {
+  0%, 50%  { opacity: 1; }
+  51%,100% { opacity: 0; }
+}
+
+.landing-root .lf-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: hsl(var(--surface-2));
+  width: fit-content;
+}
+.landing-root .lf-thinking span {
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: hsl(var(--muted-fg));
+  animation: lf-thinking-dot 1.1s ease-in-out infinite both;
+}
+.landing-root .lf-thinking span:nth-child(2) { animation-delay: 0.18s; }
+.landing-root .lf-thinking span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes lf-thinking-dot {
+  0%, 80%, 100% { transform: scale(0.55); opacity: 0.4; }
+  40%           { transform: scale(1);   opacity: 1;   }
+}
+
+.landing-root .lf-chip-in {
+  animation: lf-chip-in var(--dur-medium) var(--ease-out) both;
+}
+@keyframes lf-chip-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .lf-caret { animation: none; opacity: 0; }
+  .landing-root .lf-thinking span { animation: none; }
+  .landing-root .lf-chip-in { animation: none; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* #157 — Scroll-pinned narrative                                             */
+/* -------------------------------------------------------------------------- */
+
+.landing-root .hiw-section {
+  position: relative;
+  min-height: 280vh;
+}
+.landing-root .hiw-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.landing-root .hiw-stage-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .landing-root .hiw-stage-inner { grid-template-columns: 1fr; }
+  .landing-root .hiw-anchor { display: none; }
+}
+.landing-root .hiw-copy { max-width: 540px; }
+.landing-root .hiw-scenes {
+  position: relative;
+  margin-top: 24px;
+  min-height: 180px;
+}
+.landing-root .hiw-scene {
+  position: absolute;
+  inset: 0;
+}
+.landing-root .hiw-scene h3 {
+  font-size: 22px;
+  margin: 12px 0 8px;
+}
+.landing-root .hiw-scene p {
+  font-size: 15px;
+  line-height: 1.55;
+}
+.landing-root .hiw-anchor {
+  display: grid;
+  place-items: center;
+  color: hsl(var(--violet-500));
+}
+
+/* Progress rail */
+.landing-root .hiw-rail {
+  position: absolute;
+  right: 24px;
+  top: 30%;
+  height: 40%;
+  width: 4px;
+}
+.landing-root .hiw-rail-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: hsl(var(--border));
+}
+.landing-root .hiw-rail-fill {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  border-radius: 999px;
+  background: hsl(var(--violet-500));
+  box-shadow: 0 0 12px hsl(var(--violet-500) / 0.45);
+}
+.landing-root .hiw-rail-tick {
+  position: absolute;
+  left: -3px;
+  width: 10px; height: 10px;
+  border-radius: 999px;
+  background: hsl(var(--border-strong));
+}
+
+/* Reduced-motion fallback layout */
+.landing-root .hiw-static { padding: 96px 0; }
+.landing-root .hiw-static-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+.landing-root .hiw-static-card {
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+}
+.landing-root .hiw-static-card h3 { font-size: 18px; margin: 12px 0 6px; }
+.landing-root .hiw-static-card p { font-size: 14px; line-height: 1.55; }

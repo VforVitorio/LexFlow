@@ -16,5 +16,18 @@
   <body class="h-full bg-bg text-fg antialiased">
     <div id="root" class="h-full"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!--
+      #162 — Cloudflare Web Analytics.
+      Cookieless, RGPD-friendly, ~3KB. Reports page views + web vitals.
+      Paste your token (Cloudflare Dashboard → Web Analytics → Add a site
+      → "vforvitorio.github.io/LexFlow") into VITE_CF_BEACON_TOKEN at
+      build time (.env / GitHub Actions secret). The deploy workflow
+      substitutes the value into the placeholder below.
+    -->
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "__VITE_CF_BEACON_TOKEN__"}'
+    ></script>
   </body>
 </html>

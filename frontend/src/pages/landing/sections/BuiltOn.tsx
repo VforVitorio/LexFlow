@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
-
-interface TerminalLine { type: 'comment' | 'cmd'; text: string; }
+import { TerminalBlock, type TerminalLine } from '../components/TerminalBlock';
 
 export function BuiltOn() {
   const { t } = useTranslation('landing');
@@ -27,21 +26,10 @@ export function BuiltOn() {
               {t('builtOnCta')}
             </a>
           </div>
-          <div className="terminal">
-            <div className="terminal-bar">
-              <span className="dot r" /><span className="dot y" /><span className="dot g" />
-              <span className="name">~/LexFlow</span>
-            </div>
-            <div className="terminal-body">
-              {terminal.map((line, i) => (
-                <div key={i}>
-                  {line.type === 'comment'
-                    ? <span className="comment">{line.text}</span>
-                    : <><span className="prompt">$</span>{line.text}</>}
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* #159 — migrated from the bespoke .terminal block to the new
+              reusable TerminalBlock that ships with a copy-to-clipboard
+              button and macOS chrome. The i18n shape stays the same. */}
+          <TerminalBlock title="~/LexFlow" lines={terminal} />
         </div>
       </div>
     </section>

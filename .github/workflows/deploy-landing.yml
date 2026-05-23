@@ -57,6 +57,23 @@ jobs:
       - name: SPA fallback (index.html → 404.html)
         run: cp dist/index.html dist/404.html
 
+      # #162 — substitute Cloudflare Web Analytics beacon token. The HTML
+      # ships with the placeholder __VITE_CF_BEACON_TOKEN__; this step
+      # replaces it with the secret. We can't gate the step on the secret
+      # being set (GitHub Actions doesn't expose `secrets.*` in step `if:`),
+      # so the shell checks at run-time and is a graceful no-op when the
+      # secret is unset.
+      - name: Inject Cloudflare Analytics token
+        env:
+          CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
+        run: |
+          if [ -n "$CF_BEACON_TOKEN" ]; then
+            sed -i "s/__VITE_CF_BEACON_TOKEN__/${CF_BEACON_TOKEN}/g" dist/index.html dist/404.html
+            echo "Cloudflare Web Analytics beacon token injected."
+          else
+            echo "CF_BEACON_TOKEN secret not set; leaving placeholder (Cloudflare will ignore it)."
+          fi
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
