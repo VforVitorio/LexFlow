@@ -32,8 +32,9 @@
   font-size: 16px;
   line-height: 1.5;
   transition: background-color 200ms ease, color 200ms ease;
-  min-height: 100%;
-  overflow-y: auto;
+  /* No `overflow-y: auto` here — see comment in index.css. Letting the body
+   * scroll keeps the sticky nav and the IntersectionObserver-driven
+   * underline working out of the box. */
 }
 
 .landing-root,
@@ -94,12 +95,24 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  /* Solid background instead of the translucent blur. Keeps the nav        */
-  /* perfectly readable on top of the hero halo + grid backdrop, and        */
-  /* matches the f1stratlab idiom of a fully opaque top bar that never      */
-  /* visually mixes with the page below.                                    */
+  /* Solid background. Keeps the nav readable on top of the hero halo +
+   * grid backdrop, and matches the f1stratlab idiom of a fully opaque top
+   * bar that never visually mixes with the page below.                    */
   background: hsl(var(--bg));
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+/* Toggled by Nav.tsx once the viewport has scrolled past ~24 px. The
+ * border + soft drop-shadow give the bar a "lifted" feel as content slides
+ * underneath it, mirroring f1stratlab-web's `.nav-bar.scrolled` rule. */
+.landing-root .nav.is-scrolled {
+  border-bottom-color: hsl(var(--border));
+  box-shadow: 0 10px 24px -16px hsl(232 40% 5% / 0.45);
+}
+[data-theme='light'] .landing-root .nav.is-scrolled {
+  box-shadow: 0 10px 24px -16px hsl(232 35% 30% / 0.18);
 }
 .landing-root .nav-inner {
   display: flex;
@@ -1943,3 +1956,68 @@
 
 .landing-root .section-eyebrow .label-caps { color: hsl(var(--violet-300, 252 95% 76%)); }
 [data-theme='light'] .landing-root .section-eyebrow .label-caps { color: hsl(var(--violet-600, 252 70% 50%)); }
+
+/* -------------------------------------------------------------------------- */
+/* Mobile responsive sweep (≤ 720 px tablets, ≤ 480 px phones)               */
+/* -------------------------------------------------------------------------- */
+/* Targets the gaps left by the per-component @media blocks above. Touching   */
+/* the nav, hero, container padding, and the heavier sections so the landing  */
+/* looks shipped — not "desktop site shrunk".                                 */
+
+@media (max-width: 720px) {
+  .landing-root .lf-container { padding: 0 18px; }
+
+  /* Nav: hide the centre section links on phones; brand + actions only.    */
+  /* The page anchors still work (the user can scroll to them), they just   */
+  /* don't take 60% of the bar on a 375 px screen.                          */
+  .landing-root .nav-inner { height: 56px; gap: 12px; }
+  .landing-root .nav-links { display: none; }
+  .landing-root .nav-actions { gap: 4px; }
+  .landing-root .nav-actions .seg { display: none; }
+  .landing-root .nav-actions .btn-primary { padding: 0 12px; font-size: 13px; }
+
+  /* Hero: shrink the eyebrow and tighten the meta row so the H1 keeps      */
+  /* breathing room. Hide the secondary CTA's label, keep the icon.         */
+  .landing-root .hero { padding: 56px 0 72px; }
+  .landing-root .hero-eyebrow {
+    font-size: 10.5px;
+    gap: 8px;
+    letter-spacing: 0.12em;
+  }
+  .landing-root .hero h1 { font-size: clamp(34px, 9vw, 44px); }
+  .landing-root .hero-sub { font-size: 16px; margin-top: 18px; }
+  .landing-root .hero-cta { flex-wrap: wrap; gap: 10px; }
+  .landing-root .hero-cta .btn-lg { flex: 1 1 auto; justify-content: center; }
+  .landing-root .hero-meta { gap: 14px; flex-wrap: wrap; }
+  .landing-root .hero-meta span { font-size: 12px; }
+
+  /* Section headings + container rhythm. Drops the giant H2 on phones.     */
+  .landing-root h2,
+  .landing-root .section-title { font-size: clamp(26px, 6.4vw, 34px); }
+  .landing-root section { padding: 64px 0; }
+  .landing-root section.tight { padding: 48px 0; }
+
+  /* Mockups must never spill outside the viewport. Layers already drops to */
+  /* one column at 900 px; this caps the SVG widths for the residual cases.*/
+  .landing-root .feature-art,
+  .landing-root .feature-art-wrap { width: 100%; }
+  .landing-root .feature-art svg,
+  .landing-root .feature-art img { max-width: 100%; height: auto; }
+
+  /* Authors grid → single column on phones. */
+  .landing-root .authors-grid { grid-template-columns: 1fr; }
+
+  /* Footer: stack columns. */
+  .landing-root .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+
+@media (max-width: 480px) {
+  /* On true-phone sizes, drop the eyebrow's middle descriptor to keep one  */
+  /* clean line. The leftmost dot + LEXFLOW + version still anchor it.     */
+  .landing-root .hero-eyebrow .hero-eyebrow-sep:nth-of-type(2),
+  .landing-root .hero-eyebrow span:nth-of-type(3) { display: none; }
+
+  /* Buttons: full width and stacked. */
+  .landing-root .hero-cta { flex-direction: column; align-items: stretch; }
+  .landing-root .hero-cta .btn-lg { width: 100%; }
+}

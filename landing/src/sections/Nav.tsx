@@ -26,30 +26,36 @@ export function Nav() {
 
   // #151 — scroll-spy moving underline. IntersectionObserver picks the
   // section closest to the mid-line of the viewport; a single absolutely
-  // positioned span slides between the matching nav links.
+  // positioned span slides between the matching nav links. Mirrors
+  // f1stratlab-web's `.nav-bar` idiom (docs/_review/landing-f1stratlab-...).
   const linkRefs = useRef<Record<NavSection, HTMLAnchorElement | null>>({
     layers: null, stack: null, roadmap: null,
   });
   const navListRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState<NavSection | null>(null);
   const [rect, setRect] = useState<UnderlineRect>(HIDDEN);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const observer = new IntersectionObserver(
       (entries) => {
-        // Pick the entry currently intersecting with the highest ratio. The
-        // 45% / 45% rootMargin pins the observer to the middle of the
-        // viewport, so the active section is whichever passes the centre.
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length === 0) return;
-        const top = visible.reduce((best, e) =>
-          e.intersectionRatio > best.intersectionRatio ? e : best
-        );
-        const id = top.target.id as NavSection;
+        // Tall sections often span past both edges of the 10% band, so
+        // `isIntersecting` may be false while `intersectionRatio === 0` —
+        // we still want them active when their midline is in the band. We
+        // pick the entry with the highest ratio among all observed (not
+        // just intersecting) so very tall sections still register.
+        const ranked = entries
+          .filter((e) => e.intersectionRatio > 0 || e.isIntersecting)
+          .reduce<IntersectionObserverEntry | null>(
+            (best, e) => (!best || e.intersectionRatio > best.intersectionRatio ? e : best),
+            null,
+          );
+        if (!ranked) return;
+        const id = ranked.target.id as NavSection;
         if (NAV_SECTIONS.includes(id)) setActive(id);
       },
-      { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.5, 1] }
+      { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
     );
     NAV_SECTIONS.forEach((id) => {
       const el = document.getElementById(id);
@@ -58,17 +64,36 @@ export function Nav() {
     return () => observer.disconnect();
   }, []);
 
+  // Lift shadow + bottom-border once we've moved past the hero. 24 px gives
+  // it a beat after the very first scroll instead of triggering on every
+  // micro-bounce of trackpad inertia.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Re-measure the underline on resize so it never drifts off the link
+  // (fonts loading late, viewport rotation, etc.).
   useEffect(() => {
     if (!active || !navListRef.current) { setRect(HIDDEN); return; }
-    const link = linkRefs.current[active];
-    if (!link) { setRect(HIDDEN); return; }
-    const parent = navListRef.current.getBoundingClientRect();
-    const child = link.getBoundingClientRect();
-    setRect({ left: child.left - parent.left, width: child.width, opacity: 1 });
+    const measure = () => {
+      const list = navListRef.current;
+      const link = linkRefs.current[active];
+      if (!list || !link) { setRect(HIDDEN); return; }
+      const parent = list.getBoundingClientRect();
+      const child = link.getBoundingClientRect();
+      setRect({ left: child.left - parent.left, width: child.width, opacity: 1 });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
   }, [active]);
 
   return (
-    <header className="nav">
+    <header className={`nav${scrolled ? ' is-scrolled' : ''}`}>
       <div className="lf-container nav-inner">
         <a href="#top" className="nav-brand">
           <LandingBrandMark size={26} />
