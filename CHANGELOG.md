@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.2](https://github.com/VforVitorio/LexFlow/compare/v0.4.1...v0.4.2) (2026-05-23)
+
+
+### Bug Fixes
+
+* **landing:** drop leftover 280vh sticky CSS that left a black gap below HowItWorks ([1b623fe](https://github.com/VforVitorio/LexFlow/commit/1b623fe20ae9f0c383be9f62b6d9885cf3882301))
+* **landing:** drop leftover 280vh sticky-scroll CSS from HowItWorks ([ae103e7](https://github.com/VforVitorio/LexFlow/commit/ae103e737863d0f3b740fc285fba44c3ce96a7d0))
+
 ## [0.4.1](https://github.com/VforVitorio/LexFlow/compare/v0.4.0...v0.4.1) (2026-05-23)
 
 
