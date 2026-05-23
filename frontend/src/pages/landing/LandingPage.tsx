@@ -10,7 +10,10 @@ import { PoweredBy } from './sections/PoweredBy';
 import { Stack } from './sections/Stack';
 import { Roadmap } from './sections/Roadmap';
 import { CTA } from './sections/CTA';
+import { Authors } from './sections/Authors';
+import { HowItWorks } from './sections/HowItWorks';
 import { Footer } from './sections/Footer';
+import { RevealSection } from './components/RevealSection';
 import './landing.css';
 
 /**
@@ -37,14 +40,24 @@ export function LandingPage() {
     <div className="landing-root">
       <Nav />
       <main>
+        {/* Hero stays uncovered so first paint shows the landing. Every
+            section below fades + slides into view on first scroll
+            (#152). */}
         <Hero />
-        <StatBar />
-        <Layers lang={lang} />
-        <BuiltOn />
-        <PoweredBy />
-        <Stack />
-        <Roadmap />
-        <CTA />
+        <RevealSection><StatBar /></RevealSection>
+        <RevealSection><Layers lang={lang} /></RevealSection>
+        {/* #157 — scroll-pinned narrative between Layers and BuiltOn.
+            HowItWorks already manages its own intersection logic via
+            framer-motion's useScroll, so we DON'T wrap it in a
+            RevealSection (the wrapping element would break the offset
+            measurement). */}
+        <HowItWorks />
+        <RevealSection><BuiltOn /></RevealSection>
+        <RevealSection><PoweredBy /></RevealSection>
+        <RevealSection><Stack /></RevealSection>
+        <RevealSection><Roadmap /></RevealSection>
+        <RevealSection><Authors /></RevealSection>
+        <RevealSection><CTA /></RevealSection>
       </main>
       <Footer />
     </div>

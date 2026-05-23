@@ -81,6 +81,25 @@
       "linkLabel": "Open dashboards →"
     }
   ],
+  "howItWorks": {
+    "eyebrow": "How it works",
+    "title": "From Markdown to answer in one pass.",
+    "sub": "Each layer stacks on the previous one. The parser builds the graph, the graph grounds the chat, the API keeps every client in sync.",
+    "scenes": [
+      {
+        "title": "Parser and registry",
+        "body": "Markdown from legalize-es, YAML frontmatter, recursive sections. Result: a typed LawRegistry the rest of the stack queries without reparsing."
+      },
+      {
+        "title": "Knowledge graph",
+        "body": "Cross-references resolve to BOE identifiers and become edges. PageRank, communities and shortest paths all sit on the same NetworkX graph."
+      },
+      {
+        "title": "Chat with MCP tools",
+        "body": "The chosen model (Ollama, OpenAI, Anthropic, Google) calls search_law, get_neighbors or get_article; the chat answers with real citations from the corpus."
+      }
+    ]
+  },
   "builtOnEyebrow": "Built on open data",
   "builtOnTitle": "Powered by legalize-es. Distributed as a single binary.",
   "builtOnBody": "LexFlow is a thin, intelligent layer over legalize-es — an open Git-versioned repository of Spanish legislation in Markdown. The final deliverable is a standalone binary per OS: no Docker, no Python install, just download and run.",
@@ -138,6 +157,25 @@
     { "name": "Standalone distribution", "desc": "PyInstaller binaries: .exe · .dmg · .AppImage. Docker done.", "status": "progress" },
     { "name": "Semantic search & RAG", "desc": "Embeddings, vector index, retrieval-augmented chat.", "status": "planned" }
   ],
+  "authors": {
+    "eyebrow": "Behind the project",
+    "title": "The people who build it.",
+    "sub": "LexFlow is the open-source work of two people. If the direction of the project interests you, or you'd like to contribute, their GitHub profile is where the code lives.",
+    "list": [
+      {
+        "login": "VforVitorio",
+        "name": "Víctor",
+        "role": "Author · architecture · backend + frontend",
+        "bio": "Owns the architecture, maintains the repository, writes most of the FastAPI backend and React frontend, and coordinates release notes."
+      },
+      {
+        "login": "Santisoutoo",
+        "name": "Santiago",
+        "role": "Contributor · co-maintainer",
+        "bio": "Co-maintainer on the project. Assigned to every active epic, contributes PR reviews and strengthens the graph and chat code."
+      }
+    ]
+  },
   "ctaEyebrow": "Try it locally",
   "ctaTitle": "Spin it up in under a minute.",
   "ctaSub": "Clone the repo, install with uv, and the full API is live at localhost:8000 with interactive docs. Star the project to follow along.",

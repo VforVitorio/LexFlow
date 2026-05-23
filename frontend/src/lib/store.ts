@@ -82,9 +82,40 @@ export const useUi = create<UiState>()(
   )
 );
 
-/** Side-effect: keep <html data-theme> in sync with the store. */
+/**
+ * Side-effect: keep <html data-theme> in sync with the store.
+ *
+ * When the user toggles the theme we wrap the attribute flip in the View
+ * Transitions API where available. The browser snapshots the page, applies
+ * the change, and cross-fades between the two — a calm "mindfulness" feel
+ * that beats any CSS keyframe we could hand-write. Browsers without the API
+ * just snap the attribute (no regression).
+ *
+ * The fade CSS lives in `frontend/src/index.css` (::view-transition-* +
+ * `.theme-fade-paint` fallback rules).
+ */
 if (typeof window !== 'undefined') {
-  const apply = (t: Theme) => document.documentElement.setAttribute('data-theme', t);
+  const root = document.documentElement;
+  const apply = (t: Theme) => root.setAttribute('data-theme', t);
+
+  // Honour the persisted theme on first paint (no animation — the user
+  // hasn't done anything yet).
   apply(useUi.getState().theme);
-  useUi.subscribe((s, prev) => { if (s.theme !== prev.theme) apply(s.theme); });
+
+  useUi.subscribe((s, prev) => {
+    if (s.theme === prev.theme) return;
+    type ViewTransitionDoc = Document & {
+      startViewTransition?: (cb: () => void) => unknown;
+    };
+    const doc = document as ViewTransitionDoc;
+    if (typeof doc.startViewTransition === 'function') {
+      doc.startViewTransition(() => apply(s.theme));
+    } else {
+      // Fallback for Firefox + older Safari: brief opacity flash on the
+      // root, then a slow colour transition handled by index.css.
+      root.classList.add('theme-fade-paint');
+      apply(s.theme);
+      window.setTimeout(() => root.classList.remove('theme-fade-paint'), 480);
+    }
+  });
 }

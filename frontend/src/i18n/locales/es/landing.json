@@ -81,6 +81,25 @@
       "linkLabel": "Abrir los cuadros de mando →"
     }
   ],
+  "howItWorks": {
+    "eyebrow": "Cómo funciona",
+    "title": "De Markdown a respuesta en una pasada.",
+    "sub": "Cada capa se monta sobre la anterior. El parser produce el grafo, el grafo da contexto al chat y la API mantiene a todo el mundo en la misma página.",
+    "scenes": [
+      {
+        "title": "Parser y registro",
+        "body": "Markdown de legalize-es, metadata YAML, secciones recursivas. Resultado: un LawRegistry tipado que el resto del stack consulta sin reparsear."
+      },
+      {
+        "title": "Grafo de conocimiento",
+        "body": "Las referencias cruzadas se resuelven a BOE identifiers y entran como aristas. PageRank, comunidades y caminos cortos viven sobre ese mismo NetworkX."
+      },
+      {
+        "title": "Chat con tools MCP",
+        "body": "El modelo elegido (Ollama, OpenAI, Anthropic, Google) llama a search_law, get_neighbors o get_article; el chat responde con citas reales del corpus."
+      }
+    ]
+  },
   "builtOnEyebrow": "Construido sobre datos abiertos",
   "builtOnTitle": "Sobre legalize-es. Distribuido como un único binario.",
   "builtOnBody": "LexFlow es una capa fina e inteligente sobre legalize-es — un repositorio abierto y versionado con Git de legislación española en Markdown. El producto final es un binario standalone por sistema operativo: sin Docker, sin instalar Python, solo descargar y ejecutar.",
@@ -138,6 +157,25 @@
     { "name": "Distribución standalone", "desc": "Binarios PyInstaller: .exe · .dmg · .AppImage. Docker hecho.", "status": "progress" },
     { "name": "Búsqueda semántica y RAG", "desc": "Embeddings, índice vectorial, chat aumentado por retrieval.", "status": "planned" }
   ],
+  "authors": {
+    "eyebrow": "Detrás del proyecto",
+    "title": "Las personas que lo construyen.",
+    "sub": "LexFlow es un trabajo open source de dos personas. Si te interesa el rumbo del proyecto o quieres contribuir, su perfil en GitHub es el sitio donde el código vive.",
+    "list": [
+      {
+        "login": "VforVitorio",
+        "name": "Víctor",
+        "role": "Autor · arquitectura · backend + frontend",
+        "bio": "Diseña la arquitectura, mantiene el repositorio, escribe la mayor parte del backend FastAPI y del frontend React, y coordina las release notes."
+      },
+      {
+        "login": "Santisoutoo",
+        "name": "Santiago",
+        "role": "Contributor · co-maintainer",
+        "bio": "Co-maintainer del proyecto. Asignado a todas las epics activas, contribuye revisiones de PR y refuerza el código del grafo y el chat."
+      }
+    ]
+  },
   "ctaEyebrow": "Pruébalo en local",
   "ctaTitle": "Arráncalo en menos de un minuto.",
   "ctaSub": "Clona el repo, instala con uv y toda la API estará viva en localhost:8000 con documentación interactiva. Dale a la estrella para seguir el proyecto.",

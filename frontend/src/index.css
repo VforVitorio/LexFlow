@@ -133,3 +133,62 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Theme transition — mindfulness fade (#user-asked)                          */
+/* -------------------------------------------------------------------------- */
+/* Two-layer strategy:                                                        */
+/*                                                                            */
+/* 1. Modern browsers (Chrome/Edge ≥ 111, Safari TP) get the View Transitions */
+/*    API via `document.startViewTransition` in `src/lib/store.ts`. The       */
+/*    browser snapshots the page and cross-fades between the two themes —    */
+/*    no CSS needed beyond timing.                                            */
+/*                                                                            */
+/* 2. Older browsers (Firefox today, older Safari) get the `.theme-fade-paint`*/
+/*    fallback: a brief background-fade overlay + the slow colour transition  */
+/*    below.                                                                  */
+/*                                                                            */
+/* The "mindfulness" feel comes from a calm 420 ms duration and a soft        */
+/* ease-out — no springs, no overshoot.                                       */
+
+html {
+  /* Transition the background and text colours of the root element so any   */
+  /* element that inherits them rides the same curve. Individual components  */
+  /* can still override.                                                     */
+  transition:
+    background-color 420ms cubic-bezier(0.2, 0, 0, 1),
+    color 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Fallback paint: a translucent indigo wash over the body for one frame to  */
+/* soften the snap on browsers without view transitions.                    */
+html.theme-fade-paint::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: hsl(var(--bg));
+  opacity: 0;
+  animation: theme-fade 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes theme-fade {
+  0%   { opacity: 0; }
+  35%  { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+
+/* View Transitions API styling (modern browsers). The default browser fade  */
+/* is OK; we just slow it down a touch to match the rest of the landing.    */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { transition: none; }
+  html.theme-fade-paint::after { animation: none; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 0.01ms; }
+}
