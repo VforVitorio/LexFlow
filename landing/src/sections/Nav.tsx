@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LandingBrandMark } from '../mocks/LandingBrandMark';
 import { GH_URL, IconArrow, IconGitHub, IconMoon, IconSun } from '../icons';
-import { useUi } from '@/lib/store';
+import { useUi } from '@/lib/theme';
 import { SUPPORTED_LANGS, type Lang } from '@/i18n';
 
 const NAV_SECTIONS = ['layers', 'stack', 'roadmap'] as const;
@@ -116,10 +115,21 @@ export function Nav() {
           <a className="icon-btn" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub">
             <IconGitHub />
           </a>
-          <Link className="btn btn-primary" to="/home" style={{ marginLeft: 4 }}>
+          {/* The marketing landing is a separate static site from the SPA
+              (see main.tsx VITE_BUILD_TARGET). The primary nav CTA points
+              to the GitHub repo so visitors who click it land on install
+              instructions, releases and source — never on a stubbed SPA
+              page running on mock data. */}
+          <a
+            className="btn btn-primary"
+            href={GH_URL}
+            target="_blank"
+            rel="noreferrer"
+            style={{ marginLeft: 4 }}
+          >
             {t('nav.cta')}
             <IconArrow />
-          </Link>
+          </a>
         </div>
       </div>
     </header>

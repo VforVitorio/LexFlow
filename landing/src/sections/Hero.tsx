@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HeroGraph } from '../mocks/HeroGraph';
 import { GH_URL, IconArrow, IconGitHub } from '../icons';
@@ -6,9 +5,8 @@ import { useLatestRelease } from '../hooks/useLatestRelease';
 
 export function Hero() {
   const { t } = useTranslation('landing');
-  // Replaces the static "pre-alpha" pill with the actual latest tag pulled
-  // from GitHub once at session start. Falls back to the translated status
-  // string while loading or if the GitHub API call fails.
+  // Pulled once at session start; tag drives the long horizontal eyebrow's
+  // version chip and falls back to the translated status while loading.
   const { tag } = useLatestRelease();
   const statusLabel = tag ?? t('hero.status');
   return (
@@ -19,13 +17,17 @@ export function Hero() {
       <div className="hero-grid-lines" aria-hidden="true" />
       <div className="lf-container hero-grid">
         <div>
-          <div className="hero-badge">
-            <span className="pill">
-              {/* #154 — pulsing dot before the "pre-alpha" / version label. */}
-              <span className="pulse-dot" aria-hidden="true" />
-              {statusLabel}
-            </span>
-            <span>{t('hero.badge')}</span>
+          {/* Long horizontal eyebrow (f1stratlab-style). Sits above the H1 as
+              a single uppercase mono line with bullet separators. */}
+          <div className="hero-eyebrow" aria-label="LexFlow status line">
+            <span className="pulse-dot" aria-hidden="true" />
+            <span>LEXFLOW</span>
+            <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
+            <span>LEGAL KNOWLEDGE GRAPH</span>
+            <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
+            <span>OPEN SOURCE</span>
+            <span className="hero-eyebrow-sep" aria-hidden="true">·</span>
+            <span>{statusLabel}</span>
           </div>
           <h1>
             {/* First half gradient-clipped (#150). Wrap in .lead so the
@@ -35,10 +37,14 @@ export function Hero() {
           </h1>
           <p className="hero-sub">{t('hero.sub')}</p>
           <div className="hero-cta">
-            <Link className="btn btn-primary btn-lg" to="/home">
+            {/* Marketing landing is a separate static site from the SPA
+                (see main.tsx VITE_BUILD_TARGET). Primary CTA goes to the
+                GitHub repo so visitors land on install / releases / source —
+                never on a stubbed SPA running on mock data. */}
+            <a className="btn btn-primary btn-lg" href={GH_URL} target="_blank" rel="noreferrer">
               {t('hero.ctaPrimary')}
               <IconArrow />
-            </Link>
+            </a>
             <a className="btn btn-secondary btn-lg" href={GH_URL} target="_blank" rel="noreferrer">
               <IconGitHub />
               {t('hero.ctaSecondary')}

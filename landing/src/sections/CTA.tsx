@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GH_URL, IconArrow, IconGitHub } from '../icons';
 
@@ -15,10 +14,12 @@ export function CTA() {
           <h2>{t('ctaTitle')}</h2>
           <p>{t('ctaSub')}</p>
           <div className="cta-actions">
-            <Link className="btn btn-primary btn-lg" to="/home">
+            {/* Marketing landing must never link into the SPA mock — both
+                CTAs go to the GitHub repo. See Nav.tsx for the same idiom. */}
+            <a className="btn btn-primary btn-lg" href={GH_URL} target="_blank" rel="noreferrer">
               {t('ctaPrimary')}
               <IconArrow />
-            </Link>
+            </a>
             <a className="btn btn-secondary btn-lg" href={GH_URL} target="_blank" rel="noreferrer">
               <IconGitHub />
               {t('ctaSecondary')}

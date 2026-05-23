@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
  *
  * --- WHERE TO CHANGE IF X CHANGES ---
  * Public favicon:  frontend/public/favicon.svg (same paths, hard-coded ids)
- * Landing variant: frontend/src/pages/landing/mocks/LandingBrandMark.tsx
+ * Landing variant: landing/src/mocks/LandingBrandMark.tsx (separate project)
  */
 export function BrandMark({
   size = 24,
