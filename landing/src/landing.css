@@ -336,7 +336,7 @@
 
 .landing-root .hero {
   position: relative;
-  padding: 80px 0 64px;
+  padding: 120px 0 96px;
   overflow: hidden;
 }
 
@@ -371,15 +371,24 @@
           mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 25%, transparent 78%);
 }
 .landing-root .hero > .lf-container { position: relative; z-index: 1; }
-.landing-root .hero-grid {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: 64px;
+
+/* Single centred column — f1stratlab idiom. The previous two-column grid
+ * with a sidekick mockup competed with the H1 for attention and mixed law
+ * metadata with stack labels in the same hover-card. The cleaner layout
+ * lets the gradient-clipped headline and the long horizontal eyebrow carry
+ * the first fold on their own. */
+.landing-root .hero-centered {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  max-width: 920px;
+  margin: 0 auto;
 }
-@media (max-width: 960px) {
-  .landing-root .hero-grid { grid-template-columns: 1fr; gap: 48px; }
-}
+.landing-root .hero-centered .hero-eyebrow { justify-content: center; }
+.landing-root .hero-centered .hero-sub { margin-left: auto; margin-right: auto; }
+.landing-root .hero-centered .hero-cta { justify-content: center; }
+.landing-root .hero-centered .hero-meta { justify-content: center; }
 
 .landing-root .hero-badge {
   display: inline-flex;
@@ -459,10 +468,11 @@
 }
 
 .landing-root .hero h1 {
-  font-size: clamp(40px, 6.4vw, 72px);
-  line-height: 0.98;
+  font-size: clamp(44px, 7.6vw, 96px);
+  line-height: 1.02;
   letter-spacing: -0.035em;
   text-wrap: balance;
+  margin: 0;
 }
 /* #150 — first half of the H1 also gradient-clipped. On dark mode it is a */
 /* vertical white-to-lilac fade; on light mode an indigo-to-slate fade.    */
@@ -530,22 +540,6 @@
   color: hsl(var(--muted-fg));
 }
 .landing-root .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
-
-/* Hero visual */
-.landing-root .hero-visual {
-  position: relative;
-  aspect-ratio: 1 / 1;
-  max-width: 520px;
-  margin-left: auto;
-}
-.landing-root .hero-visual::before {
-  content: '';
-  position: absolute;
-  inset: -10%;
-  background: radial-gradient(ellipse at center, hsl(var(--violet-500) / 0.18), transparent 60%);
-  filter: blur(40px);
-  z-index: 0;
-}
 
 /* ─── Stat bar ─── */
 

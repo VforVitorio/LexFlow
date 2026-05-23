@@ -9,9 +9,9 @@
   "hero": {
     "status": "pre-alpha",
     "badge": "Open source · Apache 2.0",
-    "title1": "Spanish legislation,",
-    "title2": "alive and connected.",
-    "sub": "An open-source platform to actually understand Spanish law — a knowledge graph that wires every cross-reference together, an AI chat that cites the real BOE, and dashboards that show how the law evolves over time. All on top of the legalize-es corpus.",
+    "title1": "Spanish law,",
+    "title2": "walked like a graph.",
+    "sub": "Open-source platform to actually explore Spanish legislation. A knowledge graph wires every cross-reference together, an AI chat cites the real BOE, and dashboards show how the law evolves over time.",
     "ctaPrimary": "Try LexFlow",
     "ctaSecondary": "View on GitHub",
     "meta1": "Python 3.12 · FastAPI",
