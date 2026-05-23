@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/shell/AppShell';
-import { LandingPage } from '@/pages/landing/LandingPage';
 import { HomePage } from '@/pages/HomePage';
 import { ExplorerPage } from '@/pages/ExplorerPage';
 import { LawDetailPage } from '@/pages/LawDetailPage';
@@ -13,11 +12,13 @@ import { SearchResultsPage } from '@/pages/SearchResultsPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 
+// The marketing landing lives in a completely separate Vite project under
+// ../landing — it has its own build, deps and GitHub Pages deploy. The SPA
+// owns only the application surface; `/` redirects to the home dashboard.
 export function App() {
   return (
     <Routes>
-      {/* Public marketing surface — no AppShell wrapper. */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
 
       {/* First-launch gate; nav to /onboarding from a host trigger when needed. */}
       <Route path="/onboarding" element={<OnboardingPage />} />
@@ -38,7 +39,7 @@ export function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

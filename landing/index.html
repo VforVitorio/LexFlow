@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3140c2" />
+    <title>LexFlow · Legislación viva</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!--
+      #162 — Cloudflare Web Analytics.
+      Cookieless, RGPD-friendly, ~3KB. Reports page views + web vitals.
+      Token comes from the CF_BEACON_TOKEN GitHub Actions secret; the deploy
+      workflow (.github/workflows/deploy-landing.yml) substitutes the value
+      below at build time.
+    -->
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "__VITE_CF_BEACON_TOKEN__"}'
+    ></script>
+  </body>
+</html>

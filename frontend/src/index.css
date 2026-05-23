@@ -179,7 +179,7 @@ html.theme-fade-paint::after {
 }
 
 /* View Transitions API styling (modern browsers). The default browser fade  */
-/* is OK; we just slow it down a touch to match the rest of the landing.    */
+/* is OK; we just slow it down a touch to match the theme-fade timing above. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 420ms;

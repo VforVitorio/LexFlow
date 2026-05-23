@@ -1,0 +1,124 @@
+/* Root CSS tokens consumed by landing.css through `hsl(var(--token) / α)`.
+ * Same numbers as the SPA's frontend/src/index.css so the visual identity
+ * matches, but stripped of every token the marketing surface does not use
+ * (no Tailwind plumbing, no app-shell-specific palettes).
+ */
+
+:root,
+[data-theme='light'] {
+  --bg:            232 30% 99%;
+  --surface:       232 25% 97%;
+  --surface-2:     232 22% 94%;
+  --border:        232 18% 88%;
+  --border-strong: 232 18% 78%;
+  --muted-fg:      232 12% 45%;
+  --fg:            232 35% 12%;
+
+  --primary-soft:  232 88% 96%;
+  --amber-soft:    38 100% 94%;
+  --success-soft:  152 60% 94%;
+  --danger-soft:   354 90% 96%;
+
+  --violet-300: 252 100% 86%;
+  --violet-400: 252 95% 76%;
+  --violet-500: 252 85% 65%;
+  --violet-600: 252 70% 55%;
+  --violet-soft: 252 95% 96%;
+  --blue-500:  217 91% 60%;
+  --blue-600:  217 91% 50%;
+
+  --amber-500: 36 95% 56%;
+  --success:   152 60% 40%;
+
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg:            232 30% 7%;
+  --surface:       232 28% 10%;
+  --surface-2:     232 25% 14%;
+  --border:        232 22% 22%;
+  --border-strong: 232 22% 32%;
+  --muted-fg:      232 15% 65%;
+  --fg:            232 18% 95%;
+
+  --primary-soft:  232 60% 18%;
+  --amber-soft:    36 60% 16%;
+  --success-soft:  152 40% 14%;
+  --danger-soft:   354 50% 18%;
+
+  --violet-soft:   252 50% 18%;
+
+  color-scheme: dark;
+}
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: 'cv02', 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  background: hsl(var(--bg));
+  color: hsl(var(--fg));
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(232 72% 52%);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced-motion safety net. Individual components also check
+ * `useReducedMotion()` and short-circuit their animations. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Theme transition — mindfulness fade (same idiom as the SPA).
+ * Modern browsers ride document.startViewTransition (lib/theme.ts);
+ * older browsers paint .theme-fade-paint for one frame. */
+html {
+  transition:
+    background-color 420ms cubic-bezier(0.2, 0, 0, 1),
+    color 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+html.theme-fade-paint::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: hsl(var(--bg));
+  opacity: 0;
+  animation: theme-fade 420ms cubic-bezier(0.2, 0, 0, 1);
+}
+@keyframes theme-fade {
+  0%   { opacity: 0; }
+  35%  { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { transition: none; }
+  html.theme-fade-paint::after { animation: none; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 0.01ms; }
+}

@@ -131,9 +131,9 @@ jobs:
       - name: Mypy
         run: uv run mypy src/lexflow/
 
-  # Builds the React landing/frontend on every push and PR. Not (yet) wired
-  # into branch protection — runs informationally so we catch breakage early
-  # without blocking merges while the frontend is still pre-alpha.
+  # Builds the React SPA on every push and PR. Not (yet) wired into branch
+  # protection — runs informationally so we catch breakage early without
+  # blocking merges while the frontend is still pre-alpha.
   frontend-build:
     name: frontend-build
     runs-on: ubuntu-latest
@@ -154,6 +154,33 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  # Builds the standalone marketing landing under landing/. Completely
+  # independent from the SPA above — different deps, different bundle. Runs
+  # informationally so a broken marketing build never blocks app merges.
+  landing-build:
+    name: landing-build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: landing
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: landing/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
 
       - name: Build
         run: npm run build

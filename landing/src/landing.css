@@ -381,6 +381,40 @@
   color: hsl(var(--muted-fg));
   margin-bottom: 24px;
 }
+
+/* Long horizontal eyebrow above the hero H1 — f1stratlab-style status line. */
+/* One uppercase mono line, bullet-separated, with a pulsing dot on the left. */
+.landing-root .hero-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--violet-400));
+}
+[data-theme='light'] .landing-root .hero-eyebrow { color: hsl(var(--violet-600)); }
+.landing-root .hero-eyebrow .pulse-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  margin-right: 4px;
+  animation: lf-pulse-dot 1.8s ease-in-out infinite;
+}
+.landing-root .hero-eyebrow-sep {
+  opacity: 0.55;
+  font-weight: 400;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .hero-eyebrow .pulse-dot { animation: none; }
+}
 .landing-root .hero-badge .pill {
   padding: 2px 8px;
   border-radius: 999px;
