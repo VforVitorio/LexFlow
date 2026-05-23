@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Settings as ToolIcon, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { BrandMark } from '@/components/BrandMark';
@@ -72,6 +73,10 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
 /**
  * Tiny markdown renderer for **bold** and `1.` list items — keeps the
  * dependency surface small. Upgrade to react-markdown if you need more.
+ *
+ * Renders via plain JSX (React auto-escapes text children), so backend
+ * content cannot inject HTML even if a tool result or model output ever
+ * carries `<script>` or similar payloads.
  */
 function Paragraph({ text }: { text: string }) {
   const isList = /^\d+\.\s/.test(text);
@@ -81,13 +86,20 @@ function Paragraph({ text }: { text: string }) {
       return (
         <div className="mb-2 flex gap-2.5">
           <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-300 shrink-0">{m[1]}.</span>
-          <span className="flex-1" dangerouslySetInnerHTML={{ __html: bold(m[2]) }} />
+          <span className="flex-1">{renderBold(m[2])}</span>
         </div>
       );
     }
   }
-  return <p className="mb-2 text-pretty" dangerouslySetInnerHTML={{ __html: bold(text) }} />;
+  return <p className="mb-2 text-pretty">{renderBold(text)}</p>;
 }
-function bold(s: string) {
-  return s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+function renderBold(s: string): React.ReactNode[] {
+  const parts = s.split(/(\*\*[^*]+?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return <Fragment key={i}>{part}</Fragment>;
+  });
 }

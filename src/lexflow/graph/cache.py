@@ -57,10 +57,19 @@ def load_graph(cache_path: Path) -> tuple[LegalGraph, str] | None:
 def load_or_build(registry: LawRegistry, data_path: Path) -> LegalGraph:
     cache_path = data_path.parent / "graph_cache.json"
     current_hash = _submodule_hash(data_path)
+    # If we cannot identify the data revision (no git checkout, missing
+    # submodule), treat the cache as stale to avoid serving a graph that
+    # never invalidates. Equality on "unknown" would otherwise lock the
+    # cache permanently.
+    if current_hash == "unknown":
+        logger.info("Rebuilding graph (data revision unknown — cache bypassed)")
+        graph = build_graph(registry)
+        save_graph(graph, cache_path, current_hash)
+        return graph
     cached = load_graph(cache_path)
     if cached is not None:
         graph, cached_hash = cached
-        if cached_hash == current_hash:
+        if cached_hash == current_hash and cached_hash != "unknown":
             logger.info("Graph loaded from cache (%d nodes)", graph.node_count())
             return graph
     logger.info("Rebuilding graph (hash mismatch or no cache)")

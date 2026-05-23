@@ -39,7 +39,7 @@ End-state: a standalone desktop app (`.exe`, `.dmg`, `.AppImage`) bundling FastA
 | Concern | Tool |
 |---|---|
 | Build | Vite |
-| Framework | React 19 |
+| Framework | React 18 |
 | Routing | TanStack Router (file-based, typed) |
 | Server state | TanStack Query |
 | Client / UI state | Zustand |
