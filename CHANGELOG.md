@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/VforVitorio/LexFlow/compare/v0.3.0...v0.4.0) (2026-05-23)
+
+
+### Features
+
+* **landing:** new brand mark + live version pill + hover graph + nav polish ([5b3fabb](https://github.com/VforVitorio/LexFlow/commit/5b3fabbef55c88c1cf9171c97c8b3684e5b4388b))
+* **landing:** node-graph logo, version pill, ApiFeature auto-rotate, HeroGraph hover, nav polish ([d85e7fe](https://github.com/VforVitorio/LexFlow/commit/d85e7fe8001355a13ad8252e2dada447a1648dcf))
+
 ## [0.3.0](https://github.com/VforVitorio/LexFlow/compare/v0.2.0...v0.3.0) (2026-05-23)
 
 
