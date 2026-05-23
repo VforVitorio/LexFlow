@@ -1,4 +1,11 @@
-"""Law endpoints: list and detail."""
+"""Law endpoints: list and detail.
+
+Handlers are sync ``def`` because ``registry.get_law`` and ``list_laws`` hit
+blocking I/O (Path.read_text + YAML parse + regex on multi-MB files) on first
+access. FastAPI runs sync handlers on a threadpool, which keeps the event
+loop free; declaring them ``async def`` would block every other request on
+the same loop while a cold law is parsed.
+"""
 
 from __future__ import annotations
 
@@ -17,7 +24,7 @@ router = APIRouter(prefix="/laws", tags=["Laws"])
     response_model=PaginatedResponse[LawSummary],
     summary="List laws with filtering and pagination",
 )
-async def list_laws(
+def list_laws(
     pagination: PaginationParams = Depends(),
     registry: LawRegistry = Depends(get_law_registry),
     rank: LawRank | None = Query(None, description="Filter by law rank"),
@@ -41,7 +48,7 @@ async def list_laws(
     response_model=LawDetail,
     summary="Get full detail of a specific law",
 )
-async def get_law(
+def get_law(
     law_id: str,
     registry: LawRegistry = Depends(get_law_registry),
 ) -> LawDetail:

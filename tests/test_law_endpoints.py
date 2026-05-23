@@ -61,4 +61,7 @@ class TestGetLaw:
         response = client.get("/api/v1/laws/NONEXISTENT-123")
         assert response.status_code == 404
         body = response.json()
-        assert body["error"] == "LawNotFound"
+        # FastAPI's default {"detail"} envelope; "code" is a machine-readable
+        # tag for clients that want to branch without parsing the message.
+        assert body["code"] == "law_not_found"
+        assert "NONEXISTENT-123" in body["detail"]

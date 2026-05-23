@@ -15,7 +15,7 @@ export function AppShell() {
   useHotkey('mod+.', (e) => { e.preventDefault(); toggleTheme(); });
 
   useGoToHotkey({
-    h: () => navigate('/'),
+    h: () => navigate('/home'),
     e: () => navigate('/explorer'),
     g: () => navigate('/graph'),
     c: () => navigate('/chat'),

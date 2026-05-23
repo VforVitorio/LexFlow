@@ -40,7 +40,10 @@ class TestGetArticle:
     def test_not_found(self, client: TestClient, mock_registry: LawRegistry) -> None:
         response = client.get("/api/v1/laws/BOE-A-2000-323/articles/999")
         assert response.status_code == 404
-        assert response.json()["error"] == "ArticleNotFound"
+        body = response.json()
+        # See test_law_endpoints::test_not_found for the envelope contract.
+        assert body["code"] == "article_not_found"
+        assert "999" in body["detail"]
 
     def test_with_trailing_dot(self, client: TestClient, mock_registry: LawRegistry) -> None:
         response = client.get("/api/v1/laws/BOE-A-2000-323/articles/1.")

@@ -23,6 +23,19 @@
   --success-soft:  152 60% 94%;
   --danger-soft:   354 90% 96%;
 
+  /* Landing-page accent tokens (used by the marketing surface; safe to ignore in the app shell). */
+  --violet-300: 252 100% 86%;
+  --violet-400: 252 95% 76%;
+  --violet-500: 252 85% 65%;
+  --violet-600: 252 70% 55%;
+  --violet-soft: 252 95% 96%;
+  --blue-500:  217 91% 60%;
+  --blue-600:  217 91% 50%;
+
+  /* Semantic tokens used as CSS custom properties (mirrors tailwind.config.ts). */
+  --amber-500: 36 95% 56%;
+  --success:   152 60% 40%;
+
   color-scheme: light;
 }
 
@@ -39,6 +52,8 @@
   --amber-soft:    36 60% 16%;
   --success-soft:  152 40% 14%;
   --danger-soft:   354 50% 18%;
+
+  --violet-soft:   252 50% 18%;
 
   color-scheme: dark;
 }

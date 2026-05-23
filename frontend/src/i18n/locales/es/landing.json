@@ -1,0 +1,159 @@
+{
+  "nav": {
+    "features": "Capas",
+    "stack": "Stack",
+    "roadmap": "Roadmap",
+    "github": "GitHub",
+    "cta": "Abrir la app"
+  },
+  "hero": {
+    "status": "pre-alpha",
+    "badge": "Open source · Apache 2.0",
+    "title1": "Legislación española,",
+    "title2": "viva y navegable.",
+    "sub": "Plataforma open source para explorar, analizar y consultar legislación española mediante grafos de conocimiento, IA y dashboards interactivos. Construida sobre el corpus legalize-es.",
+    "ctaPrimary": "Abrir la app",
+    "ctaSecondary": "Ver en GitHub",
+    "meta1": "Python 3.12 · FastAPI",
+    "meta2": "React 18 · TypeScript",
+    "meta3": "Local-first · Binario standalone"
+  },
+  "stats": [
+    { "value": "4", "unit": "", "label": "Capas integradas — API, grafo, chat y dashboards" },
+    { "value": "5", "unit": "", "label": "Proveedores LLM soportados vía herramientas MCP" },
+    { "value": "1", "unit": "k+", "label": "Leyes españolas del corpus legalize-es" },
+    { "value": "100", "unit": "%", "label": "Código abierto bajo licencia Apache 2.0" }
+  ],
+  "layersEyebrow": "Cuatro capas integradas",
+  "layersTitle": "Una plataforma. Todo el stack legal.",
+  "layersSub": "Cada capa se monta sobre el mismo **núcleo FastAPI** y vive detrás de un único **contrato tipado**, así que la app React y cualquier cliente externo comparten **exactamente los mismos datos**.",
+  "layers": [
+    {
+      "num": "01",
+      "kicker": "API REST",
+      "title": "Un contrato tipado sobre toda la legislación española.",
+      "body": "Endpoints FastAPI para leyes, artículos, versiones, diffs, búsqueda full-text y estadísticas — OpenAPI generado y consumido por un cliente React tipado estrictamente.",
+      "bullets": [
+        "GET /api/v1/laws · catálogo paginado",
+        "GET /api/v1/laws/{id}/diff · cambios a nivel de artículo",
+        "GET /api/v1/search?q= · búsqueda full-text en todo el corpus",
+        "Modelos Pydantic v2, playground interactivo en /docs"
+      ],
+      "linkLabel": "Abrir el explorador →"
+    },
+    {
+      "num": "02",
+      "kicker": "Grafo de conocimiento",
+      "title": "Las referencias cruzadas como una red navegable.",
+      "body": "Un grafo NetworkX que enlaza leyes, artículos y modificaciones. Recorre vecinos, encuentra caminos más cortos, descubre las normas más centrales por PageRank.",
+      "bullets": [
+        "Algoritmos de PageRank, clustering y camino más corto",
+        "/graph/neighbors · /graph/path · /graph/subgraph",
+        "Filtros por temática, estado, período o tipo de relación",
+        "Preparado para sustituir NetworkX por Neo4j a escala"
+      ],
+      "linkLabel": "Abrir el canvas del grafo →"
+    },
+    {
+      "num": "03",
+      "kicker": "Chat legal",
+      "title": "Un chatbot que de verdad lee la ley.",
+      "body": "Trae tu propio modelo — Ollama, LM Studio, OpenAI, Anthropic o Google. Un servidor FastMCP expone la API como herramientas, así las respuestas vienen de datos reales, no de texto memorizado.",
+      "bullets": [
+        "Cinco proveedores detrás de un único selector",
+        "Tools MCP: buscar ley, leer artículo, ver diff, consultar grafo",
+        "Respuestas en streaming con citas en línea",
+        "Local-first por defecto — Ollama funciona sin conexión"
+      ],
+      "linkLabel": "Probar el chat →"
+    },
+    {
+      "num": "04",
+      "kicker": "Dashboards",
+      "title": "Compliance y analítica de un vistazo.",
+      "body": "Dashboards Plotly para análisis legislativo y seguimiento de cumplimiento — velocidad de reformas por año, leyes más modificadas, alertas por sector.",
+      "bullets": [
+        "Panel de compliance · normas y alertas por sector",
+        "Panel analítico · velocidad de reformas, modificaciones, tendencias",
+        "Figuras Plotly servidas como JSON para cualquier cliente",
+        "Filtros interactivos y exportación a CSV"
+      ],
+      "linkLabel": "Abrir los cuadros de mando →"
+    }
+  ],
+  "builtOnEyebrow": "Construido sobre datos abiertos",
+  "builtOnTitle": "Sobre legalize-es. Distribuido como un único binario.",
+  "builtOnBody": "LexFlow es una capa fina e inteligente sobre legalize-es — un repositorio abierto y versionado con Git de legislación española en Markdown. El producto final es un binario standalone por sistema operativo: sin Docker, sin instalar Python, solo descargar y ejecutar.",
+  "builtOnCta": "Leer la arquitectura →",
+  "builtOnTerminal": [
+    { "type": "comment", "text": "# Clona, sincroniza el corpus, arranca el servidor" },
+    { "type": "cmd", "text": "git clone https://github.com/VforVitorio/LexFlow.git" },
+    { "type": "cmd", "text": "cd LexFlow && git submodule update --init --recursive" },
+    { "type": "cmd", "text": "uv sync --all-extras" },
+    { "type": "cmd", "text": "uv run python main.py" },
+    { "type": "comment", "text": "# → API en marcha en http://localhost:8000/docs" }
+  ],
+  "stackEyebrow": "El stack",
+  "stackTitle": "Tecnología aburrida, cimientos modernos.",
+  "stackSub": "Sin frameworks experimentales ni nube propietaria — cada pieza es open source, bien documentada y fácil de reemplazar.",
+  "stackBackend": {
+    "name": "Backend",
+    "meta": "Python 3.12 · FastAPI",
+    "rows": [
+      ["Framework web", "FastAPI + Uvicorn"],
+      ["Validación", "Pydantic v2"],
+      ["Motor de grafo", "NetworkX"],
+      ["Chat y tools", "FastMCP · Ollama · OpenAI · Anthropic · Google"],
+      ["Dashboards", "Plotly (figuras como JSON)"],
+      ["Tests", "pytest + pytest-asyncio"],
+      ["Empaquetado", "uv · PyInstaller"]
+    ]
+  },
+  "stackFrontend": {
+    "name": "Frontend",
+    "meta": "React 18 · TypeScript estricto",
+    "rows": [
+      ["Bundler", "Vite"],
+      ["Routing", "React Router v6 (basado en componentes)"],
+      ["Estado servidor", "TanStack Query"],
+      ["Estado cliente", "Zustand"],
+      ["Estilado", "Tailwind CSS + shadcn/ui"],
+      ["Visualización de grafo", "react-flow"],
+      ["Tests", "Vitest + Playwright"]
+    ]
+  },
+  "roadmapEyebrow": "Dónde estamos",
+  "roadmapTitle": "Un roadmap público, fase a fase.",
+  "roadmapSub": "LexFlow se construye en abierto. El backend está completo en funcionalidades; el frontend en React es donde aterrizan los próximos hitos.",
+  "statusDone": "Hecho",
+  "statusProgress": "En curso",
+  "statusPlanned": "Planificado",
+  "roadmap": [
+    { "name": "Fundación", "desc": "Estructura del repo, CI/CD, protección de ramas, dependabot.", "status": "done" },
+    { "name": "API base", "desc": "Parser de legalize-es, endpoints REST, búsqueda full-text.", "status": "done" },
+    { "name": "Grafo de conocimiento", "desc": "Modelo NetworkX, PageRank, clustering, endpoints de navegación.", "status": "done" },
+    { "name": "Chat legal", "desc": "Cinco proveedores LLM, servidor FastMCP de herramientas, historial.", "status": "done" },
+    { "name": "Dashboards", "desc": "Paneles Plotly de compliance + analítica con filtros interactivos.", "status": "done" },
+    { "name": "Frontend React", "desc": "Layout, explorador de leyes, canvas del grafo, chat, dashboards.", "status": "progress" },
+    { "name": "Distribución standalone", "desc": "Binarios PyInstaller: .exe · .dmg · .AppImage. Docker hecho.", "status": "progress" },
+    { "name": "Búsqueda semántica y RAG", "desc": "Embeddings, índice vectorial, chat aumentado por retrieval.", "status": "planned" }
+  ],
+  "ctaEyebrow": "Pruébalo en local",
+  "ctaTitle": "Arráncalo en menos de un minuto.",
+  "ctaSub": "Clona el repo, instala con uv y toda la API estará viva en localhost:8000 con documentación interactiva. Dale a la estrella para seguir el proyecto.",
+  "ctaPrimary": "Abrir LexFlow",
+  "ctaSecondary": "Abrir en GitHub",
+  "footer": {
+    "tagline": "Legislación española, viva y navegable. Una plataforma open source sobre legalize-es.",
+    "poweredBy": "Construido sobre",
+    "product": "Producto",
+    "productLinks": ["Capas", "Roadmap", "Arquitectura", "Changelog"],
+    "project": "Proyecto",
+    "projectLinks": ["GitHub", "Issues", "Contribuir", "Código de conducta"],
+    "resources": "Recursos",
+    "resourcesLinks": ["legalize-es", "Docs de la API", "CLAUDE.md", "Licencia"],
+    "legal": "Apache 2.0 · pre-alpha · Hecho con cariño en 2026",
+    "themeLabel": "Tema",
+    "langLabel": "Idioma"
+  }
+}
