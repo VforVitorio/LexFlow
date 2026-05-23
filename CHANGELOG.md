@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.4.0](https://github.com/VforVitorio/LexFlow/compare/v0.3.0...v0.4.0) (2026-05-23)
+
+
+### Features
+
+* **landing:** new brand mark + live version pill + hover graph + nav polish ([5b3fabb](https://github.com/VforVitorio/LexFlow/commit/5b3fabbef55c88c1cf9171c97c8b3684e5b4388b))
+* **landing:** node-graph logo, version pill, ApiFeature auto-rotate, HeroGraph hover, nav polish ([d85e7fe](https://github.com/VforVitorio/LexFlow/commit/d85e7fe8001355a13ad8252e2dada447a1648dcf))
+
+## [0.3.0](https://github.com/VforVitorio/LexFlow/compare/v0.2.0...v0.3.0) (2026-05-23)
+
+
+### Features
+
+* **landing:** animations + extras — close [#150](https://github.com/VforVitorio/LexFlow/issues/150)-[#162](https://github.com/VforVitorio/LexFlow/issues/162) ([3b3d6e6](https://github.com/VforVitorio/LexFlow/commit/3b3d6e657c3fbb910b05284ef5f894d5fe6b6548))
+* **landing:** animations + extras — closes [#150](https://github.com/VforVitorio/LexFlow/issues/150)-[#162](https://github.com/VforVitorio/LexFlow/issues/162) (13 issues) ([dd6877b](https://github.com/VforVitorio/LexFlow/commit/dd6877b01b27c4a54ae469443907e2471139e24b))
+
+
+### Bug Fixes
+
+* **landing:** stop feature cards from navigating into the SPA + add 'Authors' section ([6ebf1b0](https://github.com/VforVitorio/LexFlow/commit/6ebf1b032902438c55472694a78c09faae4b0ebc))
+* **landing:** stop feature cards from navigating into the SPA + add 'Meet the authors' ([#148](https://github.com/VforVitorio/LexFlow/issues/148)) ([d9a6c57](https://github.com/VforVitorio/LexFlow/commit/d9a6c5742b1b9d62c469a55d5345d8a89c0167d3))
+
+
+### Refactoring
+
+* **api:** align error envelope to {detail} + handlers to sync def (closes [#99](https://github.com/VforVitorio/LexFlow/issues/99), [#100](https://github.com/VforVitorio/LexFlow/issues/100)) ([a1a5d44](https://github.com/VforVitorio/LexFlow/commit/a1a5d448b4406ecfc86b9a20f83aa70af69005f0))
+* **api:** align error envelope to {detail} + handlers to sync def (closes [#99](https://github.com/VforVitorio/LexFlow/issues/99), [#100](https://github.com/VforVitorio/LexFlow/issues/100)) ([571e2d4](https://github.com/VforVitorio/LexFlow/commit/571e2d4257bc8f21560aff56f8c0cf32b95dc8fd))
+
 ## [0.2.0](https://github.com/VforVitorio/LexFlow/compare/v0.1.0...v0.2.0) (2026-05-23)
 
 
