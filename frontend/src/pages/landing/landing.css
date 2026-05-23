@@ -697,6 +697,21 @@
   transform: translateY(-2px);
 }
 
+/* Same chrome as `.feature-art-link` but without the hover treatment —     */
+/* these wrappers are illustrative and do NOT navigate (see PR #149). The  */
+/* wrap MUST share the aspect-ratio / background / border so the mockups   */
+/* render as cards; without these the SVG/canvas inside collapses and the  */
+/* left half of every feature card looks empty.                            */
+.landing-root .feature-art-wrap {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
 /* ─── Built on ─── */
 
 .landing-root .built-on {
