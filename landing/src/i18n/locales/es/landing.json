@@ -4,53 +4,53 @@
     "stack": "Stack",
     "roadmap": "Roadmap",
     "github": "GitHub",
-    "cta": "Abrir la app"
+    "cta": "Probar LexFlow"
   },
   "hero": {
     "status": "pre-alpha",
     "badge": "Open source · Apache 2.0",
     "title1": "Legislación española,",
-    "title2": "viva y navegable.",
-    "sub": "Plataforma open source para explorar, analizar y consultar legislación española mediante grafos de conocimiento, IA y dashboards interactivos. Construida sobre el corpus legalize-es.",
-    "ctaPrimary": "Abrir la app",
+    "title2": "viva y conectada.",
+    "sub": "Una plataforma open source para entender la legislación española de verdad. Grafos que conectan cada referencia entre leyes, un chat con IA que cita el BOE de verdad y paneles que enseñan cómo evoluciona la norma. Todo sobre el corpus legalize-es.",
+    "ctaPrimary": "Probar LexFlow",
     "ctaSecondary": "Ver en GitHub",
     "meta1": "Python 3.12 · FastAPI",
     "meta2": "React 18 · TypeScript",
     "meta3": "Local-first · Binario standalone"
   },
   "stats": [
-    { "value": "4", "unit": "", "label": "Capas integradas — API, grafo, chat y dashboards" },
-    { "value": "5", "unit": "", "label": "Proveedores LLM soportados vía herramientas MCP" },
-    { "value": "1", "unit": "k+", "label": "Leyes españolas del corpus legalize-es" },
+    { "value": "4", "unit": "", "label": "Capas que comparten datos — API, grafo, chat y paneles" },
+    { "value": "5", "unit": "", "label": "Proveedores de LLM soportados mediante herramientas MCP" },
+    { "value": "1", "unit": "k+", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
     { "value": "100", "unit": "%", "label": "Código abierto bajo licencia Apache 2.0" }
   ],
   "layersEyebrow": "Cuatro capas integradas",
-  "layersTitle": "Una plataforma. Todo el stack legal.",
-  "layersSub": "Cada capa se monta sobre el mismo **núcleo FastAPI** y vive detrás de un único **contrato tipado**, así que la app React y cualquier cliente externo comparten **exactamente los mismos datos**.",
+  "layersTitle": "Una sola plataforma para todo el stack legal.",
+  "layersSub": "Cada capa se apoya en el mismo **núcleo de FastAPI** y vive detrás de un único **contrato tipado**. Eso significa que la app de React y cualquier cliente externo trabajan **exactamente con los mismos datos**.",
   "layers": [
     {
       "num": "01",
       "kicker": "API REST",
       "title": "Un contrato tipado sobre toda la legislación española.",
-      "body": "Endpoints FastAPI para leyes, artículos, versiones, diffs, búsqueda full-text y estadísticas — OpenAPI generado y consumido por un cliente React tipado estrictamente.",
+      "body": "Endpoints de FastAPI para leyes, artículos, versiones, diffs, búsqueda y estadísticas. El OpenAPI se genera solo y lo consume un cliente de React con tipado estricto — sin copiar tipos a mano.",
       "bullets": [
         "GET /api/v1/laws · catálogo paginado",
         "GET /api/v1/laws/{id}/diff · cambios a nivel de artículo",
         "GET /api/v1/search?q= · búsqueda full-text en todo el corpus",
-        "Modelos Pydantic v2, playground interactivo en /docs"
+        "Modelos Pydantic v2 y playground interactivo en /docs"
       ],
-      "linkLabel": "Abrir el explorador →"
+      "linkLabel": "Ir al explorador →"
     },
     {
       "num": "02",
       "kicker": "Grafo de conocimiento",
-      "title": "Las referencias cruzadas como una red navegable.",
-      "body": "Un grafo NetworkX que enlaza leyes, artículos y modificaciones. Recorre vecinos, encuentra caminos más cortos, descubre las normas más centrales por PageRank.",
+      "title": "Las referencias entre normas, como una red que se recorre.",
+      "body": "Un grafo de NetworkX que enlaza leyes, artículos y modificaciones. Recorre vecinos, encuentra el camino más corto entre dos normas y descubre las piezas centrales con PageRank.",
       "bullets": [
-        "Algoritmos de PageRank, clustering y camino más corto",
+        "PageRank, clustering y camino más corto",
         "/graph/neighbors · /graph/path · /graph/subgraph",
         "Filtros por temática, estado, período o tipo de relación",
-        "Preparado para sustituir NetworkX por Neo4j a escala"
+        "Listo para sustituir NetworkX por Neo4j cuando toque escalar"
       ],
       "linkLabel": "Abrir el canvas del grafo →"
     },
@@ -58,63 +58,63 @@
       "num": "03",
       "kicker": "Chat legal",
       "title": "Un chatbot que de verdad lee la ley.",
-      "body": "Trae tu propio modelo — Ollama, LM Studio, OpenAI, Anthropic o Google. Un servidor FastMCP expone la API como herramientas, así las respuestas vienen de datos reales, no de texto memorizado.",
+      "body": "Trae tu propio modelo — Ollama, LM Studio, OpenAI, Anthropic o Google. Un servidor de FastMCP expone la API como herramientas, así el chat responde con citas reales del BOE en lugar de texto memorizado en el entrenamiento.",
       "bullets": [
         "Cinco proveedores detrás de un único selector",
-        "Tools MCP: buscar ley, leer artículo, ver diff, consultar grafo",
+        "Herramientas MCP: buscar ley, leer artículo, ver diff, consultar grafo",
         "Respuestas en streaming con citas en línea",
-        "Local-first por defecto — Ollama funciona sin conexión"
+        "Local-first por defecto — con Ollama funciona sin conexión"
       ],
       "linkLabel": "Probar el chat →"
     },
     {
       "num": "04",
-      "kicker": "Dashboards",
-      "title": "Compliance y analítica de un vistazo.",
-      "body": "Dashboards Plotly para análisis legislativo y seguimiento de cumplimiento — velocidad de reformas por año, leyes más modificadas, alertas por sector.",
+      "kicker": "Paneles",
+      "title": "Cumplimiento y analítica de un vistazo.",
+      "body": "Paneles de Plotly para análisis legislativo y seguimiento de compliance: ritmo de reformas por año, normas más modificadas y alertas por sector.",
       "bullets": [
         "Panel de compliance · normas y alertas por sector",
-        "Panel analítico · velocidad de reformas, modificaciones, tendencias",
-        "Figuras Plotly servidas como JSON para cualquier cliente",
+        "Panel analítico · ritmo de reformas, modificaciones, tendencias",
+        "Figuras de Plotly servidas como JSON para cualquier cliente",
         "Filtros interactivos y exportación a CSV"
       ],
-      "linkLabel": "Abrir los cuadros de mando →"
+      "linkLabel": "Abrir los paneles →"
     }
   ],
   "howItWorks": {
     "eyebrow": "Cómo funciona",
-    "title": "De Markdown a respuesta en una pasada.",
-    "sub": "Cada capa se monta sobre la anterior. El parser produce el grafo, el grafo da contexto al chat y la API mantiene a todo el mundo en la misma página.",
+    "title": "De Markdown a respuesta, en una sola pasada.",
+    "sub": "Cada capa se apoya en la anterior. El parser alimenta al grafo, el grafo le da contexto al chat y la API actúa como única fuente de verdad para cualquier cliente.",
     "scenes": [
       {
         "title": "Parser y registro",
-        "body": "Markdown de legalize-es, metadata YAML, secciones recursivas. Resultado: un LawRegistry tipado que el resto del stack consulta sin reparsear."
+        "body": "Markdown de legalize-es, frontmatter en YAML y secciones recursivas. El resultado es un LawRegistry tipado al que el resto del stack consulta sin tener que reparsear nada."
       },
       {
         "title": "Grafo de conocimiento",
-        "body": "Las referencias cruzadas se resuelven a BOE identifiers y entran como aristas. PageRank, comunidades y caminos cortos viven sobre ese mismo NetworkX."
+        "body": "Las referencias cruzadas se resuelven a identificadores del BOE y entran como aristas. PageRank, comunidades y caminos cortos viven sobre el mismo grafo de NetworkX."
       },
       {
-        "title": "Chat con tools MCP",
-        "body": "El modelo elegido (Ollama, OpenAI, Anthropic, Google) llama a search_law, get_neighbors o get_article; el chat responde con citas reales del corpus."
+        "title": "Chat con herramientas MCP",
+        "body": "El modelo elegido (Ollama, OpenAI, Anthropic o Google) invoca search_law, get_neighbors o get_article y el chat responde citando el texto real del corpus."
       }
     ]
   },
   "builtOnEyebrow": "Construido sobre datos abiertos",
   "builtOnTitle": "Sobre legalize-es. Distribuido como un único binario.",
-  "builtOnBody": "LexFlow es una capa fina e inteligente sobre legalize-es — un repositorio abierto y versionado con Git de legislación española en Markdown. El producto final es un binario standalone por sistema operativo: sin Docker, sin instalar Python, solo descargar y ejecutar.",
-  "builtOnCta": "Leer la arquitectura →",
+  "builtOnBody": "LexFlow es una capa fina sobre legalize-es: un repositorio público en Git con toda la legislación española en Markdown. El producto final es un binario standalone por sistema operativo. Sin Docker, sin instalar Python — se descarga y se ejecuta.",
+  "builtOnCta": "Ver la arquitectura →",
   "builtOnTerminal": [
-    { "type": "comment", "text": "# Clona, sincroniza el corpus, arranca el servidor" },
+    { "type": "comment", "text": "# Clona, sincroniza el corpus y arranca el servidor" },
     { "type": "cmd", "text": "git clone https://github.com/VforVitorio/LexFlow.git" },
     { "type": "cmd", "text": "cd LexFlow && git submodule update --init --recursive" },
     { "type": "cmd", "text": "uv sync --all-extras" },
     { "type": "cmd", "text": "uv run python main.py" },
-    { "type": "comment", "text": "# → API en marcha en http://localhost:8000/docs" }
+    { "type": "comment", "text": "# → API escuchando en http://localhost:8000/docs" }
   ],
   "stackEyebrow": "El stack",
-  "stackTitle": "Tecnología aburrida, cimientos modernos.",
-  "stackSub": "Sin frameworks experimentales ni nube propietaria — cada pieza es open source, bien documentada y fácil de reemplazar.",
+  "stackTitle": "Tecnología aburrida, cimientos sólidos.",
+  "stackSub": "Sin frameworks experimentales ni nube propietaria. Cada pieza es open source, está bien documentada y se puede reemplazar sin reescribir el resto.",
   "stackBackend": {
     "name": "Backend",
     "meta": "Python 3.12 · FastAPI",
@@ -122,8 +122,8 @@
       ["Framework web", "FastAPI + Uvicorn"],
       ["Validación", "Pydantic v2"],
       ["Motor de grafo", "NetworkX"],
-      ["Chat y tools", "FastMCP · Ollama · OpenAI · Anthropic · Google"],
-      ["Dashboards", "Plotly (figuras como JSON)"],
+      ["Chat y herramientas", "FastMCP · Ollama · OpenAI · Anthropic · Google"],
+      ["Paneles", "Plotly (figuras como JSON)"],
       ["Tests", "pytest + pytest-asyncio"],
       ["Empaquetado", "uv · PyInstaller"]
     ]
@@ -134,33 +134,33 @@
     "rows": [
       ["Bundler", "Vite"],
       ["Routing", "React Router v6 (basado en componentes)"],
-      ["Estado servidor", "TanStack Query"],
-      ["Estado cliente", "Zustand"],
-      ["Estilado", "Tailwind CSS + shadcn/ui"],
+      ["Estado de servidor", "TanStack Query"],
+      ["Estado de cliente", "Zustand"],
+      ["Estilos", "Tailwind CSS + shadcn/ui"],
       ["Visualización de grafo", "react-flow"],
       ["Tests", "Vitest + Playwright"]
     ]
   },
   "roadmapEyebrow": "Dónde estamos",
   "roadmapTitle": "Un roadmap público, fase a fase.",
-  "roadmapSub": "LexFlow se construye en abierto. El backend está completo en funcionalidades; el frontend en React es donde aterrizan los próximos hitos.",
+  "roadmapSub": "LexFlow se construye en abierto. El backend ya tiene todas las funcionalidades planeadas; los próximos hitos viven en el frontend de React.",
   "statusDone": "Hecho",
   "statusProgress": "En curso",
   "statusPlanned": "Planificado",
   "roadmap": [
-    { "name": "Fundación", "desc": "Estructura del repo, CI/CD, protección de ramas, dependabot.", "status": "done" },
-    { "name": "API base", "desc": "Parser de legalize-es, endpoints REST, búsqueda full-text.", "status": "done" },
-    { "name": "Grafo de conocimiento", "desc": "Modelo NetworkX, PageRank, clustering, endpoints de navegación.", "status": "done" },
-    { "name": "Chat legal", "desc": "Cinco proveedores LLM, servidor FastMCP de herramientas, historial.", "status": "done" },
-    { "name": "Dashboards", "desc": "Paneles Plotly de compliance + analítica con filtros interactivos.", "status": "done" },
-    { "name": "Frontend React", "desc": "Layout, explorador de leyes, canvas del grafo, chat, dashboards.", "status": "progress" },
-    { "name": "Distribución standalone", "desc": "Binarios PyInstaller: .exe · .dmg · .AppImage. Docker hecho.", "status": "progress" },
-    { "name": "Búsqueda semántica y RAG", "desc": "Embeddings, índice vectorial, chat aumentado por retrieval.", "status": "planned" }
+    { "name": "Fundación", "desc": "Estructura del repo, CI/CD, protección de ramas y dependabot.", "status": "done" },
+    { "name": "API base", "desc": "Parser de legalize-es, endpoints REST y búsqueda full-text.", "status": "done" },
+    { "name": "Grafo de conocimiento", "desc": "Modelo en NetworkX, PageRank, clustering y endpoints de navegación.", "status": "done" },
+    { "name": "Chat legal", "desc": "Cinco proveedores de LLM, servidor FastMCP de herramientas e historial.", "status": "done" },
+    { "name": "Paneles", "desc": "Paneles de Plotly de compliance y analítica con filtros interactivos.", "status": "done" },
+    { "name": "Frontend en React", "desc": "Layout, explorador de leyes, canvas del grafo, chat y paneles.", "status": "progress" },
+    { "name": "Distribución standalone", "desc": "Binarios con PyInstaller: .exe · .dmg · .AppImage. Docker ya está hecho.", "status": "progress" },
+    { "name": "Búsqueda semántica y RAG", "desc": "Embeddings, índice vectorial y chat aumentado por recuperación.", "status": "planned" }
   ],
   "authors": {
-    "eyebrow": "Detrás del proyecto",
+    "eyebrow": "Quién está detrás",
     "title": "Las personas que lo construyen.",
-    "sub": "LexFlow es un trabajo open source de dos personas. Si te interesa el rumbo del proyecto o quieres contribuir, su perfil en GitHub es el sitio donde el código vive.",
+    "sub": "LexFlow es un proyecto open source de dos personas. Si te interesa por dónde va o quieres contribuir, su perfil de GitHub es el sitio donde el código vive.",
     "list": [
       {
         "login": "VforVitorio",
@@ -172,25 +172,25 @@
         "login": "Santisoutoo",
         "name": "Santiago",
         "role": "Co-autor",
-        "bio": "Futuro ingeniero apasionado por la industria de la aviación. Construye sistemas inteligentes usando IA y datos para mejorar el rendimiento y garantizar la seguridad."
+        "bio": "Futuro ingeniero apasionado por la industria de la aviación. Construye sistemas inteligentes con IA y datos para mejorar el rendimiento y reforzar la seguridad."
       }
     ]
   },
   "ctaEyebrow": "Pruébalo en local",
-  "ctaTitle": "Arráncalo en menos de un minuto.",
-  "ctaSub": "Clona el repo, instala con uv y toda la API estará viva en localhost:8000 con documentación interactiva. Dale a la estrella para seguir el proyecto.",
-  "ctaPrimary": "Abrir LexFlow",
+  "ctaTitle": "Levántalo en menos de un minuto.",
+  "ctaSub": "Clona el repo, lanza `uv sync` y la API queda escuchando en `localhost:8000` con la documentación interactiva lista. Si te interesa el rumbo del proyecto, pon una estrella.",
+  "ctaPrimary": "Probar LexFlow",
   "ctaSecondary": "Abrir en GitHub",
   "footer": {
-    "tagline": "Legislación española, viva y navegable. Una plataforma open source sobre legalize-es.",
+    "tagline": "Legislación española, viva y conectada. Una plataforma open source sobre legalize-es.",
     "poweredBy": "Construido sobre",
     "product": "Producto",
     "productLinks": ["Capas", "Roadmap", "Arquitectura", "Changelog"],
     "project": "Proyecto",
-    "projectLinks": ["GitHub", "Issues", "Contribuir", "Código de conducta"],
+    "projectLinks": ["GitHub", "Issues", "Cómo contribuir", "Código de conducta"],
     "resources": "Recursos",
-    "resourcesLinks": ["legalize-es", "Docs de la API", "CLAUDE.md", "Licencia"],
-    "legal": "Apache 2.0 · pre-alpha · Hecho con cariño en 2026",
+    "resourcesLinks": ["legalize-es", "Documentación de la API", "CLAUDE.md", "Licencia"],
+    "legal": "Apache 2.0 · pre-alpha · Construido en abierto · 2026",
     "themeLabel": "Tema",
     "langLabel": "Idioma"
   }
