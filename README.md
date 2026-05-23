@@ -37,14 +37,16 @@ Backend en **Python 3.12** (FastAPI + Pydantic + NetworkX + FastMCP). Frontend e
 
 | Fase | Estado |
 |------|--------|
-| 0 — Fundación (repo, CI/CD, branch protection, dependabot) | ✅ Hecho |
-| 1 — API base + parseo legalize-es + búsqueda full-text | ✅ Hecho |
-| 2 — Grafo de conocimiento (modelo + algoritmos + endpoints + persistencia) | ✅ Backend hecho |
-| 3 — Chatbot (Ollama + LM Studio + OpenAI + Anthropic + Google + FastMCP) | ✅ Backend hecho |
-| 4 — Dashboards (Plotly: compliance + analytics) | ✅ Backend hecho |
-| 5 — Frontend React (layout, explorador, grafo, chat, dashboards) | 🚧 En progreso |
-| 6 — Empaquetado y distribución (Docker, PyInstaller, instaladores) | ⚙️ Docker hecho, resto pendiente |
-| 7 — Búsqueda semántica y RAG | 📋 Planificado |
+| 0 — Fundación (repo, CI/CD, branch protection, dependabot) | Hecho |
+| 1 — API base + parseo legalize-es + búsqueda full-text | Hecho |
+| 2 — Grafo de conocimiento (modelo + algoritmos + endpoints + persistencia) | Backend hecho |
+| 3 — Chatbot (Ollama + LM Studio + OpenAI + Anthropic + Google + FastMCP) | Backend hecho |
+| 4 — Dashboards (Plotly: compliance + analytics) | Backend hecho |
+| 5 — Frontend React (layout, explorador, grafo, chat, dashboards) | En curso |
+| 6 — Empaquetado y distribución (Docker, PyInstaller, instaladores) | Docker hecho, resto pendiente |
+| 7 — Búsqueda semántica y RAG | Planificado |
+| 8 — UX y onboarding (greeting, tour, wizard de modelos, accesibilidad) | Planificado |
+| 9 — Personalización y MCP extensibility (plantillas, servers MCP externos) | Planificado |
 
 Roadmap detallado: [ROADMAP.md](ROADMAP.md). Issues activas: [GitHub Issues](https://github.com/VforVitorio/LexFlow/issues).
 
