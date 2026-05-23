@@ -52,7 +52,7 @@ jobs:
 
       - name: Cache legalize-es submodule checkout
         id: legalize-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: data/legalize-es
           key: legalize-es-${{ runner.os }}-${{ steps.legalize-sha.outputs.sha }}
