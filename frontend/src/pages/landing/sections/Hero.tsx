@@ -2,9 +2,15 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { HeroGraph } from '../mocks/HeroGraph';
 import { GH_URL, IconArrow, IconGitHub } from '../icons';
+import { useLatestRelease } from '../hooks/useLatestRelease';
 
 export function Hero() {
   const { t } = useTranslation('landing');
+  // Replaces the static "pre-alpha" pill with the actual latest tag pulled
+  // from GitHub once at session start. Falls back to the translated status
+  // string while loading or if the GitHub API call fails.
+  const { tag } = useLatestRelease();
+  const statusLabel = tag ?? t('hero.status');
   return (
     <section className="hero" id="top">
       {/* #150 — backdrop layers. pointer-events:none so content above stays
@@ -15,9 +21,9 @@ export function Hero() {
         <div>
           <div className="hero-badge">
             <span className="pill">
-              {/* #154 — pulsing dot before the "pre-alpha" label. */}
+              {/* #154 — pulsing dot before the "pre-alpha" / version label. */}
               <span className="pulse-dot" aria-hidden="true" />
-              {t('hero.status')}
+              {statusLabel}
             </span>
             <span>{t('hero.badge')}</span>
           </div>

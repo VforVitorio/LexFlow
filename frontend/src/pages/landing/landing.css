@@ -94,10 +94,12 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background: hsl(var(--bg) / 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid hsl(var(--border) / 0.6);
+  /* Solid background instead of the translucent blur. Keeps the nav        */
+  /* perfectly readable on top of the hero halo + grid backdrop, and        */
+  /* matches the f1stratlab idiom of a fully opaque top bar that never      */
+  /* visually mixes with the page below.                                    */
+  background: hsl(var(--bg));
+  border-bottom: 1px solid hsl(var(--border));
 }
 .landing-root .nav-inner {
   display: flex;
@@ -695,6 +697,21 @@
   border-color: hsl(var(--violet-500) / 0.55);
   box-shadow: 0 12px 32px -16px hsl(var(--violet-500) / 0.45);
   transform: translateY(-2px);
+}
+
+/* Same chrome as `.feature-art-link` but without the hover treatment —     */
+/* these wrappers are illustrative and do NOT navigate (see PR #149). The  */
+/* wrap MUST share the aspect-ratio / background / border so the mockups   */
+/* render as cards; without these the SVG/canvas inside collapses and the  */
+/* left half of every feature card looks empty.                            */
+.landing-root .feature-art-wrap {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 /* ─── Built on ─── */
@@ -1717,11 +1734,14 @@
 .landing-root .nav-links .nav-underline {
   position: absolute;
   left: 0;
-  bottom: -8px;
-  height: 2px;
+  /* Sit closer to the link baseline so the underline reads as part of the */
+  /* nav, not as a separator. Slightly thicker so the moving bar is        */
+  /* unmistakable on light theme.                                           */
+  bottom: -4px;
+  height: 3px;
   border-radius: 999px;
   background: hsl(var(--violet-500));
-  box-shadow: 0 0 8px hsl(var(--violet-500) / 0.55);
+  box-shadow: 0 0 10px hsl(var(--violet-500) / 0.7);
   transition:
     transform var(--dur-quick) var(--ease-out),
     width var(--dur-quick) var(--ease-out),
@@ -1927,3 +1947,35 @@
 }
 .landing-root .hiw-static-card h3 { font-size: 18px; margin: 12px 0 6px; }
 .landing-root .hiw-static-card p { font-size: 14px; line-height: 1.55; }
+
+/* -------------------------------------------------------------------------- */
+/* Hero graph — floating card tweaks for the new hover-driven tooltip         */
+/* -------------------------------------------------------------------------- */
+/* `.lf-float` defines the chrome; this class adds the smooth in/out fade so   */
+/* swapping between nodes re-keys the card without a hard pop.                 */
+
+.landing-root .lf-graph-card {
+  animation: lf-graph-card-in 320ms var(--ease-out, cubic-bezier(0.2, 0, 0, 1)) both;
+  pointer-events: none;
+  z-index: 3;
+}
+@keyframes lf-graph-card-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 6px)); }
+  to   { opacity: 1; transform: translate(-50%, -100%);             }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .lf-graph-card { animation: none; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Hero typography — gentle colour bump on the lead headline + eyebrows       */
+/* -------------------------------------------------------------------------- */
+/* The previous lead colour was almost flat fg. Now it carries the indigo→fg   */
+/* vertical gradient already shipped, but the eyebrow and metadata picks up a  */
+/* tinted text colour so the first-fold has actual brand colour anchoring.    */
+
+.landing-root .hero-badge .pill { color: hsl(var(--violet-300, 252 95% 76%)); }
+[data-theme='light'] .landing-root .hero-badge .pill { color: hsl(var(--violet-600, 252 70% 50%)); }
+
+.landing-root .section-eyebrow .label-caps { color: hsl(var(--violet-300, 252 95% 76%)); }
+[data-theme='light'] .landing-root .section-eyebrow .label-caps { color: hsl(var(--violet-600, 252 70% 50%)); }

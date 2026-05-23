@@ -1,5 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <rect x="2" y="2" width="20" height="20" rx="5" fill="hsl(232 70% 44%)"></rect>
-  <path d="M6.5 7.5 L12 4 L17.5 7.5 L17.5 13.5 L12 17 L6.5 13.5 Z" fill="none" stroke="hsl(36 95% 56%)" stroke-width="1.6" stroke-linejoin="round"></path>
-  <circle cx="12" cy="10.5" r="1.7" fill="hsl(36 95% 56%)"></circle>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="LexFlow">
+  <defs>
+    <linearGradient id="lf-node" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(252, 95%, 76%)"/>
+      <stop offset="100%" stop-color="hsl(217, 91%, 60%)"/>
+    </linearGradient>
+    <linearGradient id="lf-edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(252, 95%, 70%)" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="hsl(217, 91%, 58%)" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#lf-edge)" stroke-width="2.6" stroke-linecap="round" fill="none">
+    <line x1="11" y1="7"  x2="24" y2="13"/>
+    <line x1="24" y1="13" x2="21" y2="25"/>
+    <line x1="21" y1="25" x2="8"  y2="19"/>
+    <line x1="8"  y1="19" x2="11" y2="7"/>
+  </g>
+  <circle cx="11" cy="7"  r="3.6" fill="url(#lf-node)"/>
+  <circle cx="24" cy="13" r="3.2" fill="url(#lf-node)"/>
+  <circle cx="21" cy="25" r="3.2" fill="url(#lf-node)"/>
+  <circle cx="8"  cy="19" r="3"   fill="url(#lf-node)"/>
 </svg>
