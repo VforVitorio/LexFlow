@@ -1890,83 +1890,13 @@
 /* #157 — Scroll-pinned narrative                                             */
 /* -------------------------------------------------------------------------- */
 
+/* #157 — Originally a 280vh sticky-scroll narrative; simplified to a flat
+ * three-card grid because the band layout left visible empty space between
+ * scenes. The .hiw-stage / .hiw-rail / .hiw-scene rules from the old layout
+ * are intentionally gone — the JSX no longer emits those nodes. */
 .landing-root .hiw-section {
-  position: relative;
-  min-height: 280vh;
+  padding: 96px 0;
 }
-.landing-root .hiw-stage {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-.landing-root .hiw-stage-inner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-  align-items: center;
-}
-@media (max-width: 900px) {
-  .landing-root .hiw-stage-inner { grid-template-columns: 1fr; }
-  .landing-root .hiw-anchor { display: none; }
-}
-.landing-root .hiw-copy { max-width: 540px; }
-.landing-root .hiw-scenes {
-  position: relative;
-  margin-top: 24px;
-  min-height: 180px;
-}
-.landing-root .hiw-scene {
-  position: absolute;
-  inset: 0;
-}
-.landing-root .hiw-scene h3 {
-  font-size: 22px;
-  margin: 12px 0 8px;
-}
-.landing-root .hiw-scene p {
-  font-size: 15px;
-  line-height: 1.55;
-}
-.landing-root .hiw-anchor {
-  display: grid;
-  place-items: center;
-  color: hsl(var(--violet-500));
-}
-
-/* Progress rail */
-.landing-root .hiw-rail {
-  position: absolute;
-  right: 24px;
-  top: 30%;
-  height: 40%;
-  width: 4px;
-}
-.landing-root .hiw-rail-track {
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: hsl(var(--border));
-}
-.landing-root .hiw-rail-fill {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  border-radius: 999px;
-  background: hsl(var(--violet-500));
-  box-shadow: 0 0 12px hsl(var(--violet-500) / 0.45);
-}
-.landing-root .hiw-rail-tick {
-  position: absolute;
-  left: -3px;
-  width: 10px; height: 10px;
-  border-radius: 999px;
-  background: hsl(var(--border-strong));
-}
-
-/* Reduced-motion fallback layout */
-.landing-root .hiw-static { padding: 96px 0; }
 .landing-root .hiw-static-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
