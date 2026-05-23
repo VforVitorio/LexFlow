@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/VforVitorio/LexFlow/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python" /></a>
-  <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-19-61dafb.svg" alt="React" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-18-61dafb.svg" alt="React" /></a>
   <a href="https://github.com/VforVitorio/LexFlow/issues"><img src="https://img.shields.io/github/issues/VforVitorio/LexFlow" alt="Issues" /></a>
   <img src="https://img.shields.io/badge/status-pre--alpha-orange" alt="Status" />
 </p>
@@ -37,14 +37,16 @@ Backend en **Python 3.12** (FastAPI + Pydantic + NetworkX + FastMCP). Frontend e
 
 | Fase | Estado |
 |------|--------|
-| 0 — Fundación (repo, CI/CD, branch protection, dependabot) | ✅ Hecho |
-| 1 — API base + parseo legalize-es + búsqueda full-text | ✅ Hecho |
-| 2 — Grafo de conocimiento (modelo + algoritmos + endpoints + persistencia) | ✅ Backend hecho |
-| 3 — Chatbot (Ollama + LM Studio + OpenAI + Anthropic + Google + FastMCP) | ✅ Backend hecho |
-| 4 — Dashboards (Plotly: compliance + analytics) | ✅ Backend hecho |
-| 5 — Frontend React (layout, explorador, grafo, chat, dashboards) | 🚧 En progreso |
-| 6 — Empaquetado y distribución (Docker, PyInstaller, instaladores) | ⚙️ Docker hecho, resto pendiente |
-| 7 — Búsqueda semántica y RAG | 📋 Planificado |
+| 0 — Fundación (repo, CI/CD, branch protection, dependabot) | Hecho |
+| 1 — API base + parseo legalize-es + búsqueda full-text | Hecho |
+| 2 — Grafo de conocimiento (modelo + algoritmos + endpoints + persistencia) | Backend hecho |
+| 3 — Chatbot (Ollama + LM Studio + OpenAI + Anthropic + Google + FastMCP) | Backend hecho |
+| 4 — Dashboards (Plotly: compliance + analytics) | Backend hecho |
+| 5 — Frontend React (layout, explorador, grafo, chat, dashboards) | En curso |
+| 6 — Empaquetado y distribución (Docker, PyInstaller, instaladores) | Docker hecho, resto pendiente |
+| 7 — Búsqueda semántica y RAG | Planificado |
+| 8 — UX y onboarding (greeting, tour, wizard de modelos, accesibilidad) | Planificado |
+| 9 — Personalización y MCP extensibility (plantillas, servers MCP externos) | Planificado |
 
 Roadmap detallado: [ROADMAP.md](ROADMAP.md). Issues activas: [GitHub Issues](https://github.com/VforVitorio/LexFlow/issues).
 
@@ -150,7 +152,7 @@ LexFlow/
 | Componente | Tecnología |
 |---|---|
 | Build | Vite |
-| Framework | React 19 + TypeScript strict |
+| Framework | React 18 + TypeScript strict |
 | Routing | TanStack Router (typed, file-based) |
 | Server state | TanStack Query |
 | Client state | Zustand |

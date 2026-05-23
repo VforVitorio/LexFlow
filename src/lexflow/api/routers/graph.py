@@ -46,11 +46,15 @@ def get_neighbors(
 
 @router.get("/path", response_model=list[str])
 def get_path(
-    from_id: str = Query(..., alias="from_id"),
-    to_id: str = Query(..., alias="to_id"),
-    graph: LegalGraph = Depends(get_graph_dep),
+    from_id: Annotated[str, Query(alias="from")],
+    to_id: Annotated[str, Query(alias="to")],
+    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
 ) -> list[str]:
-    """Return the shortest directed path between two law nodes."""
+    """Return the shortest directed path between two law nodes.
+
+    Query params use the `from` / `to` aliases (matches the convention of
+    the versions diff endpoint and the documented example in the README).
+    """
     try:
         return shortest_path(graph, from_id, to_id)
     except (nx.NetworkXNoPath, nx.NodeNotFound) as exc:
@@ -60,10 +64,17 @@ def get_path(
 @router.get("/subgraph/{law_id}", response_model=GraphSubgraphResponse)
 def get_subgraph(
     law_id: str,
+    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
     depth: int = Query(1, ge=1, le=3),
-    graph: LegalGraph = Depends(get_graph_dep),
 ) -> GraphSubgraphResponse:
-    """Return the ego-subgraph around a law node up to a given depth."""
+    """Return the ego-subgraph around a law node up to a given depth.
+
+    Returns 404 if the law id is not a node in the graph — `get_subgraph`
+    on `LegalGraph` walks `successors`/`predecessors` which raise
+    `NetworkXError` on unknown nodes; we want a controlled response.
+    """
+    if law_id not in graph.graph:
+        raise HTTPException(status_code=404, detail=f"Law id not in graph: {law_id}")
     sub = graph.get_subgraph(law_id, depth=depth)
     nodes = [
         GraphNodeData(id=n, **{k: v for k, v in sub.nodes[n].items() if k in {"title", "rank", "status"}})
@@ -76,7 +87,7 @@ def get_subgraph(
 
 
 @router.get("/stats", response_model=GraphStatsResponse)
-def get_stats(graph: LegalGraph = Depends(get_graph_dep)) -> GraphStatsResponse:
+def get_stats(graph: Annotated[LegalGraph, Depends(get_graph_dep)]) -> GraphStatsResponse:
     """Return high-level statistics about the knowledge graph."""
     g = graph.graph
     return GraphStatsResponse(
@@ -89,11 +100,17 @@ def get_stats(graph: LegalGraph = Depends(get_graph_dep)) -> GraphStatsResponse:
 
 @router.get("/top", response_model=list[GraphTopItem])
 def get_top(
-    n: int = Query(10, ge=1, le=100),
-    graph: LegalGraph = Depends(get_graph_dep),
+    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
+    limit: int = Query(10, ge=1, le=100),
+    metric: str = Query("pagerank", pattern="^pagerank$"),
 ) -> list[GraphTopItem]:
-    """Return the top-n most referenced laws by PageRank score."""
-    items = top_laws(graph, n=n)
+    """Return the top-`limit` most referenced laws by `metric` (PageRank only).
+
+    `metric` accepts `pagerank` today; new metrics will extend the pattern.
+    Param names match the README example (`?metric=pagerank&limit=20`).
+    """
+    del metric  # Only one metric supported today; declared for the public contract.
+    items = top_laws(graph, n=limit)
     g = graph.graph
     return [
         GraphTopItem(law_id=law_id, score=round(score, 6), title=g.nodes[law_id].get("title"))

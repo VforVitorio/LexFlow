@@ -31,10 +31,17 @@ class LegalGraph:
         *,
         source_article: str | None = None,
         reference_text: str = "",
-    ) -> None:
-        """Add a directed edge from source to target law."""
-        if source_id in self._g and target_id in self._g:
-            self._g.add_edge(source_id, target_id, source_article=source_article, reference_text=reference_text)
+    ) -> bool:
+        """Add a directed edge from source to target law.
+
+        Returns True if the edge was added, False if either endpoint is not
+        a known node. Returning a flag lets callers keep accurate counters
+        instead of guessing from `edge_count()` deltas.
+        """
+        if source_id not in self._g or target_id not in self._g:
+            return False
+        self._g.add_edge(source_id, target_id, source_article=source_article, reference_text=reference_text)
+        return True
 
     def get_neighbors(self, law_id: str) -> list[str]:
         """Return IDs of laws that this law references (successors)."""
