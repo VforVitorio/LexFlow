@@ -9,9 +9,9 @@
   "hero": {
     "status": "pre-alpha",
     "badge": "Open source · Apache 2.0",
-    "title1": "Legislación española,",
-    "title2": "viva y conectada.",
-    "sub": "Una plataforma open source para entender la legislación española de verdad. Grafos que conectan cada referencia entre leyes, un chat con IA que cita el BOE de verdad y paneles que enseñan cómo evoluciona la norma. Todo sobre el corpus legalize-es.",
+    "title1": "La ley española,",
+    "title2": "navegable como un grafo.",
+    "sub": "Plataforma open source para explorar la legislación española de verdad. Un grafo de conocimiento conecta cada referencia cruzada, un chat con IA cita el BOE real y los paneles enseñan cómo cambian las normas con el tiempo.",
     "ctaPrimary": "Probar LexFlow",
     "ctaSecondary": "Ver en GitHub",
     "meta1": "Python 3.12 · FastAPI",
