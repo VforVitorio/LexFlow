@@ -165,14 +165,14 @@
       {
         "login": "VforVitorio",
         "name": "Víctor",
-        "role": "Autor · arquitectura · backend + frontend",
-        "bio": "Diseña la arquitectura, mantiene el repositorio, escribe la mayor parte del backend FastAPI y del frontend React, y coordina las release notes."
+        "role": "Co-autor",
+        "bio": "AI & Data Intern en NTT DATA España. 4º curso de Ingeniería de Sistemas Inteligentes en UIE Campus Coruña. Construye IA para la Fórmula 1 — desde el modelado de telemetría hasta el razonamiento multi-agente."
       },
       {
         "login": "Santisoutoo",
         "name": "Santiago",
-        "role": "Contributor · co-maintainer",
-        "bio": "Co-maintainer del proyecto. Asignado a todas las epics activas, contribuye revisiones de PR y refuerza el código del grafo y el chat."
+        "role": "Co-autor",
+        "bio": "Futuro ingeniero apasionado por la industria de la aviación. Construye sistemas inteligentes usando IA y datos para mejorar el rendimiento y garantizar la seguridad."
       }
     ]
   },
