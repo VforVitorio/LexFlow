@@ -9,7 +9,7 @@ import { useLawsList } from '@/lib/queries';
 interface NavItem { to: string; icon: React.ComponentType<{ className?: string }>; label: string; k: string; }
 
 const NAV: NavItem[] = [
-  { to: '/',          icon: Home,           label: 'Inicio',     k: 'g h' },
+  { to: '/home',      icon: Home,           label: 'Inicio',     k: 'g h' },
   { to: '/explorer',  icon: BookOpenText,   label: 'Explorador', k: 'g e' },
   { to: '/graph',     icon: Network,        label: 'Grafo',      k: 'g g' },
   { to: '/chat',      icon: MessagesSquare, label: 'Chat',       k: 'g c' },

@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/shell/AppShell';
+import { LandingPage } from '@/pages/landing/LandingPage';
 import { HomePage } from '@/pages/HomePage';
 import { ExplorerPage } from '@/pages/ExplorerPage';
 import { LawDetailPage } from '@/pages/LawDetailPage';
@@ -15,11 +16,14 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 export function App() {
   return (
     <Routes>
+      {/* Public marketing surface — no AppShell wrapper. */}
+      <Route path="/" element={<LandingPage />} />
+
       {/* First-launch gate; nav to /onboarding from a host trigger when needed. */}
       <Route path="/onboarding" element={<OnboardingPage />} />
 
       <Route element={<AppShell />}>
-        <Route index element={<HomePage />} />
+        <Route path="home" element={<HomePage />} />
         <Route path="explorer" element={<ExplorerPage />} />
         <Route path="laws/:lawId" element={<LawDetailPage />} />
         <Route path="laws/:lawId/diff" element={<DiffPage />} />

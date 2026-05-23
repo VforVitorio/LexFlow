@@ -9,7 +9,7 @@ export function NotFoundPage() {
         className="max-w-md"
         title="No encontramos esa página"
         description="Comprueba la URL o vuelve al inicio."
-        primaryAction={{ label: 'Inicio', onClick: () => navigate('/') }}
+        primaryAction={{ label: 'Inicio', onClick: () => navigate('/home') }}
       />
     </div>
   );

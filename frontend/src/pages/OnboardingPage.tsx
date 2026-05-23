@@ -20,7 +20,7 @@ export function OnboardingPage() {
 
   const finish = () => {
     try { localStorage.setItem('lexflow.onboarded', '1'); } catch { /* private mode */ }
-    navigate('/');
+    navigate('/home');
   };
 
   return (

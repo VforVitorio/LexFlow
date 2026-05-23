@@ -1,11 +1,11 @@
 name: docs
 
+# Auto-trigger on push removed: the landing now uses the modern Pages
+# artifact deploy (see deploy-landing.yml) and both workflows targeting the
+# same Pages site would race. Keep this workflow as a manual fallback while
+# the docs site is decided — when ready, fold its build steps into
+# deploy-landing.yml so a single artifact serves landing + docs.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:

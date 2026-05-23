@@ -5,6 +5,9 @@ import path from 'node:path';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // GitHub Pages serves the site under /LexFlow/. CI sets VITE_BASE_PATH
+  // before building; local dev keeps the default '/' so the proxy still works.
+  base: process.env.VITE_BASE_PATH ?? '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
