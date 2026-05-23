@@ -1,4 +1,9 @@
-"""Article endpoints: list articles within a law, get a single article."""
+"""Article endpoints: list articles within a law, get a single article.
+
+Handlers are sync ``def`` for the same reason as ``laws.py``: registry access
+performs blocking I/O on first hit and would freeze the event loop if run
+on an ``async`` coroutine.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,7 @@ router = APIRouter(prefix="/laws/{law_id}/articles", tags=["Articles"])
     response_model=PaginatedResponse[Article],
     summary="List all articles of a law",
 )
-async def list_articles(
+def list_articles(
     law_id: str,
     pagination: PaginationParams = Depends(),
     registry: LawRegistry = Depends(get_law_registry),
@@ -41,7 +46,7 @@ async def list_articles(
     response_model=ArticleResponse,
     summary="Get a specific article by number",
 )
-async def get_article(
+def get_article(
     law_id: str,
     article_number: str,
     registry: LawRegistry = Depends(get_law_registry),

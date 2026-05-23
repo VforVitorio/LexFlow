@@ -16,7 +16,7 @@ router = APIRouter(tags=["Search"])
     response_model=SearchResponse,
     summary="Full-text search across all laws",
 )
-async def search_laws(
+def search_laws(
     q: str = Query(..., min_length=2, max_length=200, description="Search query"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
