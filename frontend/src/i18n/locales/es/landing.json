@@ -81,6 +81,25 @@
       "linkLabel": "Abrir los cuadros de mando →"
     }
   ],
+  "howItWorks": {
+    "eyebrow": "Cómo funciona",
+    "title": "De Markdown a respuesta en una pasada.",
+    "sub": "Cada capa se monta sobre la anterior. El parser produce el grafo, el grafo da contexto al chat y la API mantiene a todo el mundo en la misma página.",
+    "scenes": [
+      {
+        "title": "Parser y registro",
+        "body": "Markdown de legalize-es, metadata YAML, secciones recursivas. Resultado: un LawRegistry tipado que el resto del stack consulta sin reparsear."
+      },
+      {
+        "title": "Grafo de conocimiento",
+        "body": "Las referencias cruzadas se resuelven a BOE identifiers y entran como aristas. PageRank, comunidades y caminos cortos viven sobre ese mismo NetworkX."
+      },
+      {
+        "title": "Chat con tools MCP",
+        "body": "El modelo elegido (Ollama, OpenAI, Anthropic, Google) llama a search_law, get_neighbors o get_article; el chat responde con citas reales del corpus."
+      }
+    ]
+  },
   "builtOnEyebrow": "Construido sobre datos abiertos",
   "builtOnTitle": "Sobre legalize-es. Distribuido como un único binario.",
   "builtOnBody": "LexFlow es una capa fina e inteligente sobre legalize-es — un repositorio abierto y versionado con Git de legislación española en Markdown. El producto final es un binario standalone por sistema operativo: sin Docker, sin instalar Python, solo descargar y ejecutar.",

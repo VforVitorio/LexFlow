@@ -53,7 +53,8 @@ export function Layers({ lang }: Props) {
                     {l.bullets.map((b, j) => <li key={j}>{b}</li>)}
                   </ul>
                 </div>
-                <div className="feature-art-wrap" aria-hidden="true">
+                <div className="feature-art-wrap lf-hint" aria-hidden="true">
+                  {/* #160 — mobile hint nudge (only renders < 760 px). */}
                   <LayerArt idx={i} lang={lang} />
                 </div>
               </article>
