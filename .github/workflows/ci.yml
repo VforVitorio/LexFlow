@@ -40,12 +40,29 @@ jobs:
         with:
           # actions/checkout does not honour `shallow = true` in .gitmodules
           # natively, so we skip it here and clone the submodule manually
-          # below with an explicit `--depth 1`. Avoids pulling 70K+ commits
-          # of legalize-es history (~hundreds of MB) on every CI run.
+          # below. legalize-es is ~1.7 GB upstream; `--depth 1` only trims
+          # history (the tip still pulls hundreds of MB), so we combine it
+          # with `--filter=blob:none` and `actions/cache` keyed to the
+          # gitlink SHA to make cache hits near-instant.
           submodules: false
 
-      - name: Shallow-clone legalize-es submodule
-        run: git submodule update --init --depth 1 --recursive
+      - name: Resolve legalize-es gitlink SHA
+        id: legalize-sha
+        run: echo "sha=$(git ls-tree HEAD data/legalize-es | awk '{print $3}')" >> $GITHUB_OUTPUT
+
+      - name: Cache legalize-es submodule checkout
+        id: legalize-cache
+        uses: actions/cache@v4
+        with:
+          path: data/legalize-es
+          key: legalize-es-${{ runner.os }}-${{ steps.legalize-sha.outputs.sha }}
+
+      - name: Shallow + partial clone of legalize-es (cache miss only)
+        if: steps.legalize-cache.outputs.cache-hit != 'true'
+        run: |
+          git -c submodule.recurse=false \
+              -c protocol.version=2 \
+              submodule update --init --depth 1 --filter=blob:none data/legalize-es
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
