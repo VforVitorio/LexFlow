@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/VforVitorio/LexFlow/compare/v0.5.0...v0.5.1) (2026-05-23)
+
+
+### Refactoring
+
+* **landing:** drop HeroGraph mockup, centre the hero like f1stratlab ([551649b](https://github.com/VforVitorio/LexFlow/commit/551649b1576698931d995c70edda5ac5a1ba123f))
+
 ## [0.5.0](https://github.com/VforVitorio/LexFlow/compare/v0.4.2...v0.5.0) (2026-05-23)
 
 
