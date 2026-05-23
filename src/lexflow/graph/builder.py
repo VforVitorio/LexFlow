@@ -18,22 +18,23 @@ def build_graph(registry: LawRegistry) -> LegalGraph:
             meta = registry.get_metadata(law_id)
             graph.add_law(meta)
         except Exception:
-            logger.warning("Could not add node for %s", law_id)
-    # Pass 2: add edges from cross-references
+            logger.warning("Could not add node for %s", law_id, exc_info=True)
+    # Pass 2: add edges from cross-references. Only count edges that were
+    # actually inserted — `add_reference` skips edges whose endpoints are
+    # not (yet) registered nodes, and we want the log to reflect reality.
     added_edges = 0
     for law_id in registry.law_ids:
         try:
             law = registry.get_law(law_id)
             for ref in law.references:
-                if ref.target_id:
-                    graph.add_reference(
-                        law_id,
-                        ref.target_id,
-                        source_article=ref.source_article,
-                        reference_text=ref.target_text,
-                    )
+                if ref.target_id and graph.add_reference(
+                    law_id,
+                    ref.target_id,
+                    source_article=ref.source_article,
+                    reference_text=ref.target_text,
+                ):
                     added_edges += 1
         except Exception:
-            logger.warning("Could not process references for %s", law_id)
+            logger.warning("Could not process references for %s", law_id, exc_info=True)
     logger.info("Graph built: %d nodes, %d edges", graph.node_count(), added_edges)
     return graph

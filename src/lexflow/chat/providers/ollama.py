@@ -23,7 +23,7 @@ class OllamaProvider(ChatProvider):
             models: list[dict[str, str]] = response.get("models", []) if isinstance(response, dict) else []
             return [m["name"] for m in models if "name" in m]
         except Exception as exc:
-            raise ChatProviderError("ollama", str(exc)) from exc
+            raise ChatProviderError(f"Ollama error: {exc}") from exc
 
     async def stream_chat(
         self,
@@ -39,4 +39,4 @@ class OllamaProvider(ChatProvider):
                 if content:
                     yield content
         except Exception as exc:
-            raise ChatProviderError("ollama", str(exc)) from exc
+            raise ChatProviderError(f"Ollama error: {exc}") from exc

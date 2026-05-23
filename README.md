@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://github.com/VforVitorio/LexFlow/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.12+-blue.svg" alt="Python" /></a>
-  <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-19-61dafb.svg" alt="React" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/react-18-61dafb.svg" alt="React" /></a>
   <a href="https://github.com/VforVitorio/LexFlow/issues"><img src="https://img.shields.io/github/issues/VforVitorio/LexFlow" alt="Issues" /></a>
   <img src="https://img.shields.io/badge/status-pre--alpha-orange" alt="Status" />
 </p>
@@ -150,7 +150,7 @@ LexFlow/
 | Componente | Tecnología |
 |---|---|
 | Build | Vite |
-| Framework | React 19 + TypeScript strict |
+| Framework | React 18 + TypeScript strict |
 | Routing | TanStack Router (typed, file-based) |
 | Server state | TanStack Query |
 | Client state | Zustand |

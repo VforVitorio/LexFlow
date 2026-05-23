@@ -24,7 +24,7 @@ class LMStudioProvider(ChatProvider):
             response = await self._client.models.list()
             return [m.id for m in response.data]
         except openai.APIConnectionError as exc:
-            raise ChatProviderError(str(exc)) from exc
+            raise ChatProviderError(f"LM Studio connection failed: {exc}") from exc
 
     async def stream_chat(
         self,
@@ -43,6 +43,8 @@ class LMStudioProvider(ChatProvider):
                 ),
             )
             async for chunk in stream:
-                yield chunk.choices[0].delta.content or ""
+                delta = chunk.choices[0].delta if chunk.choices else None
+                if delta and delta.content:
+                    yield delta.content
         except openai.APIConnectionError as exc:
-            raise ChatProviderError(str(exc)) from exc
+            raise ChatProviderError(f"LM Studio connection failed: {exc}") from exc

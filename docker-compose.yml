@@ -10,7 +10,12 @@ services:
     ports:
       - "${LEXFLOW_PORT:-8000}:8000"
     volumes:
-      - lexflow-data:/app/data/legalize-es
+      # Read-only bind mount: the legalize-es corpus is baked into the image
+      # at build time, but we expose the host checkout so contributors can
+      # run a newer submodule without rebuilding. A previous named volume
+      # (`lexflow-data:/app/data/legalize-es`) masked the corpus on first
+      # boot and left the container with zero laws.
+      - ./data/legalize-es:/app/data/legalize-es:ro
     environment:
       - LEXFLOW_HOST=0.0.0.0
       - LEXFLOW_PORT=8000
@@ -22,7 +27,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
-
-volumes:
-  lexflow-data:
-    driver: local
