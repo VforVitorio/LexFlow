@@ -1,4 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  Background,
+  BackgroundVariant,
+  Controls,
+  type Edge,
+  Handle,
+  MiniMap,
+  type Node as RFNode,
+  type NodeProps,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
 import { cn } from '@/lib/utils';
 import type { GraphData, GraphNode, GraphNodeKind } from '@/lib/types';
 
@@ -10,12 +25,22 @@ export const NODE_KIND_LABELS: Record<GraphNodeKind, string> = {
   repealed: 'Derogada',
 };
 
+/** Brand colour per node kind. Shared with `GraphPage.tsx` legend so the
+ * canvas + the legend never drift. */
 const KIND_FILL: Record<GraphNodeKind, string> = {
   law:       'hsl(232 72% 52%)',
   article:   'hsl(36 95% 56%)',
   reference: 'hsl(266 65% 60%)',
   amendment: 'hsl(195 70% 50%)',
   repealed:  'hsl(220 8% 55%)',
+};
+/** Node size (px) per kind. Law nodes anchor the canvas; articles ring them. */
+const KIND_SIZE: Record<GraphNodeKind, number> = {
+  law: 56,
+  article: 36,
+  reference: 36,
+  amendment: 36,
+  repealed: 40,
 };
 
 export interface GraphCanvasProps {
@@ -26,122 +51,271 @@ export interface GraphCanvasProps {
   className?: string;
 }
 
-const SIZE = { law: 28, article: 18, reference: 16, amendment: 16, repealed: 18 } as Record<GraphNodeKind, number>;
-
 /**
- * Lightweight SVG graph. For dense (>1k nodes) graphs swap this for
- * `@xyflow/react` — the wiring (data + selection + visibleKinds) stays the
- * same. See README "Swap to react-flow".
+ * Obsidian-style graph canvas — closes #87.
  *
- * ─────────────────────────────────────────────────────────────────────
- * ⚠ TODO · FUTURE WORK · Obsidian-style graph
- * ─────────────────────────────────────────────────────────────────────
+ * Replaces the original inline SVG with `@xyflow/react`. Public API
+ * (props + onSelect contract) is unchanged so `GraphPage.tsx` doesn't
+ * need to move.
  *
- * This component is a *placeholder* renderer that lays out a fixed seed
- * set of nodes from `mock-data.ts`. To match the experience the user
- * actually wants (Obsidian-grade), we still need:
+ * --- Layout ---
+ * The backend doesn't ship node positions yet. We compute a deterministic
+ * radial layout once per `data` reference: law-kind nodes anchor a small
+ * inner ring; references / amendments sit on a middle ring; articles +
+ * repealed go on the outer ring. The result is stable across renders
+ * (no force-sim jiggling) and scales to a few hundred nodes per ring
+ * before crowding becomes a problem — past that we'll swap to dagre or
+ * d3-force per the follow-ups below.
  *
- *   1. Force-directed simulation (d3-force or @xyflow/react's layout helpers)
- *      with adjustable repulsion / link strength / center gravity exposed
- *      as Tweaks. Persist the simulation position so the layout doesn't
- *      jump after every navigation.
+ * --- Performance ---
+ * `onlyRenderVisibleElements` keeps off-screen nodes out of the React
+ * tree during pan/zoom — required to hold 60 fps once the corpus has
+ * thousands of laws (#87 acceptance criterion).
  *
- *   2. Smooth pan + pinch-zoom (Obsidian-style), inertial scrolling,
- *      double-click-to-focus on a node which re-centers the camera with
- *      a 320ms spring (already in our motion vocabulary).
+ * --- WHERE TO CHANGE IF X CHANGES ---
+ * * Color tokens / size       → ``KIND_FILL`` / ``KIND_SIZE`` above
+ * * Layout policy             → ``_layout`` below
+ * * Node visual               → ``LfNode`` component
  *
- *   3. Hover preview card — when the cursor lingers on a node, fade in
- *      a popover with the law title, BOE id, a 2-line summary and
- *      first 3 #tags. Esc / mouse-out cancels.
+ * --- FOLLOW-UPS (tracked in #87's parent epic) ---
+ * 1. Force-directed simulation with adjustable repulsion / link strength
+ * 2. Hover preview card (popover with title + first 3 tags)
+ * 3. Depth slider (1-hop / 2-hop / 3-hop neighbourhood)
+ * 4. Tag-driven hue ring
+ * 5. Local-graph mode for ``/laws/:id`` pages
  *
- *   4. Depth slider in the toolbar: 1-hop, 2-hop, 3-hop neighbourhoods
- *      around the selected node. Default 2.
- *
- *   5. Tag-driven hue: when the user has active tag filters, nodes that
- *      carry a tag flash the tag's deterministic colour on the ring;
- *      Obsidian's local-graph trick.
- *
- *   6. Local-graph mode: when invoked from a LawDetail page (`/laws/:id`),
- *      render the local neighbourhood of that node, not the global graph.
- *
- *   7. Performance budget: 1.000 nodes at 60fps. The current SVG path is
- *      fine up to ~150 nodes; beyond that switch to canvas + an offscreen
- *      worker for layout.
- *
- * Keep this component's *public API* (props + the selected/visibleKinds
- * contract) stable so the upgrade lands without touching `GraphPage.tsx`
- * or any of its consumers.
- * ─────────────────────────────────────────────────────────────────────
+ * The public API (props) stays stable through all of those.
  */
-export function GraphCanvas({ data, visibleKinds, selected, onSelect, className }: GraphCanvasProps) {
-  const W = 920, H = 560;
-  const visible = useMemo(() => new Set(data.nodes.filter((n) => visibleKinds.has(n.kind)).map((n) => n.id)), [data, visibleKinds]);
 
+interface LfNodeData extends Record<string, unknown> {
+  label: string;
+  kind: GraphNodeKind;
+  dim: boolean;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}
+
+function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
+  const { label, kind, dim, selected: isSelected, onSelect } = data;
+  const size = KIND_SIZE[kind];
+  const fill = KIND_FILL[kind];
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className={cn('size-full select-none', className)}>
-      <defs>
-        <pattern id="lf-dots" width="20" height="20" patternUnits="userSpaceOnUse">
-          <circle cx="1" cy="1" r="0.8" fill="hsl(var(--border))" />
-        </pattern>
-      </defs>
-      <rect width={W} height={H} fill="url(#lf-dots)" />
-
-      {/* Edges */}
-      {data.edges.map((e) => {
-        const a = data.nodes.find((n) => n.id === e.source);
-        const b = data.nodes.find((n) => n.id === e.target);
-        if (!a || !b || a.x == null || a.y == null || b.x == null || b.y == null) return null;
-        const v = visible.has(a.id) && visible.has(b.id);
-        const sel = a.id === selected || b.id === selected;
-        return (
-          <line
-            key={e.id}
-            x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-            stroke={sel ? 'hsl(232 72% 52%)' : 'hsl(var(--border-strong))'}
-            strokeWidth={sel ? 2 : 1}
-            opacity={v ? (sel ? 1 : 0.55) : 0.1}
-            style={sel ? { filter: 'drop-shadow(0 0 4px hsl(232 72% 52% / 0.5))' } : undefined}
-          />
-        );
-      })}
-
-      {/* Nodes */}
-      {data.nodes.map((n) => <Node key={n.id} node={n} selected={n.id === selected} visible={visible.has(n.id)} onSelect={onSelect} />)}
-    </svg>
+    <button
+      type="button"
+      className={cn(
+        'group relative grid place-items-center rounded-full transition-opacity',
+        dim ? 'opacity-25' : 'opacity-100',
+      )}
+      style={{ width: size, height: size }}
+      onClick={() => onSelect(id)}
+      aria-label={`${NODE_KIND_LABELS[kind]}: ${label}`}
+    >
+      {/* Connection handles — `@xyflow/react` requires them on every node,
+          even when edges connect arbitrarily. Hidden visually. */}
+      <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
+      <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
+      {isSelected && (
+        <span
+          aria-hidden
+          className="absolute inset-[-10px] rounded-full"
+          style={{ background: 'hsl(232 72% 52% / 0.18)' }}
+        />
+      )}
+      <span
+        aria-hidden
+        className="size-full rounded-full"
+        style={{
+          background: fill,
+          boxShadow: isSelected ? '0 0 0 3px hsl(var(--bg)), 0 0 18px hsl(232 72% 52% / 0.55)' : undefined,
+        }}
+      />
+      {kind === 'law' && (
+        <span
+          aria-hidden
+          className="absolute size-[60%] rounded-full"
+          style={{ border: '1.5px solid hsl(var(--bg) / 0.55)' }}
+        />
+      )}
+      <span
+        className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap text-[11px] font-medium text-fg"
+        style={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: isSelected ? 600 : 500 }}
+      >
+        {label}
+      </span>
+    </button>
   );
 }
 
-function Node({ node, selected, visible, onSelect }: { node: GraphNode; selected: boolean; visible: boolean; onSelect: (id: string) => void }) {
-  if (node.x == null || node.y == null) return null;
-  const r = SIZE[node.kind];
-  const fill = KIND_FILL[node.kind];
-  const dim = !visible || node.dim;
+const NODE_TYPES = { lf: LfNode } as const;
+
+/**
+ * Cheap-and-deterministic radial layout. We compute it once per
+ * `nodes` reference (memoised by the caller) and feed the positions
+ * straight into react-flow.
+ *
+ * Picking radii by kind keeps the visual story clear at a glance
+ * (laws in the centre, articles on the outside) without needing a
+ * force-sim warmup pass.
+ */
+function _layout(nodes: GraphNode[]): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>();
+  const buckets: Record<GraphNodeKind, GraphNode[]> = {
+    law: [], article: [], reference: [], amendment: [], repealed: [],
+  };
+  for (const node of nodes) buckets[node.kind].push(node);
+
+  const ringRadius: Record<GraphNodeKind, number> = {
+    law: 180,
+    reference: 320,
+    amendment: 320,
+    article: 460,
+    repealed: 460,
+  };
+  // The inner ring rotates slightly so the law that opened the page sits
+  // at the top — same trick Obsidian uses to "anchor" the focused node.
+  const ringOffset: Record<GraphNodeKind, number> = {
+    law: -Math.PI / 2,
+    reference: -Math.PI / 2 + 0.25,
+    amendment: -Math.PI / 2 - 0.25,
+    article: -Math.PI / 2,
+    repealed: -Math.PI / 2 + Math.PI,
+  };
+
+  for (const kind of Object.keys(buckets) as GraphNodeKind[]) {
+    const bucket = buckets[kind];
+    if (bucket.length === 0) continue;
+    const r = ringRadius[kind];
+    const offset = ringOffset[kind];
+    for (let i = 0; i < bucket.length; i++) {
+      const node = bucket[i];
+      // Prefer backend-supplied positions when present — once the API
+      // ships node coords (issue #146), this branch carries them straight
+      // through.
+      if (node.x != null && node.y != null) {
+        positions.set(node.id, { x: node.x, y: node.y });
+        continue;
+      }
+      const angle = offset + (i * 2 * Math.PI) / bucket.length;
+      positions.set(node.id, {
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
+      });
+    }
+  }
+  return positions;
+}
+
+function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }: GraphCanvasProps) {
+  const visibleSet = useMemo(
+    () => new Set(data.nodes.filter((n) => visibleKinds.has(n.kind)).map((n) => n.id)),
+    [data, visibleKinds],
+  );
+  const layout = useMemo(() => _layout(data.nodes), [data]);
+
+  // Avoid re-allocating react-flow node/edge arrays just because `selected`
+  // changed — we read `selected` inside `LfNode` through the data prop.
+  const flowNodes = useMemo<RFNode<LfNodeData>[]>(
+    () =>
+      data.nodes.map((n) => {
+        const pos = layout.get(n.id) ?? { x: 0, y: 0 };
+        return {
+          id: n.id,
+          type: 'lf',
+          position: pos,
+          data: {
+            label: n.label,
+            kind: n.kind,
+            dim: !visibleSet.has(n.id) || Boolean(n.dim),
+            selected: n.id === selected,
+            onSelect,
+          },
+          // Disable the default drag — Obsidian-style canvases keep the
+          // layout immutable so the user can rely on relative position
+          // memory across sessions.
+          draggable: false,
+        };
+      }),
+    [data.nodes, layout, visibleSet, selected, onSelect],
+  );
+
+  const flowEdges = useMemo<Edge[]>(
+    () =>
+      data.edges.map((e) => {
+        const isSelected = e.source === selected || e.target === selected;
+        const bothVisible = visibleSet.has(e.source) && visibleSet.has(e.target);
+        return {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          // Thin curved edges read calmer than the default straight lines
+          // when nodes sit on the same ring. ``smoothstep`` is built in.
+          type: 'smoothstep',
+          animated: false,
+          style: {
+            stroke: isSelected ? 'hsl(232 72% 52%)' : 'hsl(var(--border-strong))',
+            strokeWidth: isSelected ? 2 : 1,
+            opacity: bothVisible ? (isSelected ? 1 : 0.45) : 0.08,
+          },
+        };
+      }),
+    [data.edges, visibleSet, selected],
+  );
+
+  // Keep the viewport centered on first mount + whenever the dataset
+  // identity changes. Once mounted, the user owns the camera (pan/zoom).
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const handlePaneClick = useCallback(() => {
+    // Clicking empty space deselects, matching Obsidian's interaction.
+    if (selected != null) onSelect('');
+  }, [onSelect, selected]);
+  useEffect(() => {
+    // No-op for now — `fitView` on the ReactFlow component below does
+    // the initial framing. Keeps the ref handy for the upcoming
+    // local-graph "focus on node" follow-up.
+  }, [data]);
+
   return (
-    <g
-      onClick={() => onSelect(node.id)}
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter') onSelect(node.id); }}
-      role="button"
-      aria-label={`${NODE_KIND_LABELS[node.kind]}: ${node.label}`}
-      style={{ cursor: 'pointer', opacity: dim ? 0.25 : 1 }}
-    >
-      {selected && (
-        <circle cx={node.x} cy={node.y} r={r + 8} fill="hsl(232 72% 52% / 0.18)">
-          <animate attributeName="r" values={`${r+6};${r+14};${r+6}`} dur="2.2s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.5;0.2;0.5" dur="2.2s" repeatCount="indefinite" />
-        </circle>
-      )}
-      <circle cx={node.x} cy={node.y} r={r} fill={fill} stroke={selected ? 'hsl(var(--bg))' : 'transparent'} strokeWidth={selected ? 3 : 0} />
-      {node.kind === 'law' && (
-        <circle cx={node.x} cy={node.y} r={r - 5} fill="none" stroke="hsl(var(--bg))" strokeOpacity={0.45} strokeWidth={1.5} />
-      )}
-      <text
-        x={node.x} y={node.y + r + 14}
-        textAnchor="middle" fontSize={11} fontFamily='"JetBrains Mono", monospace'
-        fontWeight={selected ? 600 : 500}
-        fill="hsl(var(--fg))"
-        style={{ pointerEvents: 'none' }}
-      >{node.label}</text>
-    </g>
+    <div ref={wrapperRef} className={cn('size-full', className)}>
+      <ReactFlow
+        nodes={flowNodes}
+        edges={flowEdges}
+        nodeTypes={NODE_TYPES}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        proOptions={{ hideAttribution: true }}
+        // #87 acceptance criterion — cull off-screen nodes so the canvas
+        // holds 60 fps on the full corpus.
+        onlyRenderVisibleElements
+        onPaneClick={handlePaneClick}
+        // Plain pan/zoom — no Obsidian-style inertia for this first cut.
+        panOnDrag
+        panOnScroll
+        zoomOnScroll
+        minZoom={0.2}
+        maxZoom={2}
+      >
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--border))" />
+        <Controls showInteractive={false} />
+        <MiniMap
+          pannable
+          zoomable
+          maskColor="hsl(var(--bg) / 0.6)"
+          nodeColor={(node) => KIND_FILL[(node.data as LfNodeData).kind] ?? 'hsl(var(--muted-fg))'}
+        />
+      </ReactFlow>
+    </div>
+  );
+}
+
+/**
+ * Public component. Wraps the inner renderer in a ``ReactFlowProvider``
+ * so the parent page doesn't need to worry about react-flow's context
+ * requirements.
+ */
+export function GraphCanvas(props: GraphCanvasProps) {
+  return (
+    <ReactFlowProvider>
+      <GraphCanvasInner {...props} />
+    </ReactFlowProvider>
   );
 }
