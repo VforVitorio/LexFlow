@@ -581,7 +581,32 @@ const liveApi: ApiClient = {
     },
   },
   dashboards: {
-    metrics: () => Promise.reject(new ApiError(501, null, 'dashboards.metrics not implemented (issue #85)')),
+    metrics: async (preset) => {
+      // #85 — `GET /api/v1/dashboards/{preset}` returns
+      // `{ preset, cards: MetricCard[], series: { labels, values, recent_from? } }`.
+      // The wire is snake_case; we flip `recent_from` → `recentFrom` here.
+      const raw = await http<{
+        preset: 'compliance' | 'analytics';
+        cards: { id: string; title: string; value: string; delta: string; spark: number[]; positive: boolean | null }[];
+        series: { labels: string[]; values: number[]; recent_from: number | null };
+      }>(`/dashboards/${encodeURIComponent(preset)}`);
+      return {
+        preset: raw.preset,
+        cards: raw.cards.map((c) => ({
+          id: c.id,
+          title: c.title,
+          value: c.value,
+          delta: c.delta,
+          spark: c.spark,
+          positive: c.positive ?? undefined,
+        })),
+        series: {
+          labels: raw.series.labels,
+          values: raw.series.values,
+          recentFrom: raw.series.recent_from ?? undefined,
+        },
+      };
+    },
   },
   sync: {
     status: () => Promise.reject(new ApiError(501, null, 'sync.status not implemented (issue #86)')),
