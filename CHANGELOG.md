@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.6.0](https://github.com/VforVitorio/LexFlow/compare/v0.5.1...v0.6.0) (2026-05-24)
+
+
+### Features
+
+* **api:** GET /api/v1/models — list chat providers + their models (closes [#82](https://github.com/VforVitorio/LexFlow/issues/82)) ([6b77a5d](https://github.com/VforVitorio/LexFlow/commit/6b77a5da1dc6f166e7f91ac8f5f78920f509c8f6))
+* **api:** GET /api/v1/models — list chat providers and their models ([4ab7172](https://github.com/VforVitorio/LexFlow/commit/4ab7172bcf64fbfc05288471043e12dc15b3d83b))
+* **frontend:** wire api.ts graph endpoints — neighbors/path/top/stats (closes [#81](https://github.com/VforVitorio/LexFlow/issues/81)) ([9202855](https://github.com/VforVitorio/LexFlow/commit/92028555a0ed3dd68cde6481c03bb598c757f75c))
+* **frontend:** wire api.ts to /api/v1/search + /api/v1/models (closes [#80](https://github.com/VforVitorio/LexFlow/issues/80)) ([b6cbe80](https://github.com/VforVitorio/LexFlow/commit/b6cbe80601a1b9f8d90a502f9c7a0c29d295beb0))
+* **frontend:** wire api.ts to /api/v1/search and /api/v1/models ([6c36248](https://github.com/VforVitorio/LexFlow/commit/6c362487939d9b5db7da403d44424223ca510c6e))
+* **frontend:** wire api.ts to /graph/neighbors, /path, /top, /stats ([5768106](https://github.com/VforVitorio/LexFlow/commit/576810662b34ff3cedd13ebf9c5f66d9f4224185))
+* **landing:** "Qué es esto" + DevContrib banner + chat typewriter + persona icons ([e913164](https://github.com/VforVitorio/LexFlow/commit/e913164a081a29cab537b36289c1035ea9136357))
+* **landing:** full product reorientation — Personas, problem-framed Layers, UserFlow, SPA previews, cozy animations ([a2d201e](https://github.com/VforVitorio/LexFlow/commit/a2d201e9545260453d16e57f72bfdbbd8c5ab221))
+* **landing:** macOS-style window chrome on every preview + chat overflow fix ([42e3da0](https://github.com/VforVitorio/LexFlow/commit/42e3da028db9577ce068a4ca9832959c72e69a01))
+* **landing:** reorient hero-to-CTA flow around product (Personas, UserFlow), demote dev sections ([c369974](https://github.com/VforVitorio/LexFlow/commit/c36997465845d6627b52c218bc19d0377ead3e2e))
+* **landing:** SPA-mirror previews ([#185](https://github.com/VforVitorio/LexFlow/issues/185), Obsidian-style graph) + cozy animation layer ([4e2c6d2](https://github.com/VforVitorio/LexFlow/commit/4e2c6d2ae2013308df70a9f1a684a3ac3ee50e26))
+
+
+### Bug Fixes
+
+* **landing:** chat typewriter pauses (not restarts), title color palette, WhatIs left-aligned ([635850f](https://github.com/VforVitorio/LexFlow/commit/635850fb1d8b01edfa0a57f39b5c3919f529153d))
+
 ## [0.5.1](https://github.com/VforVitorio/LexFlow/compare/v0.5.0...v0.5.1) (2026-05-23)
 
 
