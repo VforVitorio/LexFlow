@@ -108,6 +108,70 @@ export const mockApi: ApiClient = {
       await delay(200);
       return GRAPH;
     },
+    async neighbors(id) {
+      await delay(120);
+      // Direct successors from the in-memory graph. We treat the canned
+      // GRAPH as bidirectional for the mock since the layout doesn't carry
+      // direction; consumers just need a reasonable list to render.
+      return GRAPH.edges
+        .filter((e) => e.source === id || e.target === id)
+        .map((e) => (e.source === id ? e.target : e.source));
+    },
+    async path(from, to) {
+      await delay(120);
+      // Tiny BFS over the canned graph so the mock returns a plausible
+      // walk between two nodes. Returns [] (404-equivalent) when no path
+      // exists; the consumer treats both the same.
+      const adj = new Map<string, string[]>();
+      for (const e of GRAPH.edges) {
+        adj.set(e.source, [...(adj.get(e.source) ?? []), e.target]);
+        adj.set(e.target, [...(adj.get(e.target) ?? []), e.source]);
+      }
+      const queue: string[][] = [[from]];
+      const seen = new Set<string>([from]);
+      while (queue.length) {
+        const path = queue.shift()!;
+        const last = path[path.length - 1];
+        if (last === to) return path;
+        for (const next of adj.get(last) ?? []) {
+          if (seen.has(next)) continue;
+          seen.add(next);
+          queue.push([...path, next]);
+        }
+      }
+      return [];
+    },
+    async top(opts = {}) {
+      await delay(120);
+      const limit = opts.limit ?? 10;
+      // Rank canned nodes by degree as a stand-in for PageRank.
+      const counts = new Map<string, number>();
+      for (const e of GRAPH.edges) {
+        counts.set(e.source, (counts.get(e.source) ?? 0) + 1);
+        counts.set(e.target, (counts.get(e.target) ?? 0) + 1);
+      }
+      return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([lawId, deg]) => {
+          const node = GRAPH.nodes.find((n) => n.id === lawId);
+          return { lawId, score: deg / Math.max(1, GRAPH.edges.length), title: node?.label ?? null };
+        });
+    },
+    async stats() {
+      await delay(80);
+      const nodeCount = GRAPH.nodes.length;
+      const edgeCount = GRAPH.edges.length;
+      const maxEdges = Math.max(1, nodeCount * (nodeCount - 1));
+      return {
+        nodeCount,
+        edgeCount,
+        density: Number((edgeCount / maxEdges).toFixed(6)),
+        // The canned graph is small and roughly connected; one component
+        // is the honest answer.
+        weaklyConnectedComponents: 1,
+      };
+    },
   },
   search: {
     async universal(q) {

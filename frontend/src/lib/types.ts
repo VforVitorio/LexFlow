@@ -169,6 +169,21 @@ export interface GraphData {
   edges: GraphEdge[];
 }
 
+// #81 — auxiliary graph endpoints. Camel-cased mirrors of the backend's
+// snake_case schemas (`GraphTopItem`, `GraphStatsResponse`).
+export interface GraphTopItem {
+  lawId: string;
+  score: number;
+  title: string | null;
+}
+export interface GraphStats {
+  nodeCount: number;
+  edgeCount: number;
+  density: number;
+  weaklyConnectedComponents: number;
+}
+export type GraphTopMetric = 'pagerank';
+
 // ─── Chat ────────────────────────────────────────────────────────────────
 
 export interface ChatThread {
@@ -341,6 +356,14 @@ export interface ApiClient {
   };
   graph: {
     forLaw(id: string, depth?: number): Promise<GraphData>;
+    /** Direct successors (outgoing references) of a law node. */
+    neighbors(id: string): Promise<string[]>;
+    /** Shortest directed path between two law nodes (404 if disconnected). */
+    path(from: string, to: string): Promise<string[]>;
+    /** Top-`limit` laws by PageRank (only metric supported today). */
+    top(opts?: { limit?: number; metric?: GraphTopMetric }): Promise<GraphTopItem[]>;
+    /** Global graph stats — node/edge count, density, components. */
+    stats(): Promise<GraphStats>;
   };
   search: {
     universal(q: string): Promise<SearchResults>;

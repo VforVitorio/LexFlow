@@ -28,6 +28,9 @@ import type {
   DashboardData,
   DiffResult,
   GraphData,
+  GraphStats,
+  GraphTopItem,
+  GraphTopMetric,
   HierarchyNode,
   Law,
   LawDetail,
@@ -475,6 +478,46 @@ const liveApi: ApiClient = {
         kind: 'cites',
       }));
       return { nodes, edges };
+    },
+    neighbors: async (id) => {
+      // Backend returns `{law_id, neighbors, count}`; consumers only need
+      // the list — count is recoverable as `.length` and the law_id is
+      // already known to the caller.
+      const raw = await http<{ law_id: string; neighbors: string[]; count: number }>(
+        `/graph/neighbors/${encodeURIComponent(id)}`,
+      );
+      return raw.neighbors;
+    },
+    path: async (from, to) => {
+      // 404 (NetworkXNoPath / NodeNotFound) bubbles up as ApiError — the
+      // caller can branch on `.status === 404` to render an empty state.
+      return await http<string[]>(`/graph/path${qs({ from, to })}`);
+    },
+    top: async (opts = {}) => {
+      const limit = opts.limit ?? 10;
+      const metric: GraphTopMetric = opts.metric ?? 'pagerank';
+      const raw = await http<{ law_id: string; score: number; title: string | null }[]>(
+        `/graph/top${qs({ limit, metric })}`,
+      );
+      return raw.map<GraphTopItem>((it) => ({
+        lawId: it.law_id,
+        score: it.score,
+        title: it.title,
+      }));
+    },
+    stats: async () => {
+      const raw = await http<{
+        node_count: number;
+        edge_count: number;
+        density: number;
+        weakly_connected_components: number;
+      }>('/graph/stats');
+      return {
+        nodeCount: raw.node_count,
+        edgeCount: raw.edge_count,
+        density: raw.density,
+        weaklyConnectedComponents: raw.weakly_connected_components,
+      };
     },
   },
   search: {
