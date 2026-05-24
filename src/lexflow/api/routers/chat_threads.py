@@ -1,0 +1,288 @@
+"""``/api/v1/chat/threads`` — CRUD for persisted chat threads (issue #83).
+
+Five endpoints:
+
+* ``GET    /chat/threads``               — paginated listing
+* ``POST   /chat/threads``               — create
+* ``GET    /chat/threads/{id}``          — detail + message history
+* ``PATCH  /chat/threads/{id}``          — rename
+* ``DELETE /chat/threads/{id}``          — delete
+* ``POST   /chat/threads/{id}/messages`` — append a turn (used by tests
+                                            today, by the streaming
+                                            endpoint in #84 tomorrow)
+
+Persistence is SQLite via :mod:`lexflow.chat.db`.
+
+--- WHERE TO CHANGE IF X CHANGES ---
+* Schema    →  ``lexflow.chat.schemas`` (ChatThreadRead, ChatMessageRead).
+* Storage   →  ``lexflow.chat.storage_models`` (SQLModel tables).
+* Streaming →  issue #84 will add ``POST /chat/threads/{id}/send`` that
+               returns an SSE stream and writes the assistant turn here
+               on completion.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from datetime import UTC
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc
+from sqlmodel import Session, func, select
+
+from lexflow.chat.db import get_session
+from lexflow.chat.schemas import (
+    ChatMessageCreate,
+    ChatMessageRead,
+    ChatThreadCreate,
+    ChatThreadDetail,
+    ChatThreadList,
+    ChatThreadPatch,
+    ChatThreadRead,
+)
+from lexflow.chat.storage_models import ChatMessage, ChatThread
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/chat", tags=["Chat"])
+
+_PREVIEW_MAX_CHARS = 140
+
+
+# ---------------------------------------------------------------------------
+# Helpers — keep route handlers thin
+# ---------------------------------------------------------------------------
+
+
+def _load_thread_or_404(session: Session, thread_id: str) -> ChatThread:
+    """Fetch a thread row by id or raise FastAPI's 404."""
+    thread = session.get(ChatThread, thread_id)
+    if thread is None:
+        raise HTTPException(status_code=404, detail=f"Chat thread not found: {thread_id}")
+    return thread
+
+
+def _decode_payload(raw: str | None) -> dict[str, Any] | None:
+    """JSON-decode a payload column, returning ``None`` on absence/error.
+
+    Bad rows are logged at WARNING and surfaced as ``None`` — we don't
+    want one corrupted row to brick a whole thread listing.
+    """
+    if not raw:
+        return None
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning("Chat message payload is not valid JSON; surfacing None")
+        return None
+    if isinstance(value, dict):
+        return value
+    return None
+
+
+def _encode_payload(payload: dict[str, Any] | None) -> str | None:
+    """JSON-encode the payload field, or ``None`` if absent."""
+    if payload is None:
+        return None
+    return json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+
+
+def _message_read(message: ChatMessage) -> ChatMessageRead:
+    """Map a storage row to the API response shape."""
+    return ChatMessageRead(
+        id=message.id,
+        thread_id=message.thread_id,
+        # Pydantic narrows ``str`` to the ``ChatRole`` literal at parse
+        # time — invalid roles would already have failed at insert.
+        role=message.role,
+        content=message.content,
+        created_at=message.created_at,
+        payload=_decode_payload(message.payload_json),
+    )
+
+
+def _latest_preview(session: Session, thread_id: str) -> str | None:
+    """Pick the most recent message's content as a thread preview.
+
+    Trimmed to ``_PREVIEW_MAX_CHARS`` chars so the conversation rail
+    doesn't have to do its own ellipsising.
+    """
+    statement = (
+        select(ChatMessage)
+        .where(ChatMessage.thread_id == thread_id)
+        # SQLModel re-binds ``created_at`` to an ORM descriptor at runtime,
+        # but mypy only sees the declared ``datetime`` type — hence the
+        # explicit ignore. Same pattern used in ``list_threads`` below.
+        .order_by(desc(ChatMessage.created_at))  # type: ignore[arg-type]
+        .limit(1)
+    )
+    msg = session.exec(statement).first()
+    if msg is None or not msg.content:
+        return None
+    text = msg.content.strip()
+    if len(text) <= _PREVIEW_MAX_CHARS:
+        return text
+    return text[: _PREVIEW_MAX_CHARS - 1].rstrip() + "…"
+
+
+def _thread_read(session: Session, thread: ChatThread) -> ChatThreadRead:
+    """Map a storage row to the API listing shape, including preview."""
+    return ChatThreadRead(
+        id=thread.id,
+        title=thread.title,
+        model=thread.model,
+        created_at=thread.created_at,
+        updated_at=thread.updated_at,
+        preview=_latest_preview(session, thread.id),
+    )
+
+
+def _touch_thread(thread: ChatThread) -> None:
+    """Bump ``updated_at`` so the conversation rail reorders correctly."""
+    from datetime import datetime
+
+    thread.updated_at = datetime.now(UTC)
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/threads",
+    response_model=ChatThreadList,
+    summary="List chat threads, newest activity first.",
+)
+def list_threads(
+    session: Annotated[Session, Depends(get_session)],
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+) -> ChatThreadList:
+    """Paginated list of threads ordered by ``updated_at`` desc."""
+    total = session.exec(select(func.count()).select_from(ChatThread)).one()
+    statement = (
+        select(ChatThread)
+        # See note on ``_latest_preview`` — runtime descriptor vs static type.
+        .order_by(desc(ChatThread.updated_at))  # type: ignore[arg-type]
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    rows = session.exec(statement).all()
+    return ChatThreadList(
+        items=[_thread_read(session, t) for t in rows],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.post(
+    "/threads",
+    response_model=ChatThreadRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new chat thread.",
+)
+def create_thread(
+    body: ChatThreadCreate,
+    session: Annotated[Session, Depends(get_session)],
+) -> ChatThreadRead:
+    """Insert a new thread and return its read shape."""
+    thread = ChatThread(
+        title=body.title or "Nueva conversación",
+        model=body.model or "",
+    )
+    session.add(thread)
+    session.commit()
+    session.refresh(thread)
+    return _thread_read(session, thread)
+
+
+@router.get(
+    "/threads/{thread_id}",
+    response_model=ChatThreadDetail,
+    summary="Read a thread plus its full message history.",
+)
+def get_thread(
+    thread_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> ChatThreadDetail:
+    """404 if the id is unknown."""
+    thread = _load_thread_or_404(session, thread_id)
+    base = _thread_read(session, thread)
+    return ChatThreadDetail(
+        **base.model_dump(),
+        messages=[_message_read(m) for m in thread.messages],
+    )
+
+
+@router.patch(
+    "/threads/{thread_id}",
+    response_model=ChatThreadRead,
+    summary="Rename a thread (only ``title`` is patchable today).",
+)
+def patch_thread(
+    thread_id: str,
+    body: ChatThreadPatch,
+    session: Annotated[Session, Depends(get_session)],
+) -> ChatThreadRead:
+    """Apply non-null fields from the body and return the updated row."""
+    thread = _load_thread_or_404(session, thread_id)
+    if body.title is not None:
+        thread.title = body.title
+    _touch_thread(thread)
+    session.add(thread)
+    session.commit()
+    session.refresh(thread)
+    return _thread_read(session, thread)
+
+
+@router.delete(
+    "/threads/{thread_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a thread and all its messages (cascade).",
+)
+def delete_thread(
+    thread_id: str,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    """Idempotent — but we return 404 when the id is unknown so callers
+    can distinguish "I deleted nothing because nothing was there" from
+    "I deleted exactly that thread". Cascade on ``ChatThread.messages``
+    cleans up child rows.
+    """
+    thread = _load_thread_or_404(session, thread_id)
+    session.delete(thread)
+    session.commit()
+
+
+@router.post(
+    "/threads/{thread_id}/messages",
+    response_model=ChatMessageRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Append one message to a thread. Streaming send lives in #84.",
+)
+def append_message(
+    thread_id: str,
+    body: ChatMessageCreate,
+    session: Annotated[Session, Depends(get_session)],
+) -> ChatMessageRead:
+    """Append a turn, touch the thread's ``updated_at`` and return the
+    persisted row. Intentionally non-streaming — see issue #84 for the
+    SSE counterpart that adds the assistant + tool turns.
+    """
+    thread = _load_thread_or_404(session, thread_id)
+    message = ChatMessage(
+        thread_id=thread.id,
+        role=body.role,
+        content=body.content,
+        payload_json=_encode_payload(body.payload),
+    )
+    session.add(message)
+    _touch_thread(thread)
+    session.add(thread)
+    session.commit()
+    session.refresh(message)
+    return _message_read(message)

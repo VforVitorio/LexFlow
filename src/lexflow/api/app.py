@@ -10,8 +10,9 @@ from fastapi import FastAPI
 
 from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
-from lexflow.api.routers import articles, laws, models, search, versions
+from lexflow.api.routers import articles, chat_threads, laws, models, search, versions
 from lexflow.api.routers.graph import router as graph_router
+from lexflow.chat.db import init_db
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,10 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application startup / shutdown lifecycle."""
     logger.info("LexFlow %s starting up", __version__)
+    # Chat thread persistence (issue #83) — idempotent ``create_all`` on
+    # the SQLite tables. Cheap, runs once per process. Tests that need a
+    # custom DB path call ``init_db_for_path`` from a fixture instead.
+    init_db()
     # Metadata preload is deferred to first request to avoid import-time
     # side effects during testing.  Production startup can call
     # ``get_registry().preload_all_metadata()`` explicitly.
@@ -41,6 +46,7 @@ app.include_router(versions.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(graph_router, prefix="/api/v1")
 app.include_router(models.router, prefix="/api/v1")
+app.include_router(chat_threads.router, prefix="/api/v1")
 
 
 @app.get("/health")

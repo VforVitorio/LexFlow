@@ -27,6 +27,10 @@ dependencies = [
     "numpy>=1.26",
     "scipy>=1.13",
     "httpx>=0.28",
+    # Chat thread persistence (issue #83). Light dep — sits on SQLAlchemy
+    # + Pydantic which we already use. Lets us define tables as Pydantic
+    # models so the API and storage layers share one source of truth.
+    "sqlmodel>=0.0.22",
 ]
 
 [project.optional-dependencies]
