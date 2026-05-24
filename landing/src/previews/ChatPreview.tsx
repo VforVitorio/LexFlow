@@ -34,6 +34,9 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Lang } from '@/i18n';
+import { PreviewChrome } from './PreviewChrome';
+
+const TITLE: Record<Lang, string> = { es: 'Chat · LexFlow', en: 'Chat · LexFlow' };
 
 interface Source {
   id: string;
@@ -42,21 +45,26 @@ interface Source {
   excerpt: string;
 }
 
+// Trimmed to two sources so the rail keeps a calm pace and matches the
+// two cite markers in the shortened reply.
 const SOURCES_ES: Source[] = [
   { id: 's1', lawId: 'LOPDGDD', article: 'Art. 22', excerpt: 'Las decisiones basadas únicamente en tratamientos automatizados…' },
-  { id: 's2', lawId: 'RGPD',     article: 'Art. 35', excerpt: 'Cuando un tipo de tratamiento entrañe un alto riesgo…' },
-  { id: 's3', lawId: 'LOPDGDD', article: 'Art. 28', excerpt: 'El responsable establecerá las garantías adecuadas…' },
+  { id: 's2', lawId: 'RGPD',    article: 'Art. 35', excerpt: 'Cuando un tipo de tratamiento entrañe un alto riesgo…' },
 ];
 const SOURCES_EN: Source[] = [
   { id: 's1', lawId: 'LOPDGDD', article: 'Art. 22', excerpt: 'Decisions based solely on automated processing…' },
   { id: 's2', lawId: 'GDPR',    article: 'Art. 35', excerpt: 'Where processing is likely to result in high risk…' },
-  { id: 's3', lawId: 'LOPDGDD', article: 'Art. 28', excerpt: 'The controller shall implement adequate safeguards…' },
 ];
 
-const USER_QUERY = { es: '¿Qué obligaciones hay con tratamiento de datos automatizado?', en: 'What are the obligations for automated data processing?' };
+// Keep the example short so the bubble never overflows on narrow card
+// widths. Long demo text was breaking out of the chat column at < 600 px.
+const USER_QUERY = {
+  es: '¿Qué exige la LOPDGDD con datos automatizados?',
+  en: 'What does LOPDGDD ask of automated decisions?',
+};
 const ASST_REPLY = {
-  es: 'Según la LOPDGDD, las decisiones basadas únicamente en tratamientos automatizados quedan sujetas a salvaguardas concretas{cite:s1}. Cuando el tratamiento implica alto riesgo, el RGPD obliga a una evaluación de impacto previa{cite:s2}. Además, el responsable debe definir garantías técnicas y organizativas{cite:s3}.',
-  en: 'Under LOPDGDD, decisions based solely on automated processing are subject to specific safeguards{cite:s1}. When processing is likely high-risk, GDPR requires a prior impact assessment{cite:s2}. The data controller must also define technical and organisational safeguards{cite:s3}.',
+  es: 'Las decisiones automatizadas exigen salvaguardas concretas{cite:s1}. Si hay alto riesgo, el RGPD pide evaluación de impacto previa{cite:s2}.',
+  en: 'Automated decisions require specific safeguards{cite:s1}. High-risk processing also needs a prior impact assessment under GDPR{cite:s2}.',
 };
 
 const THREADS_ES = [
@@ -73,8 +81,8 @@ const THREADS_EN = [
 ];
 
 const COPY = {
-  es: { newConv: 'Nueva conversación', placeholder: 'Pregunta algo al corpus…', sourcesLabel: 'Fuentes', meta: 'Citas: 3 · LOPDGDD · RGPD', model: 'gpt-4o · BOE-rag', caret: '▎' },
-  en: { newConv: 'New conversation',   placeholder: 'Ask the corpus anything…', sourcesLabel: 'Sources', meta: 'Citations: 3 · LOPDGDD · GDPR', model: 'gpt-4o · BOE-rag', caret: '▎' },
+  es: { newConv: 'Nueva conversación', placeholder: 'Pregunta al corpus…', sourcesLabel: 'Fuentes', meta: '2 fuentes citadas', model: 'gpt-4o', caret: '▎' },
+  en: { newConv: 'New conversation',   placeholder: 'Ask the corpus…',    sourcesLabel: 'Sources', meta: '2 cited sources', model: 'gpt-4o', caret: '▎' },
 } as const;
 
 type Phase = 'idle' | 'userTyping' | 'pause' | 'asstTyping' | 'done';
@@ -269,12 +277,14 @@ export function ChatPreview({ lang }: Props) {
 
   return (
     <div
-      className="lf-prev lf-prev-chat"
+      className="lf-prev"
       aria-hidden="true"
       ref={wrapperRef}
       onMouseEnter={() => { pausedRef.current = true; }}
       onMouseLeave={() => { pausedRef.current = false; }}
     >
+      <PreviewChrome title={TITLE[lang] ?? TITLE.en} />
+      <div className="lf-prev-body lf-prev-chat">
       <aside className="lf-prev-chat-rail">
         <button type="button" className="lf-prev-chat-new">+ {t.newConv}</button>
         {groupBy(threads, (x) => x.when).map(([label, list]) => (
@@ -336,6 +346,7 @@ export function ChatPreview({ lang }: Props) {
           </div>
         ))}
       </aside>
+      </div>
     </div>
   );
 }

@@ -2451,6 +2451,72 @@
   overflow: hidden;
   font-size: 12.5px;
   color: hsl(var(--fg));
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 10px 32px -16px hsl(232 40% 4% / 0.55),
+    0 1px 0 hsl(var(--fg) / 0.04) inset;
+}
+[data-theme='light'] .landing-root .lf-prev {
+  box-shadow:
+    0 12px 32px -18px hsl(232 30% 30% / 0.22),
+    0 1px 0 hsl(var(--fg) / 0.04) inset;
+}
+
+/* macOS-style title bar shared by every preview. Traffic-light dots on
+ * the left, a centred tab pill carrying the preview's name. Sits as the
+ * first child inside .lf-prev; the body grows below it. */
+.landing-root .lf-prev-chrome {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, hsl(var(--surface-2)) 0%, hsl(var(--surface)) 100%);
+  border-bottom: 1px solid hsl(var(--border));
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.landing-root .lf-prev-traffic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.landing-root .lf-prev-traffic-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+  box-shadow: 0 0 0 0.5px hsl(0 0% 0% / 0.15) inset;
+}
+.landing-root .lf-prev-traffic-dot.is-close { background: hsl(355 75% 60%); }
+.landing-root .lf-prev-traffic-dot.is-min   { background: hsl(40 92% 56%); }
+.landing-root .lf-prev-traffic-dot.is-max   { background: hsl(140 56% 50%); }
+.landing-root .lf-prev-tab {
+  justify-self: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: hsl(var(--muted-fg));
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Body inside a chromed preview. Fills the remaining height. Each feature
+ * (search/chat/dash/graph) sets its own grid + padding via a sibling class. */
+.landing-root .lf-prev-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Generic card surface used inside previews (KPI tiles, source cards, etc.) */

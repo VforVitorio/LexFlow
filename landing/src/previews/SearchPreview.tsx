@@ -11,6 +11,9 @@
  */
 
 import type { Lang } from '@/i18n';
+import { PreviewChrome } from './PreviewChrome';
+
+const TITLE: Record<Lang, string> = { es: 'Explorador · LexFlow', en: 'Explorer · LexFlow' };
 
 interface Law {
   id: string;
@@ -61,7 +64,9 @@ export function SearchPreview({ lang, activeTag }: Props) {
   const laws = (lang === 'es' ? LAWS_ES : LAWS_EN);
   const filtered = activeTag ? laws.filter((l) => l.tags.includes(activeTag)) : laws;
   return (
-    <div className="lf-prev lf-prev-search" aria-hidden="true">
+    <div className="lf-prev" aria-hidden="true">
+      <PreviewChrome title={TITLE[lang] ?? TITLE.en} />
+      <div className="lf-prev-body lf-prev-search">
       <aside className="lf-prev-search-rail">
         <div className="label-caps lf-prev-search-rail-label">{t.filters}</div>
         <div className="lf-prev-search-rail-section">
@@ -110,6 +115,7 @@ export function SearchPreview({ lang, activeTag }: Props) {
             </li>
           )}
         </ul>
+      </div>
       </div>
     </div>
   );

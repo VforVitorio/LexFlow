@@ -21,6 +21,9 @@
 
 import { useMemo, useState } from 'react';
 import type { Lang } from '@/i18n';
+import { PreviewChrome } from './PreviewChrome';
+
+const TITLE: Record<Lang, string> = { es: 'Grafo · LexFlow', en: 'Graph · LexFlow' };
 
 type Kind = 'law' | 'article' | 'reform';
 interface Node {
@@ -110,7 +113,9 @@ export function GraphPreview({ lang }: Props) {
   const degree = EDGES.reduce((n, e) => n + (e.a === focusId || e.b === focusId ? 1 : 0), 0);
 
   return (
-    <div className="lf-prev lf-prev-graph" aria-hidden="true">
+    <div className="lf-prev" aria-hidden="true">
+      <PreviewChrome title={TITLE[lang] ?? TITLE.en} />
+      <div className="lf-prev-body lf-prev-graph">
       <svg viewBox="0 0 760 480" className="lf-prev-graph-svg">
         {/* Edges first so nodes paint over them */}
         {EDGES.map((e, i) => {
@@ -169,6 +174,7 @@ export function GraphPreview({ lang }: Props) {
         <div className="lf-prev-graph-tooltip-meta">{focusedNode.rango} · {degree} {t.degree}</div>
       </div>
       <div className="lf-prev-graph-hint">{t.idleHint}</div>
+      </div>
     </div>
   );
 }

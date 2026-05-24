@@ -12,6 +12,9 @@
  */
 
 import type { Lang } from '@/i18n';
+import { PreviewChrome } from './PreviewChrome';
+
+const TITLE: Record<Lang, string> = { es: 'Paneles · LexFlow', en: 'Dashboards · LexFlow' };
 
 interface KpiCard {
   title: string;
@@ -48,7 +51,9 @@ export function DashboardPreview({ lang }: Props) {
   const t = COPY[lang] ?? COPY.en;
   const cards = lang === 'es' ? KPI_ES : KPI_EN;
   return (
-    <div className="lf-prev lf-prev-dash" aria-hidden="true">
+    <div className="lf-prev" aria-hidden="true">
+      <PreviewChrome title={TITLE[lang] ?? TITLE.en} />
+      <div className="lf-prev-body lf-prev-dash">
       <header className="lf-prev-dash-head">
         <span className="lf-prev-dash-h1">{lang === 'es' ? 'Cuadros de mando' : 'Dashboards'}</span>
         <div className="lf-prev-dash-tabs" role="tablist">
@@ -70,6 +75,7 @@ export function DashboardPreview({ lang }: Props) {
           <span className="lf-prev-dash-chart-meta">{t.chartMeta}</span>
         </div>
         <BarChart />
+      </div>
       </div>
     </div>
   );
