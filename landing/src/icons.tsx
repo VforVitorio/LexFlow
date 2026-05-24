@@ -150,3 +150,38 @@ export const TECH_LOGOS: TechLogo[] = [
 ];
 
 export const GH_URL = 'https://github.com/VforVitorio/LexFlow';
+
+/* Persona icons (#181). Lucide-flavoured strokes at 22 px, stroke-width 1.6
+ * so they sit visually with the section eyebrows and chip metas. Used by
+ * <Personas />; key matches `personas.list[*].icon` in the i18n schema. */
+export const PERSONA_ICONS: Record<string, ReactNode> = {
+  scale: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v18" />
+      <path d="M8 21h8" />
+      <path d="M3 7h18" />
+      <path d="M6 7l-3 6a4 4 0 0 0 6 0z" />
+      <path d="M18 7l-3 6a4 4 0 0 0 6 0z" />
+    </svg>
+  ),
+  book: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5a2.5 2.5 0 0 0-2.5 2.5z" />
+      <path d="M4 4.5v17A2.5 2.5 0 0 0 6.5 22H20" />
+      <path d="M8 7h8M8 11h6" />
+    </svg>
+  ),
+  newspaper: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 5h13v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5z" />
+      <path d="M17 8h3v11a2 2 0 0 1-2 2" />
+      <path d="M8 8h6M8 12h6M8 16h4" />
+    </svg>
+  ),
+  shield: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  ),
+};

@@ -1,9 +1,11 @@
 {
   "nav": {
-    "features": "Layers",
+    "features": "Features",
+    "howYouUse": "How you use it",
     "stack": "Stack",
     "roadmap": "Roadmap",
     "github": "GitHub",
+    "forDevs": "For devs",
     "cta": "Try LexFlow"
   },
   "hero": {
@@ -21,68 +23,139 @@
   "stats": [
     { "value": "4", "unit": "", "label": "Integrated layers sharing data — API, graph, chat & dashboards" },
     { "value": "5", "unit": "", "label": "LLM providers supported through MCP tools" },
-    { "value": "1", "unit": "k+", "label": "Spanish laws indexed from the legalize-es corpus" },
+    { "value": "42", "unit": "K+", "label": "Spanish laws indexed from the legalize-es corpus" },
     { "value": "100", "unit": "%", "label": "Open source under the Apache 2.0 license" }
   ],
-  "layersEyebrow": "Four integrated layers",
-  "layersTitle": "One platform for the whole legal stack.",
-  "layersSub": "Every layer ships on the same **FastAPI core** and lives behind a single **typed contract** — so the React app and any external client speak to the **exact same data**.",
+  "whatIs": {
+    "eyebrow": "OK, but what is this?",
+    "title": "LexFlow in two paragraphs.",
+    "p1": "LexFlow is an **open-source platform** that takes the full body of Spanish legislation — the BOE corpus, already in Markdown thanks to the **legalize-es** project — and turns it into something walkable: fast search, a graph of cross-references between statutes, a chat that cites the exact article, and dashboards that show how the law shifts over time.",
+    "p2": "The goal is simple: anyone who works with the law — or just wants to understand it — should stop losing hours jumping between BOE tabs. Everything runs locally, no cloud round-trips, and the code is public so anyone can review or improve it.",
+    "stats": [
+      { "value": "42K+",   "label": "laws indexed"           },
+      { "value": "100%",   "label": "open source"            },
+      { "value": "Local",  "label": "runs on your machine"   }
+    ]
+  },
+  "devContrib": {
+    "title": "Built in the open, made to be contributed to.",
+    "body": "LexFlow is a public, free project under the Apache 2.0 license. The vision is to build it together with everyone who cares about Spanish legislation being easier to understand. If you can bring something to the table — code, ideas, copy fixes, translations, accessibility tweaks — it all counts.",
+    "bullet1": "Open issues labelled with good-first-issue",
+    "bullet2": "Public roadmap — no surprises about what's coming",
+    "bullet3": "No account, no SaaS — everything runs on your machine",
+    "cta": "How to contribute"
+  },
+  "personas": {
+    "eyebrow": "Who this is for",
+    "title": "Made for people who live with the law every day.",
+    "sub": "You don't need to know how to code. LexFlow is built for the people who already fight the BOE every day and need a less tedious way to do it.",
+    "list": [
+      {
+        "icon": "scale",
+        "who": "Lawyers and law firms",
+        "pain": "Cross-reference statutes without opening twenty BOE tabs and without losing track of which amends what."
+      },
+      {
+        "icon": "book",
+        "who": "Bar-exam students",
+        "pain": "Ask the syllabus instead of digging through it. Every answer comes with the exact article cited."
+      },
+      {
+        "icon": "newspaper",
+        "who": "Journalists & researchers",
+        "pain": "Trace a law from its publication through every amendment, and see which other laws cite it."
+      },
+      {
+        "icon": "shield",
+        "who": "Compliance teams",
+        "pain": "Sector-scoped alerts when a regulation changes, instead of watching the BOE by hand every morning."
+      }
+    ]
+  },
+  "layersEyebrow": "Features",
+  "layersTitle": "What LexFlow takes off your plate.",
+  "layersSub": "Four concrete problems that show up when you work with Spanish legislation — and how the product solves each one. The tech detail sits in **For devs** below, if you care how it's built.",
   "layers": [
     {
       "num": "01",
-      "kicker": "REST API",
-      "title": "A typed contract over every Spanish law.",
-      "body": "FastAPI endpoints for laws, articles, versions, diffs, full-text search and stats. The OpenAPI schema is generated automatically and consumed by a strictly-typed React client — no hand-rolled types.",
+      "kicker": "Search & catalogue",
+      "title": "Find any law without opening the BOE.",
+      "body": "Full catalogue of Spanish legislation with instant full-text search, filters by rank, scope and status, and the full text of every article one click away.",
       "bullets": [
-        "GET /api/v1/laws · paginated catalogue",
-        "GET /api/v1/laws/{id}/diff · article-level changes",
-        "GET /api/v1/search?q= · full-text across the whole corpus",
-        "Pydantic v2 models and an interactive playground at /docs"
+        "Full-text search across the whole corpus, not just titles",
+        "Filter by rank, scope and validity status",
+        "Full article text, with BOE metadata attached",
+        "Fast pagination — no spinner even on thousands of results"
       ],
-      "linkLabel": "Open the explorer →"
+      "stack": ["FastAPI", "Pydantic v2", "Typed OpenAPI"]
     },
     {
       "num": "02",
-      "kicker": "Knowledge graph",
-      "title": "Cross-references, walkable like a graph.",
-      "body": "A NetworkX graph that links laws, articles and amendments. Walk a node's neighbours, find the shortest path between two norms, surface the most central pieces with PageRank.",
+      "kicker": "Reference graph",
+      "title": "See the network of statutes, not a flat list.",
+      "body": "Every cross-reference becomes a walkable edge. Browse neighbours, find the shortest path between two laws and surface the corpus's most central pieces.",
       "bullets": [
-        "PageRank, clustering and shortest-path algorithms",
-        "/graph/neighbors · /graph/path · /graph/subgraph",
-        "Filterable by topic, status, period or relation type",
-        "Ready to swap NetworkX for Neo4j when scaling up"
+        "Neighbours of any law or article in one click",
+        "Shortest path between two statutes",
+        "Most central pieces of the corpus surfaced by PageRank",
+        "Filter by topic, period or relation type"
       ],
-      "linkLabel": "Open the graph canvas →"
+      "stack": ["NetworkX", "PageRank", "Shortest path"]
     },
     {
       "num": "03",
-      "kicker": "Legal chat",
-      "title": "A chatbot that actually reads the law.",
-      "body": "Bring your own model — Ollama, LM Studio, OpenAI, Anthropic or Google. A FastMCP server exposes the API as tools, so answers come back with real citations from the BOE instead of training-data recall.",
+      "kicker": "Chat with real citations",
+      "title": "Ask the BOE like a teammate.",
+      "body": "Bring your own model and the chat answers with text quoted from the real corpus — not from what the model remembers from training. With Ollama it runs offline.",
       "bullets": [
-        "Five providers behind a single selector",
-        "MCP tools: search law, fetch article, view diff, query graph",
-        "Streamed responses with inline source citations",
-        "Local-first by default — Ollama runs offline"
+        "Five AI providers behind a single selector",
+        "Every answer comes with the exact article cited",
+        "Saved, linkable conversation history",
+        "Local-first — with Ollama everything stays on your machine"
       ],
-      "linkLabel": "Try the chat →"
+      "stack": ["FastMCP", "Ollama · OpenAI · Anthropic · Google"]
     },
     {
       "num": "04",
-      "kicker": "Dashboards",
-      "title": "Compliance and analytics at a glance.",
-      "body": "Plotly dashboards for legislative analysis and compliance tracking: reform pace by year, most-amended laws, sector-scoped alerts.",
+      "kicker": "Dashboards & alerts",
+      "title": "Watch how the law evolves over time.",
+      "body": "Interactive dashboards showing reform pace, the most-amended statutes and sector-scoped alerts whenever something shifts.",
       "bullets": [
-        "Compliance panel · sector-scoped norms and alerts",
-        "Analytics panel · reform pace, amendments, trends",
-        "Plotly figures served as JSON for any client",
-        "Interactive filters and CSV export"
+        "Reform pace by year and by sector",
+        "Top statutes by number of amendments",
+        "Configurable sector-scoped alerts",
+        "CSV export of any filtered slice"
       ],
-      "linkLabel": "Open the dashboards →"
+      "stack": ["Plotly", "Figures as JSON"]
     }
   ],
+  "userFlow": {
+    "eyebrow": "How you use it",
+    "title": "Three steps. No Python, no Docker.",
+    "sub": "LexFlow downloads, opens and that's it. The user flow is the same across every operating system.",
+    "steps": [
+      {
+        "num": "01",
+        "title": "Open LexFlow",
+        "body": "One executable per OS. No Python install, no dependencies, no Docker. Just download and open.",
+        "bullet": "Available on Windows, macOS and Linux"
+      },
+      {
+        "num": "02",
+        "title": "Search or browse",
+        "body": "Type the law's name or its BOE number. If you'd rather explore, the graph shows you everything around a given statute.",
+        "bullet": "Full-text search · Walkable graph"
+      },
+      {
+        "num": "03",
+        "title": "Ask or export",
+        "body": "The chat answers with the exact article cited. Dashboards give you the big picture. Any result exports to CSV or JSON.",
+        "bullet": "Cited chat · CSV/JSON export"
+      }
+    ]
+  },
   "howItWorks": {
-    "eyebrow": "How it works",
+    "eyebrow": "How it works under the hood",
     "title": "From Markdown to answer, in one pass.",
     "sub": "Each layer rests on the one below it. The parser feeds the graph, the graph grounds the chat, and the API is the single source of truth for every client.",
     "scenes": [
@@ -100,7 +173,7 @@
       }
     ]
   },
-  "builtOnEyebrow": "Built on open data",
+  "builtOnEyebrow": "Open data",
   "builtOnTitle": "Powered by legalize-es. Shipped as a single binary.",
   "builtOnBody": "LexFlow is a thin, intelligent layer over legalize-es — a public Git-versioned repository of Spanish legislation in Markdown. The final deliverable is a standalone binary per OS. No Docker, no Python install — download and run.",
   "builtOnCta": "Read the architecture →",
@@ -112,7 +185,7 @@
     { "type": "cmd", "text": "uv run python main.py" },
     { "type": "comment", "text": "# → API live at http://localhost:8000/docs" }
   ],
-  "stackEyebrow": "The stack",
+  "stackEyebrow": "Stack",
   "stackTitle": "Boring tech, solid foundations.",
   "stackSub": "No experimental frameworks, no proprietary cloud. Every piece is open source, well-documented and easy to swap out without rewriting the rest.",
   "stackBackend": {
@@ -141,7 +214,7 @@
       ["Tests", "Vitest + Playwright"]
     ]
   },
-  "roadmapEyebrow": "Where we are",
+  "roadmapEyebrow": "Roadmap",
   "roadmapTitle": "A public roadmap, phase by phase.",
   "roadmapSub": "LexFlow is being built in the open. The backend is feature-complete; the next milestones live in the React frontend.",
   "statusDone": "Done",
@@ -181,11 +254,14 @@
   "ctaSub": "Clone the repo, run `uv sync`, and the full API is live at `localhost:8000` with interactive docs ready to go. If the project direction resonates, drop a star.",
   "ctaPrimary": "Try LexFlow",
   "ctaSecondary": "Open on GitHub",
+  "paraDevsEyebrow": "For developers",
+  "paraDevsTitle": "If you want to peek under the hood.",
+  "paraDevsSub": "Stack, internal architecture and the commands to run the project locally. Everything below is optional — the app works without touching any of it.",
   "footer": {
     "tagline": "Spanish legislation, alive and connected. An open-source platform built on legalize-es.",
     "poweredBy": "Powered by",
     "product": "Product",
-    "productLinks": ["Layers", "Roadmap", "Architecture", "Changelog"],
+    "productLinks": ["Features", "Roadmap", "Architecture", "Changelog"],
     "project": "Project",
     "projectLinks": ["GitHub", "Issues", "Contributing", "Code of conduct"],
     "resources": "Resources",

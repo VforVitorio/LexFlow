@@ -5,8 +5,21 @@ import { GH_URL, IconArrow, IconGitHub, IconMoon, IconSun } from '../icons';
 import { useUi } from '@/lib/theme';
 import { SUPPORTED_LANGS, type Lang } from '@/i18n';
 
-const NAV_SECTIONS = ['layers', 'stack', 'roadmap'] as const;
+// #186 — Top-nav reorientation. "Stack" was a dev-detail wormhole next to
+// the main product tabs, so it's gone from the centre row (it still lives
+// on the page under the "Para devs" zone). New order: Funcionalidades →
+// Cómo lo usas → Roadmap. The matching anchor ids must exist on the
+// rendered sections: #layers, #how-you-use, #roadmap.
+const NAV_SECTIONS = ['layers', 'how-you-use', 'roadmap'] as const;
 type NavSection = typeof NAV_SECTIONS[number];
+
+// Maps each scroll-spy section id to the `nav.<key>` translation. Decouples
+// the DOM ids (kept short for the URL hash) from the i18n keys.
+const NAV_LABEL_KEY: Record<NavSection, string> = {
+  layers: 'features',
+  'how-you-use': 'howYouUse',
+  roadmap: 'roadmap',
+};
 
 interface UnderlineRect { left: number; width: number; opacity: number; }
 const HIDDEN: UnderlineRect = { left: 0, width: 0, opacity: 0 };
@@ -29,7 +42,7 @@ export function Nav() {
   // positioned span slides between the matching nav links. Mirrors
   // f1stratlab-web's `.nav-bar` idiom (docs/_review/landing-f1stratlab-...).
   const linkRefs = useRef<Record<NavSection, HTMLAnchorElement | null>>({
-    layers: null, stack: null, roadmap: null,
+    layers: null, 'how-you-use': null, roadmap: null,
   });
   const navListRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState<NavSection | null>(null);
@@ -108,7 +121,7 @@ export function Nav() {
               aria-current={active === id ? 'true' : undefined}
               className={active === id ? 'active' : undefined}
             >
-              {t(`nav.${id === 'layers' ? 'features' : id}`)}
+              {t(`nav.${NAV_LABEL_KEY[id]}`)}
             </a>
           ))}
           {/* The moving underline. One span shared across every link; we
@@ -139,6 +152,12 @@ export function Nav() {
           </button>
           <a className="icon-btn" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub">
             <IconGitHub />
+          </a>
+          {/* #186 — "Para devs" sidekick. Lives in the actions row (not in
+              the centre tabs) so the centre row stays product-focused. The
+              hash anchor points at the dev-zone container in LandingPage. */}
+          <a className="nav-devs-link" href="#para-devs">
+            {t('nav.forDevs')}
           </a>
           {/* The marketing landing is a separate static site from the SPA
               (see main.tsx VITE_BUILD_TARGET). The primary nav CTA points

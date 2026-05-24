@@ -2,9 +2,9 @@ import { type ReactNode, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Lang } from '@/i18n';
 import { ApiFeature, type LayerCopy } from '../mocks/ApiFeature';
-import { GraphMockup } from '../mocks/GraphMockup';
-import { ChatMockup } from '../mocks/ChatMockup';
-import { DashboardMockup } from '../mocks/DashboardMockup';
+import { GraphPreview } from '../previews/GraphPreview';
+import { ChatPreview } from '../previews/ChatPreview';
+import { DashboardPreview } from '../previews/DashboardPreview';
 
 interface Props { lang: Lang; }
 
@@ -16,10 +16,16 @@ function renderBold(str: string): ReactNode[] {
   );
 }
 
+/**
+ * Each card pairs a problem statement (from i18n) with a landing-native
+ * preview that mirrors the matching SPA page. Previews use mock data
+ * inline and the landing's CSS tokens — no Tailwind, no TanStack Query
+ * — so the marketing bundle stays small and visually consistent.
+ */
 function LayerArt({ idx, lang }: { idx: number; lang: Lang }) {
-  if (idx === 1) return <GraphMockup lang={lang} />;
-  if (idx === 2) return <ChatMockup lang={lang} />;
-  return <DashboardMockup lang={lang} />;
+  if (idx === 1) return <GraphPreview lang={lang} />;
+  if (idx === 2) return <ChatPreview lang={lang} />;
+  return <DashboardPreview lang={lang} />;
 }
 
 export function Layers({ lang }: Props) {
@@ -37,7 +43,7 @@ export function Layers({ lang }: Props) {
           <span className="dot" />
           <span className="label-caps">{t('layersEyebrow')}</span>
         </div>
-        <h2 className="section-title">{t('layersTitle')}</h2>
+        <h2 className="section-title section-title-accent">{t('layersTitle')}</h2>
         <p className="section-sub">{renderBold(t('layersSub'))}</p>
         <div className="features">
           {layers.map((l, i) => {
@@ -52,6 +58,11 @@ export function Layers({ lang }: Props) {
                   <ul className="feature-bullets">
                     {l.bullets.map((b, j) => <li key={j}>{b}</li>)}
                   </ul>
+                  {l.stack && l.stack.length > 0 && (
+                    <ul className="feature-stack-chips" aria-label="Stack">
+                      {l.stack.map((s) => <li key={s}>{s}</li>)}
+                    </ul>
+                  )}
                 </div>
                 <div className="feature-art-wrap lf-hint" aria-hidden="true">
                   {/* #160 — mobile hint nudge (only renders < 760 px). */}

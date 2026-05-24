@@ -11,7 +11,7 @@ export function CTA() {
             <span className="dot" />
             <span className="label-caps">{t('ctaEyebrow')}</span>
           </div>
-          <h2>{t('ctaTitle')}</h2>
+          <h2 className="section-title-accent">{t('ctaTitle')}</h2>
           <p>{t('ctaSub')}</p>
           <div className="cta-actions">
             {/* Marketing landing must never link into the SPA mock — both

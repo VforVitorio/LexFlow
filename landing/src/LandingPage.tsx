@@ -1,16 +1,21 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGS, type Lang } from '@/i18n';
+import { useSpotlightCards } from './hooks/useSpotlight';
 import { Nav } from './sections/Nav';
 import { Hero } from './sections/Hero';
 import { StatBar } from './sections/StatBar';
+import { WhatIs } from './sections/WhatIs';
+import { Personas } from './sections/Personas';
 import { Layers } from './sections/Layers';
+import { UserFlow } from './sections/UserFlow';
 import { BuiltOn } from './sections/BuiltOn';
 import { PoweredBy } from './sections/PoweredBy';
 import { Stack } from './sections/Stack';
 import { Roadmap } from './sections/Roadmap';
 import { CTA } from './sections/CTA';
 import { Authors } from './sections/Authors';
+import { DevContrib } from './sections/DevContrib';
 import { HowItWorks } from './sections/HowItWorks';
 import { Footer } from './sections/Footer';
 import { RevealSection } from './components/RevealSection';
@@ -22,6 +27,16 @@ import './landing.css';
  * Mounts outside the AppShell, so the left rail / TopBar are absent.
  * All landing-only CSS lives under `.landing-root` so it can't bleed
  * into the rest of the app when the user navigates away.
+ *
+ * --- ORDER (post #180 reorientation) ---
+ * Hero · StatBar — first fold, value prop in human language.
+ * Personas         — for whom (#181).
+ * Layers           — what it solves, framed as 4 user problems (#182).
+ * UserFlow         — how you use it, 3 steps, no code (#183).
+ * Authors · CTA    — close on people + invitation.
+ * <div #para-devs> — dev-tone wrapper (#184). Stack, BuiltOn, HowItWorks,
+ *                    PoweredBy, Roadmap live here with reduced visual
+ *                    weight so non-dev visitors can ignore the section.
  */
 export function LandingPage() {
   const { i18n } = useTranslation('landing');
@@ -36,28 +51,43 @@ export function LandingPage() {
       : 'LexFlow — Spanish legislation, alive and navigable';
   }, [lang]);
 
+  // Cursor-spotlight on every `.spotlight-card` (Personas + UserFlow). Single
+  // listener, gated on `hover: hover`, throttled by rAF. Reduced-motion-safe
+  // because it only paints a static radial gradient — no transitions tied to
+  // pointer motion.
+  useSpotlightCards();
+
   return (
     <div className="landing-root">
       <Nav />
       <main>
-        {/* Hero stays uncovered so first paint shows the landing. Every
-            section below fades + slides into view on first scroll
-            (#152). */}
         <Hero />
         <RevealSection><StatBar /></RevealSection>
+        {/* Brief explainer of what the product actually is, before we
+            pivot to who it's for. Closes the gap between the hero
+            metaphor and the product-first deck. */}
+        <RevealSection><WhatIs /></RevealSection>
+        <RevealSection><Personas /></RevealSection>
         <RevealSection><Layers lang={lang} /></RevealSection>
-        {/* #157 — scroll-pinned narrative between Layers and BuiltOn.
-            HowItWorks already manages its own intersection logic via
-            framer-motion's useScroll, so we DON'T wrap it in a
-            RevealSection (the wrapping element would break the offset
-            measurement). */}
-        <HowItWorks />
-        <RevealSection><BuiltOn /></RevealSection>
-        <RevealSection><PoweredBy /></RevealSection>
-        <RevealSection><Stack /></RevealSection>
-        <RevealSection><Roadmap /></RevealSection>
+        <RevealSection><UserFlow /></RevealSection>
         <RevealSection><Authors /></RevealSection>
         <RevealSection><CTA /></RevealSection>
+
+        {/* "Para devs" zone (#184). Same components as before but wrapped in
+            a class that pulls down the visual hierarchy: smaller headings,
+            no halo backdrop, lighter eyebrows. Anchor target for the small
+            nav-actions "Para devs" link (#186). */}
+        <div id="para-devs" className="para-devs">
+          {/* Open-source / contribution invite sits at the very top of the
+              dev zone — readers entering this section meet the project's
+              stance on contributions before the stack table. */}
+          <RevealSection><DevContrib /></RevealSection>
+          <RevealSection><Stack /></RevealSection>
+          <RevealSection><HowItWorks /></RevealSection>
+          <RevealSection><BuiltOn /></RevealSection>
+          <RevealSection><PoweredBy /></RevealSection>
+          <RevealSection><Roadmap /></RevealSection>
+        </div>
       </main>
       <Footer />
     </div>

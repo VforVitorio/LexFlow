@@ -6,13 +6,19 @@
 
 :root,
 [data-theme='light'] {
-  --bg:            232 30% 99%;
-  --surface:       232 25% 97%;
-  --surface-2:     232 22% 94%;
-  --border:        232 18% 88%;
-  --border-strong: 232 18% 78%;
-  --muted-fg:      232 12% 45%;
-  --fg:            232 35% 12%;
+  /* #187 (rev 4) — Light theme bumped further down to 88% L on `--bg`.
+   * At this point the page reads as "warm paper" rather than "screen
+   * white" — the previous 92% still felt too close to white next to the
+   * dark hero. Surfaces follow the drop so the hierarchy stays intact
+   * (bg > surface > surface-2). Borders drop too so they don't look
+   * cartoonish against the softer canvas. */
+  --bg:            232 14% 88%;
+  --surface:       232 12% 85%;
+  --surface-2:     232 10% 81%;
+  --border:        232 14% 76%;
+  --border-strong: 232 16% 62%;
+  --muted-fg:      232 14% 34%;
+  --fg:            232 38% 10%;
 
   --primary-soft:  232 88% 96%;
   --amber-soft:    38 100% 94%;
