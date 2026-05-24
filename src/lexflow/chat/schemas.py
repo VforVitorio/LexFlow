@@ -128,3 +128,17 @@ class ChatMessageCreate(BaseModel):
     role: ChatRole = Field("user")
     content: str = Field(..., min_length=1, max_length=10_000)
     payload: dict[str, Any] | None = None
+
+
+class ChatSendRequest(BaseModel):
+    """Body of ``POST /chat/threads/{id}/send`` (issue #84).
+
+    Carries the user message + the model id chosen for this turn. The
+    model id follows the ``provider:model`` convention used by the
+    ``/api/v1/models`` listing (e.g. ``"openai:gpt-4o"``).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str = Field(..., min_length=1, max_length=10_000)
+    model: str = Field(..., min_length=1, max_length=120)
