@@ -1,9 +1,11 @@
 {
   "nav": {
-    "features": "Capas",
+    "features": "Funcionalidades",
+    "howYouUse": "Cómo lo usas",
     "stack": "Stack",
     "roadmap": "Roadmap",
     "github": "GitHub",
+    "forDevs": "Para devs",
     "cta": "Probar LexFlow"
   },
   "hero": {
@@ -24,65 +26,117 @@
     { "value": "1", "unit": "k+", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
     { "value": "100", "unit": "%", "label": "Código abierto bajo licencia Apache 2.0" }
   ],
-  "layersEyebrow": "Cuatro capas integradas",
-  "layersTitle": "Una sola plataforma para todo el stack legal.",
-  "layersSub": "Cada capa se apoya en el mismo **núcleo de FastAPI** y vive detrás de un único **contrato tipado**. Eso significa que la app de React y cualquier cliente externo trabajan **exactamente con los mismos datos**.",
+  "personas": {
+    "eyebrow": "Para quién es esto",
+    "title": "Hecho para quien convive con la ley a diario.",
+    "sub": "No hace falta saber programar. LexFlow está pensado para perfiles que ya pelean con el BOE cada día y necesitan una forma menos tediosa de hacerlo.",
+    "list": [
+      {
+        "icon": "⚖️",
+        "who": "Abogados y despachos",
+        "pain": "Cruzar referencias entre normas sin abrir veinte pestañas del BOE y sin perder el hilo de qué modifica a qué."
+      },
+      {
+        "icon": "📚",
+        "who": "Opositores",
+        "pain": "Preguntarle al temario en lugar de buscarlo a mano. Cada respuesta llega con la cita exacta del artículo."
+      },
+      {
+        "icon": "📰",
+        "who": "Periodistas e investigación",
+        "pain": "Seguirle la pista a una ley desde su publicación hasta cada una de sus modificaciones — y ver qué leyes la mencionan."
+      },
+      {
+        "icon": "🛡️",
+        "who": "Equipos de compliance",
+        "pain": "Alertas por sector cuando una norma se modifica, sin tener que vigilar el BOE a mano cada mañana."
+      }
+    ]
+  },
+  "layersEyebrow": "Funcionalidades",
+  "layersTitle": "Lo que LexFlow te quita de encima.",
+  "layersSub": "Cuatro problemas concretos que aparecen al trabajar con legislación española — y cómo los resuelve el producto. La parte técnica está abajo, en **Para devs**, si te interesa cómo está construido por dentro.",
   "layers": [
     {
       "num": "01",
-      "kicker": "API REST",
-      "title": "Un contrato tipado sobre toda la legislación española.",
-      "body": "Endpoints de FastAPI para leyes, artículos, versiones, diffs, búsqueda y estadísticas. El OpenAPI se genera solo y lo consume un cliente de React con tipado estricto — sin copiar tipos a mano.",
+      "kicker": "Buscador y catálogo",
+      "title": "Encuentra cualquier ley sin abrir el BOE.",
+      "body": "Catálogo completo de la legislación española con búsqueda full-text al instante, filtros por rango, ámbito y estado, y el texto íntegro de cada artículo a un clic.",
       "bullets": [
-        "GET /api/v1/laws · catálogo paginado",
-        "GET /api/v1/laws/{id}/diff · cambios a nivel de artículo",
-        "GET /api/v1/search?q= · búsqueda full-text en todo el corpus",
-        "Modelos Pydantic v2 y playground interactivo en /docs"
+        "Búsqueda full-text en todo el corpus, no solo por título",
+        "Filtros por rango, ámbito y estado de vigencia",
+        "Texto íntegro de cada artículo, con metadatos del BOE",
+        "Paginación rápida — sin esperas aunque pidas miles de resultados"
       ],
-      "linkLabel": "Ir al explorador →"
+      "stack": ["FastAPI", "Pydantic v2", "OpenAPI tipado"]
     },
     {
       "num": "02",
-      "kicker": "Grafo de conocimiento",
-      "title": "Las referencias entre normas, como una red que se recorre.",
-      "body": "Un grafo de NetworkX que enlaza leyes, artículos y modificaciones. Recorre vecinos, encuentra el camino más corto entre dos normas y descubre las piezas centrales con PageRank.",
+      "kicker": "Grafo de referencias",
+      "title": "Mira la red de normas, no una lista plana.",
+      "body": "Cada referencia cruzada entre leyes se convierte en una arista navegable. Recorre vecinos, encuentra el camino más corto entre dos normas y descubre cuáles son las piezas centrales del corpus.",
       "bullets": [
-        "PageRank, clustering y camino más corto",
-        "/graph/neighbors · /graph/path · /graph/subgraph",
-        "Filtros por temática, estado, período o tipo de relación",
-        "Listo para sustituir NetworkX por Neo4j cuando toque escalar"
+        "Vecinos de cualquier ley o artículo en un clic",
+        "Camino más corto entre dos normas",
+        "Detección de las normas más centrales por PageRank",
+        "Filtros por temática, período o tipo de relación"
       ],
-      "linkLabel": "Abrir el canvas del grafo →"
+      "stack": ["NetworkX", "PageRank", "Camino más corto"]
     },
     {
       "num": "03",
-      "kicker": "Chat legal",
-      "title": "Un chatbot que de verdad lee la ley.",
-      "body": "Trae tu propio modelo — Ollama, LM Studio, OpenAI, Anthropic o Google. Un servidor de FastMCP expone la API como herramientas, así el chat responde con citas reales del BOE en lugar de texto memorizado en el entrenamiento.",
+      "kicker": "Chat con citas reales",
+      "title": "Pregúntale al BOE como si fuese un compañero.",
+      "body": "Trae tu modelo favorito y el chat responde citando texto real del corpus, no lo que el modelo recuerde de su entrenamiento. Con Ollama funciona sin conexión.",
       "bullets": [
-        "Cinco proveedores detrás de un único selector",
-        "Herramientas MCP: buscar ley, leer artículo, ver diff, consultar grafo",
-        "Respuestas en streaming con citas en línea",
-        "Local-first por defecto — con Ollama funciona sin conexión"
+        "Cinco proveedores de IA detrás de un único selector",
+        "Cada respuesta viene con la cita exacta del artículo",
+        "Conversaciones guardadas y enlazables",
+        "Local-first — con Ollama todo se queda en tu máquina"
       ],
-      "linkLabel": "Probar el chat →"
+      "stack": ["FastMCP", "Ollama · OpenAI · Anthropic · Google"]
     },
     {
       "num": "04",
-      "kicker": "Paneles",
-      "title": "Cumplimiento y analítica de un vistazo.",
-      "body": "Paneles de Plotly para análisis legislativo y seguimiento de compliance: ritmo de reformas por año, normas más modificadas y alertas por sector.",
+      "kicker": "Paneles y alertas",
+      "title": "Visualiza cómo cambia la ley con el tiempo.",
+      "body": "Paneles interactivos que enseñan el ritmo de reformas, las normas más modificadas y alertas por sector cuando algo se mueve.",
       "bullets": [
-        "Panel de compliance · normas y alertas por sector",
-        "Panel analítico · ritmo de reformas, modificaciones, tendencias",
-        "Figuras de Plotly servidas como JSON para cualquier cliente",
-        "Filtros interactivos y exportación a CSV"
+        "Ritmo de reformas por año y por sector",
+        "Top de leyes con más modificaciones",
+        "Alertas configurables por sector",
+        "Exportación a CSV de cualquier filtro"
       ],
-      "linkLabel": "Abrir los paneles →"
+      "stack": ["Plotly", "Figuras como JSON"]
     }
   ],
+  "userFlow": {
+    "eyebrow": "Cómo lo usas",
+    "title": "Tres pasos. Sin instalar Python ni Docker.",
+    "sub": "LexFlow se descarga, se abre y ya está. El flujo del usuario es el mismo en cualquier sistema operativo.",
+    "steps": [
+      {
+        "num": "01",
+        "title": "Abre LexFlow",
+        "body": "Un único ejecutable por sistema operativo. No hay que instalar Python, ni dependencias, ni Docker. Solo descargar y abrir.",
+        "bullet": "Disponible en Windows, macOS y Linux"
+      },
+      {
+        "num": "02",
+        "title": "Busca o navega",
+        "body": "Escribe el nombre de la ley o el número del BOE. Si prefieres explorar, el grafo te enseña qué hay alrededor de cualquier norma.",
+        "bullet": "Búsqueda full-text · Grafo navegable"
+      },
+      {
+        "num": "03",
+        "title": "Pregunta o exporta",
+        "body": "El chat te responde con la cita exacta del artículo. Los paneles te dan la foto general. Cualquier resultado se exporta a CSV o JSON.",
+        "bullet": "Chat con citas · Exportar a CSV/JSON"
+      }
+    ]
+  },
   "howItWorks": {
-    "eyebrow": "Cómo funciona",
+    "eyebrow": "Cómo funciona por dentro",
     "title": "De Markdown a respuesta, en una sola pasada.",
     "sub": "Cada capa se apoya en la anterior. El parser alimenta al grafo, el grafo le da contexto al chat y la API actúa como única fuente de verdad para cualquier cliente.",
     "scenes": [
@@ -100,7 +154,7 @@
       }
     ]
   },
-  "builtOnEyebrow": "Construido sobre datos abiertos",
+  "builtOnEyebrow": "Datos abiertos",
   "builtOnTitle": "Sobre legalize-es. Distribuido como un único binario.",
   "builtOnBody": "LexFlow es una capa fina sobre legalize-es: un repositorio público en Git con toda la legislación española en Markdown. El producto final es un binario standalone por sistema operativo. Sin Docker, sin instalar Python — se descarga y se ejecuta.",
   "builtOnCta": "Ver la arquitectura →",
@@ -112,7 +166,7 @@
     { "type": "cmd", "text": "uv run python main.py" },
     { "type": "comment", "text": "# → API escuchando en http://localhost:8000/docs" }
   ],
-  "stackEyebrow": "El stack",
+  "stackEyebrow": "Stack",
   "stackTitle": "Tecnología aburrida, cimientos sólidos.",
   "stackSub": "Sin frameworks experimentales ni nube propietaria. Cada pieza es open source, está bien documentada y se puede reemplazar sin reescribir el resto.",
   "stackBackend": {
@@ -141,7 +195,7 @@
       ["Tests", "Vitest + Playwright"]
     ]
   },
-  "roadmapEyebrow": "Dónde estamos",
+  "roadmapEyebrow": "Roadmap",
   "roadmapTitle": "Un roadmap público, fase a fase.",
   "roadmapSub": "LexFlow se construye en abierto. El backend ya tiene todas las funcionalidades planeadas; los próximos hitos viven en el frontend de React.",
   "statusDone": "Hecho",
@@ -181,11 +235,14 @@
   "ctaSub": "Clona el repo, lanza `uv sync` y la API queda escuchando en `localhost:8000` con la documentación interactiva lista. Si te interesa el rumbo del proyecto, pon una estrella.",
   "ctaPrimary": "Probar LexFlow",
   "ctaSecondary": "Abrir en GitHub",
+  "paraDevsEyebrow": "Para desarrolladores",
+  "paraDevsTitle": "Si quieres mirar bajo el capó.",
+  "paraDevsSub": "Stack, arquitectura interna y comandos para arrancar el proyecto en local. Todo lo de aquí abajo es opcional — la app se puede usar sin tocar nada.",
   "footer": {
     "tagline": "Legislación española, viva y conectada. Una plataforma open source sobre legalize-es.",
     "poweredBy": "Construido sobre",
     "product": "Producto",
-    "productLinks": ["Capas", "Roadmap", "Arquitectura", "Changelog"],
+    "productLinks": ["Funcionalidades", "Roadmap", "Arquitectura", "Changelog"],
     "project": "Proyecto",
     "projectLinks": ["GitHub", "Issues", "Cómo contribuir", "Código de conducta"],
     "resources": "Recursos",

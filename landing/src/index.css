@@ -6,12 +6,17 @@
 
 :root,
 [data-theme='light'] {
-  --bg:            232 30% 99%;
-  --surface:       232 25% 97%;
-  --surface-2:     232 22% 94%;
-  --border:        232 18% 88%;
-  --border-strong: 232 18% 78%;
-  --muted-fg:      232 12% 45%;
+  /* #187 — Light theme softened. Previous bg was hsl(232 30% 99%) which
+   * read as a flashbang in a dark room. Pulled saturation down and
+   * luminance to ~97% so the page feels paper-warm instead of bleached.
+   * Surface tokens follow the same drop; muted-fg darkens a touch so
+   * body text keeps WCAG AA contrast against the warmer surfaces. */
+  --bg:            232 18% 97%;
+  --surface:       232 15% 95%;
+  --surface-2:     232 12% 91%;
+  --border:        232 16% 85%;
+  --border-strong: 232 18% 72%;
+  --muted-fg:      232 12% 42%;
   --fg:            232 35% 12%;
 
   --primary-soft:  232 88% 96%;

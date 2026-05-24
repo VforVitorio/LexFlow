@@ -52,6 +52,11 @@ export function Layers({ lang }: Props) {
                   <ul className="feature-bullets">
                     {l.bullets.map((b, j) => <li key={j}>{b}</li>)}
                   </ul>
+                  {l.stack && l.stack.length > 0 && (
+                    <ul className="feature-stack-chips" aria-label="Stack">
+                      {l.stack.map((s) => <li key={s}>{s}</li>)}
+                    </ul>
+                  )}
                 </div>
                 <div className="feature-art-wrap lf-hint" aria-hidden="true">
                   {/* #160 — mobile hint nudge (only renders < 760 px). */}

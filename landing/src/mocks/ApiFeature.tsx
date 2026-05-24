@@ -9,6 +9,11 @@ export interface LayerCopy {
   title: string;
   body: string;
   bullets: string[];
+  /** #182 — tech-stack chips. Demoted from the body copy to a small row of
+   *  pills at the bottom of each card so the headline reads as a user
+   *  outcome ("Pregúntale al BOE") and the stack ("FastMCP · Ollama")
+   *  reads as secondary context. */
+  stack?: string[];
   /** Deprecated — left in the i18n schema for parity. Feature cards no longer link into the SPA. */
   linkLabel?: string;
 }
@@ -78,6 +83,11 @@ export function ApiFeature({ layer, lang }: Props) {
             </button>
           ))}
         </div>
+        {layer.stack && layer.stack.length > 0 && (
+          <ul className="feature-stack-chips" aria-label="Stack">
+            {layer.stack.map((s) => <li key={s}>{s}</li>)}
+          </ul>
+        )}
       </div>
       <div className="feature-art">
         <ApiMockup lang={lang} activeIdx={active} />
