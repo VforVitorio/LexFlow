@@ -6,18 +6,19 @@
 
 :root,
 [data-theme='light'] {
-  /* #187 (rev 3) — Light theme nudged one notch greyer. The 94% canvas
-   * from rev 2 still read as "almost white" against the dark hero on a
-   * standard monitor; 92% L makes the page feel like soft paper without
-   * losing the airy feel. Surfaces follow the drop so the hierarchy
-   * (bg > surface > surface-2) stays intact. */
-  --bg:            232 14% 92%;
-  --surface:       232 12% 89%;
-  --surface-2:     232 10% 85%;
-  --border:        232 14% 80%;
-  --border-strong: 232 16% 66%;
-  --muted-fg:      232 14% 36%;
-  --fg:            232 36% 11%;
+  /* #187 (rev 4) — Light theme bumped further down to 88% L on `--bg`.
+   * At this point the page reads as "warm paper" rather than "screen
+   * white" — the previous 92% still felt too close to white next to the
+   * dark hero. Surfaces follow the drop so the hierarchy stays intact
+   * (bg > surface > surface-2). Borders drop too so they don't look
+   * cartoonish against the softer canvas. */
+  --bg:            232 14% 88%;
+  --surface:       232 12% 85%;
+  --surface-2:     232 10% 81%;
+  --border:        232 14% 76%;
+  --border-strong: 232 16% 62%;
+  --muted-fg:      232 14% 34%;
+  --fg:            232 38% 10%;
 
   --primary-soft:  232 88% 96%;
   --amber-soft:    38 100% 94%;
