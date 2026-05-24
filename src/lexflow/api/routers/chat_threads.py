@@ -29,6 +29,7 @@ from datetime import UTC
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import desc
 from sqlmodel import Session, func, select
 
@@ -36,6 +37,7 @@ from lexflow.chat.db import get_session
 from lexflow.chat.schemas import (
     ChatMessageCreate,
     ChatMessageRead,
+    ChatSendRequest,
     ChatThreadCreate,
     ChatThreadDetail,
     ChatThreadList,
@@ -43,6 +45,7 @@ from lexflow.chat.schemas import (
     ChatThreadRead,
 )
 from lexflow.chat.storage_models import ChatMessage, ChatThread
+from lexflow.chat.streaming import stream_chat_reply
 
 logger = logging.getLogger(__name__)
 
@@ -286,3 +289,65 @@ def append_message(
     session.commit()
     session.refresh(message)
     return _message_read(message)
+
+
+@router.post(
+    "/threads/{thread_id}/send",
+    summary="Stream an assistant reply for the user message (SSE).",
+    responses={
+        200: {
+            "description": "Server-sent events stream.",
+            "content": {"text/event-stream": {}},
+        },
+    },
+)
+async def send_message_stream(
+    thread_id: str,
+    body: ChatSendRequest,
+    session: Annotated[Session, Depends(get_session)],
+) -> StreamingResponse:
+    """Persist the user turn, then stream the assistant reply as SSE.
+
+    Wire format (one event per record, blank line terminator):
+
+    ::
+
+        event: text
+        data: {"delta": "Hola "}
+
+        event: text
+        data: {"delta": "mundo."}
+
+        event: done
+        data: {}
+
+    On provider error we emit ``event: error`` with a ``detail`` field
+    before the final ``done``. Partial assistant replies are persisted —
+    a dropped connection leaves the thread with whatever streamed
+    through. See :mod:`lexflow.chat.streaming` for the generator.
+
+    The MCP tool-use loop (``tool_call`` / ``source`` events) is tracked
+    as a follow-up issue; the wire format is forward-compatible so
+    clients that already render those event types keep working.
+    """
+    thread = _load_thread_or_404(session, thread_id)
+    # ``stream_chat_reply`` consumes the session — once the generator is
+    # entered we cannot reuse it for the response body. The dependency
+    # already opens a fresh session per request, so FastAPI closes it
+    # cleanly when the streaming response finishes.
+    generator = stream_chat_reply(
+        session=session,
+        thread=thread,
+        user_message_content=body.message,
+        model_id=body.model,
+    )
+    return StreamingResponse(
+        generator,
+        media_type="text/event-stream",
+        headers={
+            # Disable response buffering on reverse proxies (nginx etc.)
+            # so chunks reach the client immediately.
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
