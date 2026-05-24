@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Lang } from '@/i18n';
-import { ENDPOINTS } from './apiEndpoints';
-import { ApiMockup } from './ApiMockup';
+import { SearchPreview } from '../previews/SearchPreview';
 
 export interface LayerCopy {
   num: string;
@@ -9,12 +8,9 @@ export interface LayerCopy {
   title: string;
   body: string;
   bullets: string[];
-  /** #182 — tech-stack chips. Demoted from the body copy to a small row of
-   *  pills at the bottom of each card so the headline reads as a user
-   *  outcome ("Pregúntale al BOE") and the stack ("FastMCP · Ollama")
-   *  reads as secondary context. */
+  /** #182 — small stack chips at the bottom of each card. */
   stack?: string[];
-  /** Deprecated — left in the i18n schema for parity. Feature cards no longer link into the SPA. */
+  /** Deprecated — preserved for i18n schema parity. Cards no longer link into the SPA. */
   linkLabel?: string;
 }
 
@@ -23,33 +19,47 @@ interface Props {
   lang: Lang;
 }
 
-/** Time between automatic endpoint advances when nobody is hovering. */
+/**
+ * First feature card — "Find any law without opening the BOE".
+ *
+ * The user hovers a tag chip on the left and watches the law list on
+ * the right re-filter to laws carrying that tag. While the cursor is
+ * idle the chip list auto-rotates every {@link ROTATE_MS}, same idiom
+ * f1stratlab uses on its "Models" panel.
+ *
+ * --- WHERE TO CHANGE IF X CHANGES ---
+ * Tag → law mapping: landing/src/previews/SearchPreview.tsx (LAWS_* arrays)
+ * Styles:            landing/src/landing.css   .lf-prev-search-*, .lf-tags-*
+ */
 const ROTATE_MS = 3800;
 
-/**
- * Stops the auto-rotation while the cursor sits anywhere over the
- * `.lf-endpoints` list. Same idiom f1stratlab uses on its "Models" panel:
- * passive rotation when idle, immediate response on hover.
- */
+interface TagRow { id: string; label: { es: string; en: string }; count: number; }
+const TAGS: TagRow[] = [
+  { id: 'laboral',        label: { es: 'laboral',        en: 'labour' },          count: 142 },
+  { id: 'fiscal',         label: { es: 'fiscal',         en: 'tax' },             count: 98  },
+  { id: 'datos',          label: { es: 'datos',          en: 'data' },            count: 76  },
+  { id: 'constitucional', label: { es: 'constitucional', en: 'constitutional' },  count: 41  },
+];
+
 export function ApiFeature({ layer, lang }: Props) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const endpoints = ENDPOINTS[lang] ?? ENDPOINTS.en;
   const reduceMotion = useRef(
     typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
   ).current;
 
-  // Auto-rotate the active endpoint while no pointer is hovering and the
-  // user has NOT opted out of motion. The interval restarts every time we
-  // resume so the user gets a fresh tick instead of an instant flip.
   useEffect(() => {
     if (paused || reduceMotion) return;
     const id = window.setInterval(() => {
-      setActive((i) => (i + 1) % endpoints.length);
+      setActive((i) => (i + 1) % TAGS.length);
     }, ROTATE_MS);
     return () => window.clearInterval(id);
-  }, [paused, endpoints.length, reduceMotion]);
+  }, [paused, reduceMotion]);
+
+  // SearchPreview filters on the English tag id, so the same data drives
+  // both locales — only the chip label flips.
+  const activeTag = lang === 'es' ? TAGS[active].id : TAGS[active].label.en;
 
   return (
     <article className="feature">
@@ -59,27 +69,27 @@ export function ApiFeature({ layer, lang }: Props) {
         <h3>{layer.title}</h3>
         <p>{layer.body}</p>
         <div
-          className="lf-endpoints"
+          className="lf-tags"
           role="tablist"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}
           onBlur={() => setPaused(false)}
         >
-          {endpoints.map((ep, i) => (
+          {TAGS.map((tag, i) => (
             <button
-              key={i}
+              key={tag.id}
               type="button"
               role="tab"
               aria-selected={i === active}
-              className={`lf-endpoint ${i === active ? 'active' : ''}`}
+              className={`lf-tag${i === active ? ' active' : ''}`}
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               onClick={() => setActive(i)}
             >
-              <span className="lf-endpoint-method">{ep.method}</span>
-              <code className="lf-endpoint-path">{ep.path}</code>
-              <span className="lf-endpoint-label">{ep.label}</span>
+              <span className="lf-tag-hash">#</span>
+              <span className="lf-tag-name">{tag.label[lang] ?? tag.label.en}</span>
+              <span className="lf-tag-count">{tag.count}</span>
             </button>
           ))}
         </div>
@@ -90,7 +100,7 @@ export function ApiFeature({ layer, lang }: Props) {
         )}
       </div>
       <div className="feature-art">
-        <ApiMockup lang={lang} activeIdx={active} />
+        <SearchPreview lang={lang} activeTag={activeTag} />
       </div>
     </article>
   );

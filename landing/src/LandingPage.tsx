@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGS, type Lang } from '@/i18n';
+import { useSpotlightCards } from './hooks/useSpotlight';
 import { Nav } from './sections/Nav';
 import { Hero } from './sections/Hero';
 import { StatBar } from './sections/StatBar';
@@ -47,6 +48,12 @@ export function LandingPage() {
       ? 'LexFlow — Legislación española, viva y navegable'
       : 'LexFlow — Spanish legislation, alive and navigable';
   }, [lang]);
+
+  // Cursor-spotlight on every `.spotlight-card` (Personas + UserFlow). Single
+  // listener, gated on `hover: hover`, throttled by rAF. Reduced-motion-safe
+  // because it only paints a static radial gradient — no transitions tied to
+  // pointer motion.
+  useSpotlightCards();
 
   return (
     <div className="landing-root">
