@@ -10,7 +10,7 @@ from fastapi import FastAPI
 
 from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
-from lexflow.api.routers import articles, chat_threads, dashboards, laws, models, search, versions
+from lexflow.api.routers import articles, chat_threads, dashboards, laws, models, search, sync, versions
 from lexflow.api.routers.graph import router as graph_router
 from lexflow.chat.db import init_db
 
@@ -48,6 +48,7 @@ app.include_router(graph_router, prefix="/api/v1")
 app.include_router(models.router, prefix="/api/v1")
 app.include_router(chat_threads.router, prefix="/api/v1")
 app.include_router(dashboards.router, prefix="/api/v1")
+app.include_router(sync.router, prefix="/api/v1")
 
 
 @app.get("/health")
