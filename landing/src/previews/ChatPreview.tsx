@@ -17,6 +17,14 @@
  * (renders the final state directly). Pauses on hover so the user can
  * read the citations without the loop overwriting them.
  *
+ * --- Why this isn't a setTimeout pyramid ---
+ * The first cut nested setTimeouts/setIntervals inside a useEffect whose
+ * deps included `paused` and `inView`. Any hover or scroll-out-of-view
+ * cancelled the timers AND restarted from scratch on the next re-run,
+ * which the user saw as "se queda a la mitad". This version drives the
+ * whole machine from a single rAF/setInterval tick with refs, so hover
+ * truly pauses and scrolling out then back in resumes where it stopped.
+ *
  * --- WHERE TO CHANGE IF X CHANGES ---
  * SPA reference: frontend/src/pages/ChatPage.tsx
  *                frontend/src/components/domain/ChatMessage.tsx
@@ -71,6 +79,16 @@ const COPY = {
 
 type Phase = 'idle' | 'userTyping' | 'pause' | 'asstTyping' | 'done';
 
+// Tick granularity for the animation. 30 ms gives us ~33 fps which is
+// plenty for char-by-char and easy on the main thread.
+const TICK_MS = 30;
+// Per-phase budgets, expressed in ticks. 1 tick = TICK_MS milliseconds.
+const USER_CHARS_PER_TICK = 1;       // ~33 ch/s
+const ASST_CHARS_PER_TICK = 2;       // ~66 ch/s
+const PAUSE_TICKS_BEFORE_USER = 12;  //  0.36 s settle-in before user types
+const PAUSE_TICKS_BEFORE_ASST = 22;  //  0.66 s "thinking" between bubbles
+const DONE_HOLD_TICKS = 230;         //  ~7 s before the loop restarts
+
 interface Props { lang: Lang; }
 
 export function ChatPreview({ lang }: Props) {
@@ -81,119 +99,168 @@ export function ChatPreview({ lang }: Props) {
   const asstText = ASST_REPLY[lang] ?? ASST_REPLY.en;
 
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
+
+  // Reduced-motion users see the final frame and the animation never runs.
   const reduceMotion = useRef(
     typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
   ).current;
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [userChars, setUserChars] = useState(0);
-  const [asstChars, setAsstChars] = useState(0);
-  const [paused, setPaused] = useState(false);
-  // Sources should not show up until the matching cite marker has been
-  // typed out. We compute revealed source ids from how far asstChars has
-  // walked past each `{cite:sN}` marker in the source text.
+
+  // Visible state that drives the JSX. The tick refs below own the actual
+  // animation progression; we mirror them into React state only when the
+  // rendered output should change.
+  const [phase, setPhase] = useState<Phase>(reduceMotion ? 'done' : 'idle');
+  const [userChars, setUserChars] = useState(reduceMotion ? userText.length : 0);
+  const [asstChars, setAsstChars] = useState(reduceMotion ? asstText.length : 0);
+
+  // Refs for the tick loop. Survive across re-renders so pause/resume keep
+  // their position instead of resetting to zero each time inView flips.
+  const phaseRef = useRef<Phase>('idle');
+  const userIdxRef = useRef(0);
+  const asstIdxRef = useRef(0);
+  const phaseTimerRef = useRef(0);   // ticks elapsed inside the current phase
+  const pausedRef = useRef(false);
+  const inViewRef = useRef(false);
+
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  // Compute revealed citation source ids from the assistant's current
+  // character cursor. Walks the source text up to `asstChars` and bumps
+  // every `{cite:sN}` marker it crosses.
   const revealedSources = useMemo(() => {
     if (phase === 'done' || reduceMotion) return new Set(sources.map((s) => s.id));
     const revealed = new Set<string>();
     let i = 0;
-    let outIdx = 0;
-    while (i < asstText.length && outIdx <= asstChars) {
+    let visible = 0;
+    while (i < asstText.length && visible <= asstChars) {
       if (asstText.startsWith('{cite:', i)) {
         const end = asstText.indexOf('}', i);
         if (end === -1) break;
-        const id = asstText.slice(i + 6, end);
-        if (outIdx <= asstChars) revealed.add(id);
+        revealed.add(asstText.slice(i + 6, end));
         i = end + 1;
       } else {
         i++;
-        outIdx++;
+        visible++;
       }
     }
     return revealed;
   }, [asstChars, asstText, phase, reduceMotion, sources]);
 
-  // Kick off when the preview crosses the viewport. Stays observed so the
-  // loop can pause/resume if the user scrolls away and back.
+  // IntersectionObserver flips `inViewRef`. We use a low threshold so the
+  // preview kicks in as soon as a sliver crosses the viewport — the bug
+  // before was a 0.35 threshold combined with a hover handler that reset
+  // progress on every toggle. Now hover only pauses, IO only gates the
+  // tick loop.
   useEffect(() => {
-    if (reduceMotion) { setPhase('done'); return; }
+    if (reduceMotion) return;
     const el = wrapperRef.current;
     if (!el || typeof window === 'undefined') return;
     const io = new IntersectionObserver(
-      (entries) => setInView(entries[0]?.isIntersecting ?? false),
-      { threshold: 0.35 },
+      (entries) => {
+        const visible = entries[0]?.isIntersecting ?? false;
+        inViewRef.current = visible;
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -10% 0px' },
     );
     io.observe(el);
     return () => io.disconnect();
   }, [reduceMotion]);
 
-  // The animation loop. One useEffect, one bag of timers — clear them all
-  // on cleanup so React.StrictMode's double-invoke doesn't leak intervals.
+  // The single tick loop. Runs the whole machine; pause just stops
+  // advancing — never resets. Cleanup clears the interval; refs survive.
   useEffect(() => {
-    if (reduceMotion || !inView || paused) return;
-    let cancelled = false;
-    const timers: number[] = [];
+    if (reduceMotion) return;
+    if (typeof window === 'undefined') return;
 
-    function run() {
-      if (cancelled) return;
-      setPhase('userTyping');
-      setUserChars(0);
-      setAsstChars(0);
+    const handle = window.setInterval(() => {
+      if (!inViewRef.current) return;   // outside viewport, hold the frame
+      if (pausedRef.current) return;    // hovered, hold the frame
 
-      // Type the user query at ~30 chars/sec.
-      let uc = 0;
-      const uTimer = window.setInterval(() => {
-        if (cancelled) return;
-        uc += 1;
-        setUserChars(uc);
-        if (uc >= userText.length) {
-          window.clearInterval(uTimer);
-          timers.push(window.setTimeout(() => {
-            if (cancelled) return;
-            setPhase('pause');
-            timers.push(window.setTimeout(() => {
-              if (cancelled) return;
-              setPhase('asstTyping');
-              let ac = 0;
-              // Assistant prints faster (~55 chars/sec) so the reply
-              // doesn't drag — most users stop reading at 2-3 lines.
-              const aTimer = window.setInterval(() => {
-                if (cancelled) return;
-                ac += 1;
-                setAsstChars(ac);
-                if (ac >= asstText.length) {
-                  window.clearInterval(aTimer);
-                  timers.push(window.setTimeout(() => {
-                    if (cancelled) return;
-                    setPhase('done');
-                    // Hold the completed state for a beat, then restart.
-                    timers.push(window.setTimeout(() => {
-                      if (cancelled) return;
-                      run();
-                    }, 7000));
-                  }, 300));
-                }
-              }, 18);
-              timers.push(aTimer);
-            }, 700));
-          }, 350));
+      const ph = phaseRef.current;
+
+      if (ph === 'idle') {
+        phaseTimerRef.current += 1;
+        if (phaseTimerRef.current >= PAUSE_TICKS_BEFORE_USER) {
+          phaseTimerRef.current = 0;
+          userIdxRef.current = 0;
+          asstIdxRef.current = 0;
+          setPhase('userTyping');
+          phaseRef.current = 'userTyping';
+          setUserChars(0);
+          setAsstChars(0);
         }
-      }, 32);
-      timers.push(uTimer);
-    }
-
-    // Tiny delay so the entry animation of the preview card has time to
-    // play before we start filling it with text.
-    timers.push(window.setTimeout(run, 400));
-
-    return () => {
-      cancelled = true;
-      for (const t of timers) {
-        window.clearTimeout(t);
-        window.clearInterval(t);
+        return;
       }
-    };
-  }, [inView, paused, reduceMotion, userText, asstText]);
+
+      if (ph === 'userTyping') {
+        userIdxRef.current = Math.min(userIdxRef.current + USER_CHARS_PER_TICK, userText.length);
+        setUserChars(userIdxRef.current);
+        if (userIdxRef.current >= userText.length) {
+          phaseTimerRef.current = 0;
+          setPhase('pause');
+          phaseRef.current = 'pause';
+        }
+        return;
+      }
+
+      if (ph === 'pause') {
+        phaseTimerRef.current += 1;
+        if (phaseTimerRef.current >= PAUSE_TICKS_BEFORE_ASST) {
+          phaseTimerRef.current = 0;
+          setPhase('asstTyping');
+          phaseRef.current = 'asstTyping';
+        }
+        return;
+      }
+
+      if (ph === 'asstTyping') {
+        asstIdxRef.current = Math.min(asstIdxRef.current + ASST_CHARS_PER_TICK, asstText.length);
+        setAsstChars(asstIdxRef.current);
+        if (asstIdxRef.current >= asstText.length) {
+          phaseTimerRef.current = 0;
+          setPhase('done');
+          phaseRef.current = 'done';
+        }
+        return;
+      }
+
+      if (ph === 'done') {
+        phaseTimerRef.current += 1;
+        if (phaseTimerRef.current >= DONE_HOLD_TICKS) {
+          // Loop back. idle → userTyping → … on the next ticks.
+          phaseTimerRef.current = 0;
+          userIdxRef.current = 0;
+          asstIdxRef.current = 0;
+          setPhase('idle');
+          phaseRef.current = 'idle';
+        }
+        return;
+      }
+    }, TICK_MS);
+
+    return () => window.clearInterval(handle);
+    // Intentionally empty deps — the loop reads everything from refs and
+    // must survive language / state changes that don't actually affect it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Restart whenever the source text changes (e.g. user flips languages
+  // mid-animation). Resetting state explicitly avoids garbled text.
+  useEffect(() => {
+    if (reduceMotion) {
+      setPhase('done');
+      setUserChars(userText.length);
+      setAsstChars(asstText.length);
+      return;
+    }
+    phaseTimerRef.current = 0;
+    userIdxRef.current = 0;
+    asstIdxRef.current = 0;
+    phaseRef.current = 'idle';
+    setPhase('idle');
+    setUserChars(0);
+    setAsstChars(0);
+  }, [userText, asstText, reduceMotion]);
 
   const showUser = phase !== 'idle';
   const showAsst = phase === 'asstTyping' || phase === 'done';
@@ -205,8 +272,8 @@ export function ChatPreview({ lang }: Props) {
       className="lf-prev lf-prev-chat"
       aria-hidden="true"
       ref={wrapperRef}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseEnter={() => { pausedRef.current = true; }}
+      onMouseLeave={() => { pausedRef.current = false; }}
     >
       <aside className="lf-prev-chat-rail">
         <button type="button" className="lf-prev-chat-new">+ {t.newConv}</button>

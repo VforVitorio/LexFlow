@@ -31,7 +31,7 @@ export function UserFlow() {
           <span className="dot" />
           <span className="label-caps">{t('userFlow.eyebrow')}</span>
         </div>
-        <h2 className="section-title">{t('userFlow.title')}</h2>
+        <h2 className="section-title section-title-cool">{t('userFlow.title')}</h2>
         <p className="section-sub">{t('userFlow.sub')}</p>
         <ol className="user-flow-grid">
           {steps.map((s) => (

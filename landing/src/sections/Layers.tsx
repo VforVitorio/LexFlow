@@ -43,7 +43,7 @@ export function Layers({ lang }: Props) {
           <span className="dot" />
           <span className="label-caps">{t('layersEyebrow')}</span>
         </div>
-        <h2 className="section-title">{t('layersTitle')}</h2>
+        <h2 className="section-title section-title-accent">{t('layersTitle')}</h2>
         <p className="section-sub">{renderBold(t('layersSub'))}</p>
         <div className="features">
           {layers.map((l, i) => {

@@ -27,12 +27,12 @@ export function Personas() {
   return (
     <section id="personas" className="tight">
       <div className="lf-container">
-        <div className="section-eyebrow" style={{ justifyContent: 'center' }}>
+        <div className="section-eyebrow">
           <span className="dot" />
           <span className="label-caps">{t('personas.eyebrow')}</span>
         </div>
-        <h2 className="section-title" style={{ textAlign: 'center' }}>{t('personas.title')}</h2>
-        <p className="section-sub" style={{ textAlign: 'center', marginLeft: 'auto', marginRight: 'auto' }}>{t('personas.sub')}</p>
+        <h2 className="section-title section-title-accent">{t('personas.title')}</h2>
+        <p className="section-sub">{t('personas.sub')}</p>
         <div className="personas-grid">
           {items.map((p) => (
             <article key={p.who} className="persona-card spotlight-card">

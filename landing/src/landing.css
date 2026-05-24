@@ -322,6 +322,90 @@
   letter-spacing: -0.025em;
   max-width: 720px;
   text-wrap: balance;
+  /* Subtle vertical fade by default — same idiom the hero `.lead` uses but
+   * gentler. Keeps titles from reading as a flat blanket of white while
+   * still letting the actual accent variants below own the "wow" moments. */
+  background: linear-gradient(180deg, hsl(var(--fg)) 0%, hsl(var(--fg) / 0.72) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme='light'] .landing-root .section-title {
+  background: linear-gradient(180deg, hsl(var(--fg)) 0%, hsl(232 35% 22%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Variant A — "violet beam", same diagonal palette the hero accent uses.
+ * Reserved for the few section titles that anchor identity / hook moments
+ * (WhatIs, Personas, Layers, CTA). Don't apply to every section or it
+ * stops feeling special. */
+.landing-root .section-title-accent {
+  background: linear-gradient(102deg,
+    hsl(252, 100%, 82%) 0%,
+    hsl(232, 100%, 78%) 35%,
+    hsl(210, 100%, 72%) 65%,
+    hsl(190, 95%, 70%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lf-hero-shimmer 9s ease-in-out infinite;
+}
+[data-theme='light'] .landing-root .section-title-accent {
+  background: linear-gradient(102deg,
+    hsl(252, 80%, 55%) 0%,
+    hsl(232, 85%, 52%) 40%,
+    hsl(210, 90%, 50%) 70%,
+    hsl(190, 85%, 45%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lf-hero-shimmer 9s ease-in-out infinite;
+}
+
+/* Variant B — cool blue lean. Used on UserFlow so the product story has a
+ * gentle palette shift between sections instead of one repeating accent. */
+.landing-root .section-title-cool {
+  background: linear-gradient(102deg,
+    hsl(217, 100%, 76%) 0%,
+    hsl(200, 95%, 72%) 50%,
+    hsl(186, 90%, 70%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme='light'] .landing-root .section-title-cool {
+  background: linear-gradient(102deg,
+    hsl(217, 85%, 50%) 0%,
+    hsl(200, 80%, 46%) 50%,
+    hsl(186, 75%, 42%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Variant C — warm amber-to-violet. Reserved for the human / authors
+ * surface so the people section feels warmer than the product cards. */
+.landing-root .section-title-warm {
+  background: linear-gradient(102deg,
+    hsl(36, 95%, 70%) 0%,
+    hsl(20, 90%, 72%) 45%,
+    hsl(330, 85%, 75%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme='light'] .landing-root .section-title-warm {
+  background: linear-gradient(102deg,
+    hsl(36, 85%, 45%) 0%,
+    hsl(20, 80%, 48%) 45%,
+    hsl(330, 70%, 50%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .landing-root .section-sub {
   font-size: 17px;
@@ -2019,22 +2103,35 @@
 /* -------------------------------------------------------------------------- */
 /* "¿Qué es esto?" explainer — sits between Hero and Personas                 */
 /* -------------------------------------------------------------------------- */
-.landing-root .what-is {
-  text-align: center;
+.landing-root .what-is { /* left-aligned to match every other section */ }
+.landing-root .what-is .section-eyebrow {
+  /* Slightly louder eyebrow than the default — this section is the page's
+   * elevator pitch and the dot+label deserves to read at a glance. */
+  font-size: 13px;
+}
+.landing-root .what-is .section-eyebrow .label-caps { font-size: 12.5px; }
+.landing-root .what-is-title {
+  /* Bigger than the default .section-title so it carries weight as the
+   * page's "OK, what is this?" anchor. Roughly halfway between section
+   * and hero scale. */
+  font-size: clamp(36px, 5.6vw, 60px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin-top: 12px;
 }
 .landing-root .what-is-body {
   max-width: 720px;
-  margin: 18px auto 0;
-  font-size: 16px;
+  margin: 22px 0 0;
+  font-size: 17px;
   line-height: 1.65;
   color: hsl(var(--muted-fg));
 }
-.landing-root .what-is-body p { margin: 0 0 12px; }
+.landing-root .what-is-body p { margin: 0 0 14px; }
 .landing-root .what-is-body strong { color: hsl(var(--fg)); font-weight: 600; }
 .landing-root .what-is-stats {
   list-style: none;
   padding: 0;
-  margin: 32px auto 0;
+  margin: 32px 0 0;
   max-width: 720px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
