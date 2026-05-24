@@ -11,7 +11,21 @@ from fastapi.testclient import TestClient
 
 from lexflow.api.app import app
 from lexflow.api.dependencies import get_law_registry
+from lexflow.chat.db import init_db_for_path
 from lexflow.core.registry import LawRegistry
+
+
+@pytest.fixture(autouse=True)
+def _isolated_chat_db(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Force every test to use an isolated chat-thread SQLite DB.
+
+    The app's lifespan calls :func:`init_db` which would otherwise write
+    to ``data/chat.db`` in the working tree. Tests that don't touch the
+    chat surface still benefit — the DB just stays empty.
+    """
+    tmp_db = tmp_path_factory.mktemp("chat-db") / "chat.db"
+    init_db_for_path(tmp_db)
+    yield
 
 
 @pytest.fixture()

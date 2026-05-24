@@ -297,6 +297,13 @@ firebase-adminsdk*.json
 .ollama/
 chat_history.json
 chat_history.jsonl
+# Chat thread persistence (issue #83) — local SQLite DB at data/chat.db
+# is per-user state, never committed. Anchored so it doesn't match
+# other `chat.db` paths inside submodules / vendored data.
+/data/chat.db
+/data/chat.db-journal
+/data/chat.db-wal
+/data/chat.db-shm
 
 # Reflex leftovers (in case any get re-introduced before full cleanup)
 .web/
