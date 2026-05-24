@@ -1,0 +1,212 @@
+"""``GET /api/v1/models`` — lists every (provider, model) pair the user can pick.
+
+Probes each chat provider concurrently with a short timeout. A provider
+that isn't reachable (Ollama not running, no API key for a cloud provider)
+yields a single placeholder ``ModelInfo`` with ``configured=False`` so the
+frontend can render a "needs setup" affordance without omitting the
+provider entirely.
+
+--- WHERE TO CHANGE IF X CHANGES ---
+* Add a new provider:  edit ``_PROVIDERS`` below + add a factory in
+  ``src/lexflow/chat/providers/`` that exposes ``list_models()``.
+* Tweak context-window heuristics: edit ``_context_window_for``.
+* Tighten the probe timeout: ``_PROBE_TIMEOUT_S``.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import os
+from collections.abc import Awaitable, Callable
+
+from fastapi import APIRouter
+
+from lexflow.chat.base import ChatProvider, ChatProviderError
+from lexflow.chat.providers import (
+    AnthropicProvider,
+    GoogleProvider,
+    LMStudioProvider,
+    OllamaProvider,
+    OpenAIProvider,
+)
+from lexflow.chat.schemas import ModelInfo
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(tags=["Models"])
+
+# Probe budget per provider. Ollama / LM Studio block on TCP if not running,
+# so we cap each probe so the overall request can never exceed
+# ``len(_PROVIDERS) * _PROBE_TIMEOUT_S`` even in the worst case.
+_PROBE_TIMEOUT_S = 2.0
+
+
+class _ProviderSpec:
+    """How to probe and label one provider in the response."""
+
+    def __init__(
+        self,
+        key: str,
+        local: bool,
+        factory: Callable[[], ChatProvider],
+        default_context: int,
+        env_key: str | None = None,
+    ) -> None:
+        self.key = key
+        self.local = local
+        self.factory = factory
+        self.default_context = default_context
+        self.env_key = env_key
+
+    def has_credentials(self) -> bool:
+        """Cloud providers need an env var; local providers don't."""
+        if self.env_key is None:
+            return True
+        return bool(os.environ.get(self.env_key))
+
+
+_PROVIDERS: list[_ProviderSpec] = [
+    _ProviderSpec("ollama", local=True, factory=OllamaProvider, default_context=8192),
+    _ProviderSpec("lmstudio", local=True, factory=LMStudioProvider, default_context=8192),
+    _ProviderSpec("openai", local=False, factory=OpenAIProvider, default_context=128_000, env_key="OPENAI_API_KEY"),
+    _ProviderSpec(
+        "anthropic", local=False, factory=AnthropicProvider, default_context=200_000, env_key="ANTHROPIC_API_KEY"
+    ),
+    _ProviderSpec("google", local=False, factory=GoogleProvider, default_context=1_000_000, env_key="GOOGLE_API_KEY"),
+]
+
+
+def _context_window_for(provider: str, model: str, default: int) -> int:
+    """Best-effort context-window heuristic.
+
+    Only catches a handful of common model name patterns. Falls back to the
+    provider's default for anything unknown.
+    """
+    lower = model.lower()
+    # OpenAI ladder: 4o family is 128k, 3.5 is 16k.
+    if provider == "openai":
+        if "gpt-4o" in lower or "gpt-4-turbo" in lower or "gpt-4.1" in lower:
+            return 128_000
+        if "gpt-3.5" in lower:
+            return 16_385
+    # Anthropic: every modern Claude is 200k.
+    if provider == "anthropic" and "claude" in lower:
+        return 200_000
+    # Google Gemini: 1.5 / 2.0 are 1M; 1.0 is 32k.
+    if provider == "google":
+        if "1.0" in lower:
+            return 32_768
+        if "gemini" in lower:
+            return 1_000_000
+    return default
+
+
+async def _probe(spec: _ProviderSpec) -> list[ModelInfo]:
+    """Probe one provider. Always returns ≥ 1 entry — never raises.
+
+    Empty model list with ``configured=False`` is the placeholder for
+    "user hasn't set this up yet" so the frontend can render the provider
+    row with a setup hint instead of pretending it doesn't exist.
+    """
+    if not spec.has_credentials():
+        return [
+            ModelInfo(
+                id=f"{spec.key}:",
+                provider=spec.key,
+                model="",
+                local=spec.local,
+                configured=False,
+                context_window=None,
+                error="Missing credentials",
+            )
+        ]
+
+    try:
+        provider = spec.factory()
+    except Exception as exc:
+        logger.warning("Failed to construct %s provider: %s", spec.key, exc)
+        return [
+            ModelInfo(
+                id=f"{spec.key}:",
+                provider=spec.key,
+                model="",
+                local=spec.local,
+                configured=False,
+                context_window=None,
+                error=str(exc),
+            )
+        ]
+
+    try:
+        models = await asyncio.wait_for(provider.list_models(), timeout=_PROBE_TIMEOUT_S)
+    except TimeoutError:
+        message = "Probe timed out"
+        logger.info("%s: %s after %.1fs", spec.key, message, _PROBE_TIMEOUT_S)
+        return [
+            ModelInfo(
+                id=f"{spec.key}:",
+                provider=spec.key,
+                model="",
+                local=spec.local,
+                configured=False,
+                context_window=None,
+                error=message,
+            )
+        ]
+    except ChatProviderError as exc:
+        logger.info("%s probe failed: %s", spec.key, exc)
+        return [
+            ModelInfo(
+                id=f"{spec.key}:",
+                provider=spec.key,
+                model="",
+                local=spec.local,
+                configured=False,
+                context_window=None,
+                error=str(exc),
+            )
+        ]
+
+    if not models:
+        return [
+            ModelInfo(
+                id=f"{spec.key}:",
+                provider=spec.key,
+                model="",
+                local=spec.local,
+                configured=False,
+                context_window=None,
+                error="No models available",
+            )
+        ]
+
+    return [
+        ModelInfo(
+            id=f"{spec.key}:{name}",
+            provider=spec.key,
+            model=name,
+            local=spec.local,
+            configured=True,
+            context_window=_context_window_for(spec.key, name, spec.default_context),
+            error=None,
+        )
+        for name in models
+    ]
+
+
+@router.get(
+    "/models",
+    response_model=list[ModelInfo],
+    summary="List every chat model the user can pick across all providers.",
+)
+async def list_models() -> list[ModelInfo]:
+    """Return every available (provider, model) pair, flat.
+
+    Each provider is probed concurrently with a short timeout. Unreachable
+    or unconfigured providers still appear in the response as a single
+    placeholder entry (``configured: false``) so the UI can show them.
+    """
+    probes: list[Awaitable[list[ModelInfo]]] = [_probe(spec) for spec in _PROVIDERS]
+    results = await asyncio.gather(*probes)
+    return [model for batch in results for model in batch]
