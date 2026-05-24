@@ -23,31 +23,50 @@
   "stats": [
     { "value": "4", "unit": "", "label": "Integrated layers sharing data — API, graph, chat & dashboards" },
     { "value": "5", "unit": "", "label": "LLM providers supported through MCP tools" },
-    { "value": "1", "unit": "k+", "label": "Spanish laws indexed from the legalize-es corpus" },
+    { "value": "42", "unit": "K+", "label": "Spanish laws indexed from the legalize-es corpus" },
     { "value": "100", "unit": "%", "label": "Open source under the Apache 2.0 license" }
   ],
+  "whatIs": {
+    "eyebrow": "OK, but what is this?",
+    "title": "LexFlow in two paragraphs.",
+    "p1": "LexFlow is an **open-source platform** that takes the full body of Spanish legislation — the BOE corpus, already in Markdown thanks to the **legalize-es** project — and turns it into something walkable: fast search, a graph of cross-references between statutes, a chat that cites the exact article, and dashboards that show how the law shifts over time.",
+    "p2": "The goal is simple: anyone who works with the law — or just wants to understand it — should stop losing hours jumping between BOE tabs. Everything runs locally, no cloud round-trips, and the code is public so anyone can review or improve it.",
+    "stats": [
+      { "value": "42K+",   "label": "laws indexed"           },
+      { "value": "100%",   "label": "open source"            },
+      { "value": "Local",  "label": "runs on your machine"   }
+    ]
+  },
+  "devContrib": {
+    "title": "Built in the open, made to be contributed to.",
+    "body": "LexFlow is a public, free project under the Apache 2.0 license. The vision is to build it together with everyone who cares about Spanish legislation being easier to understand. If you can bring something to the table — code, ideas, copy fixes, translations, accessibility tweaks — it all counts.",
+    "bullet1": "Open issues labelled with good-first-issue",
+    "bullet2": "Public roadmap — no surprises about what's coming",
+    "bullet3": "No account, no SaaS — everything runs on your machine",
+    "cta": "How to contribute"
+  },
   "personas": {
     "eyebrow": "Who this is for",
     "title": "Made for people who live with the law every day.",
-    "sub": "You don't have to know how to code. LexFlow is built for the people who already fight the BOE every day and need a less tedious way to do it.",
+    "sub": "You don't need to know how to code. LexFlow is built for the people who already fight the BOE every day and need a less tedious way to do it.",
     "list": [
       {
-        "icon": "⚖️",
+        "icon": "scale",
         "who": "Lawyers and law firms",
-        "pain": "Cross-reference statutes without opening twenty BOE tabs — without losing track of which amends what."
+        "pain": "Cross-reference statutes without opening twenty BOE tabs and without losing track of which amends what."
       },
       {
-        "icon": "📚",
+        "icon": "book",
         "who": "Bar-exam students",
         "pain": "Ask the syllabus instead of digging through it. Every answer comes with the exact article cited."
       },
       {
-        "icon": "📰",
+        "icon": "newspaper",
         "who": "Journalists & researchers",
-        "pain": "Trace a law from its publication through every amendment — and see which laws cite it."
+        "pain": "Trace a law from its publication through every amendment, and see which other laws cite it."
       },
       {
-        "icon": "🛡️",
+        "icon": "shield",
         "who": "Compliance teams",
         "pain": "Sector-scoped alerts when a regulation changes, instead of watching the BOE by hand every morning."
       }

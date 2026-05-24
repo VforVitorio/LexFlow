@@ -6,18 +6,19 @@
 
 :root,
 [data-theme='light'] {
-  /* #187 — Light theme softened. Previous bg was hsl(232 30% 99%) which
-   * read as a flashbang in a dark room. Pulled saturation down and
-   * luminance to ~97% so the page feels paper-warm instead of bleached.
-   * Surface tokens follow the same drop; muted-fg darkens a touch so
-   * body text keeps WCAG AA contrast against the warmer surfaces. */
-  --bg:            232 18% 97%;
-  --surface:       232 15% 95%;
-  --surface-2:     232 12% 91%;
-  --border:        232 16% 85%;
-  --border-strong: 232 18% 72%;
-  --muted-fg:      232 12% 42%;
-  --fg:            232 35% 12%;
+  /* #187 (rev 2) — Light theme is now a soft warm grey rather than near
+   * white. Iteration after the user said "que sea claro obviamente pero
+   * no tan tan tan claro". `--bg` at 94% L lifts the canvas towards
+   * paper without sliding into "cream". Surfaces follow the drop; the
+   * panel rail (`--surface`) stays one shade *darker* than `--bg` so the
+   * SPA preview's filter rail still reads as inset, not as the page. */
+  --bg:            232 14% 94%;
+  --surface:       232 12% 91%;
+  --surface-2:     232 10% 87%;
+  --border:        232 14% 82%;
+  --border-strong: 232 16% 68%;
+  --muted-fg:      232 14% 38%;
+  --fg:            232 36% 11%;
 
   --primary-soft:  232 88% 96%;
   --amber-soft:    38 100% 94%;

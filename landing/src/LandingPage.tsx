@@ -5,6 +5,7 @@ import { useSpotlightCards } from './hooks/useSpotlight';
 import { Nav } from './sections/Nav';
 import { Hero } from './sections/Hero';
 import { StatBar } from './sections/StatBar';
+import { WhatIs } from './sections/WhatIs';
 import { Personas } from './sections/Personas';
 import { Layers } from './sections/Layers';
 import { UserFlow } from './sections/UserFlow';
@@ -14,6 +15,7 @@ import { Stack } from './sections/Stack';
 import { Roadmap } from './sections/Roadmap';
 import { CTA } from './sections/CTA';
 import { Authors } from './sections/Authors';
+import { DevContrib } from './sections/DevContrib';
 import { HowItWorks } from './sections/HowItWorks';
 import { Footer } from './sections/Footer';
 import { RevealSection } from './components/RevealSection';
@@ -61,6 +63,10 @@ export function LandingPage() {
       <main>
         <Hero />
         <RevealSection><StatBar /></RevealSection>
+        {/* Brief explainer of what the product actually is, before we
+            pivot to who it's for. Closes the gap between the hero
+            metaphor and the product-first deck. */}
+        <RevealSection><WhatIs /></RevealSection>
         <RevealSection><Personas /></RevealSection>
         <RevealSection><Layers lang={lang} /></RevealSection>
         <RevealSection><UserFlow /></RevealSection>
@@ -72,6 +78,10 @@ export function LandingPage() {
             no halo backdrop, lighter eyebrows. Anchor target for the small
             nav-actions "Para devs" link (#186). */}
         <div id="para-devs" className="para-devs">
+          {/* Open-source / contribution invite sits at the very top of the
+              dev zone — readers entering this section meet the project's
+              stance on contributions before the stack table. */}
+          <RevealSection><DevContrib /></RevealSection>
           <RevealSection><Stack /></RevealSection>
           <RevealSection><HowItWorks /></RevealSection>
           <RevealSection><BuiltOn /></RevealSection>

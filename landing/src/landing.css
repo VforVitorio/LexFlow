@@ -2017,6 +2017,120 @@
 }
 
 /* -------------------------------------------------------------------------- */
+/* "¿Qué es esto?" explainer — sits between Hero and Personas                 */
+/* -------------------------------------------------------------------------- */
+.landing-root .what-is {
+  text-align: center;
+}
+.landing-root .what-is-body {
+  max-width: 720px;
+  margin: 18px auto 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .what-is-body p { margin: 0 0 12px; }
+.landing-root .what-is-body strong { color: hsl(var(--fg)); font-weight: 600; }
+.landing-root .what-is-stats {
+  list-style: none;
+  padding: 0;
+  margin: 32px auto 0;
+  max-width: 720px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 600px) { .landing-root .what-is-stats { grid-template-columns: 1fr; } }
+.landing-root .what-is-stats li {
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.landing-root .what-is-stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--violet-300));
+}
+[data-theme='light'] .landing-root .what-is-stat-value { color: hsl(var(--violet-600)); }
+.landing-root .what-is-stat-label {
+  font-size: 12px;
+  color: hsl(var(--muted-fg));
+  letter-spacing: 0.02em;
+}
+
+/* -------------------------------------------------------------------------- */
+/* DevContrib banner — sits at the top of the .para-devs zone                 */
+/* -------------------------------------------------------------------------- */
+.landing-root .dev-contrib { padding: 24px 0 8px; }
+.landing-root .dev-contrib-card {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 20px;
+  padding: 22px 24px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  border-left: 3px solid hsl(var(--violet-500));
+}
+@media (max-width: 640px) {
+  .landing-root .dev-contrib-card { grid-template-columns: 1fr; gap: 14px; }
+}
+.landing-root .dev-contrib-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: hsl(var(--violet-500) / 0.15);
+  color: hsl(var(--violet-300));
+  display: grid;
+  place-items: center;
+}
+[data-theme='light'] .landing-root .dev-contrib-icon { color: hsl(var(--violet-600)); }
+.landing-root .dev-contrib-title {
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: hsl(var(--fg));
+}
+.landing-root .dev-contrib-body {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .dev-contrib-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.landing-root .dev-contrib-bullets li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 13.5px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .dev-contrib-bullets li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: hsl(var(--violet-400));
+  font-weight: 700;
+}
+[data-theme='light'] .landing-root .dev-contrib-bullets li::before { color: hsl(var(--violet-600)); }
+
+/* The DevContrib lives inside `.para-devs`. The wrapper's `.para-devs section
+ * { padding: 56px 0 }` rule would push the banner too low — tighten it. */
+.landing-root .para-devs .dev-contrib { padding: 32px 0 16px; }
+
+/* -------------------------------------------------------------------------- */
 /* #181 — Personas grid                                                       */
 /* -------------------------------------------------------------------------- */
 .landing-root .personas-grid {
@@ -2030,10 +2144,14 @@
 
 .landing-root .persona-card {
   position: relative;
-  padding: 24px 22px;
+  padding: 28px 22px 24px;
   border-radius: 16px;
   border: 1px solid hsl(var(--border));
   background: hsl(var(--surface));
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transition:
     border-color var(--dur-micro) var(--ease-out),
     background-color var(--dur-micro) var(--ease-out),
@@ -2043,11 +2161,31 @@
   border-color: hsl(var(--border-strong));
   transform: translateY(-2px);
 }
-.landing-root .persona-icon {
-  font-size: 26px;
-  line-height: 1;
-  margin-bottom: 14px;
+.landing-root .persona-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  background: hsl(var(--violet-500) / 0.15);
+  color: hsl(var(--violet-300));
+  position: relative;
 }
+[data-theme='light'] .landing-root .persona-icon-wrap {
+  background: hsl(var(--violet-500) / 0.10);
+  color: hsl(var(--violet-600));
+}
+.landing-root .persona-icon-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  background: radial-gradient(closest-side, hsl(var(--violet-500) / 0.22), transparent 70%);
+  z-index: -1;
+  filter: blur(4px);
+}
+.landing-root .persona-icon { display: grid; place-items: center; }
 .landing-root .persona-who {
   font-size: 17px;
   margin: 0 0 8px;
@@ -2058,6 +2196,7 @@
   line-height: 1.55;
   color: hsl(var(--muted-fg));
   margin: 0;
+  max-width: 28ch;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2347,8 +2486,11 @@
 }
 .landing-root .lf-prev-search-row {
   display: grid;
-  grid-template-columns: 84px 1fr;
-  gap: 12px;
+  /* Narrower ID column (was 84 px) so the title gets more room. The body
+   * column is `minmax(0, 1fr)` so the inner overflow-hidden actually
+   * clamps to the parent grid cell. */
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
   background: hsl(var(--bg));
@@ -2356,6 +2498,8 @@
   transition:
     border-color var(--dur-micro) var(--ease-out),
     transform var(--dur-micro) var(--ease-out);
+  /* Don't let a long single tag chip force the row wider than the parent. */
+  overflow: hidden;
 }
 .landing-root .lf-prev-search-row:hover {
   border-color: hsl(var(--border-strong));
@@ -2367,8 +2511,11 @@
   font-weight: 600;
   color: hsl(var(--violet-400));
   letter-spacing: 0.02em;
+  align-self: start;
+  padding-top: 1px;
 }
 [data-theme='light'] .landing-root .lf-prev-search-row-id { color: hsl(var(--violet-600)); }
+.landing-root .lf-prev-search-row-body { min-width: 0; }
 .landing-root .lf-prev-search-row-title {
   font-size: 12.5px;
   font-weight: 500;
@@ -2381,7 +2528,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px 6px;
   margin-top: 4px;
   font-size: 10.5px;
   color: hsl(var(--muted-fg));
@@ -2601,6 +2748,68 @@
  * uses on ChatMessage / CitationCard — pure CSS, no JS state. */
 .landing-root .lf-prev-chat-cite:hover,
 .landing-root .lf-prev-chat-cite:hover ~ * .lf-prev-chat-source { background: hsl(var(--violet-500) / 0.22); }
+
+/* Typewriter loop chrome — bubble entry, caret, thinking dots, source
+ * card reveal. Drives ChatPreview's #185 follow-up animation. */
+.landing-root .lf-prev-chat-msg-in {
+  animation: lf-chat-msg-in 320ms var(--ease-out) both;
+}
+@keyframes lf-chat-msg-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.landing-root .lf-prev-chat-caret {
+  display: inline-block;
+  width: 2px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  color: hsl(var(--violet-400));
+  animation: lf-chat-caret 1s steps(1) infinite;
+}
+[data-theme='light'] .landing-root .lf-prev-chat-caret { color: hsl(var(--violet-600)); }
+@keyframes lf-chat-caret {
+  50% { opacity: 0; }
+}
+.landing-root .lf-prev-chat-msg-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  align-self: flex-start;
+}
+.landing-root .lf-prev-chat-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: hsl(var(--muted-fg));
+  display: inline-block;
+  opacity: 0.4;
+  animation: lf-chat-dot 1.1s ease-in-out infinite;
+}
+.landing-root .lf-prev-chat-dot:nth-child(2) { animation-delay: 160ms; }
+.landing-root .lf-prev-chat-dot:nth-child(3) { animation-delay: 320ms; }
+@keyframes lf-chat-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40%           { opacity: 0.9; transform: translateY(-2px); }
+}
+
+/* Source cards start dim and brighten the moment their cite marker is
+ * typed out. Soft transition so the rail doesn't feel like a slot machine. */
+.landing-root .lf-prev-chat-source {
+  opacity: 0.45;
+  transform: translateX(2px);
+  transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out), background 200ms var(--ease-out);
+}
+.landing-root .lf-prev-chat-source.is-revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .lf-prev-chat-msg-in { animation: none; }
+  .landing-root .lf-prev-chat-caret  { animation: none; opacity: 0; }
+  .landing-root .lf-prev-chat-dot    { animation: none; opacity: 0.6; }
+  .landing-root .lf-prev-chat-source { opacity: 1; transform: none; transition: none; }
+}
 
 /* ---------- DashboardPreview --------------------------------------------- */
 .landing-root .lf-prev-dash { padding: 14px; }

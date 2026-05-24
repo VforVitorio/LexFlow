@@ -23,33 +23,52 @@
   "stats": [
     { "value": "4", "unit": "", "label": "Capas que comparten datos — API, grafo, chat y paneles" },
     { "value": "5", "unit": "", "label": "Proveedores de LLM soportados mediante herramientas MCP" },
-    { "value": "1", "unit": "k+", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
+    { "value": "42", "unit": "K+", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
     { "value": "100", "unit": "%", "label": "Código abierto bajo licencia Apache 2.0" }
   ],
+  "whatIs": {
+    "eyebrow": "Vale, ¿pero qué es esto?",
+    "title": "LexFlow en dos párrafos.",
+    "p1": "LexFlow es una **plataforma open source** que coge toda la legislación española —el corpus completo del BOE, ya en formato Markdown gracias al proyecto **legalize-es**— y la convierte en algo navegable: un buscador rápido, un grafo de referencias entre normas, un chat que cita el artículo exacto y paneles que enseñan cómo cambia la ley con el tiempo.",
+    "p2": "El objetivo es sencillo: que cualquier persona que trabaje con la ley —o que simplemente quiera entenderla— deje de perder horas saltando entre pestañas del BOE. Todo se ejecuta en local, sin enviar consultas a la nube, y el código es público para que cualquiera pueda revisarlo o mejorarlo.",
+    "stats": [
+      { "value": "42K+",   "label": "leyes indexadas"   },
+      { "value": "100%",   "label": "código abierto"    },
+      { "value": "Local",  "label": "se ejecuta en tu máquina" }
+    ]
+  },
+  "devContrib": {
+    "title": "Construido en abierto, pensado para contribuirse.",
+    "body": "LexFlow es un proyecto público y gratuito bajo licencia Apache 2.0. La visión es construirlo entre todas las personas a las que les importe que la legislación española sea más fácil de entender. Si crees que puedes aportar algo —código, ideas, correcciones de texto, traducciones, mejoras de accesibilidad—, todo eso suma.",
+    "bullet1": "Issues abiertas con buen primer ticket etiquetado",
+    "bullet2": "Roadmap público — sin sorpresas sobre lo que viene",
+    "bullet3": "Sin cuenta, sin SaaS — todo corre en tu máquina",
+    "cta": "Cómo contribuir"
+  },
   "personas": {
     "eyebrow": "Para quién es esto",
     "title": "Hecho para quien convive con la ley a diario.",
-    "sub": "No hace falta saber programar. LexFlow está pensado para perfiles que ya pelean con el BOE cada día y necesitan una forma menos tediosa de hacerlo.",
+    "sub": "No hace falta saber programar. LexFlow está pensado para gente que ya pelea con el BOE cada día y necesita una forma menos tediosa de hacerlo.",
     "list": [
       {
-        "icon": "⚖️",
+        "icon": "scale",
         "who": "Abogados y despachos",
-        "pain": "Cruzar referencias entre normas sin abrir veinte pestañas del BOE y sin perder el hilo de qué modifica a qué."
+        "pain": "Cruzar referencias entre normas sin abrir veinte pestañas del BOE ni perder el hilo de qué modifica a qué."
       },
       {
-        "icon": "📚",
+        "icon": "book",
         "who": "Opositores",
-        "pain": "Preguntarle al temario en lugar de buscarlo a mano. Cada respuesta llega con la cita exacta del artículo."
+        "pain": "Pregúntale al temario en lugar de pelearte con el índice. Cada respuesta llega con la cita exacta del artículo."
       },
       {
-        "icon": "📰",
+        "icon": "newspaper",
         "who": "Periodistas e investigación",
-        "pain": "Seguirle la pista a una ley desde su publicación hasta cada una de sus modificaciones — y ver qué leyes la mencionan."
+        "pain": "Sigue la pista de una ley desde su publicación hasta cada una de sus modificaciones, y mira qué otras leyes la mencionan."
       },
       {
-        "icon": "🛡️",
+        "icon": "shield",
         "who": "Equipos de compliance",
-        "pain": "Alertas por sector cuando una norma se modifica, sin tener que vigilar el BOE a mano cada mañana."
+        "pain": "Alertas por sector cuando una norma se mueve, sin tener que vigilar el BOE a mano cada mañana."
       }
     ]
   },
