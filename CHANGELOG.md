@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0](https://github.com/VforVitorio/LexFlow/compare/v0.7.0...v0.8.0) (2026-05-24)
+
+
+### Features
+
+* **api:** /api/v1/sync/status + /sync/run for legalize-es ([1dcf79d](https://github.com/VforVitorio/LexFlow/commit/1dcf79ddeec7a4001a8fab92e594b4f6ec20dbfd))
+* **api:** /api/v1/sync/status + /sync/run for legalize-es (closes [#86](https://github.com/VforVitorio/LexFlow/issues/86)) ([b95c24c](https://github.com/VforVitorio/LexFlow/commit/b95c24cdf62c4e0ee40e918c0bdd89b89cdbf466))
+* **api:** GET /api/v1/dashboards/{preset} + wire frontend ([710ac4b](https://github.com/VforVitorio/LexFlow/commit/710ac4befdb3b2f193df228740a6920d055cec9c))
+* **api:** GET /api/v1/dashboards/{preset} + wire frontend (closes [#85](https://github.com/VforVitorio/LexFlow/issues/85)) ([7ccfb33](https://github.com/VforVitorio/LexFlow/commit/7ccfb3335d5ec932bc8cb9bd8f48a556eadff1c6))
+* **api:** SSE chat streaming endpoint with persistence ([8d4fc27](https://github.com/VforVitorio/LexFlow/commit/8d4fc27b39ec896b72393d1398e787759b0ca3a4))
+* **api:** SSE chat streaming endpoint with persistence (closes [#84](https://github.com/VforVitorio/LexFlow/issues/84)) ([6cf06f3](https://github.com/VforVitorio/LexFlow/commit/6cf06f388b5a89d89061cf5444ce920dbe3e33e9))
+* **frontend:** Obsidian-style graph canvas via @xyflow/react ([ed56281](https://github.com/VforVitorio/LexFlow/commit/ed56281f1ed658a03ac4d6db32dad291945de08c))
+* **frontend:** Obsidian-style graph canvas via @xyflow/react (closes [#87](https://github.com/VforVitorio/LexFlow/issues/87)) ([d36c612](https://github.com/VforVitorio/LexFlow/commit/d36c612ef818ad205f804be20f31a4e49ca90ffd))
+
 ## [0.7.0](https://github.com/VforVitorio/LexFlow/compare/v0.6.0...v0.7.0) (2026-05-24)
 
 
