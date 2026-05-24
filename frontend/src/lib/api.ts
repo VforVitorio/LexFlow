@@ -609,8 +609,29 @@ const liveApi: ApiClient = {
     },
   },
   sync: {
-    status: () => Promise.reject(new ApiError(501, null, 'sync.status not implemented (issue #86)')),
-    run: () => Promise.reject(new ApiError(501, null, 'sync.run not implemented (issue #86)')),
+    // #86 — `GET /api/v1/sync/status` returns `{ last_sync_at, upstream,
+    // behind, busy }`. The frontend's `SyncStatus` uses `lastSyncAt`,
+    // `upstream`, `behind`, `busy` — we flip the only snake_case field.
+    status: async () => {
+      const raw = await http<{
+        last_sync_at: string | null;
+        upstream: string;
+        behind: number;
+        busy: boolean;
+      }>('/sync/status');
+      return {
+        lastSyncAt: raw.last_sync_at,
+        upstream: raw.upstream,
+        behind: raw.behind,
+        busy: raw.busy,
+      };
+    },
+    // 202 from the server: the pull ran (or was skipped because another
+    // one was in flight). 409 maps to ApiError(.status=409) so the SPA
+    // can show a "sync already running" toast.
+    run: async () => {
+      await http<unknown>('/sync/run', { method: 'POST' });
+    },
   },
 };
 
