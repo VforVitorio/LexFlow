@@ -496,9 +496,12 @@ const liveApi: ApiClient = {
       return { hits, total: raw.total };
     },
   },
-  // Chat / models / dashboards / sync are tracked as separate follow-up issues
-  // (#82-#86). Until they land, the mock implementation is used for these
-  // surfaces — flip VITE_USE_MOCK=true to exercise them.
+  // Chat / dashboards / sync backends are tracked as separate follow-up
+  // issues (#83-#86). When `USE_MOCK=true` (default), the SPA uses the
+  // in-process `mockApi` for the whole surface so the app is exercisable
+  // end-to-end. With `VITE_USE_MOCK=false`, the routes below throw 501
+  // until their backend lands — switch back to mock to keep working in
+  // the meantime.
   chat: {
     threads: () => Promise.reject(new ApiError(501, null, 'chat.threads not implemented (issue #83)')),
     thread: () => Promise.reject(new ApiError(501, null, 'chat.thread not implemented (issue #83)')),
@@ -507,7 +510,32 @@ const liveApi: ApiClient = {
     },
   },
   models: {
-    list: () => Promise.reject(new ApiError(501, null, 'models.list not implemented (issue #82)')),
+    list: async () => {
+      // #82 — `GET /api/v1/models` returns a flat list of (provider, model)
+      // pairs. Unconfigured providers show up as a placeholder with
+      // `configured=false` so the Settings page can render them with a
+      // setup hint instead of hiding them.
+      const raw = await http<
+        {
+          id: string;
+          provider: string;
+          model: string;
+          local: boolean;
+          configured: boolean;
+          context_window: number | null;
+          error: string | null;
+        }[]
+      >('/models');
+      return raw.map<Model>((m) => ({
+        id: m.id,
+        // Placeholder rows have no model name — fall back to the provider key
+        // so the Settings list still renders something legible.
+        label: m.model || m.provider,
+        vendor: m.provider,
+        kind: m.local ? 'local' : 'cloud',
+        available: m.configured,
+      }));
+    },
   },
   dashboards: {
     metrics: () => Promise.reject(new ApiError(501, null, 'dashboards.metrics not implemented (issue #85)')),
