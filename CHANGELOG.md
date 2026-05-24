@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/VforVitorio/LexFlow/compare/v0.6.0...v0.7.0) (2026-05-24)
+
+
+### Features
+
+* **api:** chat thread persistence — SQLite + CRUD endpoints ([1d71c0f](https://github.com/VforVitorio/LexFlow/commit/1d71c0ffbb99d5c8531863ebfb446f49d60f696d))
+* **api:** chat thread persistence — SQLite + CRUD endpoints (closes [#83](https://github.com/VforVitorio/LexFlow/issues/83)) ([d555eb1](https://github.com/VforVitorio/LexFlow/commit/d555eb1f944fefe70ede8ec4fdca6f33dbe53187))
+
 ## [0.6.0](https://github.com/VforVitorio/LexFlow/compare/v0.5.1...v0.6.0) (2026-05-24)
 
 
