@@ -2,7 +2,15 @@ import { useState } from 'react';
 import { Clock, SlidersHorizontal, Download, ExternalLink } from 'lucide-react';
 import { Button, Card, Tabs } from '@/components/ui';
 import { useDashboard } from '@/lib/queries';
+import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_FILL_SOFT } from '@/lib/graph-colors';
 import type { MetricCard } from '@/lib/types';
+
+// The dashboard charts borrow the graph palette so the whole product
+// reads as one brand: indigo for the baseline series, amber (the
+// "article" hue) for the "recent" highlight slice on the bar chart.
+const CHART_PRIMARY = GRAPH_PRIMARY;
+const CHART_PRIMARY_SOFT = GRAPH_PRIMARY_FILL_SOFT;
+const CHART_RECENT = GRAPH_KIND_FILL.article;
 
 export function DashboardPage() {
   const [preset, setPreset] = useState<'compliance' | 'analytics'>('compliance');
@@ -67,8 +75,8 @@ function Sparkline({ data }: { data: number[] }) {
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="mt-2.5 h-10 w-full">
-      <polyline points={pts} fill="none" stroke="hsl(232 72% 52%)" strokeWidth="1.5" />
-      <polygon points={`0,${h} ${pts} ${w},${h}`} fill="hsl(232 72% 52% / 0.10)" />
+      <polyline points={pts} fill="none" stroke={CHART_PRIMARY} strokeWidth="1.5" />
+      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={CHART_PRIMARY_SOFT} />
     </svg>
   );
 }
@@ -97,7 +105,7 @@ function BigChart({ values, labels, recentFrom = 0 }: { values: number[]; labels
         return (
           <g key={i}>
             <rect x={x} y={y} width={barW} height={bh}
-              fill={recent ? 'hsl(36 95% 56%)' : 'hsl(232 72% 52%)'} rx={2} />
+              fill={recent ? CHART_RECENT : CHART_PRIMARY} rx={2} />
             {i % 2 === 0 && (
               <text x={x + barW / 2} y={h - pad + 12} textAnchor="middle"
                 fontSize="9.5" fill="hsl(var(--muted-fg))" fontFamily='"JetBrains Mono", monospace'>

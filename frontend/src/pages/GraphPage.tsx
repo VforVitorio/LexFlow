@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
@@ -6,13 +6,10 @@ import { GraphCanvas, NODE_KIND_LABELS } from '@/components/domain/GraphCanvas';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { RightRail } from '@/components/shell/RightRail';
 import { useGraph } from '@/lib/queries';
+import { GRAPH_KIND_FILL } from '@/lib/graph-colors';
 import type { GraphNodeKind } from '@/lib/types';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
-const NODE_FILL: Record<GraphNodeKind, string> = {
-  law: 'hsl(232 72% 52%)', article: 'hsl(36 95% 56%)', reference: 'hsl(266 65% 60%)',
-  amendment: 'hsl(195 70% 50%)', repealed: 'hsl(220 8% 55%)',
-};
 
 export function GraphPage() {
   const navigate = useNavigate();
@@ -20,17 +17,23 @@ export function GraphPage() {
   const [selected, setSelected] = useState<string | null>('CE');
   const { data: graph, error, refetch, isLoading } = useGraph('CE-1978');
 
+  // Functional update + ``useCallback`` so the chip row doesn't re-create
+  // every onClick handler on each render. Declared BEFORE the early
+  // returns below so the hook is called unconditionally (rules-of-hooks).
+  const toggle = useCallback((t: GraphNodeKind) => {
+    setFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
+  }, []);
+
   if (error) return <div className="p-10"><ErrorState onRetry={() => refetch()} description={String(error)} /></div>;
   if (!graph || isLoading) return <div className="p-10 text-muted">Cargando grafo…</div>;
 
   const node = selected ? graph.nodes.find((n) => n.id === selected) : null;
   const neighbours = selected ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12) : [];
-
-  const toggle = (t: GraphNodeKind) => {
-    const next = new Set(filters);
-    next.has(t) ? next.delete(t) : next.add(t);
-    setFilters(next);
-  };
 
   return (
     <div className="flex h-full min-h-0">
@@ -43,7 +46,7 @@ export function GraphPage() {
               key={t}
               active={filters.has(t)}
               onClick={() => toggle(t)}
-              icon={<span className="size-2 rounded-full" style={{ background: NODE_FILL[t] }} />}
+              icon={<span className="size-2 rounded-full" style={{ background: GRAPH_KIND_FILL[t] }} />}
             >
               {NODE_KIND_LABELS[t]}
             </Chip>
@@ -63,7 +66,7 @@ export function GraphPage() {
             <div className="flex flex-col gap-1.5 text-[12px]">
               {ALL_KINDS.map((t) => (
                 <div key={t} className="flex items-center gap-2">
-                  <span className="size-2.5 rounded-full" style={{ background: NODE_FILL[t] }} />
+                  <span className="size-2.5 rounded-full" style={{ background: GRAPH_KIND_FILL[t] }} />
                   {NODE_KIND_LABELS[t]}
                 </div>
               ))}
@@ -82,7 +85,7 @@ export function GraphPage() {
         {node ? (
           <>
             <div className="mb-3.5 flex items-center gap-2">
-              <Badge style={{ background: NODE_FILL[node.kind], color: 'white', border: 'transparent' }}>
+              <Badge style={{ background: GRAPH_KIND_FILL[node.kind], color: 'white', border: 'transparent' }}>
                 {NODE_KIND_LABELS[node.kind]}
               </Badge>
               <span className="ml-auto flex gap-1">

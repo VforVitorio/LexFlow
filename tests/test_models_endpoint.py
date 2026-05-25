@@ -57,23 +57,21 @@ class TestModelsEndpoint:
                 return ["llama3.1:8b", "mistral:7b"]
 
         monkeypatch.setattr(ollama_mod, "OllamaProvider", _FakeOllama)
-        # Re-bind the symbol the router imported at module load time.
-        from lexflow.api.routers import models as router_mod
+        # Swap the "ollama" slot in the shared provider registry — the
+        # endpoint reads through ``PROVIDER_SPECS`` so this is the only
+        # place we need to patch.
+        from lexflow.chat import provider_registry as registry_mod
 
-        old = router_mod._PROVIDERS[0]  # ollama is the first entry
-        monkeypatch.setattr(
-            router_mod,
-            "_PROVIDERS",
-            [
-                router_mod._ProviderSpec(
-                    "ollama",
-                    local=old.local,
-                    factory=_FakeOllama,  # type: ignore[arg-type]
-                    default_context=old.default_context,
-                ),
-                *router_mod._PROVIDERS[1:],
-            ],
+        original = registry_mod.PROVIDERS_BY_KEY["ollama"]
+        patched = registry_mod.ProviderSpec(
+            key="ollama",
+            local=original.local,
+            factory=_FakeOllama,  # type: ignore[arg-type]
+            default_context=original.default_context,
         )
+        new_specs = [patched if s.key == "ollama" else s for s in registry_mod.PROVIDER_SPECS]
+        monkeypatch.setattr(registry_mod, "PROVIDER_SPECS", new_specs)
+        monkeypatch.setitem(registry_mod.PROVIDERS_BY_KEY, "ollama", patched)
 
         body = client.get("/api/v1/models").json()
         ollama_entries = [m for m in body if m["provider"] == "ollama"]
@@ -102,18 +100,18 @@ class TestModelsEndpoint:
 
         # Squash the timeout so we don't wait 2s per test invocation.
         monkeypatch.setattr(router_mod, "_PROBE_TIMEOUT_S", 0.05)
-        monkeypatch.setattr(
-            router_mod,
-            "_PROVIDERS",
-            [
-                router_mod._ProviderSpec(
-                    "ollama",
-                    local=True,
-                    factory=_HangingProvider,  # type: ignore[arg-type]
-                    default_context=8192,
-                ),
-            ],
+        # Replace the whole registry with a single hanging provider so the
+        # full response is just one placeholder row.
+        from lexflow.chat import provider_registry as registry_mod
+
+        only_ollama = registry_mod.ProviderSpec(
+            key="ollama",
+            local=True,
+            factory=_HangingProvider,  # type: ignore[arg-type]
+            default_context=8192,
         )
+        monkeypatch.setattr(registry_mod, "PROVIDER_SPECS", [only_ollama])
+        monkeypatch.setattr(registry_mod, "PROVIDERS_BY_KEY", {"ollama": only_ollama})
         body = client.get("/api/v1/models").json()
         assert body == [
             {
@@ -135,7 +133,7 @@ class TestModelsEndpoint:
         """A configured OpenAI provider exposes gpt-4o at 128k."""
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 
-        from lexflow.api.routers import models as router_mod
+        from lexflow.chat import provider_registry as registry_mod
 
         class _FakeOpenAI:
             def __init__(self, *args: object, **kwargs: object) -> None: ...
@@ -143,13 +141,13 @@ class TestModelsEndpoint:
             async def list_models(self) -> list[str]:
                 return ["gpt-4o", "gpt-3.5-turbo"]
 
-        # Patch only the openai slot in the providers list.
-        replaced: list[router_mod._ProviderSpec] = []
-        for spec in router_mod._PROVIDERS:
+        # Patch only the openai slot in the shared registry.
+        replaced: list[registry_mod.ProviderSpec] = []
+        for spec in registry_mod.PROVIDER_SPECS:
             if spec.key == "openai":
                 replaced.append(
-                    router_mod._ProviderSpec(
-                        "openai",
+                    registry_mod.ProviderSpec(
+                        key="openai",
                         local=False,
                         factory=_FakeOpenAI,  # type: ignore[arg-type]
                         default_context=128_000,
@@ -158,7 +156,7 @@ class TestModelsEndpoint:
                 )
             else:
                 replaced.append(spec)
-        monkeypatch.setattr(router_mod, "_PROVIDERS", replaced)
+        monkeypatch.setattr(registry_mod, "PROVIDER_SPECS", replaced)
 
         body = client.get("/api/v1/models").json()
         gpt4o = next(m for m in body if m["model"] == "gpt-4o")

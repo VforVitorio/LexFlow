@@ -36,15 +36,9 @@ from typing import Any
 
 from sqlmodel import Session
 
+from lexflow.chat import provider_registry
 from lexflow.chat.base import ChatMessage as ProviderMessage
 from lexflow.chat.base import ChatProvider, ChatProviderError
-from lexflow.chat.providers import (
-    AnthropicProvider,
-    GoogleProvider,
-    LMStudioProvider,
-    OllamaProvider,
-    OpenAIProvider,
-)
 from lexflow.chat.storage_models import ChatMessage, ChatThread
 
 logger = logging.getLogger(__name__)
@@ -63,20 +57,6 @@ class SseEvent:
     SOURCE = "source"
     ERROR = "error"
     DONE = "done"
-
-
-# Provider key → factory. Mirrors ``models.py:_PROVIDERS`` but skips the
-# probe/timeout machinery: by the time we hit this code path the client
-# has already picked a model from the listing endpoint, so we trust the
-# key. Each factory takes zero args; the cloud providers read API keys
-# from env.
-_FACTORIES: dict[str, type[ChatProvider]] = {
-    "ollama": OllamaProvider,
-    "lmstudio": LMStudioProvider,
-    "openai": OpenAIProvider,
-    "anthropic": AnthropicProvider,
-    "google": GoogleProvider,
-}
 
 
 class UnknownProviderError(ValueError):
@@ -99,12 +79,16 @@ def split_model_id(model_id: str) -> tuple[str, str]:
 
 
 def _provider_for(provider_key: str) -> ChatProvider:
-    """Instantiate the chat provider matching ``provider_key``."""
-    try:
-        factory = _FACTORIES[provider_key]
-    except KeyError as exc:
-        raise UnknownProviderError(f"Unknown chat provider: {provider_key!r}") from exc
-    return factory()
+    """Instantiate the chat provider matching ``provider_key``.
+
+    Reads from the shared registry through a module attribute so tests
+    that monkeypatch ``provider_registry.PROVIDERS_BY_KEY`` reach this
+    layer without a separate patch site.
+    """
+    spec = provider_registry.PROVIDERS_BY_KEY.get(provider_key)
+    if spec is None:
+        raise UnknownProviderError(f"Unknown chat provider: {provider_key!r}")
+    return spec.factory()
 
 
 def format_sse(event: str, data: Any) -> str:

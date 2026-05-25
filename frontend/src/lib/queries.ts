@@ -101,10 +101,14 @@ export function useGraph(id: string | undefined, depth = 2) {
 // ─── Search ──────────────────────────────────────────────────────────────
 
 export function useSearch(q: string) {
+  // Backend `/api/v1/search` requires `q` of length ≥ 2 (`min_length=2`).
+  // Disparar la query con un solo carácter devuelve 422 y mete ruido en
+  // los logs — gateamos aquí para mantener el contrato alineado.
+  const trimmed = q.trim();
   return useQuery<SearchResults>({
-    queryKey: qk.search(q),
-    queryFn: () => api.search.universal(q),
-    enabled: q.trim().length > 0,
+    queryKey: qk.search(trimmed),
+    queryFn: () => api.search.universal(trimmed),
+    enabled: trimmed.length >= 2,
     staleTime: 10_000,
   });
 }
