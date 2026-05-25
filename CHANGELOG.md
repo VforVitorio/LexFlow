@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.1](https://github.com/VforVitorio/LexFlow/compare/v0.8.0...v0.8.1) (2026-05-25)
+
+
+### Refactoring
+
+* clean-code audit pass — dedup providers, narrow exceptions, share graph palette ([b3c1099](https://github.com/VforVitorio/LexFlow/commit/b3c10994fd950ce20b5ef3a7bc6ddcf3e88982fa))
+* clean-code audit pass — dedup providers, narrow exceptions, share graph palette ([4c4f486](https://github.com/VforVitorio/LexFlow/commit/4c4f4866785248623b01576be57f486c0dd62d09))
+
 ## [0.8.0](https://github.com/VforVitorio/LexFlow/compare/v0.7.0...v0.8.0) (2026-05-24)
 
 
