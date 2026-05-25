@@ -293,15 +293,28 @@ function FilterGroup({ title, children }: { title: string; children: React.React
   );
 }
 
-function SortButton({ sort, setSort }: { sort: string; setSort: (v: any) => void }) {
-  const labels = { relevance: 'Relevancia', date: 'Fecha', refs: 'Refs', title: 'Título' } as Record<string, string>;
+// Literal union shared with ``ExplorerPage``'s ``sort`` useState so
+// adding a new sort key surfaces as a TS error at the call sites, not as
+// a runtime "unknown sort" bug. The pre-refactor signature was
+// ``setSort: (v: any) => void`` — proper typing now.
+type SortKey = 'relevance' | 'date' | 'refs' | 'title';
+const SORT_LABELS: Record<SortKey, string> = {
+  relevance: 'Relevancia',
+  date: 'Fecha',
+  refs: 'Refs',
+  title: 'Título',
+};
+
+function SortButton({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => void }) {
   return (
     <select
       value={sort}
-      onChange={(e) => setSort(e.target.value)}
+      onChange={(e) => setSort(e.target.value as SortKey)}
       className="h-9 rounded-md border border-border-strong bg-surface px-3 text-sm hover:bg-surface-2"
     >
-      {Object.entries(labels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+      {(Object.entries(SORT_LABELS) as [SortKey, string][]).map(([k, v]) => (
+        <option key={k} value={k}>{v}</option>
+      ))}
     </select>
   );
 }

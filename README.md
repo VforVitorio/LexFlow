@@ -74,17 +74,20 @@ uv run python main.py
 
 La API estará disponible en `http://localhost:8000`. Documentación interactiva en `/docs`.
 
-### Frontend (React) — cuando llegue el scaffold
+### Frontend (React)
+
+El scaffold ya está en `frontend/`. Vite proxia `/api/*` → `:8000`, así que no hay configuración de CORS en dev — basta con que el backend esté corriendo.
 
 ```bash
 cd frontend
-pnpm install
-pnpm dev          # Vite en :5173 con proxy /api → :8000
-pnpm test         # Vitest
-pnpm test:e2e     # Playwright contra un backend real
-pnpm typecheck    # tsc --noEmit
-pnpm build        # → frontend/dist/
+npm install            # primera vez
+npm run dev            # Vite en :5173 con proxy /api → :8000
+npm run typecheck      # tsc --noEmit
+npm run build          # → frontend/dist/
+npm run lint           # ESLint
 ```
+
+> Atajo: desde la raíz del repo, `./scripts/dev.ps1` arranca backend + frontend en dos terminales y deja `frontend/.env.local` con la única combinación que funciona (`VITE_USE_MOCK=false`, sin `VITE_API_URL`).
 
 ### Producción (un único proceso)
 

@@ -12,7 +12,7 @@ from pathlib import Path
 from threading import Lock
 
 from lexflow.core.enums import LawRank, LawStatus, Scope
-from lexflow.core.exceptions import DataPathError, LawNotFoundError
+from lexflow.core.exceptions import DataPathError, LawNotFoundError, LexFlowError
 from lexflow.core.metadata_parser import parse_metadata_only
 from lexflow.core.models import Law, LawMetadata
 from lexflow.core.parser import parse_law_file
@@ -164,7 +164,10 @@ class LawRegistry:
                 try:
                     self._ensure_metadata(law_id)
                     loaded += 1
-                except Exception:
+                # File I/O and parser/validation errors — what
+                # ``_ensure_metadata`` can realistically raise. A real
+                # programming bug should still escape.
+                except (OSError, ValueError, LexFlowError):
                     logger.warning("Failed to preload metadata for %s", law_id, exc_info=True)
         logger.info("Metadata preload complete: %d laws loaded", loaded)
 

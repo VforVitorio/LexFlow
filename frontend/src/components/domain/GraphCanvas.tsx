@@ -15,6 +15,7 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { cn } from '@/lib/utils';
+import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_GLOW, GRAPH_PRIMARY_SOFT } from '@/lib/graph-colors';
 import type { GraphData, GraphNode, GraphNodeKind } from '@/lib/types';
 
 export const NODE_KIND_LABELS: Record<GraphNodeKind, string> = {
@@ -23,16 +24,6 @@ export const NODE_KIND_LABELS: Record<GraphNodeKind, string> = {
   reference: 'Referencia',
   amendment: 'Reforma',
   repealed: 'Derogada',
-};
-
-/** Brand colour per node kind. Shared with `GraphPage.tsx` legend so the
- * canvas + the legend never drift. */
-const KIND_FILL: Record<GraphNodeKind, string> = {
-  law:       'hsl(232 72% 52%)',
-  article:   'hsl(36 95% 56%)',
-  reference: 'hsl(266 65% 60%)',
-  amendment: 'hsl(195 70% 50%)',
-  repealed:  'hsl(220 8% 55%)',
 };
 /** Node size (px) per kind. Law nodes anchor the canvas; articles ring them. */
 const KIND_SIZE: Record<GraphNodeKind, number> = {
@@ -73,7 +64,9 @@ export interface GraphCanvasProps {
  * thousands of laws (#87 acceptance criterion).
  *
  * --- WHERE TO CHANGE IF X CHANGES ---
- * * Color tokens / size       → ``KIND_FILL`` / ``KIND_SIZE`` above
+ * * Color tokens             → ``lib/graph-colors.ts`` (shared with
+ *                               ``GraphPage`` and ``DashboardPage``).
+ * * Node size                 → ``KIND_SIZE`` above.
  * * Layout policy             → ``_layout`` below
  * * Node visual               → ``LfNode`` component
  *
@@ -98,7 +91,7 @@ interface LfNodeData extends Record<string, unknown> {
 function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
   const { label, kind, dim, selected: isSelected, onSelect } = data;
   const size = KIND_SIZE[kind];
-  const fill = KIND_FILL[kind];
+  const fill = GRAPH_KIND_FILL[kind];
   return (
     <button
       type="button"
@@ -118,7 +111,7 @@ function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
         <span
           aria-hidden
           className="absolute inset-[-10px] rounded-full"
-          style={{ background: 'hsl(232 72% 52% / 0.18)' }}
+          style={{ background: GRAPH_PRIMARY_SOFT }}
         />
       )}
       <span
@@ -126,7 +119,7 @@ function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
         className="size-full rounded-full"
         style={{
           background: fill,
-          boxShadow: isSelected ? '0 0 0 3px hsl(var(--bg)), 0 0 18px hsl(232 72% 52% / 0.55)' : undefined,
+          boxShadow: isSelected ? `0 0 0 3px hsl(var(--bg)), 0 0 18px ${GRAPH_PRIMARY_GLOW}` : undefined,
         }}
       />
       {kind === 'law' && (
@@ -252,7 +245,7 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
           type: 'smoothstep',
           animated: false,
           style: {
-            stroke: isSelected ? 'hsl(232 72% 52%)' : 'hsl(var(--border-strong))',
+            stroke: isSelected ? GRAPH_PRIMARY : 'hsl(var(--border-strong))',
             strokeWidth: isSelected ? 2 : 1,
             opacity: bothVisible ? (isSelected ? 1 : 0.45) : 0.08,
           },
@@ -300,7 +293,7 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
           pannable
           zoomable
           maskColor="hsl(var(--bg) / 0.6)"
-          nodeColor={(node) => KIND_FILL[(node.data as LfNodeData).kind] ?? 'hsl(var(--muted-fg))'}
+          nodeColor={(node) => GRAPH_KIND_FILL[(node.data as LfNodeData).kind] ?? 'hsl(var(--muted-fg))'}
         />
       </ReactFlow>
     </div>

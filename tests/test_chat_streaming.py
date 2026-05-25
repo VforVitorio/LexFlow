@@ -49,16 +49,23 @@ def patch_provider(monkeypatch: MonkeyPatch):
     """Install a fake "ollama" provider that yields the given chunks."""
 
     def _install(chunks: list[str | Exception]) -> None:
-        from lexflow.chat import streaming as streaming_mod
+        from lexflow.chat import provider_registry as registry_mod
 
         def factory() -> _FakeProvider:
             return _FakeProvider(chunks)
 
-        monkeypatch.setattr(
-            streaming_mod,
-            "_FACTORIES",
-            {**streaming_mod._FACTORIES, "ollama": factory},  # type: ignore[dict-item]
+        # Swap only the "ollama" slot in the shared registry. The endpoint
+        # reads through ``PROVIDERS_BY_KEY``, so this is the single point
+        # both ``/api/v1/models`` and ``stream_chat_reply`` use.
+        ollama_spec = registry_mod.PROVIDERS_BY_KEY["ollama"]
+        patched = registry_mod.ProviderSpec(
+            key=ollama_spec.key,
+            local=ollama_spec.local,
+            factory=factory,  # type: ignore[arg-type]
+            default_context=ollama_spec.default_context,
+            env_key=ollama_spec.env_key,
         )
+        monkeypatch.setitem(registry_mod.PROVIDERS_BY_KEY, "ollama", patched)
 
     return _install
 

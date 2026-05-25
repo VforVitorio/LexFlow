@@ -24,7 +24,11 @@ def _submodule_hash(data_path: Path) -> str:
             stderr=subprocess.DEVNULL,
         )
         return result.decode().strip()
-    except Exception:
+    # ``check_output`` raises ``CalledProcessError`` on non-zero exit and
+    # ``FileNotFoundError`` (subclass of ``OSError``) when git is missing.
+    # We never want this helper to crash the request — degrade to a
+    # sentinel so ``load_or_build`` can decide what to do.
+    except (subprocess.CalledProcessError, OSError):
         return "unknown"
 
 
@@ -49,7 +53,11 @@ def load_graph(cache_path: Path) -> tuple[LegalGraph, str] | None:
         graph = LegalGraph()
         graph._g = g
         return graph, data["hash"]
-    except Exception as exc:
+    # Bad cache file = treat as missing. ``OSError`` for file reads,
+    # ``json.JSONDecodeError`` (a ValueError) for parse, ``KeyError`` if
+    # the schema drifted from CACHE_VERSION, ``TypeError`` for shape
+    # mismatches inside ``node_link_graph``.
+    except (OSError, ValueError, KeyError, TypeError) as exc:
         logger.warning("Could not load graph cache: %s", exc)
         return None
 

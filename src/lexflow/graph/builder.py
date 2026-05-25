@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from lexflow.core.exceptions import LexFlowError
 from lexflow.core.registry import LawRegistry
 from lexflow.graph.model import LegalGraph
 
@@ -17,7 +18,10 @@ def build_graph(registry: LawRegistry) -> LegalGraph:
         try:
             meta = registry.get_metadata(law_id)
             graph.add_law(meta)
-        except Exception:
+        # ``get_metadata`` reads/parses the source; OSError covers I/O,
+        # ValueError covers parse/validation failures, LexFlowError is the
+        # in-house surface (LawNotFoundError, ParserError, …).
+        except (OSError, ValueError, LexFlowError):
             logger.warning("Could not add node for %s", law_id, exc_info=True)
     # Pass 2: add edges from cross-references. Only count edges that were
     # actually inserted — `add_reference` skips edges whose endpoints are
@@ -34,7 +38,7 @@ def build_graph(registry: LawRegistry) -> LegalGraph:
                     reference_text=ref.target_text,
                 ):
                     added_edges += 1
-        except Exception:
+        except (OSError, ValueError, LexFlowError):
             logger.warning("Could not process references for %s", law_id, exc_info=True)
     logger.info("Graph built: %d nodes, %d edges", graph.node_count(), added_edges)
     return graph

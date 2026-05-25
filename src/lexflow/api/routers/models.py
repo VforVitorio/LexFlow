@@ -7,7 +7,8 @@ frontend can render a "needs setup" affordance without omitting the
 provider entirely.
 
 --- WHERE TO CHANGE IF X CHANGES ---
-* Add a new provider:  edit ``_PROVIDERS`` below + add a factory in
+* Add a new provider:  edit ``PROVIDER_SPECS`` in
+  ``lexflow.chat.provider_registry`` + add a factory in
   ``src/lexflow/chat/providers/`` that exposes ``list_models()``.
 * Tweak context-window heuristics: edit ``_context_window_for``.
 * Tighten the probe timeout: ``_PROBE_TIMEOUT_S``.
@@ -17,19 +18,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable
 
 from fastapi import APIRouter
 
-from lexflow.chat.base import ChatProvider, ChatProviderError
-from lexflow.chat.providers import (
-    AnthropicProvider,
-    GoogleProvider,
-    LMStudioProvider,
-    OllamaProvider,
-    OpenAIProvider,
-)
+from lexflow.chat import provider_registry
+from lexflow.chat.base import ChatProviderError
+from lexflow.chat.provider_registry import ProviderSpec
 from lexflow.chat.schemas import ModelInfo
 
 logger = logging.getLogger(__name__)
@@ -38,43 +33,8 @@ router = APIRouter(tags=["Models"])
 
 # Probe budget per provider. Ollama / LM Studio block on TCP if not running,
 # so we cap each probe so the overall request can never exceed
-# ``len(_PROVIDERS) * _PROBE_TIMEOUT_S`` even in the worst case.
+# ``len(PROVIDER_SPECS) * _PROBE_TIMEOUT_S`` even in the worst case.
 _PROBE_TIMEOUT_S = 2.0
-
-
-class _ProviderSpec:
-    """How to probe and label one provider in the response."""
-
-    def __init__(
-        self,
-        key: str,
-        local: bool,
-        factory: Callable[[], ChatProvider],
-        default_context: int,
-        env_key: str | None = None,
-    ) -> None:
-        self.key = key
-        self.local = local
-        self.factory = factory
-        self.default_context = default_context
-        self.env_key = env_key
-
-    def has_credentials(self) -> bool:
-        """Cloud providers need an env var; local providers don't."""
-        if self.env_key is None:
-            return True
-        return bool(os.environ.get(self.env_key))
-
-
-_PROVIDERS: list[_ProviderSpec] = [
-    _ProviderSpec("ollama", local=True, factory=OllamaProvider, default_context=8192),
-    _ProviderSpec("lmstudio", local=True, factory=LMStudioProvider, default_context=8192),
-    _ProviderSpec("openai", local=False, factory=OpenAIProvider, default_context=128_000, env_key="OPENAI_API_KEY"),
-    _ProviderSpec(
-        "anthropic", local=False, factory=AnthropicProvider, default_context=200_000, env_key="ANTHROPIC_API_KEY"
-    ),
-    _ProviderSpec("google", local=False, factory=GoogleProvider, default_context=1_000_000, env_key="GOOGLE_API_KEY"),
-]
 
 
 def _context_window_for(provider: str, model: str, default: int) -> int:
@@ -102,7 +62,7 @@ def _context_window_for(provider: str, model: str, default: int) -> int:
     return default
 
 
-async def _probe(spec: _ProviderSpec) -> list[ModelInfo]:
+async def _probe(spec: ProviderSpec) -> list[ModelInfo]:
     """Probe one provider. Always returns ≥ 1 entry — never raises.
 
     Empty model list with ``configured=False`` is the placeholder for
@@ -207,6 +167,8 @@ async def list_models() -> list[ModelInfo]:
     or unconfigured providers still appear in the response as a single
     placeholder entry (``configured: false``) so the UI can show them.
     """
-    probes: list[Awaitable[list[ModelInfo]]] = [_probe(spec) for spec in _PROVIDERS]
+    # Read through the module attribute so tests can monkeypatch
+    # ``PROVIDER_SPECS`` and the change reaches this handler.
+    probes: list[Awaitable[list[ModelInfo]]] = [_probe(spec) for spec in provider_registry.PROVIDER_SPECS]
     results = await asyncio.gather(*probes)
     return [model for batch in results for model in batch]

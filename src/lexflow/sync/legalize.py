@@ -11,7 +11,8 @@ This module wraps both operations. The git CLI is invoked through a thin
 without spinning up a real submodule.
 
 --- WHERE TO CHANGE IF X CHANGES ---
-* Submodule path env var      → ``LEXFLOW_LEGALIZE_PATH``
+* Submodule path env var      → ``LEXFLOW_DATA_PATH`` (single source of
+                                truth via :mod:`lexflow.utils.config`).
 * Graph invalidation hook     → wire it through the ``on_complete``
                                 callback in :func:`run_sync`.
 * Add a /tasks endpoint       → extend ``_SyncState`` with per-task ids
@@ -22,7 +23,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import shutil
 import subprocess
 import threading
@@ -33,13 +33,9 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from lexflow.utils.config import get_settings
+
 logger = logging.getLogger(__name__)
-
-
-# Override at deploy / test time. Default mirrors the layout described in
-# ``CLAUDE.md §3``.
-_ENV_VAR = "LEXFLOW_LEGALIZE_PATH"
-_DEFAULT_PATH = Path("data") / "legalize-es"
 
 # One-at-a-time sync. ``run_sync`` early-returns when a sync is already
 # in progress; the front-end polls ``/status`` to find out when it's done.
@@ -147,11 +143,14 @@ _git_factory: Callable[[Path], _Git] = _Git
 
 
 def _resolve_path() -> Path:
-    """Resolve the submodule path with env var override."""
-    raw = os.environ.get(_ENV_VAR, "").strip()
-    if raw:
-        return Path(raw)
-    return _DEFAULT_PATH
+    """Resolve the submodule path.
+
+    Single source of truth: :func:`lexflow.utils.config.get_settings`
+    reads ``LEXFLOW_DATA_PATH`` once and caches the result. The whole
+    backend (registry, graph cache, sync) now agrees on one knob
+    instead of three parallel env-var resolutions.
+    """
+    return get_settings().data_path
 
 
 def is_sync_running() -> bool:
