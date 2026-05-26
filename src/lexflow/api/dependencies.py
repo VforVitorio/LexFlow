@@ -2,14 +2,64 @@
 
 from __future__ import annotations
 
-from fastapi import Query
+import threading
+
+from fastapi import Depends, Query
 
 from lexflow.core.registry import LawRegistry, get_registry
+from lexflow.graph.cache import load_or_build as _load_or_build_graph
+from lexflow.graph.model import LegalGraph
+from lexflow.utils.config import get_settings
 
 
 def get_law_registry() -> LawRegistry:
     """Dependency that provides the singleton :class:`LawRegistry`."""
     return get_registry()
+
+
+# ---------------------------------------------------------------------------
+# LegalGraph DI provider (issue #101).
+# ---------------------------------------------------------------------------
+# The graph used to live as a module-level ``_cached_graph`` inside the
+# graph router with no lock and no override hook. This DI provider is the
+# single source of truth: a process-wide singleton gated by
+# ``_graph_lock``, swappable via ``app.dependency_overrides[get_graph]``
+# in tests, and resettable via :func:`reset_graph_cache` (called by the
+# sync router after a successful ``git pull``).
+
+_graph_lock = threading.Lock()
+_cached_graph: LegalGraph | None = None
+
+
+def get_graph(registry: LawRegistry = Depends(get_law_registry)) -> LegalGraph:
+    """Return the process-wide :class:`LegalGraph` singleton.
+
+    First call builds the graph (or loads the disk cache via
+    :func:`lexflow.graph.cache.load_or_build` so a restart doesn't
+    re-parse the full corpus). Concurrent first hits are serialised by
+    ``_graph_lock``; only one build runs per process.
+    """
+    global _cached_graph
+    if _cached_graph is not None:
+        return _cached_graph
+    with _graph_lock:
+        if _cached_graph is None:
+            settings = get_settings()
+            _cached_graph = _load_or_build_graph(registry, settings.data_path)
+    return _cached_graph
+
+
+def reset_graph_cache() -> None:
+    """Drop the in-memory graph so the next request rebuilds it.
+
+    Called by the sync router after a successful ``git pull`` on the
+    legalize-es submodule — the next ``get_graph`` invocation reloads
+    from the (now stale) disk cache, detects the hash mismatch, and
+    rebuilds against the fresh data.
+    """
+    global _cached_graph
+    with _graph_lock:
+        _cached_graph = None
 
 
 class PaginationParams:

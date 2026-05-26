@@ -102,12 +102,14 @@ class TestSyncRun:
 
     def test_run_invalidates_graph_cache(self, client: TestClient, patch_git) -> None:
         patch_git()
-        from lexflow.api.routers import graph as graph_router_module
+        from lexflow.api import dependencies as deps_mod
 
-        # Seed the cache so we can prove the invalidator ran.
-        graph_router_module._cached_graph = object()  # type: ignore[assignment]
+        # Seed the cache so we can prove the invalidator ran. Touch the
+        # DI provider's module-level cache directly — the same singleton
+        # the production code reads through ``get_graph``.
+        deps_mod._cached_graph = object()  # type: ignore[assignment]
         client.post("/api/v1/sync/run")
-        assert graph_router_module._cached_graph is None
+        assert deps_mod._cached_graph is None
 
     def test_concurrent_run_returns_409(self, client: TestClient, monkeypatch: MonkeyPatch, patch_git) -> None:
         """While one pull is in flight, a second call must 409."""

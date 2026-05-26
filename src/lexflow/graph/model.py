@@ -1,8 +1,12 @@
-"""Legal knowledge graph backed by NetworkX DiGraph."""
+"""Legal knowledge graph backed by NetworkX DiGraph.
+
+The process-wide :class:`LegalGraph` singleton lives in
+:func:`lexflow.api.dependencies.get_graph` (issue #101). Don't add a
+top-level ``get_graph`` here — that's the third copy of the same idea
+the audit found and removed.
+"""
 
 from __future__ import annotations
-
-from functools import lru_cache
 
 import networkx as nx
 
@@ -73,10 +77,3 @@ class LegalGraph:
         return self._g
 
 
-@lru_cache(maxsize=1)
-def get_graph() -> LegalGraph:
-    """Singleton LegalGraph built from the registry."""
-    from lexflow.core.registry import get_registry
-    from lexflow.graph.builder import build_graph
-
-    return build_graph(get_registry())
