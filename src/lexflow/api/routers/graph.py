@@ -1,4 +1,10 @@
-"""Graph endpoints for the legal knowledge graph."""
+"""Graph endpoints for the legal knowledge graph.
+
+The :class:`~lexflow.graph.model.LegalGraph` singleton lives in
+:func:`lexflow.api.dependencies.get_graph` so tests can override it with
+``app.dependency_overrides[get_graph]`` and the sync router can invalidate
+it without reaching into this module's globals.
+"""
 
 from __future__ import annotations
 
@@ -7,8 +13,7 @@ from typing import Annotated
 import networkx as nx
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from lexflow.api.dependencies import get_law_registry
-from lexflow.core.registry import LawRegistry
+from lexflow.api.dependencies import get_graph
 from lexflow.core.schemas import (
     GraphEdgeData,
     GraphNeighborsResponse,
@@ -18,26 +23,15 @@ from lexflow.core.schemas import (
     GraphTopItem,
 )
 from lexflow.graph.algorithms import shortest_path, top_laws
-from lexflow.graph.builder import build_graph
 from lexflow.graph.model import LegalGraph
 
 router = APIRouter(prefix="/graph", tags=["graph"])
-
-_cached_graph: LegalGraph | None = None
-
-
-def get_graph_dep(registry: Annotated[LawRegistry, Depends(get_law_registry)]) -> LegalGraph:
-    """Dependency that provides a singleton :class:`LegalGraph`."""
-    global _cached_graph
-    if _cached_graph is None:
-        _cached_graph = build_graph(registry)
-    return _cached_graph
 
 
 @router.get("/neighbors/{law_id}", response_model=GraphNeighborsResponse)
 def get_neighbors(
     law_id: str,
-    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
+    graph: Annotated[LegalGraph, Depends(get_graph)],
 ) -> GraphNeighborsResponse:
     """Return the direct successors (outgoing references) of a law node."""
     neighbors = graph.get_neighbors(law_id)
@@ -48,7 +42,7 @@ def get_neighbors(
 def get_path(
     from_id: Annotated[str, Query(alias="from")],
     to_id: Annotated[str, Query(alias="to")],
-    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
+    graph: Annotated[LegalGraph, Depends(get_graph)],
 ) -> list[str]:
     """Return the shortest directed path between two law nodes.
 
@@ -64,7 +58,7 @@ def get_path(
 @router.get("/subgraph/{law_id}", response_model=GraphSubgraphResponse)
 def get_subgraph(
     law_id: str,
-    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
+    graph: Annotated[LegalGraph, Depends(get_graph)],
     depth: int = Query(1, ge=1, le=3),
 ) -> GraphSubgraphResponse:
     """Return the ego-subgraph around a law node up to a given depth.
@@ -87,7 +81,7 @@ def get_subgraph(
 
 
 @router.get("/stats", response_model=GraphStatsResponse)
-def get_stats(graph: Annotated[LegalGraph, Depends(get_graph_dep)]) -> GraphStatsResponse:
+def get_stats(graph: Annotated[LegalGraph, Depends(get_graph)]) -> GraphStatsResponse:
     """Return high-level statistics about the knowledge graph."""
     g = graph.graph
     return GraphStatsResponse(
@@ -100,7 +94,7 @@ def get_stats(graph: Annotated[LegalGraph, Depends(get_graph_dep)]) -> GraphStat
 
 @router.get("/top", response_model=list[GraphTopItem])
 def get_top(
-    graph: Annotated[LegalGraph, Depends(get_graph_dep)],
+    graph: Annotated[LegalGraph, Depends(get_graph)],
     limit: int = Query(10, ge=1, le=100),
     metric: str = Query("pagerank", pattern="^pagerank$"),
 ) -> list[GraphTopItem]:

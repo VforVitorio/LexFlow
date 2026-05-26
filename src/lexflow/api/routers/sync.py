@@ -25,7 +25,7 @@ import logging
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from lexflow.api.routers import graph as graph_router_module
+from lexflow.api.dependencies import reset_graph_cache
 from lexflow.sync.legalize import SyncStatusPayload, get_sync_status, is_sync_running, run_sync
 
 logger = logging.getLogger(__name__)
@@ -34,8 +34,13 @@ router = APIRouter(prefix="/sync", tags=["Sync"])
 
 
 def _invalidate_graph_cache() -> None:
-    """Drop the in-memory legal graph so the next request rebuilds it."""
-    graph_router_module._cached_graph = None
+    """Drop the in-memory legal graph so the next request rebuilds it.
+
+    Delegates to the DI provider in :mod:`lexflow.api.dependencies` —
+    the previous version reached into a private global in the graph
+    router which broke the moment that router stopped owning the cache.
+    """
+    reset_graph_cache()
 
 
 @router.get(
