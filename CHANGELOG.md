@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/VforVitorio/LexFlow/compare/v0.8.1...v0.9.0) (2026-05-26)
+
+
+### Features
+
+* **frontend:** toast system + global ErrorBoundary (closes [#88](https://github.com/VforVitorio/LexFlow/issues/88)) ([2166419](https://github.com/VforVitorio/LexFlow/commit/2166419ab2ad1da3ef1a47bd72102953baf6f64a))
+* **frontend:** toast system + global ErrorBoundary surfacing FastAPI {detail} ([c49bbc1](https://github.com/VforVitorio/LexFlow/commit/c49bbc102c8d56caff6d12e6c8eb755f0ae89009))
+
+
+### Refactoring
+
+* **api:** consolidate 3 graph singletons into one DI provider ([854c6ef](https://github.com/VforVitorio/LexFlow/commit/854c6ef76f0b38cb5152cac362e5abc8bfdb75b5))
+* **api:** consolidate 3 graph singletons into one DI provider (closes [#101](https://github.com/VforVitorio/LexFlow/issues/101)) ([93e16fb](https://github.com/VforVitorio/LexFlow/commit/93e16fbe2f8b30b572e6823171aa45369c290840))
+
 ## [0.8.1](https://github.com/VforVitorio/LexFlow/compare/v0.8.0...v0.8.1) (2026-05-25)
 
 
