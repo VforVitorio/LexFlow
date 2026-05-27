@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/VforVitorio/LexFlow/compare/v0.10.0...v0.11.0) (2026-05-27)
+
+
+### Features
+
+* **frontend:** mobile bottom-tab navigation (closes [#89](https://github.com/VforVitorio/LexFlow/issues/89)) ([33a64bc](https://github.com/VforVitorio/LexFlow/commit/33a64bc9eb19abeeee4f246eb0f11a1ea6605536))
+
 ## [0.10.0](https://github.com/VforVitorio/LexFlow/compare/v0.9.0...v0.10.0) (2026-05-27)
 
 
