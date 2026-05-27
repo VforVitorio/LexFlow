@@ -80,9 +80,7 @@ class TestGetArticle:
 
     def test_unknown_article_returns_error(self, patched_registry: LawRegistry) -> None:
         del patched_registry
-        result = _unwrap(mcp_server.get_article)(
-            law_id="BOE-A-2000-323", article_number="9999"
-        )
+        result = _unwrap(mcp_server.get_article)(law_id="BOE-A-2000-323", article_number="9999")
         assert result["error"] == "article_not_found"
         assert result["article_number"] == "9999"
 
