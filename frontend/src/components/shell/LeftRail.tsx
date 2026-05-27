@@ -1,20 +1,11 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { Home, BookOpenText, Network, MessagesSquare, BarChart3, Settings, PanelLeft, PanelRightOpen } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Settings, PanelLeft, PanelRightOpen } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
 import { Kbd } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { useUi } from '@/lib/store';
 import { useLawsList } from '@/lib/queries';
-
-interface NavItem { to: string; icon: React.ComponentType<{ className?: string }>; label: string; k: string; }
-
-const NAV: NavItem[] = [
-  { to: '/home',      icon: Home,           label: 'Inicio',     k: 'g h' },
-  { to: '/explorer',  icon: BookOpenText,   label: 'Explorador', k: 'g e' },
-  { to: '/graph',     icon: Network,        label: 'Grafo',      k: 'g g' },
-  { to: '/chat',      icon: MessagesSquare, label: 'Chat',       k: 'g c' },
-  { to: '/dashboards',icon: BarChart3,      label: 'Cuadros',    k: 'g d' },
-];
+import { NAV } from './nav-items';
 
 export function LeftRail() {
   const expanded = useUi((s) => s.leftExpanded);
@@ -26,7 +17,8 @@ export function LeftRail() {
     <nav
       aria-label="Navegación principal"
       className={cn(
-        'flex shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 overflow-hidden',
+        // Hidden on mobile — the BottomTabBar takes over below `md`.
+        'hidden shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 overflow-hidden md:flex',
         expanded ? 'w-[220px]' : 'w-[60px]',
       )}
     >

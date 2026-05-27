@@ -18,17 +18,17 @@ export function TopBar() {
     >
       <Breadcrumb path={location.pathname} lawId={params.lawId} navigate={navigate} />
 
-      {/* Search trigger */}
+      {/* Search trigger — desktop only; mobile uses the floating button in AppShell. */}
       <button
         onClick={() => setPaletteOpen(true)}
-        className="ml-auto inline-flex h-8 w-80 items-center gap-2.5 rounded-lg border border-border-strong bg-surface px-2.5 text-[13px] text-muted hover:border-indigo-500/60 hover:text-fg transition-colors"
+        className="ml-auto hidden h-8 w-80 items-center gap-2.5 rounded-lg border border-border-strong bg-surface px-2.5 text-[13px] text-muted transition-colors hover:border-indigo-500/60 hover:text-fg md:inline-flex"
       >
         <Search className="size-3.5" />
         <span className="flex-1 text-left">Buscar leyes, artículos…</span>
         <Kbd>{modKey} K</Kbd>
       </button>
 
-      <Button size="icon" variant="ghost" aria-label="Cambiar tema" onClick={toggleTheme}>
+      <Button size="icon" variant="ghost" aria-label="Cambiar tema" onClick={toggleTheme} className="ml-auto md:ml-0">
         {theme === 'light' ? <Sun className="size-4" /> : <Moon className="size-4" />}
       </Button>
       <Button size="icon" variant="ghost" aria-label="Alternar panel derecho" onClick={toggleRight}>
