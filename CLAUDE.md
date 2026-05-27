@@ -150,6 +150,7 @@ Read this before touching either side.
 - **Error contract**: backend returns `{ "detail": "<message>" }` on 4xx/5xx (FastAPI default). Frontend has a single error boundary that reads `detail` and surfaces a toast.
 - **Auth (when added)**: cookie-based session, `SameSite=Lax`, `HttpOnly`, `Secure` in prod. Do not put JWTs in localStorage.
 - **Streaming (chat)**: SSE over `GET /api/v1/chat/stream?...`. Frontend uses native `EventSource` + a TanStack Query mutation for the kickoff request.
+- **Search nests under its parent resource.** Search *over laws* lives at `/api/v1/laws/search`, not at the root — same nesting as `/laws/{id}/articles`. The flat `/api/v1/search` survives as a deprecated alias (`Deprecation: true` header) until v2. When other resources gain search, follow the same shape (`/api/v1/chat/threads/search`, …). Register the search router BEFORE the laws router so `/laws/{law_id}` doesn't shadow `/laws/search`.
 - **Never hand-write types that duplicate Pydantic models.** Use the generated schema.
 
 If the integration ever blocks progress (build, packaging, streaming, auth), surface the specific failure first. The fallback is to keep Reflex for that one page — but the user has explicitly stated this is *not* recommended.
