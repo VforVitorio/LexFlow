@@ -18,9 +18,10 @@ interface UiState {
   leftExpanded: boolean;
   toggleLeft(): void;
 
-  /** Right rail visible. */
+  /** Right rail visible (docked panel on desktop, bottom sheet on mobile). */
   rightOpen: boolean;
   toggleRight(): void;
+  setRight(open: boolean): void;
 
   /** Table density (mostly for the Explorer). */
   density: Density;
@@ -52,6 +53,7 @@ export const useUi = create<UiState>()(
 
       rightOpen: true,
       toggleRight: () => set((s) => ({ rightOpen: !s.rightOpen })),
+      setRight: (open) => set({ rightOpen: open }),
 
       density: 'comfortable',
       setDensity: (d) => set({ density: d }),
