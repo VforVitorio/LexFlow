@@ -45,9 +45,7 @@ class TestNeighbors:
         assert isinstance(body["neighbors"], list)
         assert body["count"] == len(body["neighbors"])
 
-    def test_unknown_law_returns_empty_neighbours(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_unknown_law_returns_empty_neighbours(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         # The endpoint doesn't 404 on unknown ids — the graph layer
         # treats unknown nodes as having zero neighbours. Test the
         # documented contract.
@@ -58,9 +56,7 @@ class TestNeighbors:
 
 
 class TestSubgraph:
-    def test_returns_nodes_and_edges(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_returns_nodes_and_edges(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         law_id = next(iter(graph_from_fixture.graph.nodes))
         response = client.get(f"/api/v1/graph/subgraph/{law_id}", params={"depth": 1})
         assert response.status_code == 200
@@ -70,24 +66,18 @@ class TestSubgraph:
         # The seed node is always present in its own subgraph.
         assert any(n["id"] == law_id for n in body["nodes"])
 
-    def test_404_for_unknown_seed(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_404_for_unknown_seed(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         del graph_from_fixture
         response = client.get("/api/v1/graph/subgraph/MISSING-LAW")
         assert response.status_code == 404
         assert "not in graph" in response.json()["detail"]
 
-    def test_rejects_invalid_depth(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_rejects_invalid_depth(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         law_id = next(iter(graph_from_fixture.graph.nodes))
         response = client.get(f"/api/v1/graph/subgraph/{law_id}", params={"depth": 99})
         assert response.status_code == 422
 
-    def test_nodes_carry_community_and_pagerank(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_nodes_carry_community_and_pagerank(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         """#143 — every node exposes a community id + a pagerank score,
         and the pageranks over the subgraph sum to ~1."""
         law_id = next(iter(graph_from_fixture.graph.nodes))
@@ -116,9 +106,7 @@ class TestPath:
 
 
 class TestStats:
-    def test_returns_node_edge_density(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_returns_node_edge_density(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         response = client.get("/api/v1/graph/stats")
         assert response.status_code == 200
         body = response.json()
@@ -129,9 +117,7 @@ class TestStats:
 
 
 class TestTop:
-    def test_returns_capped_pagerank_list(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_returns_capped_pagerank_list(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         del graph_from_fixture
         response = client.get("/api/v1/graph/top", params={"limit": 3, "metric": "pagerank"})
         assert response.status_code == 200
@@ -141,9 +127,7 @@ class TestTop:
         for item in body:
             assert {"law_id", "score"}.issubset(item.keys())
 
-    def test_rejects_unknown_metric(
-        self, client: TestClient, graph_from_fixture: LegalGraph
-    ) -> None:
+    def test_rejects_unknown_metric(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         del graph_from_fixture
         response = client.get("/api/v1/graph/top", params={"metric": "degree"})
         assert response.status_code == 422

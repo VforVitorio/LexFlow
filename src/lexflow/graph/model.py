@@ -75,5 +75,3 @@ class LegalGraph:
     @property
     def graph(self) -> nx.DiGraph:
         return self._g
-
-
