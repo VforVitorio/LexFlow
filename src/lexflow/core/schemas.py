@@ -138,12 +138,20 @@ class GraphNeighborsResponse(BaseModel):
 
 
 class GraphNodeData(BaseModel):
-    """Minimal node representation for subgraph responses."""
+    """Node representation for subgraph responses.
+
+    ``community`` and ``pagerank`` (issue #143) are computed over the
+    returned subgraph — not the global graph — so they stay meaningful
+    as the seed/depth change. The frontend uses ``community`` to colour
+    clusters and ``pagerank`` to size nodes.
+    """
 
     id: str
     title: str | None = None
     rank: str | None = None
     status: str | None = None
+    community: int | None = None
+    pagerank: float | None = None
 
 
 class GraphEdgeData(BaseModel):

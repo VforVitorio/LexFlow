@@ -461,7 +461,17 @@ const liveApi: ApiClient = {
   graph: {
     forLaw: async (id, depth = 2) => {
       const raw = await http<{
-        nodes: { id: string; title: string | null; rank: string | null; status: string | null }[];
+        nodes: {
+          id: string;
+          title: string | null;
+          rank: string | null;
+          status: string | null;
+          // #143 — per-node cluster id + PageRank, computed over the
+          // returned subgraph. Used by the canvas for cluster colour +
+          // node size. May be null on an empty/degenerate subgraph.
+          community: number | null;
+          pagerank: number | null;
+        }[];
         edges: { source: string; target: string; source_article: string | null }[];
       }>(`/graph/subgraph/${encodeURIComponent(id)}?depth=${depth}`);
       const nodes: GraphData['nodes'] = raw.nodes.map((n) => ({
@@ -469,7 +479,12 @@ const liveApi: ApiClient = {
         kind: n.status === 'repealed' ? 'repealed' : 'law',
         label: n.title ?? n.id,
         dim: n.status === 'repealed',
-        meta: { rank: n.rank ?? '', status: n.status ?? '' },
+        meta: {
+          rank: n.rank ?? '',
+          status: n.status ?? '',
+          community: n.community ?? 0,
+          pagerank: n.pagerank ?? 0,
+        },
       }));
       const edges: GraphData['edges'] = raw.edges.map((e, i) => ({
         id: `e-${i}`,
