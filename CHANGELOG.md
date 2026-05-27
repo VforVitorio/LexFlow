@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.0](https://github.com/VforVitorio/LexFlow/compare/v0.9.0...v0.10.0) (2026-05-27)
+
+
+### Features
+
+* **api:** /api/v1/tags vocabulary + parser tag extraction ([#145](https://github.com/VforVitorio/LexFlow/issues/145)) ([79beaa8](https://github.com/VforVitorio/LexFlow/commit/79beaa8397a12c05ea26c080ae5e10a044260f74))
+* **api:** /api/v1/tags vocabulary + parser tag extraction (closes [#145](https://github.com/VforVitorio/LexFlow/issues/145)) ([46d7099](https://github.com/VforVitorio/LexFlow/commit/46d7099f02b36cf19840ae9fd280539be03fd496))
+* **graph:** enrich /subgraph with per-node community + pagerank ([#143](https://github.com/VforVitorio/LexFlow/issues/143)) ([a87e846](https://github.com/VforVitorio/LexFlow/commit/a87e8464158bf9736c64540851c4c7f578deba26))
+* **graph:** enrich /subgraph with per-node community + pagerank (closes [#143](https://github.com/VforVitorio/LexFlow/issues/143)) ([555ec69](https://github.com/VforVitorio/LexFlow/commit/555ec69b8fed6aa880eef3e5936182bd9884a59f))
+
+
+### Refactoring
+
+* **api:** nest search under /laws/search, keep /search as deprecated alias ([#102](https://github.com/VforVitorio/LexFlow/issues/102)) ([8a332b9](https://github.com/VforVitorio/LexFlow/commit/8a332b9379a6a60d0bf745c5f4d09e1ed2b25cbb))
+* **api:** nest search under /laws/search, keep /search as deprecated alias (closes [#102](https://github.com/VforVitorio/LexFlow/issues/102)) ([2da535d](https://github.com/VforVitorio/LexFlow/commit/2da535d92265f985bbb663d082d89b56b0713134))
+
 ## [0.9.0](https://github.com/VforVitorio/LexFlow/compare/v0.8.1...v0.9.0) (2026-05-26)
 
 
