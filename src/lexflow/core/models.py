@@ -134,6 +134,12 @@ class LawMetadata(BaseModel):
     scope: Scope = Field(Scope.ESTATAL)
     jurisdiction: Jurisdiction | None = Field(None)
     country: str = Field("es")
+    # #145 — topic tags extracted from the YAML frontmatter
+    # (tags / categories / keywords), normalised to kebab-case ASCII.
+    # Empty when the source has none. ``category`` is the single primary
+    # category when the frontmatter declares one.
+    tags: list[str] = Field(default_factory=list, description="Normalised topic tags.")
+    category: str | None = Field(None, description="Primary category, if the source declares one.")
 
 
 # ---------------------------------------------------------------------------

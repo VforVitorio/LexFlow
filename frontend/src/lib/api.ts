@@ -453,10 +453,11 @@ const liveApi: ApiClient = {
     },
   },
   tags: {
-    // The backend does not surface a tag vocabulary yet (it lives only in
-    // mock-data). Returning an empty list is correct under the live client
-    // until the tag endpoint lands (tracked as a follow-up issue).
-    list: async () => [],
+    // #145 — `GET /api/v1/tags` returns `[{tag, count}]` ranked by usage.
+    // Empty until the corpus frontmatter carries tags/categories/keywords;
+    // the endpoint + shape are live so the Explorer filter and command
+    // palette work the moment any law is tagged.
+    list: async () => http<Array<{ tag: string; count: number }>>('/tags'),
   },
   graph: {
     forLaw: async (id, depth = 2) => {

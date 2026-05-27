@@ -7,6 +7,7 @@ lazily parses them on first access, and caches results permanently.
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 from threading import Lock
@@ -151,6 +152,19 @@ class LawRegistry:
         if not self._search_index.is_built:
             self._build_search_index()
         return self._search_index.search(query, page=page, page_size=page_size)
+
+    def tag_counts(self) -> list[tuple[str, int]]:
+        """Aggregate the tag vocabulary across all laws (#145).
+
+        Returns ``(tag, count)`` pairs sorted by count desc, then tag asc
+        for stable ordering. Reads from cached metadata (the parser
+        already normalises each law's ``tags`` to kebab-case slugs).
+        """
+        counts: Counter[str] = Counter()
+        for law_id in self._index:
+            meta = self._ensure_metadata(law_id)
+            counts.update(meta.tags)
+        return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
     def preload_all_metadata(self) -> None:
         """Parse frontmatter for all laws in the index.

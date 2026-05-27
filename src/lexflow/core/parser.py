@@ -10,6 +10,7 @@ assembled by the top-level :func:`parse_law_file` entry point.
 from __future__ import annotations
 
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -70,6 +71,55 @@ def _safe_enum(enum_cls: type, value: Any, default: Any) -> Any:
         return default
 
 
+# #145 — tag normalisation. The frontmatter expresses topics under
+# `tags`, `categories` and/or `keywords`, with values that may be a list
+# or a comma-separated string. We fold them all into one normalised,
+# de-duplicated, order-preserving list of kebab-case ASCII slugs so the
+# `/api/v1/tags` vocabulary is consistent regardless of source spelling.
+
+_TAG_SOURCE_KEYS = ("tags", "categories", "keywords")
+_TAG_SLUG_RE = re.compile(r"[^a-z0-9]+")
+
+
+def normalize_tag(raw: str) -> str:
+    """Normalise a raw tag to a kebab-case ASCII slug.
+
+    ``"Protección de Datos"`` → ``"proteccion-de-datos"``. Strips
+    accents, lowercases, collapses any non-alphanumeric run to a single
+    hyphen, and trims leading/trailing hyphens. Returns ``""`` for input
+    that has no alphanumeric content (the caller drops empties).
+    """
+    decomposed = unicodedata.normalize("NFKD", raw)
+    ascii_only = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    return _TAG_SLUG_RE.sub("-", ascii_only.lower()).strip("-")
+
+
+def _coerce_tag_values(value: Any) -> list[str]:
+    """Coerce one frontmatter tag field to a list of raw strings.
+
+    Accepts a list (``[a, b]``) or a comma/semicolon-separated string
+    (``"a, b; c"``). Anything else yields an empty list.
+    """
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    if isinstance(value, str):
+        return [part for part in re.split(r"[,;]", value)]
+    return []
+
+
+def extract_tags(raw: dict[str, Any]) -> list[str]:
+    """Pull + normalise tags from the ``tags``/``categories``/``keywords``
+    frontmatter fields into one de-duplicated, order-preserving list.
+    """
+    seen: dict[str, None] = {}  # dict preserves insertion order, acts as ordered set
+    for key in _TAG_SOURCE_KEYS:
+        for candidate in _coerce_tag_values(raw.get(key)):
+            slug = normalize_tag(candidate)
+            if slug:
+                seen.setdefault(slug, None)
+    return list(seen)
+
+
 def frontmatter_to_metadata(raw: dict[str, Any]) -> LawMetadata:
     """Convert a raw frontmatter dict to a validated :class:`LawMetadata`.
 
@@ -95,6 +145,8 @@ def frontmatter_to_metadata(raw: dict[str, Any]) -> LawMetadata:
         scope=_safe_enum(Scope, raw.get("scope"), Scope.ESTATAL),
         jurisdiction=_safe_enum(Jurisdiction, raw.get("jurisdiction"), None),
         country=str(raw.get("country", "es")),
+        tags=extract_tags(raw),
+        category=str(raw["category"]) if raw.get("category") is not None else None,
     )
 
 
