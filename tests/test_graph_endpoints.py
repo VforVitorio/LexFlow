@@ -85,6 +85,23 @@ class TestSubgraph:
         response = client.get(f"/api/v1/graph/subgraph/{law_id}", params={"depth": 99})
         assert response.status_code == 422
 
+    def test_nodes_carry_community_and_pagerank(
+        self, client: TestClient, graph_from_fixture: LegalGraph
+    ) -> None:
+        """#143 — every node exposes a community id + a pagerank score,
+        and the pageranks over the subgraph sum to ~1."""
+        law_id = next(iter(graph_from_fixture.graph.nodes))
+        body = client.get(f"/api/v1/graph/subgraph/{law_id}", params={"depth": 3}).json()
+        assert body["nodes"], "subgraph should have at least the seed node"
+        for node in body["nodes"]:
+            assert "community" in node
+            assert "pagerank" in node
+            assert node["community"] is None or isinstance(node["community"], int)
+            assert node["pagerank"] is None or isinstance(node["pagerank"], (int, float))
+        ranks = [n["pagerank"] for n in body["nodes"] if n["pagerank"] is not None]
+        if ranks:
+            assert abs(sum(ranks) - 1.0) < 0.05  # rounding tolerance
+
 
 class TestPath:
     def test_404_when_no_path(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:

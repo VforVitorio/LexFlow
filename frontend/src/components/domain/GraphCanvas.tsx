@@ -85,12 +85,28 @@ interface LfNodeData extends Record<string, unknown> {
   kind: GraphNodeKind;
   dim: boolean;
   selected: boolean;
+  /** #143 — PageRank over the subgraph (0..1). Scales node size. */
+  pagerank: number;
   onSelect: (id: string) => void;
 }
 
+/**
+ * Map a node's PageRank to a px diameter on top of its base kind size.
+ * PageRank within a subgraph is tiny (sums to 1 across all nodes), so we
+ * scale generously: a node with 3× the mean rank reads visibly bigger
+ * without the hubs ballooning off-screen.
+ */
+function sizeForNode(kind: GraphNodeKind, pagerank: number): number {
+  const base = KIND_SIZE[kind];
+  // +0..28px on top of the base, capped. 0.15 pagerank (a strong hub in a
+  // ~15-node subgraph) hits the cap.
+  const boost = Math.min(28, pagerank * 190);
+  return Math.round(base + boost);
+}
+
 function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
-  const { label, kind, dim, selected: isSelected, onSelect } = data;
-  const size = KIND_SIZE[kind];
+  const { label, kind, dim, selected: isSelected, pagerank, onSelect } = data;
+  const size = sizeForNode(kind, pagerank);
   const fill = GRAPH_KIND_FILL[kind];
   return (
     <button
@@ -220,6 +236,10 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
             kind: n.kind,
             dim: !visibleSet.has(n.id) || Boolean(n.dim),
             selected: n.id === selected,
+            // #143 — PageRank lives in `meta.pagerank` (number) from the
+            // API transformer. Default 0 so mock data (no pagerank) keeps
+            // the base kind size.
+            pagerank: typeof n.meta?.pagerank === 'number' ? n.meta.pagerank : 0,
             onSelect,
           },
           // Disable the default drag — Obsidian-style canvases keep the
