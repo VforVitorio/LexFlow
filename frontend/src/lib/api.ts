@@ -544,7 +544,10 @@ const liveApi: ApiClient = {
         items: { law_id: string; law_title: string; article_number: string | null; snippet: string; score: number }[];
         page: number;
         page_size: number;
-      }>(`/search${qs({ q })}`);
+        // #102 — canonical route is /laws/search (search OVER laws).
+        // /search still works as a deprecated alias but we target the
+        // nested path to drop off the deprecation curve cleanly.
+      }>(`/laws/search${qs({ q })}`);
       const hits: SearchResults['hits'] = raw.items.map((h) => ({
         kind: h.article_number ? 'article' : 'law',
         id: h.article_number ? `${h.law_id}::${h.article_number}` : h.law_id,

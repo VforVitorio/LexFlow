@@ -40,10 +40,13 @@ app = FastAPI(
 )
 
 register_error_handlers(app)
+# Search MUST be registered before the laws router: its canonical route is
+# `/laws/search`, and the laws router's `/laws/{law_id}` would otherwise
+# greedily match "search" as a law id and 404 before search ever runs (#102).
+app.include_router(search.router, prefix="/api/v1")
 app.include_router(laws.router, prefix="/api/v1")
 app.include_router(articles.router, prefix="/api/v1")
 app.include_router(versions.router, prefix="/api/v1")
-app.include_router(search.router, prefix="/api/v1")
 app.include_router(graph_router, prefix="/api/v1")
 app.include_router(models.router, prefix="/api/v1")
 app.include_router(chat_threads.router, prefix="/api/v1")
