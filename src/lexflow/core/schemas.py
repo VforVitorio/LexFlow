@@ -112,6 +112,18 @@ class SearchResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Tags (#145)
+# ---------------------------------------------------------------------------
+
+
+class TagCount(BaseModel):
+    """A normalised tag and how many laws carry it."""
+
+    tag: str = Field(..., description="Normalised kebab-case tag slug.")
+    count: int = Field(..., ge=0, description="Number of laws tagged with it.")
+
+
+# ---------------------------------------------------------------------------
 # Errors
 # ---------------------------------------------------------------------------
 
