@@ -38,16 +38,36 @@ class TestOllamaProvider:
 
     @pytest.mark.asyncio
     async def test_list_models_wraps_sdk_error(self, monkeypatch: MonkeyPatch) -> None:
+        import httpx
+
         from lexflow.chat.providers import ollama as ollama_mod
 
         class _BrokenClient:
             def __init__(self, *args: object, **kwargs: object) -> None: ...
             async def list(self) -> dict:
-                raise RuntimeError("connection refused")
+                raise httpx.ConnectError("connection refused")
 
         monkeypatch.setattr(ollama_mod.ollama, "AsyncClient", _BrokenClient)
         provider = ollama_mod.OllamaProvider()
         with pytest.raises(ChatProviderError, match="Ollama"):
+            await provider.list_models()
+
+    @pytest.mark.asyncio
+    async def test_list_models_does_not_swallow_programmer_bugs(self, monkeypatch: MonkeyPatch) -> None:
+        """A `TypeError` from the fake (i.e. a real programmer bug, not an SDK
+        transport / response failure) must escape unwrapped instead of being
+        mislabelled as an "Ollama error". Regression guard for the narrowed
+        ``_OLLAMA_ERRORS`` tuple."""
+        from lexflow.chat.providers import ollama as ollama_mod
+
+        class _BuggyClient:
+            def __init__(self, *args: object, **kwargs: object) -> None: ...
+            async def list(self) -> dict:
+                raise TypeError("oops, wrong arg shape")
+
+        monkeypatch.setattr(ollama_mod.ollama, "AsyncClient", _BuggyClient)
+        provider = ollama_mod.OllamaProvider()
+        with pytest.raises(TypeError, match="wrong arg shape"):
             await provider.list_models()
 
 
