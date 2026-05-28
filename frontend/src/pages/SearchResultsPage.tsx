@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useSearch } from '@/lib/queries';
 import { groupBy } from '@/lib/utils';
 import { EmptyState } from '@/components/domain/EmptyState';
+import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
 
 export function SearchResultsPage() {
   const [params, setParams] = useSearchParams();
@@ -51,7 +52,17 @@ export function SearchResultsPage() {
                 <Badge tone={h.kind === 'law' ? 'primary' : 'amber'}>{h.kind}</Badge>
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-semibold">{h.title}</div>
-                  {h.subtitle && <div className="truncate text-[12.5px] text-muted">{h.subtitle}</div>}
+                  {h.snippet ? (
+                    <div className="truncate text-[12.5px] text-muted">
+                      <HighlightedSnippet
+                        text={h.snippet}
+                        match={h.match}
+                        prefix={h.articleNumber ? `Art. ${h.articleNumber} — ` : undefined}
+                      />
+                    </div>
+                  ) : (
+                    h.subtitle && <div className="truncate text-[12.5px] text-muted">{h.subtitle}</div>
+                  )}
                 </div>
               </button>
             ))}

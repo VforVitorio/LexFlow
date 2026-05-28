@@ -272,7 +272,22 @@ export interface SearchHit {
   kind: SearchHitKind;
   id: string;
   title: string;
+  /**
+   * Free-form subtitle. Prefer composing the rendered subtitle from `snippet`
+   * + the article prefix at the call site so the match can be highlighted —
+   * this field stays as a fallback when no snippet is available.
+   */
   subtitle?: string;
+  /** Text fragment with match context (rendered with `<HighlightedSnippet>`). */
+  snippet?: string;
+  /** Article number (when the hit is article-scoped). Rendered as `Art. N — ` prefix. */
+  articleNumber?: string;
+  /**
+   * Character offsets of the query within `snippet` so the UI can wrap the
+   * substring in a highlight without re-scanning. Null when the match was
+   * outside the trimmed window or the hit was title-only.
+   */
+  match?: { start: number; end: number } | null;
   /** Optional opaque payload used by the consumer to navigate. */
   payload?: Record<string, unknown>;
 }

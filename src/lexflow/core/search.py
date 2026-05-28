@@ -88,16 +88,7 @@ class SearchIndex:
         end = start + page_size
         page_items = scored[start:end]
 
-        results = [
-            SearchResult(
-                law_id=entry.law_id,
-                law_title=entry.law_title,
-                article_number=entry.article_number,
-                snippet=_extract_snippet(entry.text, query),
-                score=score,
-            )
-            for score, entry in page_items
-        ]
+        results = [_build_result(entry, query, score) for score, entry in page_items]
 
         return SearchResponse(
             query=query,
@@ -135,6 +126,28 @@ def _score_entry(entry: SearchEntry, query_lower: str) -> float:
     return score
 
 
+def _build_result(entry: SearchEntry, query: str, score: float) -> SearchResult:
+    """Assemble a :class:`SearchResult` for one scored entry.
+
+    Computes the snippet and locates the query inside it so the frontend can
+    visually highlight the match without re-scanning. The offsets are into
+    the final ``snippet`` string (after ellipsis prepend + whitespace
+    collapse), not the source text.
+    """
+    snippet = _extract_snippet(entry.text, query)
+    match = _locate_match(snippet, query)
+    match_start, match_end = match if match is not None else (None, None)
+    return SearchResult(
+        law_id=entry.law_id,
+        law_title=entry.law_title,
+        article_number=entry.article_number,
+        snippet=snippet,
+        match_start=match_start,
+        match_end=match_end,
+        score=score,
+    )
+
+
 def _extract_snippet(text: str, query: str, context_chars: int = 150) -> str:
     """Extract a text snippet around the first occurrence of *query*.
 
@@ -163,3 +176,19 @@ def _extract_snippet(text: str, query: str, context_chars: int = 150) -> str:
     # Collapse whitespace
     snippet = re.sub(r"\s+", " ", snippet)
     return snippet
+
+
+def _locate_match(snippet: str, query: str) -> tuple[int, int] | None:
+    """Find the first case-insensitive occurrence of *query* in *snippet*.
+
+    Returns ``(start, end)`` character offsets into ``snippet``, or ``None``
+    when the query was eliminated by the snippet's trim/ellipsis pass — that
+    happens when the corpus match was outside the kept window or when the
+    only match lived in the law title (which isn't part of the snippet).
+    """
+    if not query or not snippet:
+        return None
+    idx = snippet.lower().find(query.lower())
+    if idx == -1:
+        return None
+    return idx, idx + len(query)

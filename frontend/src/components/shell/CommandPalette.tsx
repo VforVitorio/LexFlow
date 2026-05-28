@@ -5,13 +5,15 @@ import { Kbd } from '@/components/ui';
 import { useUi } from '@/lib/store';
 import { useSearch, useTags } from '@/lib/queries';
 import { cn } from '@/lib/utils';
+import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
 
 interface PaletteItem {
   id: string;
   group: 'Tags' | 'Leyes' | 'Artículos' | 'Comandos';
   icon: React.ReactNode;
   title: string;
-  subtitle?: string;
+  /** Plain text or rich node (e.g. `<HighlightedSnippet>` for search hits). */
+  subtitle?: React.ReactNode;
   kbd?: string;
   run: () => void;
 }
@@ -67,7 +69,15 @@ export function CommandPalette() {
       group: h.kind === 'law' ? 'Leyes' : 'Artículos',
       icon: h.kind === 'law' ? <BookOpenText className="size-3.5" /> : <FileText className="size-3.5" />,
       title: h.title,
-      subtitle: h.subtitle,
+      subtitle: h.snippet ? (
+        <HighlightedSnippet
+          text={h.snippet}
+          match={h.match}
+          prefix={h.articleNumber ? `Art. ${h.articleNumber} — ` : undefined}
+        />
+      ) : (
+        h.subtitle
+      ),
       run: () => {
         const p = h.payload as { lawId?: string };
         if (p?.lawId) navigate(`/laws/${p.lawId}`);
