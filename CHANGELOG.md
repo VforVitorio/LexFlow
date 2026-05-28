@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/VforVitorio/LexFlow/compare/v0.11.0...v0.12.0) (2026-05-28)
+
+
+### Features
+
+* **search:** match offsets for query highlighting in the UI ([ac9b0d9](https://github.com/VforVitorio/LexFlow/commit/ac9b0d98b4b9800d6d87d56db048e7aa54feab72))
+
+
+### Bug Fixes
+
+* **chat:** narrow Ollama exception handler to SDK error surface ([9b47dae](https://github.com/VforVitorio/LexFlow/commit/9b47dae1a49a30ada7b985591a726e42e51e4176))
+
 ## [0.11.0](https://github.com/VforVitorio/LexFlow/compare/v0.10.0...v0.11.0) (2026-05-27)
 
 
