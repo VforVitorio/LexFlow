@@ -92,12 +92,29 @@ class ArticleResponse(BaseModel):
 
 
 class SearchResult(BaseModel):
-    """A single search hit."""
+    """A single search hit.
+
+    ``match_start`` / ``match_end`` are character offsets within ``snippet``
+    (not the source text) pointing at the substring the frontend should
+    visually highlight. ``None`` when the snippet had to be returned
+    without an explicit match anchor — e.g. the query lay outside the
+    trimmed window or the snippet was synthesised from a title-only match.
+    """
 
     law_id: str
     law_title: str
     article_number: str | None
     snippet: str = Field(..., description="Text fragment with match context.")
+    match_start: int | None = Field(
+        default=None,
+        ge=0,
+        description="Start offset of the match within ``snippet`` (inclusive). Null when not locatable.",
+    )
+    match_end: int | None = Field(
+        default=None,
+        ge=0,
+        description="Exclusive end offset of the match within ``snippet``. Null when not locatable.",
+    )
     score: float = Field(ge=0.0)
 
 

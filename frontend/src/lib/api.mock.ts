@@ -18,6 +18,19 @@ import {
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Locate the first case-insensitive occurrence of `query` in `text` and
+ * return its offsets — mirrors the backend's `_locate_match` so the mock
+ * exercises the same `match` shape as the live API.
+ */
+function locateInMock(text: string, query: string): { start: number; end: number } | null {
+  const q = query.trim();
+  if (!q || !text) return null;
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return null;
+  return { start: idx, end: idx + q.length };
+}
+
 function filterLaws(params: ListLawsParams = {}): Law[] {
   let out = LAWS.slice();
   const q = params.q?.toLowerCase().trim();
@@ -194,19 +207,37 @@ export const mockApi: ApiClient = {
         return true;
       });
 
-      const lawHits = lawsMatching.slice(0, 8).map((l) => ({
-        kind: 'law' as const, id: l.id,
-        title: `${l.id} · ${l.short}`,
-        subtitle: `${l.status} · ${l.versiones} versiones${l.tags?.length ? ' · ' + l.tags.slice(0, 3).map((t) => '#' + t).join(' ') : ''}`,
-        payload: { lawId: l.id },
-      }));
+      const userText = textTokens.join(' ').trim();
 
-      const articleHits = ARTICLES.filter((a) => `art ${a.num} ${a.titulo}`.toLowerCase().includes(textTokens.join(' ') || ql)).slice(0, 5).map((a) => ({
-        kind: 'article' as const, id: a.id,
-        title: `Art. ${a.num} — ${a.titulo}`,
-        subtitle: LAWS.find((l) => l.id === a.lawId)?.short,
-        payload: { lawId: a.lawId, articleNum: a.num },
-      }));
+      const lawHits = lawsMatching.slice(0, 8).map((l) => {
+        const snippet = `${l.title} (${l.status} · ${l.versiones} versiones)`;
+        return {
+          kind: 'law' as const,
+          id: l.id,
+          title: `${l.id} · ${l.short}`,
+          snippet,
+          match: locateInMock(snippet, userText),
+          payload: { lawId: l.id },
+        };
+      });
+
+      const articleHits = ARTICLES.filter((a) =>
+        `art ${a.num} ${a.titulo}`.toLowerCase().includes(userText || ql),
+      )
+        .slice(0, 5)
+        .map((a) => {
+          const parentShort = LAWS.find((l) => l.id === a.lawId)?.short ?? '';
+          const snippet = `${a.titulo}${parentShort ? ` — ${parentShort}` : ''}`;
+          return {
+            kind: 'article' as const,
+            id: a.id,
+            title: `Art. ${a.num} — ${a.titulo}`,
+            snippet,
+            articleNumber: a.num,
+            match: locateInMock(snippet, userText),
+            payload: { lawId: a.lawId, articleNum: a.num },
+          };
+        });
 
       const hits = [...lawHits, ...articleHits];
       return { hits, total: hits.length };

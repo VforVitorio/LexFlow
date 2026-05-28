@@ -541,7 +541,15 @@ const liveApi: ApiClient = {
       const raw = await http<{
         query: string;
         total: number;
-        items: { law_id: string; law_title: string; article_number: string | null; snippet: string; score: number }[];
+        items: {
+          law_id: string;
+          law_title: string;
+          article_number: string | null;
+          snippet: string;
+          match_start: number | null;
+          match_end: number | null;
+          score: number;
+        }[];
         page: number;
         page_size: number;
         // #102 — canonical route is /laws/search (search OVER laws).
@@ -552,7 +560,12 @@ const liveApi: ApiClient = {
         kind: h.article_number ? 'article' : 'law',
         id: h.article_number ? `${h.law_id}::${h.article_number}` : h.law_id,
         title: h.law_title,
-        subtitle: h.article_number ? `Art. ${h.article_number} — ${h.snippet}` : h.snippet,
+        snippet: h.snippet,
+        articleNumber: h.article_number ?? undefined,
+        match:
+          h.match_start !== null && h.match_end !== null
+            ? { start: h.match_start, end: h.match_end }
+            : null,
         payload: { lawId: h.law_id, articleNum: h.article_number ?? undefined },
       }));
       return { hits, total: raw.total };

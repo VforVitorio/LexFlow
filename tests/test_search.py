@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from lexflow.core.search import SearchIndex, _extract_snippet
+from lexflow.core.search import SearchIndex, _extract_snippet, _locate_match
 
 
 class TestSearchIndex:
@@ -82,3 +82,52 @@ class TestExtractSnippet:
         text = "Some text without the query."
         snippet = _extract_snippet(text, "zzz")
         assert len(snippet) > 0
+
+
+class TestLocateMatch:
+    def test_returns_offsets_of_substring(self) -> None:
+        offsets = _locate_match("alpha tribunales beta", "tribunales")
+        assert offsets == (6, 16)
+
+    def test_case_insensitive(self) -> None:
+        offsets = _locate_match("alpha TRIBUNALES beta", "tribunales")
+        assert offsets == (6, 16)
+
+    def test_returns_none_when_query_absent(self) -> None:
+        # Happens when the snippet was trimmed past the match or the hit was
+        # title-only (the snippet is built from body text).
+        assert _locate_match("alpha beta gamma", "zzz") is None
+
+    def test_returns_none_on_empty_inputs(self) -> None:
+        assert _locate_match("", "tribunales") is None
+        assert _locate_match("alpha", "") is None
+
+
+class TestSearchResultMatchOffsets:
+    def _index(self) -> SearchIndex:
+        idx = SearchIndex()
+        idx.add_entry(
+            law_id="BOE-A-2000-323",
+            law_title="Ley de Enjuiciamiento Civil",
+            article_number="1",
+            text="En los procesos civiles, los tribunales deberan actuar con arreglo a la ley.",
+        )
+        idx.mark_built()
+        return idx
+
+    def test_offsets_locate_query_inside_snippet(self) -> None:
+        result = self._index().search("tribunales")
+        hit = result.items[0]
+        assert hit.match_start is not None
+        assert hit.match_end is not None
+        assert hit.snippet[hit.match_start : hit.match_end].lower() == "tribunales"
+
+    def test_offsets_preserve_case_of_snippet(self) -> None:
+        # The query is lowercase but the snippet keeps the original case —
+        # the returned substring should equal what is *in the snippet*, not
+        # the lowercased query.
+        result = self._index().search("Tribunales")
+        hit = result.items[0]
+        assert hit.match_start is not None
+        assert hit.match_end is not None
+        assert hit.snippet[hit.match_start : hit.match_end] == "tribunales"
