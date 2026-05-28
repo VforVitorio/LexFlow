@@ -4,9 +4,16 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 
+import httpx
 import ollama
 
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
+
+# Exceptions we wrap as :class:`ChatProviderError` — every plausible failure
+# from the Ollama SDK or its httpx transport. Programmer bugs (``TypeError``,
+# ``KeyError``, ``AttributeError``) deliberately escape so they surface as
+# 500s in dev instead of being mislabelled as "Ollama error".
+_OLLAMA_ERRORS = (ollama.ResponseError, httpx.HTTPError, OSError)
 
 
 class OllamaProvider(ChatProvider):
@@ -22,7 +29,7 @@ class OllamaProvider(ChatProvider):
             response = await client.list()
             models: list[dict[str, str]] = response.get("models", []) if isinstance(response, dict) else []
             return [m["name"] for m in models if "name" in m]
-        except Exception as exc:
+        except _OLLAMA_ERRORS as exc:
             raise ChatProviderError(f"Ollama error: {exc}") from exc
 
     async def stream_chat(
@@ -38,5 +45,5 @@ class OllamaProvider(ChatProvider):
                 content = chunk.get("message", {}).get("content", "") if isinstance(chunk, dict) else ""
                 if content:
                     yield content
-        except Exception as exc:
+        except _OLLAMA_ERRORS as exc:
             raise ChatProviderError(f"Ollama error: {exc}") from exc
