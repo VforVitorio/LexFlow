@@ -12,7 +12,7 @@ import { api } from './api';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults,
+  SearchResults, WarmupStatus,
 } from './types';
 
 export const qk = {
@@ -166,6 +166,29 @@ export function useRunSync() {
 
 export function useDashboard(preset: 'compliance' | 'analytics') {
   return useQuery<DashboardData>({ queryKey: qk.dashboard(preset), queryFn: () => api.dashboards.metrics(preset) });
+}
+
+// ─── System ──────────────────────────────────────────────────────────────
+
+/**
+ * Poll the background warm-up status (#222) until everything is ready.
+ *
+ * Polls every 2 s while not ready; stops polling once `ready === true`.
+ * Consumers read individual flags (`graphReady`, `searchReady`,
+ * `metadataReady`) to render specific loading hints instead of a
+ * generic spinner.
+ *
+ * Stale-time is short (1 s) so the moment warm-up finishes the polling
+ * stops on the next tick.
+ */
+export function useWarmup() {
+  return useQuery<WarmupStatus>({
+    queryKey: ['system', 'warmup'] as const,
+    queryFn: () => api.system.warmup(),
+    refetchInterval: (q) => (q.state.data?.ready ? false : 2000),
+    refetchIntervalInBackground: false,
+    staleTime: 1000,
+  });
 }
 
 // ─── Re-exports for convenience ─────────────────────────────────────────

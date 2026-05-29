@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -10,26 +12,70 @@ from fastapi import FastAPI
 
 from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
-from lexflow.api.routers import articles, chat_threads, dashboards, laws, models, search, sync, tags, versions
+from lexflow.api.routers import articles, chat_threads, dashboards, laws, models, search, sync, system, tags, versions
 from lexflow.api.routers.graph import router as graph_router
+from lexflow.api.warmup import schedule_background_warmup
 from lexflow.chat.db import init_db
+from lexflow.core.exceptions import LexFlowError
+from lexflow.core.registry import get_registry
 
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Application startup / shutdown lifecycle."""
+    """Application startup / shutdown lifecycle (#222).
+
+    Three-tier loading:
+
+    1. **Eager** (here, before ``yield``): cheap and obligatory work —
+       chat DB schema + registry filesystem index. Both finish in <1 s
+       on the 12 K-law corpus so the server is ready to accept requests
+       almost immediately.
+    2. **Background** (scheduled, runs concurrent with serving): metadata
+       preload, search index build, graph cache load/rebuild. Each
+       stage flips a flag on the :class:`~lexflow.api.warmup.WarmupState`
+       so the SPA's `/api/v1/system/warmup` poll can render specific
+       hints in the loading UI instead of an opaque spinner.
+    3. **Lazy** (on demand, unchanged): individual law full parse,
+       per-call subgraph compute.
+    """
     logger.info("LexFlow %s starting up", __version__)
-    # Chat thread persistence (issue #83) — idempotent ``create_all`` on
-    # the SQLite tables. Cheap, runs once per process. Tests that need a
-    # custom DB path call ``init_db_for_path`` from a fixture instead.
+    # Eager #1 — chat persistence. Idempotent ``create_all`` on the
+    # SQLite tables. Tests that need a custom DB path use
+    # ``init_db_for_path`` from a fixture instead.
     init_db()
-    # Metadata preload is deferred to first request to avoid import-time
-    # side effects during testing.  Production startup can call
-    # ``get_registry().preload_all_metadata()`` explicitly.
-    yield
-    logger.info("LexFlow shutting down")
+
+    # Eager #2 + background warm-up. Skipped under
+    # ``LEXFLOW_SKIP_EAGER_INDEX=1`` so unit tests that override DI don't
+    # pay the cost.
+    warmup_task: asyncio.Task[None] | None = None
+    if os.environ.get("LEXFLOW_SKIP_EAGER_INDEX") != "1":
+        try:
+            # Filesystem scan only — populates ``identifier -> path`` (~1 s
+            # for 12 K files). No YAML parsing yet, that's the background.
+            get_registry()
+        except (OSError, LexFlowError):
+            # Misconfigured data path / missing submodule. Log and
+            # continue so endpoints surface a 500 with a useful body
+            # instead of failing at lifespan time.
+            logger.exception("Eager registry index failed; routes will lazy-load")
+
+        warmup_task = schedule_background_warmup()
+
+    try:
+        yield
+    finally:
+        if warmup_task is not None and not warmup_task.done():
+            warmup_task.cancel()
+            try:
+                await warmup_task
+            except asyncio.CancelledError:
+                # Expected — cancellation is the happy path on shutdown.
+                pass
+            except Exception:
+                logger.exception("Warmup task raised during shutdown cancel")
+        logger.info("LexFlow shutting down")
 
 
 app = FastAPI(
@@ -52,6 +98,7 @@ app.include_router(models.router, prefix="/api/v1")
 app.include_router(chat_threads.router, prefix="/api/v1")
 app.include_router(dashboards.router, prefix="/api/v1")
 app.include_router(sync.router, prefix="/api/v1")
+app.include_router(system.router, prefix="/api/v1")
 app.include_router(tags.router, prefix="/api/v1")
 
 

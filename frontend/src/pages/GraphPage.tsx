@@ -4,8 +4,9 @@ import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
 import { GraphCanvas, NODE_KIND_LABELS } from '@/components/domain/GraphCanvas';
 import { ErrorState } from '@/components/domain/ErrorState';
+import { SkeletonCanvas } from '@/components/domain/Skeleton';
 import { RightRail } from '@/components/shell/RightRail';
-import { useGraph, useGraphTop } from '@/lib/queries';
+import { useGraph, useGraphTop, useWarmup } from '@/lib/queries';
 import { GRAPH_KIND_FILL } from '@/lib/graph-colors';
 import type { GraphNodeKind } from '@/lib/types';
 
@@ -45,8 +46,21 @@ export function GraphPage() {
     });
   }, []);
 
+  const { data: warmup } = useWarmup();
   if (error) return <div className="p-10"><ErrorState onRetry={() => refetch()} description={String(error)} /></div>;
-  if (!graph || isLoading) return <div className="p-10 text-muted">Cargando grafo…</div>;
+  if (!graph || isLoading) {
+    // If warm-up explicitly tells us the graph isn't ready yet, surface
+    // a concrete hint instead of the generic spinner — the user knows
+    // why it's slow ("primera vez") and roughly how long it'll take.
+    const hint = warmup && !warmup.graphReady
+      ? 'Construyendo el grafo por primera vez. Puede tardar uno o dos minutos…'
+      : 'Cargando grafo…';
+    return (
+      <div className="h-full p-6">
+        <SkeletonCanvas hint={hint} />
+      </div>
+    );
+  }
 
   const node = selected ? graph.nodes.find((n) => n.id === selected) : null;
   const neighbours = selected ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12) : [];

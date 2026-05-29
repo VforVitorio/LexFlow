@@ -403,4 +403,23 @@ export interface ApiClient {
     status(): Promise<SyncStatus>;
     run(): Promise<void>;
   };
+  /** Process introspection — used by the SPA to time loading UI. */
+  system: {
+    /** Background warm-up progress (#222). Polled until `ready: true`. */
+    warmup(): Promise<WarmupStatus>;
+  };
+}
+
+/**
+ * Snapshot of the post-startup background warm-up sequence (#222).
+ * Powers per-page loading hints — `graph_ready === false` lets GraphPage
+ * say "Construyendo grafo, ~30s" instead of a blank spinner.
+ */
+export interface WarmupStatus {
+  ready: boolean;
+  metadataReady: boolean;
+  searchReady: boolean;
+  graphReady: boolean;
+  error: string | null;
+  durationsSeconds: Record<string, number>;
 }

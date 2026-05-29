@@ -311,6 +311,22 @@ export const mockApi: ApiClient = {
       await delay(600);
     },
   },
+  system: {
+    // Mock mode pretends warm-up finished instantly. The real backend
+    // does the work and the SPA polls; here we return "ready" so the
+    // loading hints never trigger and screens render straight away.
+    async warmup() {
+      await delay(20);
+      return {
+        ready: true,
+        metadataReady: true,
+        searchReady: true,
+        graphReady: true,
+        error: null,
+        durationsSeconds: { metadata: 0, search: 0, graph: 0 },
+      };
+    },
+  },
 };
 
 /** Convert chat chunks into a mutable assistant message — used by ChatPage. */

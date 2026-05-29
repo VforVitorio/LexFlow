@@ -213,3 +213,30 @@ class GraphTopItem(BaseModel):
     law_id: str
     score: float
     title: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# System / warm-up (#222)
+# ---------------------------------------------------------------------------
+
+
+class WarmupStatusResponse(BaseModel):
+    """Snapshot of the post-startup background warm-up (#222).
+
+    Polled by the SPA every 2-3 s until ``ready`` flips to true so the
+    UI can show specific "still loading X" messages instead of the
+    generic spinner.
+    """
+
+    ready: bool = Field(..., description="All warm-up stages complete.")
+    metadata_ready: bool = Field(..., description="Frontmatter preload finished.")
+    search_ready: bool = Field(..., description="In-memory search index built.")
+    graph_ready: bool = Field(..., description="Knowledge graph loaded/rebuilt.")
+    error: str | None = Field(
+        default=None,
+        description="Last warm-up error message, if any stage failed (the other stages can still report ready).",
+    )
+    durations_seconds: dict[str, float] = Field(
+        default_factory=dict,
+        description="Wall-clock seconds spent in each completed stage. Useful for triage.",
+    )
