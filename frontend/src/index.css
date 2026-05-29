@@ -115,6 +115,35 @@
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-fg) / 0.6); }
 
+  /*
+   * "Air glass" surface — translucent frosted-glass panel used for
+   * floating overlays (graph legend, command palette, mobile bottom
+   * sheet). Inspired by the Opera Air browser's UI language: softer
+   * viewing, content behind the surface stays partially visible.
+   *
+   * Do NOT apply to anchored chrome (LeftRail, TopBar) or to
+   * information-dense reading surfaces — those need solid opacity for
+   * density and contrast.
+   *
+   * Variants:
+   *   .air-glass         → light overlay, used for hint surfaces.
+   *   .air-glass-strong  → substantial overlay, used for modals and
+   *                        the mobile bottom sheet; carries an inset
+   *                        highlight that catches the eye.
+   */
+  .air-glass {
+    @apply rounded-xl border border-black/5 bg-surface/60 shadow-xl backdrop-blur-xl;
+  }
+  [data-theme="dark"] .air-glass {
+    @apply border-white/10;
+  }
+  .air-glass-strong {
+    @apply rounded-2xl border border-black/5 bg-surface/75 shadow-2xl ring-1 ring-inset ring-black/5 backdrop-blur-2xl;
+  }
+  [data-theme="dark"] .air-glass-strong {
+    @apply border-white/10 ring-white/10;
+  }
+
   /* Diff line highlights — used by DiffViewer */
   .diff-add { background: hsl(152 60% 40% / 0.10); }
   .diff-del { background: hsl(354 70% 50% / 0.10); }

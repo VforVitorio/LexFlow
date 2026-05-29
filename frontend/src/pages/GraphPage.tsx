@@ -76,8 +76,8 @@ export function GraphPage() {
         <div className="relative flex-1 overflow-hidden bg-bg">
           <GraphCanvas data={graph} visibleKinds={filters} selected={selected} onSelect={setSelected} />
 
-          {/* Legend */}
-          <div className="absolute bottom-4 left-4 rounded-lg border border-border bg-surface/90 px-3.5 py-2.5 shadow-1 backdrop-blur">
+          {/* Legend — frosted glass overlay (Opera Air language) */}
+          <div className="air-glass absolute bottom-4 left-4 px-3.5 py-2.5">
             <div className="label-caps mb-2">Leyenda</div>
             <div className="flex flex-col gap-1.5 text-[12px]">
               {ALL_KINDS.map((t) => (
@@ -89,10 +89,10 @@ export function GraphPage() {
             </div>
           </div>
 
-          {/* Zoom */}
-          <div className="absolute bottom-4 right-4 flex flex-col gap-1.5">
-            <Button size="icon" variant="secondary" aria-label="Acercar" icon={<Plus className="size-3.5" />} />
-            <Button size="icon" variant="secondary" aria-label="Alejar" icon={<Minus className="size-3.5" />} />
+          {/* Zoom — same glass shell as the legend so they read as a pair */}
+          <div className="air-glass absolute bottom-4 right-4 flex flex-col gap-1 p-1">
+            <Button size="icon" variant="ghost" aria-label="Acercar" icon={<Plus className="size-3.5" />} />
+            <Button size="icon" variant="ghost" aria-label="Alejar" icon={<Minus className="size-3.5" />} />
           </div>
         </div>
       </div>

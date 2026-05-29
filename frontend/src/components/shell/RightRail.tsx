@@ -43,7 +43,10 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
           role="dialog"
           aria-label="Panel contextual"
           className={cn(
-            'fixed inset-x-0 bottom-0 z-50 max-h-[78vh] overflow-auto rounded-t-2xl border-t border-border bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] scrollbar-thin shadow-2xl',
+            // Glass bottom sheet so the page underneath stays partially
+            // visible — the panel feels like an overlay, not a takeover.
+            // Top corners only (sits on the screen edge); pb adds safe-area.
+            'air-glass-strong fixed inset-x-0 bottom-0 z-50 max-h-[78vh] overflow-auto rounded-b-none rounded-t-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] scrollbar-thin',
             className,
           )}
         >
