@@ -1,16 +1,19 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Badge, Input } from '@/components/ui';
 import { Search } from 'lucide-react';
-import { useSearch } from '@/lib/queries';
+import { useSearch, useWarmup } from '@/lib/queries';
 import { groupBy } from '@/lib/utils';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
+import { SkeletonRows } from '@/components/domain/Skeleton';
 
 export function SearchResultsPage() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
   const navigate = useNavigate();
   const { data, isLoading } = useSearch(q);
+  const { data: warmup } = useWarmup();
+  const searchWarming = warmup && !warmup.searchReady;
 
   const grouped = groupBy(data?.hits ?? [], (h) => h.kind);
 
@@ -24,8 +27,13 @@ export function SearchResultsPage() {
         className="w-full"
       />
       <p className="mt-3 text-[12.5px] text-muted">
-        {isLoading ? 'Buscando…' : `${data?.total ?? 0} resultados para "${q}"`}
+        {searchWarming
+          ? 'Indexando el corpus por primera vez. Los resultados aparecerán en breve…'
+          : isLoading
+            ? 'Buscando…'
+            : `${data?.total ?? 0} resultados para "${q}"`}
       </p>
+      {isLoading && q && <SkeletonRows className="mt-6" count={5} />}
       {!isLoading && data && data.total === 0 && (
         <EmptyState
           className="mt-8"

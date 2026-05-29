@@ -665,6 +665,28 @@ const liveApi: ApiClient = {
       await http<unknown>('/sync/run', { method: 'POST' });
     },
   },
+  system: {
+    warmup: async () => {
+      // #222 — backend keys are snake_case per the wire convention; the
+      // SPA-facing shape uses camelCase.
+      const raw = await http<{
+        ready: boolean;
+        metadata_ready: boolean;
+        search_ready: boolean;
+        graph_ready: boolean;
+        error: string | null;
+        durations_seconds: Record<string, number>;
+      }>('/system/warmup');
+      return {
+        ready: raw.ready,
+        metadataReady: raw.metadata_ready,
+        searchReady: raw.search_ready,
+        graphReady: raw.graph_ready,
+        error: raw.error,
+        durationsSeconds: raw.durations_seconds,
+      };
+    },
+  },
 };
 
 // Silence unused-import warnings for types only referenced via the interface.
