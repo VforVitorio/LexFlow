@@ -20,12 +20,14 @@ class Settings:
         LEXFLOW_PAGE_SIZE — default page size for paginated endpoints
         LEXFLOW_PAGE_SIZE_MAX — maximum allowed page size
         LEXFLOW_LOG_LEVEL — logging level
+        LEXFLOW_CONFIG_DIR — per-user config dir (audit log lives here)
     """
 
     data_path: Path
     page_size_default: int
     page_size_max: int
     log_level: str
+    config_dir: Path
 
 
 def _build_settings() -> Settings:
@@ -33,11 +35,15 @@ def _build_settings() -> Settings:
     data_path_raw = os.environ.get("LEXFLOW_DATA_PATH")
     data_path = Path(data_path_raw) if data_path_raw else DEFAULT_DATA_PATH
 
+    config_dir_raw = os.environ.get("LEXFLOW_CONFIG_DIR")
+    config_dir = Path(config_dir_raw) if config_dir_raw else Path.home() / ".lexflow"
+
     return Settings(
         data_path=data_path,
         page_size_default=int(os.environ.get("LEXFLOW_PAGE_SIZE", "20")),
         page_size_max=int(os.environ.get("LEXFLOW_PAGE_SIZE_MAX", "100")),
         log_level=os.environ.get("LEXFLOW_LOG_LEVEL", "INFO"),
+        config_dir=config_dir,
     )
 
 
