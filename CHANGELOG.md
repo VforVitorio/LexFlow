@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.0](https://github.com/VforVitorio/LexFlow/compare/v0.12.0...v0.13.0) (2026-05-29)
+
+
+### Features
+
+* **mcp-audit:** emit hash-chained audit log for every MCP tool call ([#124](https://github.com/VforVitorio/LexFlow/issues/124) Phase 1) ([6ccf10b](https://github.com/VforVitorio/LexFlow/commit/6ccf10b0e102bd2f386ab9163215c841ff690b67))
+* **mcp-audit:** hash-chained audit log for MCP tool calls ([#124](https://github.com/VforVitorio/LexFlow/issues/124) Phase 1) ([bb6c7c5](https://github.com/VforVitorio/LexFlow/commit/bb6c7c54492add06871071527c8133735ef2258c))
+
 ## [0.12.0](https://github.com/VforVitorio/LexFlow/compare/v0.11.0...v0.12.0) (2026-05-28)
 
 
