@@ -28,6 +28,32 @@ def _isolated_chat_db(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None
     yield
 
 
+@pytest.fixture(autouse=True)
+def _isolated_config_dir(
+    tmp_path_factory: pytest.TempPathFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterator[Path]:
+    """Force every test to write the MCP audit log into a temp dir.
+
+    Without this, any test that exercises an MCP tool wrapper (#124)
+    would append to the user's real ``~/.lexflow/mcp.log`` — both a
+    correctness bug (chains across unrelated tests) and a privacy
+    leak. We isolate by env var so the change reaches both
+    :func:`get_settings` and the :func:`get_audit_log` singleton when
+    they next resolve their cache.
+    """
+    from lexflow.chat.audit import log as audit_log_mod
+    from lexflow.utils.config import get_settings
+
+    tmp_cfg = tmp_path_factory.mktemp("lexflow-config")
+    monkeypatch.setenv("LEXFLOW_CONFIG_DIR", str(tmp_cfg))
+    get_settings.cache_clear()
+    audit_log_mod.get_audit_log.cache_clear()
+    yield tmp_cfg
+    get_settings.cache_clear()
+    audit_log_mod.get_audit_log.cache_clear()
+
+
 @pytest.fixture()
 def client() -> TestClient:
     """Provide a synchronous test client for the FastAPI application."""
