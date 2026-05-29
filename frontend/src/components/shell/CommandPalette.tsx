@@ -114,7 +114,7 @@ export function CommandPalette() {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-[580px] max-w-[92vw] overflow-hidden rounded-xl border border-border-strong bg-surface shadow-3"
+        className="air-glass-strong w-[580px] max-w-[92vw] overflow-hidden"
       >
         <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
           <Search className="size-4 text-muted" />
