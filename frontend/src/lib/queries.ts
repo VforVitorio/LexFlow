@@ -98,6 +98,25 @@ export function useGraph(id: string | undefined, depth = 2) {
   });
 }
 
+/**
+ * Top-N laws by graph metric (PageRank by default). Powers the GraphPage
+ * dynamic seed (#221): instead of hardcoding "CE-1978" — which 404s
+ * because the real ID is "BOE-A-1978-31229" — pick the most-connected
+ * law in the current corpus. Always returns *something* sensible even
+ * as the corpus evolves.
+ *
+ * Cached aggressively (10 min) because the answer rarely changes between
+ * a sync and the next.
+ */
+export function useGraphTop(opts: { limit?: number } = {}) {
+  const limit = opts.limit ?? 10;
+  return useQuery({
+    queryKey: ['graph', 'top', limit] as const,
+    queryFn: () => api.graph.top({ limit }),
+    staleTime: 10 * 60_000,
+  });
+}
+
 // ─── Search ──────────────────────────────────────────────────────────────
 
 export function useSearch(q: string) {

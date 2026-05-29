@@ -1,21 +1,37 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
 import { GraphCanvas, NODE_KIND_LABELS } from '@/components/domain/GraphCanvas';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { RightRail } from '@/components/shell/RightRail';
-import { useGraph } from '@/lib/queries';
+import { useGraph, useGraphTop } from '@/lib/queries';
 import { GRAPH_KIND_FILL } from '@/lib/graph-colors';
 import type { GraphNodeKind } from '@/lib/types';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 
+// Fallback seed when the live `/graph/top` call isn't available (mock
+// mode without a seeded mock, transient network failure, empty corpus).
+// "BOE-A-1978-31229" is the Constitución Española de 1978 — guaranteed
+// to be in any legalize-es checkout.
+const FALLBACK_SEED_LAW_ID = 'BOE-A-1978-31229';
+
 export function GraphPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<Set<GraphNodeKind>>(new Set(ALL_KINDS));
-  const [selected, setSelected] = useState<string | null>('CE');
-  const { data: graph, error, refetch, isLoading } = useGraph('CE-1978');
+  // #221 — pick the seed dynamically. Hardcoding "CE-1978" 404'd because
+  // the real ID is "BOE-A-1978-31229"; using the top-PageRank law also
+  // keeps us honest as the corpus evolves.
+  const { data: topLaws } = useGraphTop({ limit: 1 });
+  const seedLawId = topLaws?.[0]?.lawId ?? FALLBACK_SEED_LAW_ID;
+  const [selected, setSelected] = useState<string | null>(null);
+  useEffect(() => {
+    // Initialise the right-rail selection to the seed once it resolves.
+    // User clicks afterwards own the selection state.
+    if (selected === null && seedLawId) setSelected(seedLawId);
+  }, [seedLawId, selected]);
+  const { data: graph, error, refetch, isLoading } = useGraph(seedLawId);
 
   // Functional update + ``useCallback`` so the chip row doesn't re-create
   // every onClick handler on each render. Declared BEFORE the early
@@ -112,7 +128,13 @@ export function GraphPage() {
               })}
             </div>
 
-            <Button className="mt-5 w-full" onClick={() => navigate(`/laws/CE-1978`)}>Abrir norma</Button>
+            <Button
+              className="mt-5 w-full"
+              onClick={() => selected && navigate(`/laws/${selected}`)}
+              disabled={!selected}
+            >
+              Abrir norma
+            </Button>
           </>
         ) : (
           <div className="text-[13px] text-muted">
