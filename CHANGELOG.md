@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.14.0](https://github.com/VforVitorio/LexFlow/compare/v0.13.0...v0.14.0) (2026-05-29)
+
+
+### Features
+
+* **api:** three-tier startup warm-up + /system/warmup + skeleton loaders ([#222](https://github.com/VforVitorio/LexFlow/issues/222) part 1) ([8c413a5](https://github.com/VforVitorio/LexFlow/commit/8c413a54b3d5ca5c6b817c54236d89e9c59dae89))
+* **api:** three-tier startup warm-up so cold launches stop surprising users ([#222](https://github.com/VforVitorio/LexFlow/issues/222) part 1) ([6ebec87](https://github.com/VforVitorio/LexFlow/commit/6ebec87650118e7c1c796b5ecd57611b357a1333))
+* **ui:** Opera Air glass language on floating surfaces ([2bdc612](https://github.com/VforVitorio/LexFlow/commit/2bdc61279bf08b7c349f5ac167269424b2b6ee92))
+* **ui:** Opera Air glass language on floating surfaces (graph overlays, palette, mobile sheet) ([751d2c4](https://github.com/VforVitorio/LexFlow/commit/751d2c4eb2ab9828b5afa2bd5544a469e5c65e0d))
+
+
+### Bug Fixes
+
+* **graph:** dynamic seed from /graph/top instead of hardcoded CE-1978 (closes [#221](https://github.com/VforVitorio/LexFlow/issues/221)) ([45b83e8](https://github.com/VforVitorio/LexFlow/commit/45b83e85f07f16115765a3fb4adee4fb152306b8))
+* **graph:** seed GraphPage from /graph/top instead of hardcoded "CE-1978" (closes [#221](https://github.com/VforVitorio/LexFlow/issues/221)) ([ae2d934](https://github.com/VforVitorio/LexFlow/commit/ae2d9345d7c36afd39dbb7facb20f4458b3e584c))
+
 ## [0.13.0](https://github.com/VforVitorio/LexFlow/compare/v0.12.0...v0.13.0) (2026-05-29)
 
 
