@@ -1,9 +1,9 @@
 """Cross-system interop gate against Agent_Sudo's reference verifier (#124).
 
-Skipped unless the user has ``agent-sudo`` (>= 0.4.0-rc13) installed in
+Skipped unless the user has ``agent-sudo-mcp`` (>= 0.4.0) installed in
 the test environment::
 
-    pip install "agent-sudo>=0.4.0rc13"
+    pip install "agent-sudo-mcp>=0.4.0"
     uv run pytest tests/test_audit_interop.py -v
 
 When present, the test emits a small chain through our writer and runs
@@ -38,7 +38,7 @@ from lexflow.chat.audit.schema import (
 
 spec_helpers = pytest.importorskip(
     "agent_sudo.spec_helpers",
-    reason="agent-sudo is an optional interop dependency — install with `pip install agent-sudo`",
+    reason="agent-sudo-mcp is an optional interop dependency — install with `pip install agent-sudo-mcp`",
 )
 
 
