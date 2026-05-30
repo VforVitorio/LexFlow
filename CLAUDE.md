@@ -93,11 +93,11 @@ LexFlow/
 
 ## 4. Git workflow
 
-- `main` — protected (strict; contexts `test, lint, typecheck`; conversation resolution required). Only receives PRs from `dev`.
-- `dev` — integration branch. All features and fixes merge here first.
-- Feature branches: `feat/<name>`, `fix/<name>`, `docs/<name>`, branched off `dev`.
+- **Trunk-based (desde 2026-05-30).** `main` es la única rama de larga vida. La antigua rama de integración `dev` fue retirada — ya no existe en el remote y toda PR de feature/fix apunta directamente a `main`. (El flujo `main ← dev` que aparece en commits/docs antiguos queda superseded.)
+- `main` — protected (strict; contexts `test, lint, typecheck`; conversation resolution required). Solo recibe PRs (sin pushes directos).
+- Feature branches: `feat/<name>`, `fix/<name>`, `docs/<name>`, branched off `main`. Abren PR de vuelta a `main`.
 - **No squash merges.** Full commit history is preserved.
-- Delete branches after merge.
+- Delete branches after merge (local y remoto). Corre `git fetch --prune` periódicamente y limpia las ramas locales cuyo upstream esté `gone`.
 
 When CI fails on `main`, fix the failure — never bypass with `enforce_admins`.
 
@@ -309,6 +309,8 @@ For deep React work, install from `claudemarketplaces.com`: `vercel-labs/agent-s
 - **2026-05-23** — `position: sticky` en el nav de la landing y la barra morada del scroll-spy fallaban en silencio porque `.landing-root { overflow-y: auto }` creaba un contenedor de scroll separado dentro del body. Causa: con un scroll anidado, sticky se ancla al contenedor interno (que no scrollea más allá del propio nav) y el `IntersectionObserver` con `root: viewport` por defecto no observa las secciones porque ya no atraviesan el centro del viewport. Fix: dejar que scrollee el `<body>` (`html, body { min-height: 100% }` y nada de `overflow` en wrappers). Diagnóstico: cuando un sticky no se queda fijo, el primer reflejo es buscar `overflow` no-visible en cualquier ancestro hasta el body. Memoria larga: `memory/feedback_sticky_nav_root_overflow.md`.
 - **2026-05-23** — Embeber `frontend/src/pages/ChatPage.tsx` (u otra página del SPA) directamente dentro de la landing infla el bundle (>1 MB de JS extra) y recopila el split arquitectónico que ya hicimos. Causa: las páginas del SPA importan Tailwind, TanStack Query y el sistema de diseño completo; el landing no usa nada de eso. Fix: crear un componente "preview" landing-native en `landing/src/previews/<Feature>Preview.tsx` que **espeje visualmente** la página del SPA usando los tokens CSS del landing (`hsl(var(--bg))`, etc.) y mocks inline. Convención fijada en `memory/project_spa_previews_pattern.md`. Si alguna vez hay que cambiar el SPA y queremos que el preview siga reflejándolo, cada preview ya incluye un docstring `WHERE TO CHANGE IF X CHANGES` apuntando al archivo del SPA al que mira.
 - **2026-05-26** — Dos PRs (#208, #209) tumbaron el job `lint` en `main` aunque "pasaban" localmente. Causa: el job CI corre `uvx ruff format --check .` sobre TODO el repo, pero yo solo había corrido `ruff format --check` sobre los archivos tocados en cada PR, así que 3 archivos quedaron sin formatear (`graph/model.py`, dos `test_*.py`). El check por-archivo no ve los que no listas. Fix: antes de cada push, correr SIEMPRE `uv run ruff format --check .` y `uv run ruff check .` repo-wide (sin lista de paths), igual que CI. No fiarse del check parcial.
+
+- **2026-05-30** — El repo migró a trunk-based: `origin/dev` fue borrado y las últimas ~30 PRs van directas a `main`, pero CLAUDE.md §4 seguía describiendo el flujo `main ← dev`. Causa: doc desactualizada tras el cambio de workflow. Fix: §4 ahora dice trunk-based; ramas feature salen de `main` y abren PR a `main`. Además, tras `git fetch --prune` quedaron ramas locales con upstream `[gone]` (`dev`, `sync/main-into-dev`, varias `fix/*`) — borrarlas con `git branch -D` para no confundir el estado.
 
 <!-- añadir nuevas entradas arriba de esta línea -->
 
