@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.19.0](https://github.com/VforVitorio/LexFlow/compare/v0.18.0...v0.19.0) (2026-05-30)
+
+
+### Features
+
+* **api:** serve React SPA from FastAPI in production single-process mode ([aaf57fd](https://github.com/VforVitorio/LexFlow/commit/aaf57fdd5787171190f357c65e8c1a707f403a2d))
+* **api:** serve React SPA from FastAPI in production single-process mode ([#66](https://github.com/VforVitorio/LexFlow/issues/66)) ([104affc](https://github.com/VforVitorio/LexFlow/commit/104affc441a31794530566222b7d035b31d0c623))
+* **frontend:** generate OpenAPI TS types + decide snake/camelCase mapping ([b91ef0d](https://github.com/VforVitorio/LexFlow/commit/b91ef0de6cdb40f594a4ba955be0435d024e2abb))
+* **frontend:** generate OpenAPI TS types + decide snake/camelCase mapping ([#65](https://github.com/VforVitorio/LexFlow/issues/65), [#98](https://github.com/VforVitorio/LexFlow/issues/98)) ([a10128b](https://github.com/VforVitorio/LexFlow/commit/a10128b75f2f3acba41bcf85567f57f583f04127))
+
 ## [0.18.0](https://github.com/VforVitorio/LexFlow/compare/v0.17.0...v0.18.0) (2026-05-30)
 
 
