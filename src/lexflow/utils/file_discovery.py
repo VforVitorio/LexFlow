@@ -44,9 +44,19 @@ def list_law_directories(data_path: Path) -> list[Path]:
     return sorted(data_path / region for region in KNOWN_REGIONS if (data_path / region).is_dir())
 
 
+def is_law_file_name(path: Path) -> bool:
+    """Whether *path*'s name marks a law file, by name alone (no I/O).
+
+    Works on bare paths from a ``git diff`` where the file may no longer
+    exist on disk (a deletion). The on-disk variant :func:`_is_law_file`
+    additionally requires the path to be a real file.
+    """
+    return path.suffix == LAW_FILE_SUFFIX and path.name not in EXCLUDED_FILENAMES
+
+
 def _is_law_file(path: Path) -> bool:
-    """Return True if *path* looks like a law Markdown file."""
-    return path.suffix == LAW_FILE_SUFFIX and path.name not in EXCLUDED_FILENAMES and path.is_file()
+    """Return True if *path* on disk is a law Markdown file."""
+    return is_law_file_name(path) and path.is_file()
 
 
 def list_law_files(data_path: Path, *, region: str | None = None) -> list[Path]:

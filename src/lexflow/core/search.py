@@ -62,6 +62,14 @@ class SearchIndex:
         """Signal that index construction is complete."""
         self._built = True
 
+    def remove_entries_for_law(self, law_id: str) -> None:
+        """Drop every entry belonging to *law_id* (incremental delta, #230).
+
+        Used before re-adding a modified law's entries, or on its own when a
+        law is removed from the corpus. No-op if the law has no entries.
+        """
+        self._entries = [entry for entry in self._entries if entry.law_id != law_id]
+
     def to_dict(self) -> dict[str, list[dict[str, str | None]]]:
         """Serialize entries for disk caching (see core/search_cache.py).
 

@@ -12,6 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from threading import Lock
 
+from lexflow.core.delta_sync import CorpusDiff
 from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.exceptions import DataPathError, LawNotFoundError, LexFlowError
 from lexflow.core.metadata_parser import parse_metadata_only
@@ -122,6 +123,10 @@ class LawRegistry:
         """Get just the metadata for a law (faster than full parse)."""
         return self._ensure_metadata(law_id)
 
+    def has_law(self, law_id: str) -> bool:
+        """Whether *law_id* is currently in the index."""
+        return law_id in self._index
+
     def list_laws(
         self,
         *,
@@ -216,6 +221,50 @@ class LawRegistry:
             self._search_index = index
 
     # ------------------------------------------------------------------
+    # Incremental corpus updates (#230) — patch index, caches and search
+    # index in place when only a few laws change, instead of rebuilding
+    # everything. Driven by the git diff in core/delta_sync.py; the graph
+    # is patched separately via graph.builder.apply_diff_to_graph.
+    # ------------------------------------------------------------------
+
+    def apply_corpus_diff(self, diff: CorpusDiff) -> None:
+        """Patch index, caches and search index for the laws in *diff*.
+
+        Re-scans the (cheap) filename index first so added/removed paths are
+        known, then forgets removed laws and (re)indexes added/modified ones.
+        The search index is only touched when it has already been built —
+        otherwise a later full build picks up the new state.
+        """
+        with self._lock:
+            self._refresh_index()
+            for law_id in diff.removed:
+                self._forget_law(law_id)
+            for law_id in diff.modified + diff.added:
+                self._reindex_law(law_id)
+
+    def _refresh_index(self) -> None:
+        """Rebuild the id -> path map from disk (filenames only, ~1 s)."""
+        self._index = {}
+        self._build_index()
+
+    def _forget_law(self, law_id: str) -> None:
+        """Drop a removed law from every in-memory cache."""
+        self._index.pop(law_id, None)
+        self._cache.pop(law_id, None)
+        self._metadata_cache.pop(law_id, None)
+        if self._search_index.is_built:
+            self._search_index.remove_entries_for_law(law_id)
+
+    def _reindex_law(self, law_id: str) -> None:
+        """Re-parse a new/modified law and refresh its caches + search entries."""
+        self._cache.pop(law_id, None)
+        self._metadata_cache.pop(law_id, None)
+        self._ensure_metadata(law_id)
+        if self._search_index.is_built:
+            self._search_index.remove_entries_for_law(law_id)
+            self._index_law_for_search(law_id)
+
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
@@ -242,26 +291,30 @@ class LawRegistry:
     def _build_search_index(self) -> None:
         """Build the search index from all metadata and cached law content."""
         for law_id in sorted(self._index):
-            meta = self._ensure_metadata(law_id)
-            # Add law-level entry (title is the primary searchable text)
-            self._search_index.add_entry(
-                law_id=meta.identifier,
-                law_title=meta.title,
-                article_number=None,
-                text=meta.title,
-            )
-            # Add article-level entries if the law has been fully parsed
-            if law_id in self._cache:
-                law = self._cache[law_id]
-                for article in law.articles:
-                    self._search_index.add_entry(
-                        law_id=meta.identifier,
-                        law_title=meta.title,
-                        article_number=article.number,
-                        text=article.text,
-                    )
+            self._index_law_for_search(law_id)
         self._search_index.mark_built()
         logger.info("Search index built: %d entries", self._search_index.entry_count)
+
+    def _index_law_for_search(self, law_id: str) -> None:
+        """Add one law's searchable entries (title + any parsed articles)."""
+        meta = self._ensure_metadata(law_id)
+        # Law-level entry (title is the primary searchable text).
+        self._search_index.add_entry(
+            law_id=meta.identifier,
+            law_title=meta.title,
+            article_number=None,
+            text=meta.title,
+        )
+        # Article-level entries only if the law has been fully parsed.
+        if law_id in self._cache:
+            law = self._cache[law_id]
+            for article in law.articles:
+                self._search_index.add_entry(
+                    law_id=meta.identifier,
+                    law_title=meta.title,
+                    article_number=article.number,
+                    text=article.text,
+                )
 
 
 def _apply_filters(

@@ -14,7 +14,9 @@ from lexflow.graph.builder import build_graph
 from lexflow.graph.model import LegalGraph
 
 logger = logging.getLogger(__name__)
-CACHE_VERSION = "1"
+# v2 adds the dangling-reference index to the payload (#230). Older caches
+# lack it, so bumping forces one rebuild on upgrade to populate it.
+CACHE_VERSION = "2"
 
 
 def save_graph(graph: LegalGraph, cache_path: Path, data_hash: str) -> None:

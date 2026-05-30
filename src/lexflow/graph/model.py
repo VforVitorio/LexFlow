@@ -47,6 +47,63 @@ class LegalGraph:
         self._g.add_edge(source_id, target_id, source_article=source_article, reference_text=reference_text)
         return True
 
+    # ------------------------------------------------------------------
+    # Incremental update primitives (#230)
+    #
+    # ``apply_diff_to_graph`` in graph/builder.py drives these; the model
+    # stays storage-only. The dangling index lets an added law resolve its
+    # incoming edges without rescanning the whole corpus.
+    # ------------------------------------------------------------------
+
+    @property
+    def dangling(self) -> dict[str, list[dict[str, str | None]]]:
+        """Unresolved references waiting on an absent target law.
+
+        ``target_id -> [{"source", "source_article", "reference_text"}]``.
+        Stored on the NetworkX ``graph`` dict so it round-trips through the
+        on-disk cache (``node_link_data``) for free. A reference whose target
+        wasn't a node when the edge was built is parked here so a later
+        incremental add can resolve the incoming edge cheaply.
+        """
+        index: dict[str, list[dict[str, str | None]]] = self._g.graph.setdefault("dangling", {})
+        return index
+
+    def remove_law(self, law_id: str) -> None:
+        """Remove a law node and all its in/out edges. No-op if absent."""
+        if law_id in self._g:
+            self._g.remove_node(law_id)
+
+    def clear_outgoing(self, law_id: str) -> None:
+        """Remove every outgoing edge from *law_id*; incoming edges kept."""
+        if law_id in self._g:
+            for target in list(self._g.successors(law_id)):
+                self._g.remove_edge(law_id, target)
+
+    def incoming_edges(self, law_id: str) -> list[tuple[str, dict[str, str | None]]]:
+        """Predecessors of *law_id* paired with their edge attributes."""
+        if law_id not in self._g:
+            return []
+        return [(pred, dict(self._g[pred][law_id])) for pred in self._g.predecessors(law_id)]
+
+    def add_dangling(self, target_id: str, source_id: str, *, source_article: str | None, reference_text: str) -> None:
+        """Park an unresolved reference from *source_id* to absent *target_id*."""
+        self.dangling.setdefault(target_id, []).append(
+            {"source": source_id, "source_article": source_article, "reference_text": reference_text}
+        )
+
+    def pop_dangling(self, target_id: str) -> list[dict[str, str | None]]:
+        """Remove and return the references that were waiting on *target_id*."""
+        return self.dangling.pop(target_id, [])
+
+    def drop_source_from_dangling(self, source_id: str) -> None:
+        """Forget every dangling reference originating from *source_id*."""
+        for target_id in list(self.dangling):
+            kept = [d for d in self.dangling[target_id] if d["source"] != source_id]
+            if kept:
+                self.dangling[target_id] = kept
+            else:
+                del self.dangling[target_id]
+
     def get_neighbors(self, law_id: str) -> list[str]:
         """Return IDs of laws that this law references (successors)."""
         if law_id not in self._g:
