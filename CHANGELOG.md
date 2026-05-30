@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.18.0](https://github.com/VforVitorio/LexFlow/compare/v0.17.0...v0.18.0) (2026-05-30)
+
+
+### Features
+
+* **api+frontend:** what's-new corpus diff during splash warm-up ([#228](https://github.com/VforVitorio/LexFlow/issues/228)) ([52f7a02](https://github.com/VforVitorio/LexFlow/commit/52f7a020008a1e92fc31e25362c1c0bfc8390f0d))
+* **api+frontend:** what's-new corpus diff during splash warm-up ([#228](https://github.com/VforVitorio/LexFlow/issues/228)) ([7d58bd0](https://github.com/VforVitorio/LexFlow/commit/7d58bd0887f0b8d3565dcd3bff9fdacdb0675a79))
+
 ## [0.17.0](https://github.com/VforVitorio/LexFlow/compare/v0.16.0...v0.17.0) (2026-05-30)
 
 
