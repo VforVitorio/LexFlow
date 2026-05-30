@@ -14,6 +14,7 @@ from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
 from lexflow.api.routers import articles, chat_threads, dashboards, laws, models, search, sync, system, tags, versions
 from lexflow.api.routers.graph import router as graph_router
+from lexflow.api.spa import mount_spa
 from lexflow.api.warmup import schedule_background_warmup
 from lexflow.chat.db import init_db
 from lexflow.core.exceptions import LexFlowError
@@ -106,3 +107,8 @@ app.include_router(tags.router, prefix="/api/v1")
 async def health() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok", "version": __version__}
+
+
+# SPA mount — must come last so /api/v1/* and /health are never shadowed.
+# No-op when frontend/dist/ is absent (dev mode, CI, unit tests).
+mount_spa(app)
