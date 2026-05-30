@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.15.0](https://github.com/VforVitorio/LexFlow/compare/v0.14.0...v0.15.0) (2026-05-30)
+
+
+### Features
+
+* **api:** persist metadata + search caches to disk for warm starts ([#231](https://github.com/VforVitorio/LexFlow/issues/231)) ([e1fa891](https://github.com/VforVitorio/LexFlow/commit/e1fa8912303f8982e7e54a550acc9204fe0c9db6))
+* **api:** persist metadata + search caches to disk for warm starts ([#231](https://github.com/VforVitorio/LexFlow/issues/231)) ([5c61221](https://github.com/VforVitorio/LexFlow/commit/5c61221f01b433e4a50f2ce1839f75f356826110))
+
+
+### Documentation
+
+* mark workflow trunk-based (retire dev branch) ([ac71968](https://github.com/VforVitorio/LexFlow/commit/ac71968255ab571add72dd82f6e93e5549cb2aa0))
+
 ## [0.14.0](https://github.com/VforVitorio/LexFlow/compare/v0.13.0...v0.14.0) (2026-05-29)
 
 
