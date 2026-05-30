@@ -240,3 +240,26 @@ class WarmupStatusResponse(BaseModel):
         default_factory=dict,
         description="Wall-clock seconds spent in each completed stage. Useful for triage.",
     )
+
+
+class WhatsNewLaw(BaseModel):
+    """A law that changed between two corpus revisions."""
+
+    law_id: str
+    title: str | None = None
+
+
+class WhatsNewCorpus(BaseModel):
+    """Corpus diff summary for the what's-new splash panel (#228)."""
+
+    from_commit: str | None = None
+    to_commit: str | None = None
+    added: list[WhatsNewLaw] = Field(default_factory=list)
+    modified: list[WhatsNewLaw] = Field(default_factory=list)
+    removed: list[str] = Field(default_factory=list)
+
+
+class WhatsNewResponse(BaseModel):
+    """Response for GET /system/whats-new — what changed since last launch (#228)."""
+
+    corpus: WhatsNewCorpus

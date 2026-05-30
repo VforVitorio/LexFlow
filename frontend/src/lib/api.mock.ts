@@ -326,6 +326,10 @@ export const mockApi: ApiClient = {
         durationsSeconds: { metadata: 0, search: 0, graph: 0 },
       };
     },
+    async whatsNew(_since: string | null) {
+      // Mock mode: return empty diff so the WhatsNewPanel is hidden.
+      return { fromCommit: null, toCommit: null, added: [], modified: [], removed: [] };
+    },
   },
 };
 

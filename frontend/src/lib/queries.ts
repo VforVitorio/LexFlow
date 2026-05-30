@@ -12,7 +12,7 @@ import { api } from './api';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults, WarmupStatus,
+  SearchResults, WarmupStatus, WhatsNewStatus,
 } from './types';
 
 export const qk = {
@@ -188,6 +188,19 @@ export function useWarmup() {
     refetchInterval: (q) => (q.state.data?.ready ? false : 2000),
     refetchIntervalInBackground: false,
     staleTime: 1000,
+  });
+}
+
+/**
+ * Fetch what changed in the corpus since *since* commit (#228).
+ * Used by the WhatsNewPanel inside SplashGate. Single fetch, no polling.
+ * Result is stale immediately so a re-mount always refetches.
+ */
+export function useWhatsNew(since: string | null) {
+  return useQuery<WhatsNewStatus>({
+    queryKey: ['system', 'whats-new', since ?? ''] as const,
+    queryFn: () => api.system.whatsNew(since),
+    staleTime: 0,
   });
 }
 
