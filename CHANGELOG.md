@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.17.0](https://github.com/VforVitorio/LexFlow/compare/v0.16.0...v0.17.0) (2026-05-30)
+
+
+### Features
+
+* **frontend:** SplashGate with 3-segment warm-up progress bar ([#227](https://github.com/VforVitorio/LexFlow/issues/227)) ([40afaa3](https://github.com/VforVitorio/LexFlow/commit/40afaa3804633dee1aa9141d84aa5ec994760430))
+* **frontend:** SplashGate with 3-segment warm-up progress bar ([#227](https://github.com/VforVitorio/LexFlow/issues/227)) ([99f6290](https://github.com/VforVitorio/LexFlow/commit/99f6290233a03a46d2099d2438096d2b9c356c0f))
+
+
+### Documentation
+
+* record assumed-API / broken-commit lesson ([#230](https://github.com/VforVitorio/LexFlow/issues/230) post-mortem) ([2912437](https://github.com/VforVitorio/LexFlow/commit/2912437c660b366777ec720c187ff4f33de7015f))
+
 ## [0.16.0](https://github.com/VforVitorio/LexFlow/compare/v0.15.0...v0.16.0) (2026-05-30)
 
 
