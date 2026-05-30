@@ -28,7 +28,6 @@ import type {
   DashboardData,
   DiffResult,
   GraphData,
-  GraphStats,
   GraphTopItem,
   GraphTopMetric,
   HierarchyNode,
@@ -43,6 +42,17 @@ import type {
   SearchResults,
   SyncStatus,
 } from './types';
+import type {
+  BackendArticle,
+  BackendDiffStats,
+  BackendLawDetail,
+  BackendLawDiff,
+  BackendLawSummary,
+  BackendLawVersion,
+  BackendPaginated,
+  BackendReference,
+  BackendSection,
+} from '../api';
 import { mockApi } from './api.mock';
 
 // Allow consumers (Settings page) to read whether we're on mock.
@@ -105,7 +115,7 @@ function qs(params: Record<string, unknown>): string {
   return s ? `?${s}` : '';
 }
 
-// ─── Enum mappings ───────────────────────────────────────────────────────
+// ─── Enum + shape mappings ───────────────────────────────────────────────
 
 const RANK_MAP: Record<string, RangoNormativo> = {
   ley: 'Ley',
@@ -141,73 +151,6 @@ function buildShortName(raw: { identifier: string; title: string }): string {
 }
 
 // ─── Domain transformers ─────────────────────────────────────────────────
-
-interface BackendLawSummary {
-  identifier: string;
-  title: string;
-  rank: string;
-  status: string;
-  publication_date: string | null;
-  article_count: number;
-  scope: string;
-  jurisdiction: string | null;
-}
-
-interface BackendLawDetail {
-  metadata: BackendLawSummary & {
-    enactment_date: string | null;
-    last_updated: string | null;
-    source: string | null;
-    department: string | null;
-    official_journal: string | null;
-    journal_issue: string | null;
-    consolidation_status: string;
-    country: string;
-  };
-  sections: BackendSection[];
-  articles: BackendArticle[];
-  references: BackendReference[];
-  article_count: number;
-}
-
-interface BackendSection {
-  level: number;
-  heading: string;
-  articles: BackendArticle[];
-  subsections: BackendSection[];
-}
-
-interface BackendArticle {
-  number: string;
-  title: string | null;
-  text: string;
-  references: BackendReference[];
-}
-
-interface BackendReference {
-  target_id: string | null;
-  target_text: string;
-  source_article: string | null;
-}
-
-interface BackendLawVersion {
-  commit_hash: string;
-  date: string;
-  message: string;
-  norma: string | null;
-  disposicion: string | null;
-  articulos_afectados: string[];
-}
-
-interface BackendLawDiff {
-  law_id: string;
-  from_commit: string;
-  to_commit: string;
-  from_date: string | null;
-  to_date: string | null;
-  diff_text: string;
-  stats: { additions: number; deletions: number; changed_articles: string[] };
-}
 
 function transformLaw(raw: BackendLawSummary): Law {
   return {
@@ -245,8 +188,8 @@ function levelToKind(level: number): HierarchyNode['kind'] {
 function sectionToHierarchy(section: BackendSection, path: string): HierarchyNode {
   const id = `${path}::${section.level}-${section.heading}`;
   const children: HierarchyNode[] = [
-    ...section.subsections.map((s, i) => sectionToHierarchy(s, `${id}::sub-${i}`)),
-    ...section.articles.map((a) => ({
+    ...(section.subsections ?? []).map((s, i) => sectionToHierarchy(s, `${id}::sub-${i}`)),
+    ...(section.articles ?? []).map((a) => ({
       id: `${id}::art-${a.number}`,
       kind: 'articulo' as const,
       label: `Art. ${a.number}`,
@@ -263,11 +206,20 @@ function sectionToHierarchy(section: BackendSection, path: string): HierarchyNod
 }
 
 function transformLawDetail(raw: BackendLawDetail): LawDetail {
-  const summary = transformLaw(raw.metadata);
-  const hierarchy = raw.sections.map((s, i) => sectionToHierarchy(s, `root-${i}`));
+  const m = raw.metadata;
+  const hierarchy = (raw.sections ?? []).map((s, i) => sectionToHierarchy(s, `root-${i}`));
   return {
-    ...summary,
-    referencias: raw.references.length,
+    id: m.identifier,
+    boe: m.identifier,
+    title: m.title,
+    short: buildShortName(m),
+    status: STATUS_MAP[m.status] ?? 'pendiente',
+    rango: RANK_MAP[m.rank] ?? 'Otro',
+    publicada: m.publication_date ?? '',
+    ambito: SCOPE_MAP[m.scope] ?? 'Estatal',
+    articulos: raw.article_count,
+    referencias: (raw.references ?? []).length,
+    versiones: 0,
     hierarchy,
   };
 }
@@ -284,19 +236,14 @@ function transformArticle(lawId: string, raw: BackendArticle): Article {
   // The backend returns articles as a single text blob. We render it as one
   // unmarked clause for now — proper paragraph + (a) (b) (c) splitting and
   // inline citation handles are tracked separately (see follow-up issue).
+  const refs = (raw.references ?? []).map(transformReference);
   return {
     id: `${lawId}::${raw.number}`,
     lawId,
     num: raw.number,
     titulo: raw.title ?? '',
-    body: [
-      {
-        marker: null,
-        text: raw.text,
-        citations: raw.references.map(transformReference),
-      },
-    ],
-    refs: raw.references.map(transformReference),
+    body: [{ marker: null, text: raw.text, citations: refs }],
+    refs,
   };
 }
 
@@ -312,12 +259,13 @@ function deriveVersionKind(message: string): LawVersion['kind'] {
 
 function transformVersion(raw: BackendLawVersion): LawVersion {
   const subject = raw.message.split('\n', 1)[0].trim();
+  const affected = raw.articulos_afectados ?? [];
   return {
     tag: raw.commit_hash.slice(0, 7),
     date: raw.date,
     label: raw.disposicion ?? raw.norma ?? subject.slice(0, 80),
     kind: deriveVersionKind(raw.message),
-    changedArticles: raw.articulos_afectados.length ? raw.articulos_afectados : undefined,
+    changedArticles: affected.length ? affected : undefined,
   };
 }
 
@@ -366,15 +314,16 @@ function parseUnifiedDiffLines(text: string): ArticleDiff {
 
 function transformDiff(raw: BackendLawDiff): DiffResult {
   const article = parseUnifiedDiffLines(raw.diff_text);
+  const stats: BackendDiffStats = raw.stats;
   return {
     lawId: raw.law_id,
-    from: buildVersionStub(raw.from_commit, raw.from_date),
-    to: buildVersionStub(raw.to_commit, raw.to_date),
+    from: buildVersionStub(raw.from_commit, raw.from_date ?? null),
+    to: buildVersionStub(raw.to_commit, raw.to_date ?? null),
     articles: [article],
     totals: {
-      added: raw.stats.additions,
-      removed: raw.stats.deletions,
-      modified: raw.stats.changed_articles.length,
+      added: stats.additions,
+      removed: stats.deletions,
+      modified: (stats.changed_articles ?? []).length,
     },
   };
 }
@@ -401,16 +350,6 @@ function listLawsQuery(params: ListLawsParams): Record<string, unknown> {
 }
 
 // ─── Live HTTP implementation ────────────────────────────────────────────
-
-interface BackendPaginated<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-  has_next: boolean;
-  has_previous: boolean;
-}
 
 const liveApi: ApiClient = {
   laws: {
@@ -441,12 +380,12 @@ const liveApi: ApiClient = {
       // Backend has no dedicated /references endpoint yet — derive from the
       // law detail. Returns the law's articles that carry outgoing refs.
       const raw = await http<BackendLawDetail>(`/laws/${encodeURIComponent(id)}`);
-      return raw.articles.filter((a) => a.references.length > 0).map((a) => transformArticle(id, a));
+      return (raw.articles ?? []).filter((a) => (a.references ?? []).length > 0).map((a) => transformArticle(id, a));
     },
   },
   articles: {
     get: async (lawId, num) => {
-      const raw = await http<{ law_id: string; law_title: string; article: BackendArticle }>(
+      const raw = await http<import('../api').BackendArticleResponse>(
         `/laws/${encodeURIComponent(lawId)}/articles/${encodeURIComponent(num)}`,
       );
       return transformArticle(raw.law_id, raw.article);
@@ -461,25 +400,16 @@ const liveApi: ApiClient = {
   },
   graph: {
     forLaw: async (id, depth = 2) => {
-      const raw = await http<{
-        nodes: {
-          id: string;
-          title: string | null;
-          rank: string | null;
-          status: string | null;
-          // #143 — per-node cluster id + PageRank, computed over the
-          // returned subgraph. Used by the canvas for cluster colour +
-          // node size. May be null on an empty/degenerate subgraph.
-          community: number | null;
-          pagerank: number | null;
-        }[];
-        edges: { source: string; target: string; source_article: string | null }[];
-      }>(`/graph/subgraph/${encodeURIComponent(id)}?depth=${depth}`);
+      // #143 — per-node cluster id + PageRank, computed over the returned
+      // subgraph. Used by the canvas for cluster colour + node size.
+      const raw = await http<import('../api').BackendGraphSubgraph>(
+        `/graph/subgraph/${encodeURIComponent(id)}?depth=${depth}`,
+      );
       const nodes: GraphData['nodes'] = raw.nodes.map((n) => ({
         id: n.id,
-        kind: n.status === 'repealed' ? 'repealed' : 'law',
+        kind: (n.status ?? '') === 'repealed' ? 'repealed' : 'law',
         label: n.title ?? n.id,
-        dim: n.status === 'repealed',
+        dim: (n.status ?? '') === 'repealed',
         meta: {
           rank: n.rank ?? '',
           status: n.status ?? '',
@@ -512,22 +442,17 @@ const liveApi: ApiClient = {
     top: async (opts = {}) => {
       const limit = opts.limit ?? 10;
       const metric: GraphTopMetric = opts.metric ?? 'pagerank';
-      const raw = await http<{ law_id: string; score: number; title: string | null }[]>(
+      const raw = await http<import('../api').BackendGraphTopItem[]>(
         `/graph/top${qs({ limit, metric })}`,
       );
       return raw.map<GraphTopItem>((it) => ({
         lawId: it.law_id,
         score: it.score,
-        title: it.title,
+        title: it.title ?? null,
       }));
     },
     stats: async () => {
-      const raw = await http<{
-        node_count: number;
-        edge_count: number;
-        density: number;
-        weakly_connected_components: number;
-      }>('/graph/stats');
+      const raw = await http<import('../api').BackendGraphStats>('/graph/stats');
       return {
         nodeCount: raw.node_count,
         edgeCount: raw.edge_count,
@@ -538,24 +463,8 @@ const liveApi: ApiClient = {
   },
   search: {
     universal: async (q) => {
-      const raw = await http<{
-        query: string;
-        total: number;
-        items: {
-          law_id: string;
-          law_title: string;
-          article_number: string | null;
-          snippet: string;
-          match_start: number | null;
-          match_end: number | null;
-          score: number;
-        }[];
-        page: number;
-        page_size: number;
-        // #102 — canonical route is /laws/search (search OVER laws).
-        // /search still works as a deprecated alias but we target the
-        // nested path to drop off the deprecation curve cleanly.
-      }>(`/laws/search${qs({ q })}`);
+      // #102 — canonical route is /laws/search; /search is a deprecated alias.
+      const raw = await http<import('../api').BackendSearchResponse>(`/laws/search${qs({ q })}`);
       const hits: SearchResults['hits'] = raw.items.map((h) => ({
         kind: h.article_number ? 'article' : 'law',
         id: h.article_number ? `${h.law_id}::${h.article_number}` : h.law_id,
@@ -563,7 +472,7 @@ const liveApi: ApiClient = {
         snippet: h.snippet,
         articleNumber: h.article_number ?? undefined,
         match:
-          h.match_start !== null && h.match_end !== null
+          h.match_start != null && h.match_end != null
             ? { start: h.match_start, end: h.match_end }
             : null,
         payload: { lawId: h.law_id, articleNum: h.article_number ?? undefined },
@@ -590,17 +499,7 @@ const liveApi: ApiClient = {
       // pairs. Unconfigured providers show up as a placeholder with
       // `configured=false` so the Settings page can render them with a
       // setup hint instead of hiding them.
-      const raw = await http<
-        {
-          id: string;
-          provider: string;
-          model: string;
-          local: boolean;
-          configured: boolean;
-          context_window: number | null;
-          error: string | null;
-        }[]
-      >('/models');
+      const raw = await http<import('../api').BackendModelInfo[]>('/models');
       return raw.map<Model>((m) => ({
         id: m.id,
         // Placeholder rows have no model name — fall back to the provider key
@@ -614,22 +513,17 @@ const liveApi: ApiClient = {
   },
   dashboards: {
     metrics: async (preset) => {
-      // #85 — `GET /api/v1/dashboards/{preset}` returns
-      // `{ preset, cards: MetricCard[], series: { labels, values, recent_from? } }`.
-      // The wire is snake_case; we flip `recent_from` → `recentFrom` here.
-      const raw = await http<{
-        preset: 'compliance' | 'analytics';
-        cards: { id: string; title: string; value: string; delta: string; spark: number[]; positive: boolean | null }[];
-        series: { labels: string[]; values: number[]; recent_from: number | null };
-      }>(`/dashboards/${encodeURIComponent(preset)}`);
+      // #85 — `GET /api/v1/dashboards/{preset}`. The wire is snake_case;
+      // we flip `recent_from` → `recentFrom` here.
+      const raw = await http<import('../api').BackendDashboard>(`/dashboards/${encodeURIComponent(preset)}`);
       return {
-        preset: raw.preset,
+        preset: raw.preset as 'compliance' | 'analytics',
         cards: raw.cards.map((c) => ({
           id: c.id,
           title: c.title,
           value: c.value,
           delta: c.delta,
-          spark: c.spark,
+          spark: c.spark ?? [],
           positive: c.positive ?? undefined,
         })),
         series: {
@@ -667,44 +561,28 @@ const liveApi: ApiClient = {
   },
   system: {
     warmup: async () => {
-      // #222 — backend keys are snake_case per the wire convention; the
-      // SPA-facing shape uses camelCase.
-      const raw = await http<{
-        ready: boolean;
-        metadata_ready: boolean;
-        search_ready: boolean;
-        graph_ready: boolean;
-        error: string | null;
-        durations_seconds: Record<string, number>;
-      }>('/system/warmup');
+      // #222 — snake_case wire → camelCase SPA shape.
+      const raw = await http<import('../api').BackendWarmupStatus>('/system/warmup');
       return {
         ready: raw.ready,
         metadataReady: raw.metadata_ready,
         searchReady: raw.search_ready,
         graphReady: raw.graph_ready,
-        error: raw.error,
-        durationsSeconds: raw.durations_seconds,
+        error: raw.error ?? null,
+        durationsSeconds: raw.durations_seconds ?? {},
       };
     },
     whatsNew: async (since: string | null) => {
-      // #228 — corpus diff since the last recorded commit. `since` is
-      // stored in localStorage by the SPA; null on first launch.
+      // #228 — corpus diff since the last recorded commit.
       const url = since ? `/system/whats-new?since=${encodeURIComponent(since)}` : '/system/whats-new';
-      const raw = await http<{
-        corpus: {
-          from_commit: string | null;
-          to_commit: string | null;
-          added: Array<{ law_id: string; title: string | null }>;
-          modified: Array<{ law_id: string; title: string | null }>;
-          removed: string[];
-        };
-      }>(url);
+      const raw = await http<import('../api').BackendWhatsNewResponse>(url);
+      const corpus = raw.corpus;
       return {
-        fromCommit: raw.corpus.from_commit,
-        toCommit: raw.corpus.to_commit,
-        added: raw.corpus.added.map((l) => ({ lawId: l.law_id, title: l.title })),
-        modified: raw.corpus.modified.map((l) => ({ lawId: l.law_id, title: l.title })),
-        removed: raw.corpus.removed,
+        fromCommit: corpus.from_commit ?? null,
+        toCommit: corpus.to_commit ?? null,
+        added: (corpus.added ?? []).map((l) => ({ lawId: l.law_id, title: l.title ?? null })),
+        modified: (corpus.modified ?? []).map((l) => ({ lawId: l.law_id, title: l.title ?? null })),
+        removed: corpus.removed ?? [],
       };
     },
   },
