@@ -7,6 +7,7 @@ import './index.css';
 import './lib/store'; // side-effect: sync theme attribute
 import './i18n'; // side-effect: initialize i18next before render
 import { App } from './App';
+import { SplashGate } from './components/domain/SplashGate';
 import { ErrorBoundary } from './components/shell/ErrorBoundary';
 import { Toaster } from './components/shell/Toaster';
 import { ApiError } from './lib/api';
@@ -74,7 +75,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter basename={basename}><App /></BrowserRouter>
+        <BrowserRouter basename={basename}><SplashGate><App /></SplashGate></BrowserRouter>
         <Toaster />
       </QueryClientProvider>
     </ErrorBoundary>
