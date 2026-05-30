@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.16.0](https://github.com/VforVitorio/LexFlow/compare/v0.15.0...v0.16.0) (2026-05-30)
+
+
+### Features
+
+* **api:** incremental cache updates from legalize-es deltas ([#230](https://github.com/VforVitorio/LexFlow/issues/230)) ([38e0c5e](https://github.com/VforVitorio/LexFlow/commit/38e0c5e08a10fb14d953a62942bdf25e05773598))
+* **api:** incremental cache updates from legalize-es deltas ([#230](https://github.com/VforVitorio/LexFlow/issues/230)) ([476a4af](https://github.com/VforVitorio/LexFlow/commit/476a4aff40f3f81b367aaa8569680a72a7acc5cf))
+
 ## [0.15.0](https://github.com/VforVitorio/LexFlow/compare/v0.14.0...v0.15.0) (2026-05-30)
 
 
