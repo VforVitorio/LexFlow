@@ -17,12 +17,12 @@ REPO="${GH_REPO:-VforVitorio/LexFlow}"
 
 # The REST API rejects -F restrictions= (empty string), so we pass the
 # whole payload as JSON via --input -. Keep contexts in sync with
-# .github/workflows/ci.yml job names (test / lint / typecheck).
+# .github/workflows/ci.yml job names (test / lint / typecheck / frontend-build).
 read -r -d '' PROTECTION_PAYLOAD <<'JSON' || true
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["test", "lint", "typecheck"]
+    "contexts": ["test", "lint", "typecheck", "frontend-build"]
   },
   "enforce_admins": false,
   "required_pull_request_reviews": {

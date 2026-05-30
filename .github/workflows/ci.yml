@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, dev, "feat/**", "fix/**", "docs/**"]
+    branches: [main, "feat/**", "fix/**", "docs/**"]
   pull_request:
-    branches: [main, dev]
+    branches: [main]
 
 # Cancel any in-flight CI for the same ref when a newer push lands. Keeps
 # the queue from piling up when release-please pushes back-to-back PR
@@ -131,9 +131,8 @@ jobs:
       - name: Mypy
         run: uv run mypy src/lexflow/
 
-  # Builds the React SPA on every push and PR. Not (yet) wired into branch
-  # protection — runs informationally so we catch breakage early without
-  # blocking merges while the frontend is still pre-alpha.
+  # Builds the React SPA on every push and PR. Required for merging to main
+  # (see scripts/setup-github.sh for the branch-protection contexts).
   frontend-build:
     name: frontend-build
     runs-on: ubuntu-latest
