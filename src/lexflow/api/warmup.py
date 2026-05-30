@@ -44,6 +44,9 @@ from dataclasses import dataclass, field
 
 from lexflow.api.dependencies import get_graph, get_law_registry
 from lexflow.core.exceptions import LexFlowError
+from lexflow.core.metadata_cache import load_or_preload_metadata
+from lexflow.core.search_cache import load_or_build_search
+from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -104,21 +107,24 @@ async def _run_warmup() -> None:
         _state.started_at = overall_started
         _state.error = None
 
+    data_path = get_settings().data_path
+
     try:
-        # Stage 1 — metadata preload (parses YAML frontmatter of every law).
+        # Stage 1 — metadata. Loads the on-disk cache (<1 s) when the corpus
+        # revision matches; otherwise parses every law's frontmatter (10-30 s)
+        # and persists the result for the next launch (#231).
         stage_started = time.monotonic()
         registry = get_law_registry()
-        await asyncio.to_thread(registry.preload_all_metadata)
+        await asyncio.to_thread(load_or_preload_metadata, registry, data_path)
         with _state_lock:
             _state.metadata_ready = True
         _mark("metadata", started=stage_started)
         logger.info("Warmup: metadata stage complete (%.2fs)", time.monotonic() - stage_started)
 
-        # Stage 2 — search index. Implicit: built lazily by `search_text`,
-        # which we trigger with a dummy query that matches nothing. Cheap
-        # call into an established API beats reaching for a private method.
+        # Stage 2 — search index. Same load-or-build-then-persist pattern;
+        # depends on metadata being present, hence the ordering (#231).
         stage_started = time.monotonic()
-        await asyncio.to_thread(registry.search_text, "_warmup_zzz_no_match_", page=1, page_size=1)
+        await asyncio.to_thread(load_or_build_search, registry, data_path)
         with _state_lock:
             _state.search_ready = True
         _mark("search", started=stage_started)

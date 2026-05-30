@@ -186,6 +186,36 @@ class LawRegistry:
         logger.info("Metadata preload complete: %d laws loaded", loaded)
 
     # ------------------------------------------------------------------
+    # Cache round-trip (warm starts — see core/metadata_cache.py and
+    # core/search_cache.py). These let the warm-up persist the preloaded
+    # metadata and search index to disk and reload them next launch
+    # instead of re-parsing 12 K laws.
+    # ------------------------------------------------------------------
+
+    def export_metadata(self) -> dict[str, LawMetadata]:
+        """Snapshot of the preloaded metadata cache, for disk persistence."""
+        return dict(self._metadata_cache)
+
+    def import_metadata(self, metadata: dict[str, LawMetadata]) -> None:
+        """Populate the metadata cache from a disk-loaded snapshot."""
+        with self._lock:
+            self._metadata_cache.update(metadata)
+
+    def ensure_search_index(self) -> None:
+        """Build the search index from current metadata if not already built."""
+        if not self._search_index.is_built:
+            self._build_search_index()
+
+    def export_search_index(self) -> SearchIndex:
+        """The in-memory search index, for disk persistence."""
+        return self._search_index
+
+    def import_search_index(self, index: SearchIndex) -> None:
+        """Replace the search index with a disk-loaded one."""
+        with self._lock:
+            self._search_index = index
+
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 

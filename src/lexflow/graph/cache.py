@@ -4,32 +4,17 @@ from __future__ import annotations
 
 import json
 import logging
-import subprocess
 from pathlib import Path
 
 import networkx as nx
 
+from lexflow.core.corpus_revision import UNKNOWN_REVISION, submodule_hash
 from lexflow.core.registry import LawRegistry
 from lexflow.graph.builder import build_graph
 from lexflow.graph.model import LegalGraph
 
 logger = logging.getLogger(__name__)
 CACHE_VERSION = "1"
-
-
-def _submodule_hash(data_path: Path) -> str:
-    try:
-        result = subprocess.check_output(
-            ["git", "-C", str(data_path), "rev-parse", "HEAD"],
-            stderr=subprocess.DEVNULL,
-        )
-        return result.decode().strip()
-    # ``check_output`` raises ``CalledProcessError`` on non-zero exit and
-    # ``FileNotFoundError`` (subclass of ``OSError``) when git is missing.
-    # We never want this helper to crash the request — degrade to a
-    # sentinel so ``load_or_build`` can decide what to do.
-    except (subprocess.CalledProcessError, OSError):
-        return "unknown"
 
 
 def save_graph(graph: LegalGraph, cache_path: Path, data_hash: str) -> None:
@@ -64,12 +49,12 @@ def load_graph(cache_path: Path) -> tuple[LegalGraph, str] | None:
 
 def load_or_build(registry: LawRegistry, data_path: Path) -> LegalGraph:
     cache_path = data_path.parent / "graph_cache.json"
-    current_hash = _submodule_hash(data_path)
+    current_hash = submodule_hash(data_path)
     # If we cannot identify the data revision (no git checkout, missing
     # submodule), treat the cache as stale to avoid serving a graph that
     # never invalidates. Equality on "unknown" would otherwise lock the
     # cache permanently.
-    if current_hash == "unknown":
+    if current_hash == UNKNOWN_REVISION:
         logger.info("Rebuilding graph (data revision unknown — cache bypassed)")
         graph = build_graph(registry)
         save_graph(graph, cache_path, current_hash)
@@ -77,7 +62,7 @@ def load_or_build(registry: LawRegistry, data_path: Path) -> LegalGraph:
     cached = load_graph(cache_path)
     if cached is not None:
         graph, cached_hash = cached
-        if cached_hash == current_hash and cached_hash != "unknown":
+        if cached_hash == current_hash and cached_hash != UNKNOWN_REVISION:
             logger.info("Graph loaded from cache (%d nodes)", graph.node_count())
             return graph
     logger.info("Rebuilding graph (hash mismatch or no cache)")

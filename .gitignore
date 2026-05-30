@@ -261,6 +261,14 @@ data/cache/
 data/embeddings/
 data/.scratch/
 
+# Warm-up caches (#52 graph, #231 metadata + search) — rebuilt locally and
+# keyed by the legalize-es submodule commit hash. Revision-bound, not portable;
+# regenerated on first launch when the corpus revision changes.
+data/graph_cache.json
+data/graph_cache.json.tmp
+data/metadata_cache.json
+data/search_index.json
+
 # OS junk
 .DS_Store
 .AppleDouble

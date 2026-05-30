@@ -62,6 +62,39 @@ class SearchIndex:
         """Signal that index construction is complete."""
         self._built = True
 
+    def to_dict(self) -> dict[str, list[dict[str, str | None]]]:
+        """Serialize entries for disk caching (see core/search_cache.py).
+
+        ``text_lower`` is intentionally dropped — it's pure derived data and
+        storing it would roughly double the file size. :meth:`from_dict`
+        recomputes it via :meth:`add_entry`.
+        """
+        return {
+            "entries": [
+                {
+                    "law_id": entry.law_id,
+                    "law_title": entry.law_title,
+                    "article_number": entry.article_number,
+                    "text": entry.text,
+                }
+                for entry in self._entries
+            ]
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, list[dict[str, str | None]]]) -> SearchIndex:
+        """Rebuild an index from :meth:`to_dict` output, marked as built."""
+        index = cls()
+        for raw in data["entries"]:
+            index.add_entry(
+                law_id=raw["law_id"] or "",
+                law_title=raw["law_title"] or "",
+                article_number=raw["article_number"],
+                text=raw["text"] or "",
+            )
+        index.mark_built()
+        return index
+
     def search(
         self,
         query: str,
