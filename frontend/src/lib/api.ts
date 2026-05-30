@@ -686,6 +686,27 @@ const liveApi: ApiClient = {
         durationsSeconds: raw.durations_seconds,
       };
     },
+    whatsNew: async (since: string | null) => {
+      // #228 — corpus diff since the last recorded commit. `since` is
+      // stored in localStorage by the SPA; null on first launch.
+      const url = since ? `/system/whats-new?since=${encodeURIComponent(since)}` : '/system/whats-new';
+      const raw = await http<{
+        corpus: {
+          from_commit: string | null;
+          to_commit: string | null;
+          added: Array<{ law_id: string; title: string | null }>;
+          modified: Array<{ law_id: string; title: string | null }>;
+          removed: string[];
+        };
+      }>(url);
+      return {
+        fromCommit: raw.corpus.from_commit,
+        toCommit: raw.corpus.to_commit,
+        added: raw.corpus.added.map((l) => ({ lawId: l.law_id, title: l.title })),
+        modified: raw.corpus.modified.map((l) => ({ lawId: l.law_id, title: l.title })),
+        removed: raw.corpus.removed,
+      };
+    },
   },
 };
 

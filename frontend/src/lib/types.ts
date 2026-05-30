@@ -407,7 +407,24 @@ export interface ApiClient {
   system: {
     /** Background warm-up progress (#222). Polled until `ready: true`. */
     warmup(): Promise<WarmupStatus>;
+    /** Corpus diff since the last recorded commit (#228). */
+    whatsNew(since: string | null): Promise<WhatsNewStatus>;
   };
+}
+
+/** A law that changed between two corpus revisions (#228). */
+export interface WhatsNewLaw {
+  lawId: string;
+  title: string | null;
+}
+
+/** Corpus diff summary for the what's-new splash panel (#228). */
+export interface WhatsNewStatus {
+  fromCommit: string | null;
+  toCommit: string | null;
+  added: WhatsNewLaw[];
+  modified: WhatsNewLaw[];
+  removed: string[];
 }
 
 /**
