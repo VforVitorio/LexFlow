@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Clock, SlidersHorizontal, Download, ExternalLink } from 'lucide-react';
 import { Button, Card, Tabs } from '@/components/ui';
+import { Skeleton } from '@/components/domain/Skeleton';
 import { useDashboard } from '@/lib/queries';
 import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_FILL_SOFT } from '@/lib/graph-colors';
 import type { MetricCard } from '@/lib/types';
@@ -32,7 +33,7 @@ export function DashboardPage() {
       </div>
 
       {(!data || isLoading) ? (
-        <div className="grid grid-cols-3 gap-4">{Array.from({ length: 6 }).map((_, i) => <Card key={i} className="h-28 animate-pulse" />)}</div>
+        <DashboardSkeleton />
       ) : (
         <>
           <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -49,6 +50,38 @@ export function DashboardPage() {
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Mirror of the live dashboard layout for the loading state: six metric
+ * cards in a responsive grid + one big chart card. Each metric card
+ * carries a title line, the big number+delta line, and a sparkline
+ * placeholder so the page doesn't reflow when data arrives.
+ */
+function DashboardSkeleton() {
+  return (
+    <div aria-busy>
+      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i} className="p-4.5">
+            <Skeleton className="h-3 w-7/12" />
+            <div className="mt-2 flex items-baseline gap-2">
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="h-3 w-10" />
+            </div>
+            <Skeleton className="mt-3 h-10 w-full" />
+          </Card>
+        ))}
+      </div>
+      <Card className="p-5">
+        <div className="mb-3 flex items-baseline gap-2">
+          <Skeleton className="h-4 w-56" />
+          <Skeleton className="h-3 w-32" />
+        </div>
+        <Skeleton className="h-60 w-full" />
+      </Card>
     </div>
   );
 }
