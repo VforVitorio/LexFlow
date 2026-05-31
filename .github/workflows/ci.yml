@@ -185,14 +185,18 @@ jobs:
         run: npm run build
 
   # #252 — same-day CVE alerts on Python dependencies via OSV/PyPA.
-  # Independent job (not embedded in `test`) and `continue-on-error: true`
-  # while we baseline against a real corpus of advisories. Promote to
-  # required (and drop continue-on-error) once a week of runs comes back
-  # clean. Complements Dependabot's weekly cadence with a per-PR gate.
+  # Independent job (not embedded in `test`) so a transient advisory
+  # never poisons the test signal. Fails the job (and the PR) on any
+  # known vulnerability so we ship clean. Complements Dependabot's
+  # weekly cadence with a per-PR gate.
+  #
+  # Baseline established 2026-05-31: the initial pip-audit run on this
+  # PR caught 7 real CVEs across 5 transitives (authlib, idna,
+  # python-multipart, starlette, urllib3); `uv lock --upgrade-package`
+  # for each cleared them before this job became required.
   pip-audit:
     name: pip-audit
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v6
         with:
