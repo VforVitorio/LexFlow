@@ -1,10 +1,15 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Search, ArrowRight, ChevronRight, Plus, GitCompareArrows, BookOpenText, Network, MessagesSquare, BarChart3, Flag, Hash } from 'lucide-react';
+import { Sparkles, Search, ArrowRight, ChevronRight, Plus, GitCompareArrows, BookOpenText, Network, MessagesSquare, BarChart3, Hash } from 'lucide-react';
 import { Badge, Card, Chip, Kbd } from '@/components/ui';
+import { EmptyState } from '@/components/domain/EmptyState';
+import { Skeleton } from '@/components/domain/Skeleton';
 import { useLawsList, useSyncStatus, useTags } from '@/lib/queries';
 import { useUi } from '@/lib/store';
-import { formatNumber, modKey, timeAgo, statusLabel } from '@/lib/utils';
+import { formatNumber, modKey, timeAgo, statusLabel, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { pickGreeting } from '@/lib/greeting';
+import type { Law } from '@/lib/types';
 
 const EXAMPLE_QUERIES = [
   'Cambios al Código Penal en 2024',
@@ -13,34 +18,64 @@ const EXAMPLE_QUERIES = [
   'Leyes autonómicas sobre vivienda',
 ];
 
-const WHAT_CHANGED = [
-  { date: 'Hoy', items: [
-    { law: 'Ley 11/2023', kind: 'amend' as const, detail: 'Modifica el art. 28 de la LOPDGDD' },
-  ]},
-  { date: 'Ayer', items: [
-    { law: 'Real Decreto 253/2024', kind: 'publish' as const, detail: 'Nueva norma publicada en BOE' },
-    { law: 'LO 10/1995 (CP)', kind: 'amend' as const, detail: 'Modifica los arts. 197 ter, 197 quáter' },
-  ]},
-  { date: 'Esta semana', items: [
-    { law: 'Ley 39/2015 (LPAC)', kind: 'consolidate' as const, detail: 'Texto consolidado actualizado · 12 cambios' },
-    { law: 'STC 84/2024', kind: 'doctrine' as const, detail: 'Nueva doctrina afecta al art. 24 CE' },
-  ]},
-];
+/** Date buckets for the "Qué ha cambiado" section. */
+type RecencyBucket = 'today' | 'yesterday' | 'this-week' | 'this-month' | 'older';
+
+const BUCKET_LABEL: Record<RecencyBucket, string> = {
+  today: 'Hoy',
+  yesterday: 'Ayer',
+  'this-week': 'Esta semana',
+  'this-month': 'Este mes',
+  older: 'Anteriores',
+};
+
+const BUCKET_ORDER: RecencyBucket[] = ['today', 'yesterday', 'this-week', 'this-month', 'older'];
+
+function recencyBucket(iso: string, now: Date): RecencyBucket {
+  const days = (now.getTime() - new Date(iso).getTime()) / 86_400_000;
+  if (days < 1) return 'today';
+  if (days < 2) return 'yesterday';
+  if (days < 7) return 'this-week';
+  if (days < 30) return 'this-month';
+  return 'older';
+}
+
+/** Bucket the most-recent laws into date groups for display. */
+function groupByRecency(laws: Law[], now: Date): Array<{ bucket: RecencyBucket; items: Law[] }> {
+  const map = new Map<RecencyBucket, Law[]>();
+  for (const l of laws) {
+    const b = recencyBucket(l.publicada, now);
+    const arr = map.get(b) ?? [];
+    arr.push(l);
+    map.set(b, arr);
+  }
+  return BUCKET_ORDER.filter((b) => map.has(b)).map((bucket) => ({ bucket, items: map.get(bucket)! }));
+}
 
 export function HomePage() {
   const navigate = useNavigate();
   const setPaletteOpen = useUi((s) => s.setPaletteOpen);
-  const { data: laws } = useLawsList({});
+  // Most recent laws by publication date — drives both the "Qué ha
+  // cambiado" feed and the "Reciente" cards below. Limit handled at the
+  // group level so the feed shows enough variety across buckets.
+  const { data: laws, isLoading: lawsLoading } = useLawsList({ sort: 'date', limit: 12 });
   const { data: sync } = useSyncStatus();
   const { data: vocab = [] } = useTags();
+  const greeting = useMemo(() => pickGreeting(), []);
   const recent = laws?.items.slice(0, 3) ?? [];
+  const changedByDate = useMemo(
+    () => (laws?.items ? groupByRecency(laws.items.slice(0, 10), new Date()) : []),
+    [laws?.items],
+  );
 
   return (
     <div className="h-full overflow-auto scrollbar-thin">
       <div className="mx-auto w-full max-w-[1200px] px-10 py-7">
-        {/* Greeting */}
+        {/* Greeting — time-of-day aware; appends the user's name when
+            stored (see #115 / #229 step 2). Plug-in seam for the
+            randomised welcome pool (#248) is `lib/greeting.ts`. */}
         <header className="mb-7">
-          <h1 className="font-display text-4xl font-semibold -tracking-[0.015em]">Buenas tardes, Laura</h1>
+          <h1 className="font-display text-4xl font-semibold -tracking-[0.015em]">{greeting.text}</h1>
           <p className="mt-1 text-[14.5px] text-muted">
             El corpus está al día. Última sincronización con{' '}
             <code className="font-mono text-[12.5px] text-indigo-600 dark:text-indigo-300">{sync?.upstream ?? 'legalize-es@main'}</code>{' '}
@@ -86,25 +121,39 @@ export function HomePage() {
           <section>
             <div className="mb-3.5 flex items-baseline justify-between">
               <h2 className="font-display text-lg font-semibold">Qué ha cambiado</h2>
-              <button className="inline-flex items-center gap-1 text-[13px] font-medium text-indigo-600 dark:text-indigo-300">
+              <button
+                onClick={() => navigate('/explorer?sort=date')}
+                className="inline-flex items-center gap-1 text-[13px] font-medium text-indigo-600 hover:underline dark:text-indigo-300"
+              >
                 Ver todo <ArrowRight className="size-3" />
               </button>
             </div>
             <div className="overflow-hidden rounded-lg border border-border bg-surface">
-              {WHAT_CHANGED.map((day, di) => (
-                <div key={day.date} className={cn(di < WHAT_CHANGED.length - 1 && 'border-b border-border')}>
-                  <div className="label-caps px-4 pt-2.5 pb-1">{day.date}</div>
-                  {day.items.map((it, i) => (
+              {lawsLoading && <ChangedFeedSkeleton />}
+              {!lawsLoading && changedByDate.length === 0 && (
+                <EmptyState
+                  className="border-0"
+                  title="Sin novedades"
+                  description="El corpus no tiene publicaciones recientes. Sincroniza con legalize-es para traer los últimos cambios."
+                />
+              )}
+              {!lawsLoading && changedByDate.map((group, gi) => (
+                <div key={group.bucket} className={cn(gi < changedByDate.length - 1 && 'border-b border-border')}>
+                  <div className="label-caps px-4 pt-2.5 pb-1">{BUCKET_LABEL[group.bucket]}</div>
+                  {group.items.map((law) => (
                     <button
-                      key={i}
+                      key={law.id}
+                      onClick={() => navigate(`/laws/${law.id}`)}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-2/60"
                     >
-                      <ChangeIcon kind={it.kind} />
+                      <ChangedRowIcon law={law} />
                       <div className="min-w-0 flex-1">
-                        <div className="text-[13.5px] font-medium">{it.law}</div>
-                        <div className="text-[12.5px] text-muted">{it.detail}</div>
+                        <div className="truncate text-[13.5px] font-medium">{law.short}</div>
+                        <div className="truncate text-[12.5px] text-muted">
+                          {law.title} · {formatDate(law.publicada)}
+                        </div>
                       </div>
-                      <ChevronRight className="size-3.5 text-muted" />
+                      <ChevronRight className="size-3.5 shrink-0 text-muted" />
                     </button>
                   ))}
                 </div>
@@ -161,17 +210,42 @@ export function HomePage() {
   );
 }
 
-function ChangeIcon({ kind }: { kind: 'publish' | 'amend' | 'consolidate' | 'doctrine' }) {
-  const m = {
-    publish:     { Icon: Plus,              cls: 'bg-success-soft text-success' },
-    amend:       { Icon: GitCompareArrows,  cls: 'bg-amber-soft text-amber-700' },
-    consolidate: { Icon: BookOpenText,      cls: 'bg-info/12 text-info' },
-    doctrine:    { Icon: Flag,              cls: 'bg-[hsl(266_65%_92%/.5)] text-[hsl(266_50%_40%)] dark:bg-[hsl(266_30%_22%)] dark:text-[hsl(266_60%_80%)]' },
-  }[kind];
+/**
+ * Icon for a row in the "Qué ha cambiado" feed.
+ *
+ * The feed is sorted by `publicada` (publication date), so every entry
+ * is a recent publication. The tone reflects the law's status so the
+ * eye can quickly distinguish a brand-new vigente law from a recent
+ * publication that's already been amended or repealed.
+ */
+function ChangedRowIcon({ law }: { law: Law }) {
+  const palette =
+    law.status === 'vigente'
+      ? { Icon: Plus, cls: 'bg-success-soft text-success' }
+      : law.status === 'modificada'
+        ? { Icon: GitCompareArrows, cls: 'bg-amber-soft text-amber-700' }
+        : { Icon: BookOpenText, cls: 'bg-[hsl(266_65%_92%/.5)] text-[hsl(266_50%_40%)] dark:bg-[hsl(266_30%_22%)] dark:text-[hsl(266_60%_80%)]' };
   return (
-    <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-lg', m.cls)}>
-      <m.Icon className="size-4" />
+    <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-lg', palette.cls)}>
+      <palette.Icon className="size-4" />
     </span>
+  );
+}
+
+/** Skeleton for the "Qué ha cambiado" feed while `useLawsList` resolves. */
+function ChangedFeedSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 p-4" aria-busy>
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex items-center gap-3">
+          <Skeleton className="size-8 rounded-lg" />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <Skeleton className="h-3 w-5/12" />
+            <Skeleton className="h-2.5 w-9/12" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
