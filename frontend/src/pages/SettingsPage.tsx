@@ -1,15 +1,22 @@
 import { useState } from 'react';
 import { Settings as Cog, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { useModels, useSyncStatus, useRunSync } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
+import { USER_NAME_STORAGE_KEY } from '@/lib/greeting';
+import { toast } from '@/lib/toast';
+import { SUPPORTED_LANGS } from '@/i18n';
+import type { Lang } from '@/i18n';
 
-const SECTIONS = ['Perfil', 'Apariencia', 'Modelos', 'Datos', 'Actualizaciones', 'Acerca de'] as const;
+// "Personalización" replaces the prior "Perfil" stub (#133) — name +
+// language + a11y now have a home. Other sections kept verbatim.
+const SECTIONS = ['Personalización', 'Apariencia', 'Modelos', 'Datos', 'Actualizaciones', 'Acerca de'] as const;
 type Section = typeof SECTIONS[number];
 
 export function SettingsPage() {
-  const [section, setSection] = useState<Section>('Modelos');
+  const [section, setSection] = useState<Section>('Personalización');
   return (
     <div className="flex h-full min-h-0">
       <aside className="w-56 shrink-0 border-r border-border p-4.5">
@@ -28,10 +35,11 @@ export function SettingsPage() {
         ))}
       </aside>
       <div className="flex-1 overflow-auto px-10 py-7 scrollbar-thin">
+        {section === 'Personalización' && <PersonalizacionSection />}
         {section === 'Modelos' && <ModelsSection />}
         {section === 'Apariencia' && <AppearanceSection />}
         {section === 'Datos' && <DataSection />}
-        {section !== 'Modelos' && section !== 'Apariencia' && section !== 'Datos' && (
+        {(section === 'Actualizaciones' || section === 'Acerca de') && (
           <div className="py-10 text-center text-muted">
             <h1 className="font-display text-2xl font-semibold">{section}</h1>
             <p className="mt-2 text-sm">Sección por completar — se conectará al endpoint correspondiente.</p>
@@ -40,6 +48,124 @@ export function SettingsPage() {
       </div>
     </div>
   );
+}
+
+/**
+ * #115 + #133 — name + language + a11y pointers.
+ *
+ * The name is owned by `localStorage[USER_NAME_STORAGE_KEY]` (set on
+ * the first-run welcome, #229) and read back by the greeting helper
+ * (`lib/greeting.ts`). Editing here writes the same key — the next
+ * mount of HomePage picks up the change.
+ *
+ * The language is owned by i18next via `lookupLocalStorage:
+ * 'lexflow.lang'` (see `lib/i18n/index.ts`). `i18n.changeLanguage`
+ * updates both the runtime + the persisted key.
+ *
+ * Accessibility deltas (theme, density, reading font size) live in
+ * the existing `Apariencia` section — we link to it instead of
+ * duplicating the controls here.
+ */
+function PersonalizacionSection() {
+  const { i18n } = useTranslation();
+  const initialName = readStoredUserName() ?? '';
+  const [name, setName] = useState(initialName);
+  const trimmed = name.trim();
+  const nameDirty = trimmed !== initialName;
+
+  const saveName = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (trimmed.length === 0) {
+        localStorage.removeItem(USER_NAME_STORAGE_KEY);
+      } else {
+        localStorage.setItem(USER_NAME_STORAGE_KEY, trimmed);
+      }
+      toast({
+        tone: 'info',
+        title: trimmed.length === 0 ? 'Nombre borrado' : 'Nombre actualizado',
+        message: trimmed.length === 0
+          ? 'Los saludos volverán a mostrarse sin tu nombre.'
+          : `A partir de ahora te saludaremos como ${trimmed}.`,
+      });
+    } catch {
+      toast({
+        tone: 'danger',
+        title: 'No se pudo guardar',
+        message: 'localStorage no está disponible (modo privado?).',
+      });
+    }
+  };
+
+  const changeLang = (lang: Lang) => {
+    void i18n.changeLanguage(lang);
+  };
+
+  return (
+    <>
+      <h1 className="font-display text-[22px] font-semibold">Personalización</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
+        Nombre con el que la app se dirige a ti, idioma de la interfaz y atajo a las opciones de accesibilidad. Sin cuenta — todo vive en el navegador.
+      </p>
+
+      {/* Name */}
+      <form onSubmit={saveName} className="mb-7">
+        <label htmlFor="user-name-input" className="label-caps mb-2 block">¿Cómo deberíamos llamarte?</label>
+        <div className="flex max-w-md items-center gap-2.5">
+          <input
+            id="user-name-input"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tu nombre"
+            maxLength={48}
+            className="flex-1 rounded-md border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
+          />
+          <Button type="submit" size="sm" disabled={!nameDirty}>Guardar</Button>
+        </div>
+        <p className="mt-1.5 text-[11.5px] text-muted">
+          No hace falta cuenta. Solo se guarda en este navegador. Déjalo vacío y guarda para volver a los saludos sin nombre.
+        </p>
+      </form>
+
+      {/* Language */}
+      <div className="mb-7">
+        <div className="label-caps mb-2">Idioma de la interfaz</div>
+        <Tabs
+          variant="segmented"
+          value={i18n.resolvedLanguage ?? 'es'}
+          onChange={(v) => changeLang(v as Lang)}
+          tabs={SUPPORTED_LANGS.map((lng) => ({
+            id: lng,
+            label: lng === 'es' ? 'Español' : 'English',
+          }))}
+        />
+        <p className="mt-1.5 text-[11.5px] text-muted">
+          La cabecera de saludo, los nombres de norma y el corpus permanecen en español — son contenido legal, no UI.
+        </p>
+      </div>
+
+      {/* Accessibility pointer */}
+      <div className="rounded-lg border border-border bg-surface/60 p-4">
+        <div className="font-display text-[14.5px] font-semibold">Accesibilidad</div>
+        <p className="mt-1 text-[12.5px] text-muted">
+          El tema (claro / oscuro), la densidad de las tablas y el tamaño de lectura viven en{' '}
+          <span className="font-semibold text-fg">Apariencia</span>. Pasarán a esta sección cuando tengamos un pack más amplio (alto contraste, motion-reduce, focus mejorado).
+        </p>
+      </div>
+    </>
+  );
+}
+
+function readStoredUserName(): string | null {
+  try {
+    const raw = localStorage.getItem(USER_NAME_STORAGE_KEY);
+    if (!raw) return null;
+    const trimmed = raw.trim();
+    return trimmed.length === 0 ? null : trimmed;
+  } catch {
+    return null;
+  }
 }
 
 function ModelsSection() {
