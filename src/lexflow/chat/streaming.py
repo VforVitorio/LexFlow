@@ -175,11 +175,23 @@ async def stream_chat_reply(
             assistant_chunks.append(chunk)
             yield format_sse(SseEvent.TEXT, {"delta": chunk})
     except ChatProviderError as exc:
-        logger.info("Provider %s stream failed: %s", provider_key, exc)
+        # provider_key is upstream-validated against PROVIDERS_BY_KEY (see
+        # _provider_for) so only a known literal key reaches here, but
+        # CodeQL can't see that validation across functions — `%r` formats
+        # via repr() which escapes newlines/control chars regardless and
+        # is the canonical sanitiser for py/log-injection (alert #3).
+        logger.info("Provider %r stream failed: %s", provider_key, exc)
+        # ``str(exc)`` of a ChatProviderError is the message we constructed
+        # ourselves (e.g. "OpenAI rate limit exceeded"); intentional to
+        # surface so the user knows whether to retry vs reauth.
         yield format_sse(SseEvent.ERROR, {"detail": str(exc)})
-    except Exception as exc:
+    except Exception:
+        # Generic exception path: the message can carry stack-frame
+        # context (file paths, internal SQL, model names). Log the full
+        # trace on the server side and emit a generic detail to the
+        # client (CodeQL alert #2 — py/stack-trace-exposure).
         logger.exception("Unexpected error during chat stream")
-        yield format_sse(SseEvent.ERROR, {"detail": f"Internal error: {exc}"})
+        yield format_sse(SseEvent.ERROR, {"detail": "Internal error during chat stream"})
 
     # 4. Persist whatever we got. Empty replies still get a row so the
     #    UI doesn't render a "ghost turn"; the assistant row's empty
