@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.20.0](https://github.com/VforVitorio/LexFlow/compare/v0.19.0...v0.20.0) (2026-05-31)
+
+
+### Features
+
+* **ci:** add frontend-build to required branch-protection contexts ([7043ff3](https://github.com/VforVitorio/LexFlow/commit/7043ff368e16bc87ec410ec05c4dad9a5872c6e6))
+* **frontend:** HomePage real corpus feed + dynamic greeting (drop hardcoded Laura + mock changes) ([2e68644](https://github.com/VforVitorio/LexFlow/commit/2e68644f07c6b7280fb733e3cd354a572bc3f615))
+* **frontend:** replace HomePage mock data with real corpus feed + dynamic greeting ([dba58fb](https://github.com/VforVitorio/LexFlow/commit/dba58fb76a179937b6565b1cb4d44bf088dd1d8b))
+* **frontend:** tegaki handwritten welcome + name prompt (closes [#229](https://github.com/VforVitorio/LexFlow/issues/229)) ([fd3cccc](https://github.com/VforVitorio/LexFlow/commit/fd3cccc212e14624530b4cf939de1bdfb944da63))
+* **frontend:** tegaki handwritten welcome + name prompt (closes [#229](https://github.com/VforVitorio/LexFlow/issues/229)) ([e514a0a](https://github.com/VforVitorio/LexFlow/commit/e514a0a03aec1e120a8cbd2f2d2caf0bc15d7f27))
+
 ## [0.19.0](https://github.com/VforVitorio/LexFlow/compare/v0.18.0...v0.19.0) (2026-05-30)
 
 
