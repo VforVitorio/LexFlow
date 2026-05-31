@@ -49,23 +49,33 @@ export function ChatPage() {
       {/* Conversation rail */}
       <aside className="w-60 shrink-0 overflow-auto border-r border-border bg-bg p-3.5 scrollbar-thin">
         <Button size="sm" icon={<Plus className="size-3.5" />} className="mb-3 w-full">Nueva conversación</Button>
-        {groupThreads(threads).map(([label, ts]) => (
-          <div key={label}>
-            <div className="label-caps mb-1.5 mt-3 first:mt-0">{label}</div>
-            {ts.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveId(t.id)}
-                className={cn(
-                  'mb-0.5 w-full truncate rounded px-2.5 py-1.5 text-left text-[13px] transition-colors',
-                  activeId === t.id ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',
-                )}
-              >
-                {t.title}
-              </button>
-            ))}
-          </div>
-        ))}
+        {threads.length === 0 ? (
+          // Empty rail — first time using chat, or the live backend
+          // hasn't returned any thread yet. Surfaces the explicit CTA
+          // instead of leaving the rail blank below the "Nueva"
+          // button.
+          <p className="mt-2 px-1 text-[12.5px] text-muted">
+            Aún no hay conversaciones. Pulsa <span className="font-semibold text-fg">Nueva conversación</span> para empezar.
+          </p>
+        ) : (
+          groupThreads(threads).map(([label, ts]) => (
+            <div key={label}>
+              <div className="label-caps mb-1.5 mt-3 first:mt-0">{label}</div>
+              {ts.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveId(t.id)}
+                  className={cn(
+                    'mb-0.5 w-full truncate rounded px-2.5 py-1.5 text-left text-[13px] transition-colors',
+                    activeId === t.id ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',
+                  )}
+                >
+                  {t.title}
+                </button>
+              ))}
+            </div>
+          ))
+        )}
       </aside>
 
       {/* Thread */}
@@ -80,13 +90,23 @@ export function ChatPage() {
 
         <div className="flex-1 overflow-auto py-6 scrollbar-thin">
           <div className="mx-auto flex max-w-3xl flex-col gap-4 px-6">
-            {visible.map((m) => (
-              <ChatMessage
-                key={m.id}
-                message={m}
-                onSourceClick={(s: ChatSource) => s.target && navigate(`/laws/${s.target.lawId}`)}
-              />
-            ))}
+            {visible.length === 0 ? (
+              // No active thread (first time, or the cached id no
+              // longer exists). Surface a hint pointing at the input
+              // below instead of an empty column.
+              <div className="mt-12 text-center text-[13px] text-muted">
+                <p className="font-display text-[15px] font-semibold text-fg">Empieza preguntando al corpus</p>
+                <p className="mt-1.5">Escribe tu pregunta abajo. Cita un artículo con <span className="font-mono">@</span> o filtra por <span className="font-mono">#tag</span>.</p>
+              </div>
+            ) : (
+              visible.map((m) => (
+                <ChatMessage
+                  key={m.id}
+                  message={m}
+                  onSourceClick={(s: ChatSource) => s.target && navigate(`/laws/${s.target.lawId}`)}
+                />
+              ))
+            )}
             <div ref={bottomRef} />
           </div>
         </div>

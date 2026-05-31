@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
 import { GraphCanvas, NODE_KIND_LABELS } from '@/components/domain/GraphCanvas';
+import { EmptyState } from '@/components/domain/EmptyState';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { SkeletonCanvas } from '@/components/domain/Skeleton';
 import { RightRail } from '@/components/shell/RightRail';
@@ -23,9 +24,15 @@ export function GraphPage() {
   const [filters, setFilters] = useState<Set<GraphNodeKind>>(new Set(ALL_KINDS));
   // #221 — pick the seed dynamically. Hardcoding "CE-1978" 404'd because
   // the real ID is "BOE-A-1978-31229"; using the top-PageRank law also
-  // keeps us honest as the corpus evolves.
-  const { data: topLaws } = useGraphTop({ limit: 1 });
-  const seedLawId = topLaws?.[0]?.lawId ?? FALLBACK_SEED_LAW_ID;
+  // keeps us honest as the corpus evolves. We pull the top 10 so the
+  // error-state fallback can offer those as clickable alternatives
+  // when the chosen seed isn't in the graph (corpus drift, manual URL).
+  const { data: topLaws } = useGraphTop({ limit: 10 });
+  // When the user picks an alternative from the empty-state fallback we
+  // override the derived seed via `manualSeed`. Persisted only in
+  // component state — a remount resets to the top-PageRank default.
+  const [manualSeed, setManualSeed] = useState<string | null>(null);
+  const seedLawId = manualSeed ?? topLaws?.[0]?.lawId ?? FALLBACK_SEED_LAW_ID;
   const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
     // Initialise the right-rail selection to the seed once it resolves.
@@ -47,7 +54,46 @@ export function GraphPage() {
   }, []);
 
   const { data: warmup } = useWarmup();
-  if (error) return <div className="p-10"><ErrorState onRetry={() => refetch()} description={String(error)} /></div>;
+  if (error) {
+    // Most common cause when this fires post-warmup: the chosen seed
+    // isn't in the graph (the URL pointed at a derogated law, the
+    // submodule rolled forward and the law moved/dropped, the cached
+    // top-laws response is stale). Offer the live top-PageRank laws as
+    // clickable alternatives so the user has a one-click escape instead
+    // of just a retry button. Falls back to ErrorState when we don't
+    // even have a top-laws list to suggest.
+    const suggestions = topLaws ?? [];
+    if (suggestions.length === 0) {
+      return <div className="p-10"><ErrorState onRetry={() => refetch()} description={String(error)} /></div>;
+    }
+    return (
+      <div className="p-10">
+        <EmptyState
+          title="No se pudo cargar el subgrafo desde esa norma"
+          description={
+            <>
+              <span className="block">La norma seed pidida ({seedLawId}) no está en el grafo actual.</span>
+              <span className="mt-1 block">Prueba con una de las más conectadas del corpus:</span>
+            </>
+          }
+          primaryAction={{ label: 'Reintentar', onClick: () => refetch() }}
+        />
+        <div className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2">
+          {suggestions.map((law) => (
+            <button
+              key={law.lawId}
+              type="button"
+              onClick={() => setManualSeed(law.lawId)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[12.5px] hover:border-indigo-500/60 hover:bg-primary-soft/40"
+            >
+              <span className="font-mono text-[11px] text-muted">{law.lawId}</span>
+              {law.title && <span className="max-w-[18ch] truncate">{law.title}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (!graph || isLoading) {
     // If warm-up explicitly tells us the graph isn't ready yet, surface
     // a concrete hint instead of the generic spinner — the user knows
