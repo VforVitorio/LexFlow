@@ -6,6 +6,7 @@ import { ArticleBlock } from '@/components/domain/ArticleBlock';
 import { CitationCard } from '@/components/domain/CitationCard';
 import { VersionTimeline } from '@/components/domain/VersionTimeline';
 import { ErrorState } from '@/components/domain/ErrorState';
+import { Skeleton, SkeletonLines } from '@/components/domain/Skeleton';
 import { Badge, Button, Callout, Tabs } from '@/components/ui';
 import { RightRail } from '@/components/shell/RightRail';
 import { useLaw, useVersions } from '@/lib/queries';
@@ -189,12 +190,44 @@ function DetailRightRail({
   );
 }
 
+/**
+ * Mimics the actual reading-column shape so the layout doesn't shift
+ * when the law arrives — header badges, title, subtitle, tab strip,
+ * then two article blocks worth of paragraph skeletons. Reuses the
+ * shared `<Skeleton>` family so dark/light + the future motion-reduce
+ * variants stay consistent across pages.
+ */
 function LoadingSkeleton() {
   return (
-    <div className="p-10">
-      <div className="mb-4 h-4 w-32 animate-pulse rounded bg-surface-2" />
-      <div className="mb-2 h-8 w-1/2 animate-pulse rounded bg-surface-2" />
-      <div className="h-4 w-2/3 animate-pulse rounded bg-surface-2" />
+    <div className="flex h-full min-h-0 flex-col" aria-busy>
+      {/* Header (matches LawHeader's height + badge strip) */}
+      <div className="border-b border-border px-8 py-6">
+        <div className="mb-3 flex items-center gap-2">
+          <Skeleton className="h-5 w-16 rounded-full" />
+          <Skeleton className="h-3.5 w-24" />
+        </div>
+        <Skeleton className="mb-2 h-8 w-1/2" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+
+      {/* Tab strip */}
+      <div className="border-b border-border px-8">
+        <div className="flex gap-6 py-3">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-4 w-20" />
+          ))}
+        </div>
+      </div>
+
+      {/* Reading column — two article blocks worth */}
+      <div className="reading-col flex-1 overflow-auto px-8 py-8 scrollbar-thin">
+        {[0, 1].map((blockIdx) => (
+          <div key={blockIdx} className="mb-10">
+            <Skeleton className="mb-3 h-5 w-32" />
+            <SkeletonLines count={5} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

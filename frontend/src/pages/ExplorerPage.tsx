@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash } from 'lucide-react';
 import { Badge, Button, Checkbox, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
+import { Skeleton } from '@/components/domain/Skeleton';
 import { useLawsList, useTags } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
@@ -214,6 +215,33 @@ export function ExplorerPage() {
                   <Th className="w-10" />
                 </tr>
               </thead>
+              {/* During first-load show skeleton rows shaped like the real
+                  data so the table doesn't reflow on hydration. Only fires
+                  when we have no items yet — once a page is in cache the
+                  refetch happens silently against the stale rows. */}
+              {isLoading && items.length === 0 && (
+                <tbody aria-busy>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="border-b border-border" style={{ height: rowH }}>
+                      <td className="pl-8 pr-3 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <Skeleton className="size-7 shrink-0 rounded-md" />
+                          <div className="flex w-full flex-col gap-1.5">
+                            <Skeleton className="h-3 w-2/5" />
+                            {density !== 'compact' && <Skeleton className="h-2.5 w-3/4" />}
+                          </div>
+                        </div>
+                      </td>
+                      <td><Skeleton className="h-4 w-16 rounded-full" /></td>
+                      <td><Skeleton className="h-3 w-20" /></td>
+                      <td><Skeleton className="h-3 w-16" /></td>
+                      <td className="text-right"><Skeleton className="ml-auto h-3 w-8" /></td>
+                      <td className="text-right"><Skeleton className="ml-auto h-3 w-10" /></td>
+                      <td />
+                    </tr>
+                  ))}
+                </tbody>
+              )}
               <tbody>
                 {items.map((l) => (
                   <tr
