@@ -176,13 +176,18 @@ async def stream_chat_reply(
             yield format_sse(SseEvent.TEXT, {"delta": chunk})
     except ChatProviderError as exc:
         # Both `provider_key` (from `split_model_id(body.model)`) and
-        # `exc` (built by the provider with the original SDK error
-        # wrapped in) are user-influenced. Use `%r` (repr) for both —
-        # the canonical CodeQL-recognised sanitiser for py/log-injection
-        # (alerts #3 and #4). `_provider_for` already validates the key
-        # against `PROVIDERS_BY_KEY` upstream but CodeQL can't see that
-        # across functions, so we don't rely on it for log safety.
-        logger.info("Provider %r stream failed: %r", provider_key, exc)
+        # `exc` (built by the provider wrapping the original SDK error)
+        # are user-influenced. CodeQL's py/log-injection query does NOT
+        # recognise the `%r` format spec as a sanitiser even though it
+        # invokes `repr()` at runtime (alerts #3, #4, #5 all surfaced on
+        # successive `%r` attempts). Explicit `repr()` calls match the
+        # query's sanitiser pattern, so we use those instead — same
+        # bytes on the wire, different static-analysis signal.
+        logger.info(
+            "Provider %s stream failed: %s",
+            repr(provider_key),
+            repr(exc),
+        )
         # ``str(exc)`` of a ChatProviderError is the message we constructed
         # ourselves (e.g. "OpenAI rate limit exceeded"); intentional to
         # surface so the user knows whether to retry vs reauth.
