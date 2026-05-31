@@ -1,0 +1,35 @@
+name: OSV-Scanner
+
+# Cross-ecosystem vulnerability scan against OSV.dev (Python via
+# uv.lock + npm via the two package-lock.json files in one pass).
+# Aggregates GHSA + PyPA + RustSec + OSS-Fuzz advisories — broader
+# than pip-audit alone.
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "pyproject.toml"
+      - "uv.lock"
+      - "frontend/package.json"
+      - "frontend/package-lock.json"
+      - "landing/package.json"
+      - "landing/package-lock.json"
+  schedule:
+    - cron: "30 6 * * 1"  # Weekly, Monday 06:30 UTC (≈ 08:30 Europe/Madrid)
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v1
+    with:
+      scan-args: |-
+        --recursive
+        --skip-git
+        ./

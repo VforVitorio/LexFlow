@@ -1,0 +1,39 @@
+name: Gitleaks
+
+# Secret scanning of the repo + PR diffs for hard-coded credentials
+# (OpenAI/Anthropic API keys, GitHub PATs, AWS keys, etc.). GitHub
+# already has platform-level secret scanning on public repos, but
+# this workflow gives us explicit control over allowlists and runs
+# on every PR diff.
+
+on:
+  push:
+    branches: ["main", "feat/**", "fix/**", "docs/**"]
+  pull_request:
+    branches: ["main"]
+
+concurrency:
+  group: gitleaks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history needed so gitleaks can scan the diff context.
+          fetch-depth: 0
+          submodules: false
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE is required only for GitHub Organizations.
+          # On personal repos the action runs free without it. We pass
+          # it through so a future org migration is a no-op.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

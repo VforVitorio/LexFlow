@@ -183,3 +183,30 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # #252 — same-day CVE alerts on Python dependencies via OSV/PyPA.
+  # Independent job (not embedded in `test`) and `continue-on-error: true`
+  # while we baseline against a real corpus of advisories. Promote to
+  # required (and drop continue-on-error) once a week of runs comes back
+  # clean. Complements Dependabot's weekly cadence with a per-PR gate.
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.12"
+
+      - name: Sync locked dependencies
+        run: uv sync --all-extras --frozen
+
+      - name: Audit installed dependency graph
+        run: uv run --with pip-audit pip-audit
