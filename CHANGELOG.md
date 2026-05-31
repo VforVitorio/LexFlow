@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.21.0](https://github.com/VforVitorio/LexFlow/compare/v0.20.1...v0.21.0) (2026-05-31)
+
+
+### Features
+
+* **ci:** security hardening pack — CodeQL + OSV + gitleaks + pip-audit + npm in Dependabot ([#252](https://github.com/VforVitorio/LexFlow/issues/252)) ([e36b6cc](https://github.com/VforVitorio/LexFlow/commit/e36b6cc78e7a6addb93b202c550aba3d72f17a8f))
+* **ci:** security hardening pack — CodeQL + OSV + gitleaks + pip-audit + npm in Dependabot (closes [#252](https://github.com/VforVitorio/LexFlow/issues/252)) ([edb0f6b](https://github.com/VforVitorio/LexFlow/commit/edb0f6b3f4a1fda4bd6e344372a2c6c57a3e7175))
+* **ui:** GraphPage seed-miss fallback + ChatPage empty-rail hint (Sprint 2) ([79c36a0](https://github.com/VforVitorio/LexFlow/commit/79c36a0bd7831ed0b25e28cd23cd12924b40cdd6))
+* **ui:** GraphPage seed-miss fallback + ChatPage empty-rail hint (Sprint 2) ([7ba1e7b](https://github.com/VforVitorio/LexFlow/commit/7ba1e7b225cce4f228deb7550c9b92f24b52f00a))
+* **ui:** shape-matched loading skeletons for Explorer + LawDetail + Dashboard (Sprint 2) ([12d1c85](https://github.com/VforVitorio/LexFlow/commit/12d1c852f80da069c923fc4507ea2b67644ae10b))
+* **ui:** shape-matched loading skeletons for Explorer + LawDetail + Dashboard (Sprint 2) ([978d11c](https://github.com/VforVitorio/LexFlow/commit/978d11ce1aee4ff53150f1b86c242f4d5a79f2b0))
+
 ## [0.20.1](https://github.com/VforVitorio/LexFlow/compare/v0.20.0...v0.20.1) (2026-05-31)
 
 
