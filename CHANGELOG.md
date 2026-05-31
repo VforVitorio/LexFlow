@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.22.0](https://github.com/VforVitorio/LexFlow/compare/v0.21.0...v0.22.0) (2026-05-31)
+
+
+### Features
+
+* **ui:** randomised welcome messages pool with no-repeat guard (closes [#248](https://github.com/VforVitorio/LexFlow/issues/248)) ([cadc55e](https://github.com/VforVitorio/LexFlow/commit/cadc55e7660d9d1f13b323c5ce35b49aa9655f8d))
+
+
+### Bug Fixes
+
+* **security:** close 3 CodeQL alerts (regex anchor + stack-trace exposure + log injection) ([49c3b2f](https://github.com/VforVitorio/LexFlow/commit/49c3b2fa7bb689be32e580870db3f1718237f79f))
+
 ## [0.21.0](https://github.com/VforVitorio/LexFlow/compare/v0.20.1...v0.21.0) (2026-05-31)
 
 
