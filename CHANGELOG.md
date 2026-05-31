@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1](https://github.com/VforVitorio/LexFlow/compare/v0.20.0...v0.20.1) (2026-05-31)
+
+
+### Bug Fixes
+
+* **test:** correct Agent_Sudo interop install command (agent-sudo → agent-sudo-mcp) ([9e4f653](https://github.com/VforVitorio/LexFlow/commit/9e4f65368ffe5b5750c892d1c66a234107782396))
+
 ## [0.20.0](https://github.com/VforVitorio/LexFlow/compare/v0.19.0...v0.20.0) (2026-05-31)
 
 
