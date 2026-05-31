@@ -253,7 +253,13 @@ function deriveVersionKind(message: string): LawVersion['kind'] {
   const m = message.toLowerCase();
   if (/derog|repeal/.test(m)) return 'repeal';
   if (/consolid/.test(m)) return 'consolidate';
-  if (/^feat\(publi|public/.test(m)) return 'publish';
+  // CodeQL alert #1 (#252 hardening): the previous pattern
+  // `^feat\(publi|public` parses as `^feat\(publi` OR `public` — the
+  // anchor only covers the first branch. We want both branches anchored
+  // at a word boundary so the intent (catch `publish` / `public` /
+  // `publica…` anywhere as a whole word) is preserved without the
+  // misleading-precedence trap.
+  if (/\b(publish|public)/.test(m)) return 'publish';
   return 'amend';
 }
 
