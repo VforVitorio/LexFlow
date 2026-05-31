@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.23.0](https://github.com/VforVitorio/LexFlow/compare/v0.22.0...v0.23.0) (2026-05-31)
+
+
+### Features
+
+* **ui:** Settings → Personalización with name editor + language switcher (closes [#115](https://github.com/VforVitorio/LexFlow/issues/115), [#133](https://github.com/VforVitorio/LexFlow/issues/133)) ([af6b4dc](https://github.com/VforVitorio/LexFlow/commit/af6b4dc47cd44c594fbcfb2df59bbb03340954a1))
+* **ui:** Settings → Personalización with name editor + language switcher (closes [#115](https://github.com/VforVitorio/LexFlow/issues/115), [#133](https://github.com/VforVitorio/LexFlow/issues/133)) ([eab26a8](https://github.com/VforVitorio/LexFlow/commit/eab26a81c023aa8239a56bdfc2c561ccc9706bc2))
+
+
+### Bug Fixes
+
+* **security:** sanitise exception in chat-stream log line (CodeQL [#4](https://github.com/VforVitorio/LexFlow/issues/4)) ([8bdc496](https://github.com/VforVitorio/LexFlow/commit/8bdc496a8afecad7ab3924b0d38a962dcb9e0682))
+* **security:** sanitise exception in chat-stream log line (CodeQL [#4](https://github.com/VforVitorio/LexFlow/issues/4)) + dismiss [#2](https://github.com/VforVitorio/LexFlow/issues/2) as FP ([8a5f56e](https://github.com/VforVitorio/LexFlow/commit/8a5f56eaf5713e1a5cdf9e56101260c0b3f820d3))
+* **security:** switch %r format spec to explicit repr() for CodeQL recognition ([30696ba](https://github.com/VforVitorio/LexFlow/commit/30696ba30ba96968ff3d14561e977e2b4ad80fc1))
+
 ## [0.22.0](https://github.com/VforVitorio/LexFlow/compare/v0.21.0...v0.22.0) (2026-05-31)
 
 
