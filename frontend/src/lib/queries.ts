@@ -12,7 +12,7 @@ import { api } from './api';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults, WarmupStatus, WhatsNewStatus,
+  SearchResults, SystemProfile, WarmupStatus, WhatsNewStatus,
 } from './types';
 
 export const qk = {
@@ -201,6 +201,22 @@ export function useWhatsNew(since: string | null) {
     queryKey: ['system', 'whats-new', since ?? ''] as const,
     queryFn: () => api.system.whatsNew(since),
     staleTime: 0,
+  });
+}
+
+/**
+ * Hardware + local-provider snapshot for the model wizard (#117).
+ *
+ * Fetched once when the wizard mounts and cached forever — the wizard
+ * surfaces a "Re-run detection" button that calls `refetch()` if the
+ * user starts Ollama after first launch. We never poll this on a timer.
+ */
+export function useSystemProfile() {
+  return useQuery<SystemProfile>({
+    queryKey: ['system', 'profile'] as const,
+    queryFn: () => api.system.profile(),
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 }
 

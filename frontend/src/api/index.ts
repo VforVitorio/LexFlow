@@ -57,3 +57,4 @@ export type BackendWarmupStatus = S<'WarmupStatusResponse'>;
 export type BackendWhatsNewLaw  = S<'WhatsNewLaw'>;
 export type BackendWhatsNewCorpus = S<'WhatsNewCorpus'>;
 export type BackendWhatsNewResponse = S<'WhatsNewResponse'>;
+export type BackendSystemProfile = S<'SystemProfileResponse'>;

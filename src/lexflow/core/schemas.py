@@ -263,3 +263,36 @@ class WhatsNewResponse(BaseModel):
     """Response for GET /system/whats-new — what changed since last launch (#228)."""
 
     corpus: WhatsNewCorpus
+
+
+class SystemProfileResponse(BaseModel):
+    """Hardware + local-provider snapshot consumed by the model wizard (#117/#118).
+
+    Numbers are point-in-time and meant for one-shot wizard logic — the
+    frontend should not poll this endpoint. The wizard re-runs detection
+    only when the user explicitly relaunches it from Ajustes → Modelos.
+    """
+
+    total_ram_gb: float = Field(..., description="Total physical RAM in GiB.")
+    available_ram_gb: float = Field(..., description="Free RAM at probe time, GiB.")
+    cpu_cores: int = Field(..., description="Logical CPU count (hyperthreads included).")
+    has_nvidia_gpu: bool = Field(..., description="Whether NVML reported at least one NVIDIA GPU.")
+    vram_gb: float | None = Field(
+        default=None,
+        description="VRAM of the first NVIDIA GPU in GiB, or null if no GPU is present.",
+    )
+    gpu_name: str | None = Field(
+        default=None,
+        description="Marketing name of the first NVIDIA GPU (e.g. 'NVIDIA GeForce RTX 4070').",
+    )
+    is_apple_silicon: bool = Field(
+        ...,
+        description="True on ARM64 macOS so the wizard can recommend MLX/unified-memory tiers.",
+    )
+    platform: str = Field(..., description="Short OS label: 'linux', 'darwin' or 'windows'.")
+    ollama_running: bool = Field(..., description="Whether Ollama responded on http://127.0.0.1:11434.")
+    ollama_models: list[str] = Field(
+        default_factory=list,
+        description="Model tags currently installed in Ollama (empty when Ollama is not running).",
+    )
+    lmstudio_running: bool = Field(..., description="Whether LM Studio responded on http://127.0.0.1:1234.")

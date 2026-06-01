@@ -409,7 +409,30 @@ export interface ApiClient {
     warmup(): Promise<WarmupStatus>;
     /** Corpus diff since the last recorded commit (#228). */
     whatsNew(since: string | null): Promise<WhatsNewStatus>;
+    /** Hardware + local LLM providers (#117). Consumed by the model wizard. */
+    profile(): Promise<SystemProfile>;
   };
+}
+
+/**
+ * Hardware + local-provider snapshot (#117).
+ *
+ * One-shot result used by the model wizard to recommend a tier. Do NOT
+ * poll this — re-run detection only when the user explicitly relaunches
+ * the wizard from Ajustes → Modelos.
+ */
+export interface SystemProfile {
+  totalRamGb: number;
+  availableRamGb: number;
+  cpuCores: number;
+  hasNvidiaGpu: boolean;
+  vramGb: number | null;
+  gpuName: string | null;
+  isAppleSilicon: boolean;
+  platform: 'linux' | 'darwin' | 'windows' | string;
+  ollamaRunning: boolean;
+  ollamaModels: string[];
+  lmstudioRunning: boolean;
 }
 
 /** A law that changed between two corpus revisions (#228). */

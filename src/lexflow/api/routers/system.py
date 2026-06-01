@@ -3,6 +3,7 @@
 Endpoints:
 * ``GET /system/warmup``     (#222) — warm-up progress polled by the SPA.
 * ``GET /system/whats-new``  (#228) — corpus diff since last recorded commit.
+* ``GET /system/profile``    (#117) — hardware + local LLM providers for the wizard.
 
 The conventional ``/health`` lives at the app root for compatibility with
 infrastructure probes that don't know the ``/api/v1`` prefix.
@@ -19,11 +20,13 @@ from lexflow.core.corpus_revision import UNKNOWN_REVISION, submodule_hash
 from lexflow.core.delta_sync import diff_corpus_since
 from lexflow.core.registry import get_registry
 from lexflow.core.schemas import (
+    SystemProfileResponse,
     WarmupStatusResponse,
     WhatsNewCorpus,
     WhatsNewLaw,
     WhatsNewResponse,
 )
+from lexflow.core.system_profile import build_system_profile
 from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -97,4 +100,33 @@ def get_whats_new(
             modified=[_law(lid) for lid in diff.modified],
             removed=diff.removed,
         )
+    )
+
+
+@router.get(
+    "/profile",
+    response_model=SystemProfileResponse,
+    summary="Host hardware + local LLM providers, consumed by the model wizard (#117).",
+)
+async def get_system_profile() -> SystemProfileResponse:
+    """Return a one-shot snapshot of host capacity.
+
+    The wizard runs detection once during onboarding (and again only when
+    the user explicitly relaunches it). Bounded at ~700 ms total because
+    each local-provider probe is capped at 500 ms and they run
+    concurrently.
+    """
+    profile = await build_system_profile()
+    return SystemProfileResponse(
+        total_ram_gb=profile.total_ram_gb,
+        available_ram_gb=profile.available_ram_gb,
+        cpu_cores=profile.cpu_cores,
+        has_nvidia_gpu=profile.has_nvidia_gpu,
+        vram_gb=profile.vram_gb,
+        gpu_name=profile.gpu_name,
+        is_apple_silicon=profile.is_apple_silicon,
+        platform=profile.platform,
+        ollama_running=profile.ollama_running,
+        ollama_models=profile.ollama_models,
+        lmstudio_running=profile.lmstudio_running,
     )
