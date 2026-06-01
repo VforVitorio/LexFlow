@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash } from 'lucide-react';
-import { Badge, Button, Checkbox, Chip, Input, Tabs } from '@/components/ui';
+import { Badge, Button, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
+import { FilterRail } from '@/pages/explorer/FilterRail';
 import { useLawsList, useTags } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
 import type { LawStatus, RangoNormativo, Ambito } from '@/lib/types';
-
-const STATUSES: LawStatus[] = ['vigente', 'modificada', 'derogada'];
-const RANGOS: RangoNormativo[] = ['Norma constitucional', 'Ley Orgánica', 'Ley', 'Real Decreto', 'RD Legislativo'];
-const AMBITOS: Ambito[] = ['Estatal', 'UE', 'Autonómica', 'Local'];
 
 export function ExplorerPage() {
   const navigate = useNavigate();
@@ -67,83 +64,17 @@ export function ExplorerPage() {
 
   return (
     <div className="flex h-full min-h-0">
-      {/* Filter rail */}
-      <aside aria-label="Filtros" className="w-64 shrink-0 overflow-auto border-r border-border bg-bg p-5 scrollbar-thin">
-        <div className="label-caps mb-2.5">Filtros</div>
-
-        <FilterGroup title="Estado">
-          {STATUSES.map((s) => (
-            <Checkbox
-              key={s}
-              checked={status.has(s)}
-              onChange={() => setStatus(toggle(status, s))}
-              label={statusLabel(s)}
-            />
-          ))}
-        </FilterGroup>
-
-        <FilterGroup title="Rango normativo">
-          {RANGOS.map((r) => (
-            <Checkbox
-              key={r}
-              checked={rango.has(r)}
-              onChange={() => setRango(toggle(rango, r))}
-              label={r}
-            />
-          ))}
-        </FilterGroup>
-
-        <FilterGroup title="Ámbito territorial">
-          {AMBITOS.map((a) => (
-            <Checkbox
-              key={a}
-              checked={ambito.has(a)}
-              onChange={() => setAmbito(toggle(ambito, a))}
-              label={a}
-            />
-          ))}
-        </FilterGroup>
-
-        <FilterGroup title="Año">
-          <div className="flex items-center gap-2.5">
-            <Input placeholder="1978" defaultValue="1978" className="h-8 w-20" />
-            <span className="text-[12px] text-muted">—</span>
-            <Input placeholder="2024" defaultValue="2024" className="h-8 w-20" />
-          </div>
-        </FilterGroup>
-
-        <FilterGroup title="Tags">
-          <p className="-mt-1 mb-1.5 text-[11px] text-muted">
-            Click para alternar · escribe <code className="font-mono">#tag</code> en el buscador
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {vocab.slice(0, 16).map(({ tag, count }) => {
-              const active = allTags.has(tag);
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => setTags((prev) => {
-                    const n = new Set(prev);
-                    n.has(tag) ? n.delete(tag) : n.add(tag);
-                    return n;
-                  })}
-                  className={cn(
-                    'inline-flex items-center gap-1 rounded-full border px-2 py-px text-[11.5px] font-medium transition-colors',
-                    active
-                      ? 'border-transparent bg-indigo-600 text-white'
-                      : 'border-border-strong bg-surface text-fg hover:bg-surface-2',
-                  )}
-                >
-                  <Hash className="size-3 opacity-70" />
-                  {tag}
-                  <span className={cn('font-mono text-[10px]', active ? 'text-white/70' : 'text-muted')}>{count}</span>
-                </button>
-              );
-            })}
-          </div>
-        </FilterGroup>
-      </aside>
+      <FilterRail
+        status={status}
+        setStatus={setStatus}
+        rango={rango}
+        setRango={setRango}
+        ambito={ambito}
+        setAmbito={setAmbito}
+        allTags={allTags}
+        setTags={setTags}
+        vocab={vocab}
+      />
 
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
@@ -312,14 +243,6 @@ function Th({ children, sortable, className }: { children?: React.ReactNode; sor
   );
 }
 
-function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-5">
-      <div className="mb-1.5 text-[12px] font-semibold">{title}</div>
-      <div className="flex flex-col gap-1.5">{children}</div>
-    </div>
-  );
-}
 
 // Literal union shared with ``ExplorerPage``'s ``sort`` useState so
 // adding a new sort key surfaces as a TS error at the call sites, not as
