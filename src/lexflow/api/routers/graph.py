@@ -27,7 +27,7 @@ from lexflow.core.schemas import (
 from lexflow.graph.algorithms import shortest_path, top_laws
 from lexflow.graph.model import LegalGraph
 
-router = APIRouter(prefix="/graph", tags=["graph"])
+router = APIRouter(prefix="/graph", tags=["Graph"])
 
 
 @router.get("/neighbors/{law_id}", response_model=GraphNeighborsResponse)

@@ -36,7 +36,7 @@ from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/sync", tags=["sync"])
+router = APIRouter(prefix="/sync", tags=["Sync"])
 
 GRAPH_CACHE_FILENAME = "graph_cache.json"
 
