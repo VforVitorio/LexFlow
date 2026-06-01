@@ -37,8 +37,7 @@ def load_graph(cache_path: Path) -> tuple[LegalGraph, str] | None:
         if data.get("version") != CACHE_VERSION:
             return None
         g = nx.node_link_graph(data["graph"], directed=True)
-        graph = LegalGraph()
-        graph._g = g
+        graph = LegalGraph.from_networkx(g)
         return graph, data["hash"]
     # Bad cache file = treat as missing. ``OSError`` for file reads,
     # ``json.JSONDecodeError`` (a ValueError) for parse, ``KeyError`` if

@@ -42,8 +42,21 @@ def list_versions(
 )
 def get_diff(
     law_id: str,
-    from_commit: str = Query(..., alias="from", description="Source commit hash"),
-    to_commit: str = Query(..., alias="to", description="Target commit hash"),
+    # Git short hashes are 7+ chars; full SHA-1 is 40. Refuse anything else
+    # at the boundary so `subprocess git ...` never sees adversarial input.
+    # Issue #104 (#7).
+    from_commit: str = Query(
+        ...,
+        alias="from",
+        pattern=r"^[0-9a-f]{7,40}$",
+        description="Source commit hash (7-40 hex chars)",
+    ),
+    to_commit: str = Query(
+        ...,
+        alias="to",
+        pattern=r"^[0-9a-f]{7,40}$",
+        description="Target commit hash (7-40 hex chars)",
+    ),
     registry: LawRegistry = Depends(get_law_registry),
     git_reader: GitHistoryReader = Depends(_get_git_reader),
 ) -> LawDiff:

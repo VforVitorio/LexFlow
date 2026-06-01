@@ -17,6 +17,18 @@ class LegalGraph:
     def __init__(self) -> None:
         self._g: nx.DiGraph = nx.DiGraph()
 
+    @classmethod
+    def from_networkx(cls, graph: nx.DiGraph) -> LegalGraph:
+        """Build a `LegalGraph` around an existing DiGraph.
+
+        Used by the cache loader (#104 #5) so it doesn't have to poke at
+        the private ``_g`` attribute. The graph is taken by reference —
+        callers are expected to surrender ownership.
+        """
+        instance = cls()
+        instance._g = graph
+        return instance
+
     def add_law(self, metadata: LawMetadata) -> None:
         """Add a law node with its metadata as attributes."""
         self._g.add_node(

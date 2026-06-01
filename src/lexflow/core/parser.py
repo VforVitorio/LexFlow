@@ -9,6 +9,7 @@ assembled by the top-level :func:`parse_law_file` entry point.
 
 from __future__ import annotations
 
+import logging
 import re
 import unicodedata
 from pathlib import Path
@@ -25,6 +26,8 @@ from lexflow.core.enums import (
 )
 from lexflow.core.exceptions import ParserError
 from lexflow.core.models import Article, Law, LawMetadata, Reference, Section
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Frontmatter
@@ -62,12 +65,24 @@ def parse_frontmatter(yaml_text: str) -> dict[str, Any]:
 
 
 def _safe_enum(enum_cls: type, value: Any, default: Any) -> Any:
-    """Convert *value* to *enum_cls*, falling back to *default*."""
+    """Convert *value* to *enum_cls*, falling back to *default*.
+
+    Emits a structured warning when the value is non-null but unknown so
+    upstream data drift surfaces in logs instead of silently bucketing
+    into the default (#104 cross-cutting). Pure ``None`` stays silent —
+    that's the documented "field absent" path.
+    """
     if value is None:
         return default
     try:
         return enum_cls(value)
     except ValueError:
+        logger.warning(
+            "Unknown %s value %r — falling back to %r",
+            enum_cls.__name__,
+            value,
+            default,
+        )
         return default
 
 

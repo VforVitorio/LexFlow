@@ -148,10 +148,38 @@ class TestGetDiff:
         fake_git_reader: _FakeGitReader,
     ) -> None:
         del mock_registry
+        # #104 #7 — Query now enforces ``^[0-9a-f]{7,40}$``. Use valid
+        # short hashes so the request reaches the reader.
         client.get(
             "/api/v1/laws/BOE-A-2000-323/diff",
-            params={"from": "AAA", "to": "BBB"},
+            params={"from": "abc1234", "to": "def5678"},
         )
         _file, from_commit, to_commit = fake_git_reader.diff_calls[-1]
-        assert from_commit == "AAA"
-        assert to_commit == "BBB"
+        assert from_commit == "abc1234"
+        assert to_commit == "def5678"
+
+    def test_rejects_non_hex_commit_hash(
+        self,
+        client: TestClient,
+        mock_registry: object,
+        fake_git_reader: _FakeGitReader,
+    ) -> None:
+        del mock_registry, fake_git_reader
+        response = client.get(
+            "/api/v1/laws/BOE-A-2000-323/diff",
+            params={"from": "xxxxxxx", "to": "abc1234"},
+        )
+        assert response.status_code == 422
+
+    def test_rejects_too_short_commit_hash(
+        self,
+        client: TestClient,
+        mock_registry: object,
+        fake_git_reader: _FakeGitReader,
+    ) -> None:
+        del mock_registry, fake_git_reader
+        response = client.get(
+            "/api/v1/laws/BOE-A-2000-323/diff",
+            params={"from": "abc", "to": "abc1234"},
+        )
+        assert response.status_code == 422
