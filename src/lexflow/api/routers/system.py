@@ -53,6 +53,11 @@ def get_warmup_status() -> WarmupStatusResponse:
     )
 
 
+# Sprint 7 api-12: ``/whats-new`` is the only kebab-case URL segment in
+# the v1 surface. Considered renaming to ``/system/changes`` for
+# consistency but the cost of a deprecation alias + SPA + chip-link
+# updates outweighs the win on a single endpoint. Leaving as-is; if a
+# v2 ever lands, line this up with the rest then.
 @router.get(
     "/whats-new",
     response_model=WhatsNewResponse,

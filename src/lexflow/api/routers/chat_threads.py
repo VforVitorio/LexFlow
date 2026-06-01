@@ -118,7 +118,7 @@ def _latest_preview(session: Session, thread_id: str) -> str | None:
         # SQLModel re-binds ``created_at`` to an ORM descriptor at runtime,
         # but mypy only sees the declared ``datetime`` type — hence the
         # explicit ignore. Same pattern used in ``list_threads`` below.
-        .order_by(desc(ChatMessage.created_at))  # type: ignore[arg-type]
+        .order_by(_newest_first(ChatMessage.created_at))
         .limit(1)
     )
     msg = session.exec(statement).first()
@@ -147,6 +147,17 @@ def _touch_thread(thread: ChatThread) -> None:
     thread.updated_at = datetime.now(UTC)
 
 
+def _newest_first(column: Any) -> Any:
+    """Typed wrapper around SQLAlchemy ``desc()`` (Sprint 7 rf-10).
+
+    SQLModel re-binds columns to ORM descriptors at runtime, but mypy
+    sees the declared static type and complains about
+    ``desc(SomeModel.created_at)``. Isolating the suppression here keeps
+    the call sites readable.
+    """
+    return desc(column)
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -167,7 +178,7 @@ def list_threads(
     statement = (
         select(ChatThread)
         # See note on ``_latest_preview`` — runtime descriptor vs static type.
-        .order_by(desc(ChatThread.updated_at))  # type: ignore[arg-type]
+        .order_by(_newest_first(ChatThread.updated_at))
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
