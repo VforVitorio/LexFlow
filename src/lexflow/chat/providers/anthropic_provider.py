@@ -10,7 +10,11 @@ import anthropic
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
 
 _ANTHROPIC_MODELS: list[str] = [
-    "claude-opus-4-6",
+    # Stay aligned with the current Claude 4.X family (#104 #14). Opus
+    # bumped from 4.6 → 4.8; Sonnet 4.6 and Haiku 4.5 remain current.
+    # When the line moves again, bump these IDs alongside any code that
+    # pins a default model elsewhere.
+    "claude-opus-4-8",
     "claude-sonnet-4-6",
     "claude-haiku-4-5-20251001",
 ]

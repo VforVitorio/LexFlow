@@ -63,9 +63,19 @@ def reset_graph_cache() -> None:
 
 
 class PaginationParams:
-    """Common pagination query parameters.
+    """Common pagination query parameters (#104 #8).
 
-    Inject via ``Depends(PaginationParams)`` in endpoint signatures.
+    Inject via ``Annotated[PaginationParams, Depends()]`` in endpoint
+    signatures — mirrors the pattern already used elsewhere
+    (``graph.py``, ``chat_threads.py``) so the routers look uniform.
+
+    Implementation note: this stays as a plain class (not a Pydantic
+    model) because ``from __future__ import annotations`` turns the
+    enclosing module's type hints into strings, and FastAPI's string-
+    based introspection currently doesn't destructure
+    ``Annotated[BaseModel, Query()]`` into individual query params under
+    that mode. The class form sidesteps the issue — FastAPI calls
+    ``__init__`` with the resolved ``Query`` values directly.
     """
 
     def __init__(

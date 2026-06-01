@@ -9,6 +9,8 @@ the same loop while a cold law is parsed.
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query
 
 from lexflow.api.dependencies import PaginationParams, get_law_registry
@@ -25,8 +27,8 @@ router = APIRouter(prefix="/laws", tags=["Laws"])
     summary="List laws with filtering and pagination",
 )
 def list_laws(
-    pagination: PaginationParams = Depends(),
-    registry: LawRegistry = Depends(get_law_registry),
+    pagination: Annotated[PaginationParams, Depends()],
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
     rank: LawRank | None = Query(None, description="Filter by law rank"),
     status: LawStatus | None = Query(None, description="Filter by enforcement status"),
     scope: Scope | None = Query(None, description="Filter by territorial scope"),
@@ -50,7 +52,7 @@ def list_laws(
 )
 def get_law(
     law_id: str,
-    registry: LawRegistry = Depends(get_law_registry),
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
 ) -> LawDetail:
     """Return the complete parsed representation of a law."""
     law = registry.get_law(law_id)

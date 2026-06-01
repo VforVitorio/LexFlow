@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from lexflow.core.registry import LawRegistry
 from lexflow.dashboards.analytics import rank_distribution, reforms_by_year, status_distribution
 from lexflow.dashboards.compliance import ComplianceFilter, export_csv, filter_laws
+from lexflow.dashboards.summary import LawSummaryRow, compute_law_summary_table
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -42,6 +43,37 @@ def test_rank_distribution_returns_figure(sample_law_dir: Path) -> None:
 def test_status_distribution_returns_figure(sample_law_dir: Path) -> None:
     fig = status_distribution(_registry(sample_law_dir))
     assert isinstance(fig, go.Figure)
+
+
+# ---------------------------------------------------------------------------
+# Summary table (#104 #13)
+# ---------------------------------------------------------------------------
+
+
+def test_summary_table_returns_one_row_per_law(sample_law_dir: Path) -> None:
+    registry = _registry(sample_law_dir)
+    rows = compute_law_summary_table(registry)
+    assert len(rows) == registry.total_count
+    assert all(isinstance(row, LawSummaryRow) for row in rows)
+
+
+def test_summary_table_projects_metadata_fields(sample_law_dir: Path) -> None:
+    rows = compute_law_summary_table(_registry(sample_law_dir))
+    sample = rows[0]
+    assert sample.law_id  # non-empty
+    assert sample.rank  # rank enum string
+    assert sample.status  # status enum string
+    assert sample.jurisdiction  # either an enum string or 'estatal'
+    # publication_year is allowed to be None (some fixtures may lack a date)
+
+
+def test_figures_accept_precomputed_rows(sample_law_dir: Path) -> None:
+    """The figure functions can amortise the registry pass via `rows=`."""
+    rows = compute_law_summary_table(_registry(sample_law_dir))
+    fig_year = reforms_by_year(rows=rows)
+    fig_rank = rank_distribution(rows=rows)
+    fig_status = status_distribution(rows=rows)
+    assert all(isinstance(fig, go.Figure) for fig in (fig_year, fig_rank, fig_status))
 
 
 # ---------------------------------------------------------------------------

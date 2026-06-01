@@ -7,6 +7,8 @@ on an ``async`` coroutine.
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 
 from lexflow.api.dependencies import PaginationParams, get_law_registry
@@ -14,6 +16,7 @@ from lexflow.core.exceptions import ArticleNotFoundError
 from lexflow.core.models import Article
 from lexflow.core.registry import LawRegistry
 from lexflow.core.schemas import ArticleResponse, PaginatedResponse
+from lexflow.core.services import find_article
 
 router = APIRouter(prefix="/laws/{law_id}/articles", tags=["Articles"])
 
@@ -25,8 +28,8 @@ router = APIRouter(prefix="/laws/{law_id}/articles", tags=["Articles"])
 )
 def list_articles(
     law_id: str,
-    pagination: PaginationParams = Depends(),
-    registry: LawRegistry = Depends(get_law_registry),
+    pagination: Annotated[PaginationParams, Depends()],
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
 ) -> PaginatedResponse[Article]:
     """Return a paginated list of articles for the given law."""
     law = registry.get_law(law_id)
@@ -49,11 +52,11 @@ def list_articles(
 def get_article(
     law_id: str,
     article_number: str,
-    registry: LawRegistry = Depends(get_law_registry),
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
 ) -> ArticleResponse:
     """Return a single article by its number within a law."""
     law = registry.get_law(law_id)
-    article = _find_article(law.articles, article_number)
+    article = find_article(law, article_number)
     if article is None:
         raise ArticleNotFoundError(law_id, article_number)
     return ArticleResponse(
@@ -61,12 +64,3 @@ def get_article(
         law_title=law.metadata.title,
         article=article,
     )
-
-
-def _find_article(articles: list[Article], number: str) -> Article | None:
-    """Find an article by number, with normalization of trailing dots."""
-    normalized = number.strip().rstrip(".")
-    for article in articles:
-        if article.number.strip().rstrip(".") == normalized:
-            return article
-    return None
