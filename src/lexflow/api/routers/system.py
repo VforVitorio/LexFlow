@@ -18,6 +18,7 @@ from fastapi import APIRouter, Query
 from lexflow.api.warmup import get_warmup_state
 from lexflow.core.corpus_revision import UNKNOWN_REVISION, submodule_hash
 from lexflow.core.delta_sync import diff_corpus_since
+from lexflow.core.exceptions import LawNotFoundError
 from lexflow.core.registry import get_registry
 from lexflow.core.schemas import (
     SystemProfileResponse,
@@ -87,8 +88,12 @@ def get_whats_new(
     def _law(law_id: str) -> WhatsNewLaw:
         try:
             title = registry.get_metadata(law_id).title
-        # If the law was just removed or never parsed, skip the title lookup.
-        except Exception:
+        # Narrowed in Sprint 5 (rf-3): a bare `except Exception` hid real
+        # programming bugs. The legitimate cases are: the law was just
+        # removed (LawNotFoundError) or its frontmatter is broken (the
+        # parser raises OSError on missing files and ValueError on bad
+        # YAML). Anything else should crash loudly.
+        except (LawNotFoundError, OSError, ValueError):
             title = None
         return WhatsNewLaw(law_id=law_id, title=title)
 

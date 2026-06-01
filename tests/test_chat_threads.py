@@ -108,6 +108,22 @@ class TestThreadCrud:
         listing = client.get("/api/v1/chat/threads").json()
         assert listing["total"] == 0
 
+    def test_delete_is_idempotent(self, client: TestClient) -> None:
+        """Sprint 5 api-3 — RFC 7231 mandates that DELETE be idempotent.
+
+        Repeated calls converge on 204 regardless of whether the row
+        ever existed. Previously the endpoint returned 404 on second
+        call, which broke retries for clients that lose track of state.
+        """
+        thread = _create_thread(client, title="Doomed-idem")
+        first = client.delete(f"/api/v1/chat/threads/{thread['id']}")
+        assert first.status_code == 204
+        second = client.delete(f"/api/v1/chat/threads/{thread['id']}")
+        assert second.status_code == 204
+        # Deleting a thread that never existed also returns 204.
+        unknown = client.delete("/api/v1/chat/threads/missing-id-xyz")
+        assert unknown.status_code == 204
+
 
 class TestMessages:
     def test_append_message_returns_persisted_row(self, client: TestClient) -> None:
