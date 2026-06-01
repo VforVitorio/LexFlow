@@ -154,6 +154,13 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # #90 — Vitest unit tests for the SPA. Runs in jsdom; setup file
+      # wires up @testing-library/jest-dom matchers. Kept inside
+      # `frontend-build` so a single job covers the SPA's full pre-merge
+      # contract (lint + tests + production build).
+      - name: Unit tests
+        run: npm run test
+
       - name: Build
         run: npm run build
 
