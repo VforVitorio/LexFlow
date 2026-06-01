@@ -119,15 +119,24 @@ class TestStats:
 class TestTop:
     def test_returns_capped_pagerank_list(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
         del graph_from_fixture
-        response = client.get("/api/v1/graph/top", params={"limit": 3, "metric": "pagerank"})
+        # Sprint 6 api-7: the dead `metric=` param was dropped.
+        response = client.get("/api/v1/graph/top", params={"limit": 3})
         assert response.status_code == 200
         body = response.json()
-        assert isinstance(body, list)
-        assert len(body) <= 3
-        for item in body:
+        # Sprint 6 api-6: response is now {"items": [...]} instead of a bare list.
+        items = body["items"]
+        assert len(items) <= 3
+        for item in items:
             assert {"law_id", "score"}.issubset(item.keys())
 
-    def test_rejects_unknown_metric(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
+    def test_unknown_query_param_is_ignored(self, client: TestClient, graph_from_fixture: LegalGraph) -> None:
+        """A stale ``metric=`` from an older client is silently dropped.
+
+        Sprint 6 api-7 removed the param; we no longer 422 on unknown
+        query params (FastAPI's default behaviour). The endpoint should
+        still return a normal response.
+        """
         del graph_from_fixture
         response = client.get("/api/v1/graph/top", params={"metric": "degree"})
-        assert response.status_code == 422
+        assert response.status_code == 200
+        assert "items" in response.json()

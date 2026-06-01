@@ -19,18 +19,23 @@ from fastapi import APIRouter, Depends
 
 from lexflow.api.dependencies import get_law_registry
 from lexflow.core.registry import LawRegistry
-from lexflow.core.schemas import TagCount
+from lexflow.core.schemas import TagCount, TagsResponse
 
 router = APIRouter(tags=["Tags"])
 
 
 @router.get(
     "/tags",
-    response_model=list[TagCount],
+    response_model=TagsResponse,
     summary="Tag vocabulary across the corpus, ranked by usage.",
 )
 def list_tags(
     registry: Annotated[LawRegistry, Depends(get_law_registry)],
-) -> list[TagCount]:
-    """Return ``[{tag, count}]`` sorted by count desc, then tag asc."""
-    return [TagCount(tag=tag, count=count) for tag, count in registry.tag_counts()]
+) -> TagsResponse:
+    """Return ``{items: [{tag, count}]}`` sorted by count desc, then tag asc.
+
+    Sprint 6 api-6: previously returned a bare list. Wrapped now so the
+    contract has room to grow (e.g. total distinct tags, pagination).
+    """
+    items = [TagCount(tag=tag, count=count) for tag, count in registry.tag_counts()]
+    return TagsResponse(items=items)

@@ -18,9 +18,11 @@ from lexflow.core.schemas import (
     GraphEdgeData,
     GraphNeighborsResponse,
     GraphNodeData,
+    GraphPathResponse,
     GraphStatsResponse,
     GraphSubgraphResponse,
     GraphTopItem,
+    GraphTopResponse,
 )
 from lexflow.graph.algorithms import shortest_path, top_laws
 from lexflow.graph.model import LegalGraph
@@ -38,19 +40,22 @@ def get_neighbors(
     return GraphNeighborsResponse(law_id=law_id, neighbors=neighbors, count=len(neighbors))
 
 
-@router.get("/path", response_model=list[str])
+@router.get("/path", response_model=GraphPathResponse)
 def get_path(
     from_id: Annotated[str, Query(alias="from")],
     to_id: Annotated[str, Query(alias="to")],
     graph: Annotated[LegalGraph, Depends(get_graph)],
-) -> list[str]:
+) -> GraphPathResponse:
     """Return the shortest directed path between two law nodes.
 
     Query params use the `from` / `to` aliases (matches the convention of
     the versions diff endpoint and the documented example in the README).
+
+    Sprint 6 api-6: wraps the path list in an object so the response has
+    room to carry metadata later (e.g. path length, intermediate hops).
     """
     try:
-        return shortest_path(graph, from_id, to_id)
+        return GraphPathResponse(path=shortest_path(graph, from_id, to_id))
     except (nx.NetworkXNoPath, nx.NodeNotFound) as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -121,21 +126,23 @@ def get_stats(graph: Annotated[LegalGraph, Depends(get_graph)]) -> GraphStatsRes
     )
 
 
-@router.get("/top", response_model=list[GraphTopItem])
+@router.get("/top", response_model=GraphTopResponse)
 def get_top(
     graph: Annotated[LegalGraph, Depends(get_graph)],
     limit: int = Query(10, ge=1, le=100),
-    metric: str = Query("pagerank", pattern="^pagerank$"),
-) -> list[GraphTopItem]:
-    """Return the top-`limit` most referenced laws by `metric` (PageRank only).
+) -> GraphTopResponse:
+    """Return the top-`limit` most referenced laws by PageRank.
 
-    `metric` accepts `pagerank` today; new metrics will extend the pattern.
-    Param names match the README example (`?metric=pagerank&limit=20`).
+    Sprint 6 api-7 / rf-7: the `metric` query param used to exist but
+    accepted only `pagerank` (single-value regex), and the handler
+    discarded it with `del metric`. Dropped here until a second metric
+    earns its place; the next ranking algorithm should re-introduce the
+    param with a real `Literal["pagerank","betweenness",...]` shape.
     """
-    del metric  # Only one metric supported today; declared for the public contract.
     items = top_laws(graph, n=limit)
     g = graph.graph
-    return [
+    rows = [
         GraphTopItem(law_id=law_id, score=round(score, 6), title=g.nodes[law_id].get("title"))
         for law_id, score in items
     ]
+    return GraphTopResponse(items=rows)

@@ -28,6 +28,7 @@ handle ``tool_call`` / ``source`` will keep working once those land.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator
@@ -192,6 +193,14 @@ async def stream_chat_reply(
         # ourselves (e.g. "OpenAI rate limit exceeded"); intentional to
         # surface so the user knows whether to retry vs reauth.
         yield format_sse(SseEvent.ERROR, {"detail": str(exc)})
+    except asyncio.CancelledError:
+        # Sprint 6 rf-5: a CancelledError means the client disconnected
+        # (Starlette propagates it through the generator). We must NOT
+        # swallow it — the generic `except Exception` below used to, which
+        # turned a normal disconnect into a synthetic SSE `error` event
+        # that no client could see anyway. Re-raise so the runtime can
+        # tear the stream down cleanly.
+        raise
     except Exception:
         # Generic exception path: the message can carry stack-frame
         # context (file paths, internal SQL, model names). Log the full

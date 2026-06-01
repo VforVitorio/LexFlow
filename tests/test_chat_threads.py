@@ -95,6 +95,19 @@ class TestThreadCrud:
         response = client.patch("/api/v1/chat/threads/missing", json={"title": "X"})
         assert response.status_code == 404
 
+    def test_patch_400_on_empty_body(self, client: TestClient) -> None:
+        """Sprint 6 api-9: empty patches used to silently bump
+        ``updated_at``. Now refused with 400 + stable code so the SPA
+        knows to stop sending empty bodies.
+        """
+        thread = _create_thread(client, title="Untouched")
+        response = client.patch(
+            f"/api/v1/chat/threads/{thread['id']}",
+            json={},
+        )
+        assert response.status_code == 400
+        assert response.json()["detail"]["code"] == "empty_patch"
+
     def test_delete_removes_thread_and_messages(self, client: TestClient) -> None:
         thread = _create_thread(client, title="Doomed")
         client.post(

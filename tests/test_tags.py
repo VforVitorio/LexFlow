@@ -96,17 +96,19 @@ class TestTagsEndpoint:
         del tagged_registry
         response = client.get("/api/v1/tags")
         assert response.status_code == 200
-        body = response.json()
+        # Sprint 6 api-6: response is now {"items": [...]} instead of a bare list.
+        items = response.json()["items"]
         # proteccion-de-datos appears on 2 laws → ranks first.
-        assert body[0] == {"tag": "proteccion-de-datos", "count": 2}
-        tags = {row["tag"]: row["count"] for row in body}
+        assert items[0] == {"tag": "proteccion-de-datos", "count": 2}
+        tags = {row["tag"]: row["count"] for row in items}
         assert tags["digital"] == 1
         assert tags["laboral"] == 1
 
-    def test_empty_corpus_returns_empty_list(self, client: TestClient, mock_registry: object) -> None:
+    def test_empty_corpus_returns_empty_items(self, client: TestClient, mock_registry: object) -> None:
         # The shared mock_registry fixture has no tags in its frontmatter,
-        # so the vocabulary is empty — endpoint must still 200 with [].
+        # so the vocabulary is empty — endpoint must still 200 with
+        # {"items": []} (Sprint 6 api-6).
         del mock_registry
         response = client.get("/api/v1/tags")
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json() == {"items": []}

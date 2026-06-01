@@ -10,5 +10,9 @@ import type { ApiClient } from '../types';
 import { http } from './http';
 
 export const liveTagsApi: ApiClient['tags'] = {
-  list: async () => http<Array<{ tag: string; count: number }>>('/tags'),
+  list: async () => {
+    // Sprint 6 api-6 wrapped the response in `{items: [...]}`.
+    const raw = await http<{ items: Array<{ tag: string; count: number }> }>('/tags');
+    return raw.items;
+  },
 };
