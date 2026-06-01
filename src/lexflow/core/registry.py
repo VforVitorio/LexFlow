@@ -20,6 +20,7 @@ from lexflow.core.models import Law, LawMetadata
 from lexflow.core.parser import parse_law_file
 from lexflow.core.schemas import LawSummary, PaginatedResponse, SearchResponse
 from lexflow.core.search import SearchIndex
+from lexflow.core.services import apply_law_filters, paginate_summaries
 from lexflow.utils.config import get_settings
 from lexflow.utils.file_discovery import law_id_from_path, list_law_files
 
@@ -137,10 +138,15 @@ class LawRegistry:
         scope: Scope | None = None,
         jurisdiction: str | None = None,
     ) -> PaginatedResponse[LawSummary]:
-        """Return a paginated, optionally filtered list of law summaries."""
+        """Return a paginated, optionally filtered list of law summaries.
+
+        Filter + pagination logic lives in :mod:`lexflow.core.services`
+        (Sprint 6 rf-8); this method only wires the registry summaries
+        through it so storage and selection concerns stay separate.
+        """
         summaries = self._build_summaries()
-        filtered = _apply_filters(summaries, rank=rank, status=status, scope=scope, jurisdiction=jurisdiction)
-        return _paginate(filtered, page=page, page_size=page_size)
+        filtered = apply_law_filters(summaries, rank=rank, status=status, scope=scope, jurisdiction=jurisdiction)
+        return paginate_summaries(filtered, page=page, page_size=page_size)
 
     def search_text(
         self,
@@ -315,40 +321,6 @@ class LawRegistry:
                     article_number=article.number,
                     text=article.text,
                 )
-
-
-def _apply_filters(
-    summaries: list[LawSummary],
-    *,
-    rank: LawRank | None,
-    status: LawStatus | None,
-    scope: Scope | None,
-    jurisdiction: str | None,
-) -> list[LawSummary]:
-    """Apply optional filters to a list of summaries."""
-    result = summaries
-    if rank is not None:
-        result = [s for s in result if s.rank == rank]
-    if status is not None:
-        result = [s for s in result if s.status == status]
-    if scope is not None:
-        result = [s for s in result if s.scope == scope]
-    if jurisdiction is not None:
-        result = [s for s in result if s.jurisdiction == jurisdiction]
-    return result
-
-
-def _paginate(items: list[LawSummary], *, page: int, page_size: int) -> PaginatedResponse[LawSummary]:
-    """Slice a list into a paginated response."""
-    total = len(items)
-    start = (page - 1) * page_size
-    end = start + page_size
-    return PaginatedResponse(
-        items=items[start:end],
-        total=total,
-        page=page,
-        page_size=page_size,
-    )
 
 
 @lru_cache(maxsize=1)

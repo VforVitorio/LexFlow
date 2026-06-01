@@ -215,6 +215,29 @@ class GraphTopItem(BaseModel):
     title: str | None = None
 
 
+class GraphTopResponse(BaseModel):
+    """Wrapper for ``GET /api/v1/graph/top`` (Sprint 6 api-6).
+
+    Top-level JSON arrays are a known design smell (JSON-hijacking risk
+    in some clients, no room to grow metadata). Every list endpoint
+    wraps its rows in an object with a single ``items`` key.
+    """
+
+    items: list[GraphTopItem]
+
+
+class GraphPathResponse(BaseModel):
+    """Wrapper for ``GET /api/v1/graph/path`` (Sprint 6 api-6)."""
+
+    path: list[str]
+
+
+class TagsResponse(BaseModel):
+    """Wrapper for ``GET /api/v1/tags`` (Sprint 6 api-6)."""
+
+    items: list[TagCount]
+
+
 # ---------------------------------------------------------------------------
 # System / warm-up (#222)
 # ---------------------------------------------------------------------------
