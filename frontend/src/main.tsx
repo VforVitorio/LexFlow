@@ -7,6 +7,7 @@ import './index.css';
 import './lib/store'; // side-effect: sync theme attribute
 import './i18n'; // side-effect: initialize i18next before render
 import { App } from './App';
+import { ModelWizardGate } from './components/domain/ModelWizard';
 import { SplashGate } from './components/domain/SplashGate';
 import { WelcomeFlow } from './components/domain/WelcomeFlow';
 import { ErrorBoundary } from './components/shell/ErrorBoundary';
@@ -79,7 +80,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <BrowserRouter basename={basename}>
           <SplashGate>
             <WelcomeFlow>
-              <App />
+              <ModelWizardGate>
+                <App />
+              </ModelWizardGate>
             </WelcomeFlow>
           </SplashGate>
         </BrowserRouter>

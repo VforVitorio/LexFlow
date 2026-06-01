@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Settings as Cog, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
+import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useModels, useSyncStatus, useRunSync } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
@@ -171,14 +172,29 @@ function readStoredUserName(): string | null {
 function ModelsSection() {
   const { data: models = [] } = useModels();
   const { defaultModel, setDefaultModel } = useUi();
+  const [wizardOpen, setWizardOpen] = useState(false);
   const m = models.find((x) => x.id === defaultModel) ?? models[0];
 
   return (
     <>
-      <h1 className="font-display text-[22px] font-semibold">Modelos</h1>
-      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
-        Configura los modelos disponibles para el chat. Los locales se ejecutan en tu máquina; los de nube hacen peticiones salientes.
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-[22px] font-semibold">Modelos</h1>
+          <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
+            Configura los modelos disponibles para el chat. Los locales se ejecutan en tu máquina; los de nube hacen peticiones salientes.
+          </p>
+        </div>
+        <Button size="sm" variant="secondary" icon={<Wand2 className="size-3.5" />} onClick={() => setWizardOpen(true)}>
+          Volver a lanzar wizard
+        </Button>
+      </div>
+
+      {wizardOpen && (
+        <ModelWizard
+          onComplete={() => setWizardOpen(false)}
+          onSkip={() => setWizardOpen(false)}
+        />
+      )}
 
       <div className="label-caps mb-2">Modelo por defecto</div>
       {m && (
