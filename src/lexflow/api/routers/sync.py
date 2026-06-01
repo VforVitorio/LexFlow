@@ -5,6 +5,14 @@ patches the in-memory registry, search index and graph for just the laws that
 changed (#230) and rewrites the on-disk caches. If the diff can't be trusted
 (git failure, or a change touching thousands of laws) it falls back to dropping
 the caches so the next request rebuilds wholesale.
+
+Threadpool footprint (Sprint 5 rf-4): this handler is sync ``def`` so FastAPI
+runs it in its threadpool, but it does two heavy things back-to-back —
+``git pull`` (≤120s subprocess) AND a potential full graph rebuild via
+``get_graph(registry)`` after a fallback. Concurrent sync calls block other
+sync-handler requests; we accept that today because (a) sync is a privileged
+single-user operation and (b) moving it to ``BackgroundTasks`` would require a
+client-polled job-id contract this product doesn't yet need.
 """
 
 from __future__ import annotations
@@ -12,7 +20,7 @@ from __future__ import annotations
 import logging
 import subprocess
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 
 from lexflow.api.dependencies import get_graph, reset_graph_cache
 from lexflow.core.corpus_revision import submodule_hash
@@ -34,12 +42,19 @@ GRAPH_CACHE_FILENAME = "graph_cache.json"
 
 
 @router.post("")
-def sync_corpus() -> dict[str, str | int]:
+def sync_corpus(response: Response) -> dict[str, str | int]:
     """Pull the latest legalize-es revision and refresh state.
 
-    Returns a payload describing what happened: ``mode`` is ``noop`` (nothing
-    changed), ``incremental`` (a bounded delta was applied), or ``rebuild``
-    (caches dropped for a full rebuild on next use).
+    Sprint 5 api-1: returns ``200 OK`` only for the ``noop`` mode (the
+    corpus was already at HEAD). Modes that actually mutate state
+    (``incremental``, ``rebuild``) return ``201 Created`` with a
+    ``Location`` header pointing at the resulting revision. This lets
+    cache-friendly clients tell "nothing happened" from "you changed the
+    world" without parsing the body.
+
+    Returns a payload describing what happened: ``mode`` is ``noop``
+    (nothing changed), ``incremental`` (a bounded delta was applied),
+    or ``rebuild`` (caches dropped for a full rebuild on next use).
     """
     settings = get_settings()
     data_path = settings.data_path
@@ -51,6 +66,10 @@ def sync_corpus() -> dict[str, str | int]:
 
     if before_commit == after_commit and before_commit != "unknown":
         return {"status": "ok", "mode": "noop", "output": output}
+
+    # State changed → 201 + Location pointing at the corpus revision.
+    response.status_code = 201
+    response.headers["Location"] = f"/api/v1/system/whats-new?since={before_commit}"
 
     diff = diff_corpus_since(data_path, before_commit)
     if diff is None:
@@ -69,7 +88,14 @@ def sync_corpus() -> dict[str, str | int]:
 
 
 def _git_pull(data_path: str) -> str:
-    """Run ``git pull --ff-only`` in the submodule, raising HTTP errors."""
+    """Run ``git pull --ff-only`` in the submodule, raising HTTP errors.
+
+    Sprint 5 api-2: stderr from a failed ``git pull`` may contain
+    credentials, remote URLs or paths the operator doesn't want a client
+    to see. We log it server-side and return a generic 502 with a stable
+    ``code`` so the SPA can render a deterministic message without
+    parsing free-form text.
+    """
     try:
         result = subprocess.run(
             ["git", "-C", data_path, "pull", "--ff-only"],
@@ -79,10 +105,16 @@ def _git_pull(data_path: str) -> str:
             timeout=120,
         )
     except subprocess.CalledProcessError as exc:
-        logger.error("git pull failed: %s", exc.stderr)
-        raise HTTPException(status_code=500, detail=f"git pull failed: {exc.stderr}") from exc
+        logger.error("git pull failed (stderr=%r)", exc.stderr)
+        raise HTTPException(
+            status_code=502,
+            detail={"code": "sync_upstream_failed", "message": "Upstream sync failed"},
+        ) from exc
     except subprocess.TimeoutExpired as exc:
-        raise HTTPException(status_code=504, detail="git pull timed out") from exc
+        raise HTTPException(
+            status_code=504,
+            detail={"code": "sync_upstream_timeout", "message": "Upstream sync timed out"},
+        ) from exc
     return result.stdout.strip() or "Already up to date."
 
 

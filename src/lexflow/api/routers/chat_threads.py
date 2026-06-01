@@ -245,18 +245,18 @@ def patch_thread(
 @router.delete(
     "/threads/{thread_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a thread and all its messages (cascade).",
+    summary="Delete a thread and all its messages (cascade). Idempotent.",
 )
 def delete_thread(
     thread_id: str,
     session: Annotated[Session, Depends(get_session)],
 ) -> None:
-    """Idempotent — but we return 404 when the id is unknown so callers
-    can distinguish "I deleted nothing because nothing was there" from
-    "I deleted exactly that thread". Cascade on ``ChatThread.messages``
-    cleans up child rows.
-    """
-    thread = _load_thread_or_404(session, thread_id)
+    """Fully idempotent per RFC 7231 (Sprint 5 api-3): repeated calls
+    converge on 204 regardless of whether the row existed. Cascade on
+    ``ChatThread.messages`` cleans up child rows."""
+    thread = session.get(ChatThread, thread_id)
+    if thread is None:
+        return
     session.delete(thread)
     session.commit()
 
@@ -293,12 +293,14 @@ def append_message(
 
 @router.post(
     "/threads/{thread_id}/send",
+    status_code=status.HTTP_200_OK,
     summary="Stream an assistant reply for the user message (SSE).",
     responses={
         200: {
             "description": "Server-sent events stream.",
             "content": {"text/event-stream": {}},
         },
+        404: {"description": "Thread not found — emitted BEFORE the stream opens."},
     },
 )
 async def send_message_stream(

@@ -62,6 +62,23 @@ def _context_window_for(provider: str, model: str, default: int) -> int:
     return default
 
 
+def _unconfigured_placeholder(spec: ProviderSpec, error: str) -> ModelInfo:
+    """Build the "this provider isn't usable yet" row (Sprint 5 rf-2).
+
+    Five branches of ``_probe`` produced the same shape with only the
+    ``error=`` differing; this helper is the single source of truth.
+    """
+    return ModelInfo(
+        id=f"{spec.key}:",
+        provider=spec.key,
+        model="",
+        local=spec.local,
+        configured=False,
+        context_window=None,
+        error=error,
+    )
+
+
 async def _probe(spec: ProviderSpec) -> list[ModelInfo]:
     """Probe one provider. Always returns ≥ 1 entry — never raises.
 
@@ -70,76 +87,26 @@ async def _probe(spec: ProviderSpec) -> list[ModelInfo]:
     row with a setup hint instead of pretending it doesn't exist.
     """
     if not spec.has_credentials():
-        return [
-            ModelInfo(
-                id=f"{spec.key}:",
-                provider=spec.key,
-                model="",
-                local=spec.local,
-                configured=False,
-                context_window=None,
-                error="Missing credentials",
-            )
-        ]
+        return [_unconfigured_placeholder(spec, "Missing credentials")]
 
     try:
         provider = spec.factory()
     except Exception as exc:
         logger.warning("Failed to construct %s provider: %s", spec.key, exc)
-        return [
-            ModelInfo(
-                id=f"{spec.key}:",
-                provider=spec.key,
-                model="",
-                local=spec.local,
-                configured=False,
-                context_window=None,
-                error=str(exc),
-            )
-        ]
+        return [_unconfigured_placeholder(spec, str(exc))]
 
     try:
         models = await asyncio.wait_for(provider.list_models(), timeout=_PROBE_TIMEOUT_S)
     except TimeoutError:
         message = "Probe timed out"
         logger.info("%s: %s after %.1fs", spec.key, message, _PROBE_TIMEOUT_S)
-        return [
-            ModelInfo(
-                id=f"{spec.key}:",
-                provider=spec.key,
-                model="",
-                local=spec.local,
-                configured=False,
-                context_window=None,
-                error=message,
-            )
-        ]
+        return [_unconfigured_placeholder(spec, message)]
     except ChatProviderError as exc:
         logger.info("%s probe failed: %s", spec.key, exc)
-        return [
-            ModelInfo(
-                id=f"{spec.key}:",
-                provider=spec.key,
-                model="",
-                local=spec.local,
-                configured=False,
-                context_window=None,
-                error=str(exc),
-            )
-        ]
+        return [_unconfigured_placeholder(spec, str(exc))]
 
     if not models:
-        return [
-            ModelInfo(
-                id=f"{spec.key}:",
-                provider=spec.key,
-                model="",
-                local=spec.local,
-                configured=False,
-                context_window=None,
-                error="No models available",
-            )
-        ]
+        return [_unconfigured_placeholder(spec, "No models available")]
 
     return [
         ModelInfo(
