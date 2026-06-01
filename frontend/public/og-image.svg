@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="LexFlow — Legislación viva">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(232, 35%, 8%)"/>
+      <stop offset="100%" stop-color="hsl(252, 40%, 14%)"/>
+    </linearGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(252, 95%, 76%)"/>
+      <stop offset="100%" stop-color="hsl(217, 91%, 60%)"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(252, 95%, 70%)" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="hsl(217, 91%, 58%)" stop-opacity="0.85"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.25" cy="0.45" r="0.6">
+      <stop offset="0%" stop-color="hsl(252, 95%, 76%)" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="hsl(252, 95%, 76%)" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#halo)"/>
+
+  <!-- Brand mark, large -->
+  <g transform="translate(80,200) scale(7)">
+    <g stroke="url(#edge)" stroke-width="2.6" stroke-linecap="round" fill="none">
+      <line x1="11" y1="7"  x2="24" y2="13"/>
+      <line x1="24" y1="13" x2="21" y2="25"/>
+      <line x1="21" y1="25" x2="8"  y2="19"/>
+      <line x1="8"  y1="19" x2="11" y2="7"/>
+    </g>
+    <circle cx="11" cy="7"  r="3.6" fill="url(#node)"/>
+    <circle cx="24" cy="13" r="3.2" fill="url(#node)"/>
+    <circle cx="21" cy="25" r="3.2" fill="url(#node)"/>
+    <circle cx="8"  cy="19" r="3"   fill="url(#node)"/>
+  </g>
+
+  <!-- Wordmark + tagline -->
+  <g font-family="Space Grotesk, Inter, system-ui, -apple-system, Segoe UI, sans-serif" fill="#f4f4f8">
+    <text x="380" y="305" font-size="120" font-weight="700" letter-spacing="-3">LexFlow</text>
+    <text x="383" y="375" font-size="36" font-weight="500" fill="hsl(252, 30%, 75%)">Legislación viva, navegable y explicable</text>
+  </g>
+
+  <!-- Bottom chip -->
+  <g transform="translate(383,470)">
+    <rect width="280" height="44" rx="22" fill="hsl(252, 35%, 20%)" stroke="hsl(252, 40%, 35%)"/>
+    <text x="140" y="29" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="16" fill="hsl(252, 30%, 85%)">github.com/VforVitorio/LexFlow</text>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="LexFlow">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(232, 38%, 10%)"/>
+      <stop offset="100%" stop-color="hsl(252, 45%, 18%)"/>
+    </linearGradient>
+    <linearGradient id="node" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(252, 95%, 78%)"/>
+      <stop offset="100%" stop-color="hsl(217, 91%, 62%)"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(252, 95%, 72%)" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="hsl(217, 91%, 60%)" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <!-- Maskable icons require all art to live inside a 256px safe-zone
+       circle centered at (256,256). Out-of-safe-zone area can be
+       cropped by the platform; only the background must fill the whole
+       512×512 viewport. -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g transform="translate(176,176) scale(5)">
+    <g stroke="url(#edge)" stroke-width="2.6" stroke-linecap="round" fill="none">
+      <line x1="11" y1="7"  x2="24" y2="13"/>
+      <line x1="24" y1="13" x2="21" y2="25"/>
+      <line x1="21" y1="25" x2="8"  y2="19"/>
+      <line x1="8"  y1="19" x2="11" y2="7"/>
+    </g>
+    <circle cx="11" cy="7"  r="3.6" fill="url(#node)"/>
+    <circle cx="24" cy="13" r="3.2" fill="url(#node)"/>
+    <circle cx="21" cy="25" r="3.2" fill="url(#node)"/>
+    <circle cx="8"  cy="19" r="3"   fill="url(#node)"/>
+  </g>
+</svg>
