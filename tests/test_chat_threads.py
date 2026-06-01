@@ -95,6 +95,19 @@ class TestThreadCrud:
         response = client.patch("/api/v1/chat/threads/missing", json={"title": "X"})
         assert response.status_code == 404
 
+    def test_patch_400_on_empty_body(self, client: TestClient) -> None:
+        """Sprint 6 api-9: empty patches used to silently bump
+        ``updated_at``. Now refused with 400 + stable code so the SPA
+        knows to stop sending empty bodies.
+        """
+        thread = _create_thread(client, title="Untouched")
+        response = client.patch(
+            f"/api/v1/chat/threads/{thread['id']}",
+            json={},
+        )
+        assert response.status_code == 400
+        assert response.json()["detail"]["code"] == "empty_patch"
+
     def test_delete_removes_thread_and_messages(self, client: TestClient) -> None:
         thread = _create_thread(client, title="Doomed")
         client.post(
@@ -107,6 +120,22 @@ class TestThreadCrud:
         # Listing no longer surfaces the thread.
         listing = client.get("/api/v1/chat/threads").json()
         assert listing["total"] == 0
+
+    def test_delete_is_idempotent(self, client: TestClient) -> None:
+        """Sprint 5 api-3 — RFC 7231 mandates that DELETE be idempotent.
+
+        Repeated calls converge on 204 regardless of whether the row
+        ever existed. Previously the endpoint returned 404 on second
+        call, which broke retries for clients that lose track of state.
+        """
+        thread = _create_thread(client, title="Doomed-idem")
+        first = client.delete(f"/api/v1/chat/threads/{thread['id']}")
+        assert first.status_code == 204
+        second = client.delete(f"/api/v1/chat/threads/{thread['id']}")
+        assert second.status_code == 204
+        # Deleting a thread that never existed also returns 204.
+        unknown = client.delete("/api/v1/chat/threads/missing-id-xyz")
+        assert unknown.status_code == 204
 
 
 class TestMessages:

@@ -31,7 +31,15 @@ def list_articles(
     pagination: Annotated[PaginationParams, Depends()],
     registry: Annotated[LawRegistry, Depends(get_law_registry)],
 ) -> PaginatedResponse[Article]:
-    """Return a paginated list of articles for the given law."""
+    """Return a paginated list of articles for the given law.
+
+    Sprint 7 api-13: pagination is computed in-memory by slicing the
+    parsed ``law.articles`` list. That's fine while articles live in
+    Markdown frontmatter (every law's article list fits comfortably in
+    memory + ``total`` is always exact), but the day article storage
+    moves to a database we'll want to push the OFFSET/LIMIT down to it.
+    Flagging here so the migration touches this spot.
+    """
     law = registry.get_law(law_id)
     articles = law.articles
     start = (pagination.page - 1) * pagination.page_size

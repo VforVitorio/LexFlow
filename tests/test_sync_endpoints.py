@@ -63,7 +63,9 @@ def test_sync_incremental_applies_diff(
     with patch("lexflow.api.routers.sync.get_registry", return_value=registry):
         response = client.post("/api/v1/sync")
 
-    assert response.status_code == 200
+    # Sprint 5 api-1: state-mutating modes return 201 + Location.
+    assert response.status_code == 201
+    assert response.headers["Location"].startswith("/api/v1/system/whats-new?since=before")
     body = response.json()
     assert body["mode"] == "incremental"
     assert body["added"] == 1
@@ -96,7 +98,7 @@ def test_sync_falls_back_to_rebuild(
     with patch("lexflow.api.routers.sync.get_registry", return_value=registry) as mock_get_registry:
         response = client.post("/api/v1/sync")
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["mode"] == "rebuild"
     mock_reset.assert_called_once()
     mock_get_registry.cache_clear.assert_called_once()
@@ -104,18 +106,27 @@ def test_sync_falls_back_to_rebuild(
 
 @patch("lexflow.api.routers.sync.subprocess.run")
 def test_sync_handles_git_failure(mock_run: MagicMock, client: TestClient) -> None:
-    """A git pull failure surfaces as HTTP 500."""
+    """A git pull failure surfaces as HTTP 502 with a stable code.
+
+    Sprint 5 api-2: we no longer leak ``stderr`` (which may contain
+    credentials or URLs) into the response — the body is a structured
+    detail with a fixed code the SPA can branch on.
+    """
     mock_run.side_effect = subprocess.CalledProcessError(1, "git", stderr="fatal: not a repo")
     with patch("lexflow.api.routers.sync.submodule_hash", return_value="x"):
         response = client.post("/api/v1/sync")
-    assert response.status_code == 500
-    assert "git pull failed" in response.json()["detail"]
+    assert response.status_code == 502
+    detail = response.json()["detail"]
+    assert detail["code"] == "sync_upstream_failed"
+    # The free-form stderr must NOT appear in the response.
+    assert "fatal: not a repo" not in str(detail)
 
 
 @patch("lexflow.api.routers.sync.subprocess.run")
 def test_sync_timeout(mock_run: MagicMock, client: TestClient) -> None:
-    """A git pull timeout surfaces as HTTP 504."""
+    """A git pull timeout surfaces as HTTP 504 with a stable code."""
     mock_run.side_effect = subprocess.TimeoutExpired("git", 120)
     with patch("lexflow.api.routers.sync.submodule_hash", return_value="x"):
         response = client.post("/api/v1/sync")
     assert response.status_code == 504
+    assert response.json()["detail"]["code"] == "sync_upstream_timeout"

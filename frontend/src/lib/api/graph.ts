@@ -12,7 +12,7 @@ import type {
   BackendGraphSubgraph,
   BackendGraphTopItem,
 } from '../../api';
-import type { ApiClient, GraphData, GraphTopItem, GraphTopMetric } from '../types';
+import type { ApiClient, GraphData, GraphTopItem } from '../types';
 import { http, qs } from './http';
 
 export const liveGraphApi: ApiClient['graph'] = {
@@ -51,14 +51,19 @@ export const liveGraphApi: ApiClient['graph'] = {
   },
   path: async (from, to) => {
     // 404 (NetworkXNoPath / NodeNotFound) bubbles up as ApiError — the caller
-    // can branch on `.status === 404` to render an empty state.
-    return await http<string[]>(`/graph/path${qs({ from, to })}`);
+    // can branch on `.status === 404` to render an empty state. Sprint 6
+    // api-6 wrapped the response in `{path: [...]}` so it has room to
+    // grow metadata; we still hand callers the flat array.
+    const raw = await http<{ path: string[] }>(`/graph/path${qs({ from, to })}`);
+    return raw.path;
   },
   top: async (opts = {}) => {
     const limit = opts.limit ?? 10;
-    const metric: GraphTopMetric = opts.metric ?? 'pagerank';
-    const raw = await http<BackendGraphTopItem[]>(`/graph/top${qs({ limit, metric })}`);
-    return raw.map<GraphTopItem>((it) => ({
+    // Sprint 6 api-7 dropped the dead `metric=` query param. The SPA
+    // type kept `metric?: GraphTopMetric` for forward-compat with future
+    // ranking algorithms; we just don't forward it on the wire today.
+    const raw = await http<{ items: BackendGraphTopItem[] }>(`/graph/top${qs({ limit })}`);
+    return raw.items.map<GraphTopItem>((it) => ({
       lawId: it.law_id,
       score: it.score,
       title: it.title ?? null,

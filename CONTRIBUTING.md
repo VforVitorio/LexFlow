@@ -119,6 +119,27 @@ uv run ruff check .
 uv run mypy src/
 ```
 
+### Antes de empujar un scaffold grande
+
+`.gitignore` hereda el template estándar de Python, que en su día incluyó
+`lib/` sin anclar y se comió `frontend/src/lib/` cuando aterrizó el scaffold
+React (post-mortem en CLAUDE.md §11, lección 2026-05-23). Si vas a subir
+un directorio nuevo grande, lánzate antes esto para verificar que no se
+queda nada fuera:
+
+```bash
+git add .
+git status --ignored          # ¿algún archivo del scaffold listado como ignored?
+git check-ignore -v <ruta>    # explica QUÉ regla lo ignora
+```
+
+El job CI `check-gitignore` audita la lista completa de archivos trackeados
+y un puñado de paths canónicos (`frontend/src/lib/utils.ts`, etc.) — si
+añades un patrón demasiado permisivo al `.gitignore`, lo detecta en el PR.
+Cualquier patrón de directorio con nombre genérico (`lib/`, `build/`,
+`dist/`, `var/`, `target/`, …) debe ir anclado con `/` inicial salvo que
+de verdad lo quieras global.
+
 ---
 
 ## Reportar bugs

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, Query
 
 from lexflow.api.dependencies import get_law_registry
@@ -26,9 +28,9 @@ def _get_git_reader() -> GitHistoryReader:
 )
 def list_versions(
     law_id: str,
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
+    git_reader: Annotated[GitHistoryReader, Depends(_get_git_reader)],
     max_count: int = Query(50, ge=1, le=200, description="Maximum versions to return"),
-    registry: LawRegistry = Depends(get_law_registry),
-    git_reader: GitHistoryReader = Depends(_get_git_reader),
 ) -> list[LawVersion]:
     """Return git commit history for a law file, ordered newest-first."""
     law = registry.get_law(law_id)
@@ -42,6 +44,8 @@ def list_versions(
 )
 def get_diff(
     law_id: str,
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
+    git_reader: Annotated[GitHistoryReader, Depends(_get_git_reader)],
     # Git short hashes are 7+ chars; full SHA-1 is 40. Refuse anything else
     # at the boundary so `subprocess git ...` never sees adversarial input.
     # Issue #104 (#7).
@@ -57,8 +61,6 @@ def get_diff(
         pattern=r"^[0-9a-f]{7,40}$",
         description="Target commit hash (7-40 hex chars)",
     ),
-    registry: LawRegistry = Depends(get_law_registry),
-    git_reader: GitHistoryReader = Depends(_get_git_reader),
 ) -> LawDiff:
     """Return the unified diff between two versions of a law."""
     law = registry.get_law(law_id)

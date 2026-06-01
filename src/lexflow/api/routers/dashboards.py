@@ -19,13 +19,20 @@ The payload shape matches the frontend's ``DashboardData`` interface
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from lexflow.api.dependencies import get_law_registry
 from lexflow.core.registry import LawRegistry
 from lexflow.dashboards.data import DashboardPayload, build_dashboard_payload
+
+# Sprint 6 api-8: keep the preset names + the route pattern in lock-step.
+# ``DashboardPreset`` is the type the route exposes (so the generated TS
+# client gets a discriminated union), while ``_PRESET_PATTERN`` enforces
+# the same set at the path level. Adding a preset means extending both.
+DashboardPreset = Literal["compliance", "analytics"]
+_PRESET_PATTERN = "^(compliance|analytics)$"
 
 router = APIRouter(prefix="/dashboards", tags=["Dashboards"])
 
@@ -36,7 +43,7 @@ router = APIRouter(prefix="/dashboards", tags=["Dashboards"])
     summary="Aggregated dashboard data (KPI cards + main series).",
 )
 def get_dashboard(
-    preset: Annotated[str, Path(pattern="^(compliance|analytics)$")],
+    preset: Annotated[DashboardPreset, Path(pattern=_PRESET_PATTERN)],
     registry: Annotated[LawRegistry, Depends(get_law_registry)],
 ) -> DashboardPayload:
     """Return the KPI cards + main chart series for the requested preset."""

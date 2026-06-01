@@ -25,10 +25,10 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import desc
 from sqlmodel import Session, func, select
@@ -118,7 +118,7 @@ def _latest_preview(session: Session, thread_id: str) -> str | None:
         # SQLModel re-binds ``created_at`` to an ORM descriptor at runtime,
         # but mypy only sees the declared ``datetime`` type — hence the
         # explicit ignore. Same pattern used in ``list_threads`` below.
-        .order_by(desc(ChatMessage.created_at))  # type: ignore[arg-type]
+        .order_by(_newest_first(ChatMessage.created_at))
         .limit(1)
     )
     msg = session.exec(statement).first()
@@ -144,9 +144,18 @@ def _thread_read(session: Session, thread: ChatThread) -> ChatThreadRead:
 
 def _touch_thread(thread: ChatThread) -> None:
     """Bump ``updated_at`` so the conversation rail reorders correctly."""
-    from datetime import datetime
-
     thread.updated_at = datetime.now(UTC)
+
+
+def _newest_first(column: Any) -> Any:
+    """Typed wrapper around SQLAlchemy ``desc()`` (Sprint 7 rf-10).
+
+    SQLModel re-binds columns to ORM descriptors at runtime, but mypy
+    sees the declared static type and complains about
+    ``desc(SomeModel.created_at)``. Isolating the suppression here keeps
+    the call sites readable.
+    """
+    return desc(column)
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +178,7 @@ def list_threads(
     statement = (
         select(ChatThread)
         # See note on ``_latest_preview`` — runtime descriptor vs static type.
-        .order_by(desc(ChatThread.updated_at))  # type: ignore[arg-type]
+        .order_by(_newest_first(ChatThread.updated_at))
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
@@ -231,10 +240,20 @@ def patch_thread(
     body: ChatThreadPatch,
     session: Annotated[Session, Depends(get_session)],
 ) -> ChatThreadRead:
-    """Apply non-null fields from the body and return the updated row."""
+    """Apply non-null fields from the body and return the updated row.
+
+    Sprint 6 api-9: an empty patch (every field None) used to silently
+    succeed and bump ``updated_at`` — a no-op write that confused list
+    ordering. Now refused with 400 so the client knows to stop sending
+    empty bodies.
+    """
     thread = _load_thread_or_404(session, thread_id)
-    if body.title is not None:
-        thread.title = body.title
+    if body.title is None:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "empty_patch", "message": "Provide at least one patchable field."},
+        )
+    thread.title = body.title
     _touch_thread(thread)
     session.add(thread)
     session.commit()
@@ -245,18 +264,18 @@ def patch_thread(
 @router.delete(
     "/threads/{thread_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete a thread and all its messages (cascade).",
+    summary="Delete a thread and all its messages (cascade). Idempotent.",
 )
 def delete_thread(
     thread_id: str,
     session: Annotated[Session, Depends(get_session)],
 ) -> None:
-    """Idempotent — but we return 404 when the id is unknown so callers
-    can distinguish "I deleted nothing because nothing was there" from
-    "I deleted exactly that thread". Cascade on ``ChatThread.messages``
-    cleans up child rows.
-    """
-    thread = _load_thread_or_404(session, thread_id)
+    """Fully idempotent per RFC 7231 (Sprint 5 api-3): repeated calls
+    converge on 204 regardless of whether the row existed. Cascade on
+    ``ChatThread.messages`` cleans up child rows."""
+    thread = session.get(ChatThread, thread_id)
+    if thread is None:
+        return
     session.delete(thread)
     session.commit()
 
@@ -270,11 +289,18 @@ def delete_thread(
 def append_message(
     thread_id: str,
     body: ChatMessageCreate,
+    response: Response,
     session: Annotated[Session, Depends(get_session)],
 ) -> ChatMessageRead:
     """Append a turn, touch the thread's ``updated_at`` and return the
     persisted row. Intentionally non-streaming — see issue #84 for the
     SSE counterpart that adds the assistant + tool turns.
+
+    Sprint 6 api-5: emits ``Location: /api/v1/chat/threads/{thread_id}/
+    messages/{message_id}`` per RFC 7231 for 201 responses. There is no
+    GET endpoint for an individual message today (the SPA reads them
+    nested under the thread), but the header is correct and lets a
+    future client distinguish the new row from the thread's full list.
     """
     thread = _load_thread_or_404(session, thread_id)
     message = ChatMessage(
@@ -288,17 +314,20 @@ def append_message(
     session.add(thread)
     session.commit()
     session.refresh(message)
+    response.headers["Location"] = f"/api/v1/chat/threads/{thread.id}/messages/{message.id}"
     return _message_read(message)
 
 
 @router.post(
     "/threads/{thread_id}/send",
+    status_code=status.HTTP_200_OK,
     summary="Stream an assistant reply for the user message (SSE).",
     responses={
         200: {
             "description": "Server-sent events stream.",
             "content": {"text/event-stream": {}},
         },
+        404: {"description": "Thread not found — emitted BEFORE the stream opens."},
     },
 )
 async def send_message_stream(
