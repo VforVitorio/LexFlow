@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.25.0](https://github.com/VforVitorio/LexFlow/compare/v0.24.0...v0.25.0) (2026-06-01)
+
+
+### Features
+
+* **api:** GET /system/profile for hardware + local LLM detection (closes [#117](https://github.com/VforVitorio/LexFlow/issues/117)) ([56e5919](https://github.com/VforVitorio/LexFlow/commit/56e59190bf85d154e1c00dcfa40b98d359b489a0))
+* **api:** GET /system/profile for hardware + local LLM detection (closes [#117](https://github.com/VforVitorio/LexFlow/issues/117)) ([2cfae89](https://github.com/VforVitorio/LexFlow/commit/2cfae8947a70c90914e4ba5bcdb5ba2d446988e9))
+* **onboarding:** 3-step model wizard with hardware-aware tier recommendation (closes [#118](https://github.com/VforVitorio/LexFlow/issues/118)) ([1ce8b2a](https://github.com/VforVitorio/LexFlow/commit/1ce8b2a3684a813dc3be48d3e041bc687263f21a))
+* **onboarding:** 3-step model wizard with hardware-aware tier recommendation (closes [#118](https://github.com/VforVitorio/LexFlow/issues/118)) ([424435c](https://github.com/VforVitorio/LexFlow/commit/424435c99c5a88d09407810d5f18c24b778e27f1))
+
+
+### Refactoring
+
+* **backend:** polish pack — commit hash validation, LegalGraph encapsulation, Anthropic IDs, parser warning ([#104](https://github.com/VforVitorio/LexFlow/issues/104)) ([457ff32](https://github.com/VforVitorio/LexFlow/commit/457ff32da55b9f52406a73d4af529dcc081710a7))
+* **backend:** polish pack — fully drains [#104](https://github.com/VforVitorio/LexFlow/issues/104) (8 items) ([f5459cf](https://github.com/VforVitorio/LexFlow/commit/f5459cf5746c4f6ee4b003229e6f1b8a35b23234))
+* **backend:** polish pack 2 — [#8](https://github.com/VforVitorio/LexFlow/issues/8) Annotated DI, [#10](https://github.com/VforVitorio/LexFlow/issues/10) services.find_article, [#13](https://github.com/VforVitorio/LexFlow/issues/13) dashboards summary table ([#104](https://github.com/VforVitorio/LexFlow/issues/104)) ([8b6ec7d](https://github.com/VforVitorio/LexFlow/commit/8b6ec7df83861ad98dbdf11146e5e72f166349f2))
+
 ## [0.24.0](https://github.com/VforVitorio/LexFlow/compare/v0.23.0...v0.24.0) (2026-06-01)
 
 
