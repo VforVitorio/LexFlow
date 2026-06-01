@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.24.0](https://github.com/VforVitorio/LexFlow/compare/v0.23.0...v0.24.0) (2026-06-01)
+
+
+### Features
+
+* **brand:** favicons, apple-touch-icon, og:image + meta tags (closes [#77](https://github.com/VforVitorio/LexFlow/issues/77)) ([bbdd4c5](https://github.com/VforVitorio/LexFlow/commit/bbdd4c58fe536d9c017443f71e06621b2599bedc))
+* **brand:** favicons, apple-touch-icon, og:image + meta tags (closes [#77](https://github.com/VforVitorio/LexFlow/issues/77)) ([141d662](https://github.com/VforVitorio/LexFlow/commit/141d662adef08c56664a5fb302d563ba4e8585ce))
+
+
+### Bug Fixes
+
+* **frontend:** refresh package-lock for vitest devDeps so npm ci passes ([ce30e05](https://github.com/VforVitorio/LexFlow/commit/ce30e0527739d3cc185aba23100735f704436113))
+* **frontend:** regenerate lockfile with optional emnapi + vitest esbuild ([1bd6659](https://github.com/VforVitorio/LexFlow/commit/1bd665952f4c2fee2e797e99a588d5e4fe73454b))
+
+
+### Refactoring
+
+* **frontend:** split api.ts into per-resource modules + extract ExplorerPage FilterRail (closes [#202](https://github.com/VforVitorio/LexFlow/issues/202)) ([0e71fb7](https://github.com/VforVitorio/LexFlow/commit/0e71fb7344391c7f279ce8c03ee05445ee407265))
+* **frontend:** split api.ts into per-resource modules + extract ExplorerPage FilterRail (closes [#202](https://github.com/VforVitorio/LexFlow/issues/202)) ([3d566ad](https://github.com/VforVitorio/LexFlow/commit/3d566ad0fb954a937e24f6605a2aef71cc4a2e28))
+
 ## [0.23.0](https://github.com/VforVitorio/LexFlow/compare/v0.22.0...v0.23.0) (2026-05-31)
 
 
