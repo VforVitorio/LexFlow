@@ -1,0 +1,76 @@
+name: check-gitignore
+
+# Guards against the failure mode from PR #95 (post-mortem: CLAUDE.md
+# §11, lesson 2026-05-23): the standard Python `.gitignore` template
+# shipped `lib/` without a leading slash, which silently excluded
+# `frontend/src/lib/` when the React scaffold landed. This job catches
+# two classes of regression:
+#
+# 1. Tracked file accidentally also matched by a `.gitignore` rule —
+#    means an upcoming `rm` + re-add would lose it.
+# 2. A canonical "must be tracked" path becoming ignored — covers the
+#    specific failure from PR #95.
+#
+# Runs on every PR touching `.gitignore` (cheap) and weekly via cron
+# (catches drift introduced via merges).
+
+on:
+  pull_request:
+    paths:
+      - ".gitignore"
+      - ".github/workflows/check-gitignore.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".gitignore"
+  schedule:
+    # Mondays at 07:00 UTC — runs after the Dependabot batch but before
+    # the workweek starts, so a noisy merge from the weekend gets caught
+    # before it can hide other issues.
+    - cron: "0 7 * * 1"
+
+jobs:
+  audit:
+    name: audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: false
+
+      - name: Tracked files must not be ignored
+        # `git check-ignore` exits 0 when a path IS ignored, 1 when it
+        # is not. We iterate the full tracked list (fast — under 5k
+        # entries) and fail if any tracked path matches a rule. Skips
+        # `.gitignore` itself for obvious reasons.
+        run: |
+          conflicts=$(git ls-files | xargs -d '\n' git check-ignore --no-index 2>/dev/null || true)
+          if [ -n "$conflicts" ]; then
+            echo "::error::Tracked files are matched by .gitignore rules — a re-clone would lose them:"
+            printf '%s\n' "$conflicts"
+            exit 1
+          fi
+
+      - name: Canonical paths must NOT be ignored
+        # Explicit allow-list of paths that have been bitten before
+        # (frontend/src/lib/) or that the project simply must keep
+        # trackable. `git check-ignore` returns 0 when the path IS
+        # ignored — we invert the logic so any hit fails the job.
+        run: |
+          canonical_paths=(
+            "frontend/src/lib/utils.ts"
+            "frontend/src/lib/api.ts"
+            "frontend/src/pages/HomePage.tsx"
+            "frontend/scripts/gen-icons.mjs"
+            "scripts/setup-github.sh"
+            "src/lexflow/api/app.py"
+            "src/lexflow/core/services.py"
+          )
+          failed=0
+          for path in "${canonical_paths[@]}"; do
+            if git check-ignore -q "$path" 2>/dev/null; then
+              echo "::error::Canonical path '$path' is ignored by .gitignore — anchor the offending rule with a leading slash."
+              failed=1
+            fi
+          done
+          exit $failed
