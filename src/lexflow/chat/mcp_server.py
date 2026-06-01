@@ -38,6 +38,7 @@ from lexflow.chat.audit import (
 )
 from lexflow.core.exceptions import LawNotFoundError
 from lexflow.core.registry import get_registry
+from lexflow.core.services import find_article
 
 logger = logging.getLogger(__name__)
 
@@ -183,11 +184,10 @@ def get_article(law_id: str, article_number: str) -> dict:  # type: ignore[type-
     except LawNotFoundError:
         return {"error": "not_found", "law_id": law_id}
 
-    for article in law.articles:
-        if article.number == article_number:
-            return article.model_dump()
-
-    return {"error": "article_not_found", "law_id": law_id, "article_number": article_number}
+    article = find_article(law, article_number)
+    if article is None:
+        return {"error": "article_not_found", "law_id": law_id, "article_number": article_number}
+    return article.model_dump()
 
 
 @mcp.tool()
