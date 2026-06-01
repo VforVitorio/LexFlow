@@ -31,6 +31,18 @@ dependencies = [
     # + Pydantic which we already use. Lets us define tables as Pydantic
     # models so the API and storage layers share one source of truth.
     "sqlmodel>=0.0.22",
+    # Hardware detection for the model wizard (#117). psutil is
+    # cross-platform and pynvml is NVIDIA-only but installs and imports
+    # cleanly on non-NVIDIA hosts (it just reports no GPU). Both
+    # stay in core deps because the /system/profile endpoint is
+    # exposed in every build, not behind an extra.
+    "psutil>=6.0",
+    # nvidia-ml-py is the official NVIDIA NVML binding (`import pynvml`).
+    # The legacy `pynvml` package on PyPI now emits a FutureWarning on
+    # import and forwards to this one anyway, so we depend on the real
+    # source. Installs cleanly on non-NVIDIA hosts — the binding only
+    # fails when NVML init is actually called.
+    "nvidia-ml-py>=12.0",
 ]
 
 [project.optional-dependencies]
@@ -55,6 +67,7 @@ dev = [
     "mypy>=1.14",
     "pre-commit>=4.0",
     "types-PyYAML>=6.0",
+    "types-psutil>=6.0",
 ]
 
 [project.urls]
@@ -98,7 +111,7 @@ warn_unused_configs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*"]
+module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*", "pynvml.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------

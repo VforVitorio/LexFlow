@@ -330,6 +330,25 @@ export const mockApi: ApiClient = {
       // Mock mode: return empty diff so the WhatsNewPanel is hidden.
       return { fromCommit: null, toCommit: null, added: [], modified: [], removed: [] };
     },
+    async profile() {
+      // Mock mode: pretend a mid-range developer machine so the wizard
+      // lands on the "balanced 7B" tier instead of degrading to the
+      // free-tier or cloud-only paths.
+      await delay(50);
+      return {
+        totalRamGb: 32,
+        availableRamGb: 18,
+        cpuCores: 16,
+        hasNvidiaGpu: true,
+        vramGb: 12,
+        gpuName: 'NVIDIA GeForce RTX 4070',
+        isAppleSilicon: false,
+        platform: 'linux' as const,
+        ollamaRunning: true,
+        ollamaModels: ['llama3.2:3b', 'qwen2.5:7b'],
+        lmstudioRunning: false,
+      };
+    },
   },
 };
 

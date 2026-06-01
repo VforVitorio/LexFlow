@@ -509,6 +509,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Host hardware + local LLM providers, consumed by the model wizard (#117).
+         * @description Return a one-shot snapshot of host capacity.
+         *
+         *     The wizard runs detection once during onboarding (and again only when
+         *     the user explicitly relaunches it). Bounded at ~700 ms total because
+         *     each local-provider probe is capped at 500 ms and they run
+         *     concurrently.
+         */
+        get: operations["get_system_profile_api_v1_system_profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tags": {
         parameters: {
             query?: never;
@@ -1263,6 +1288,71 @@ export interface components {
             articles?: components["schemas"]["Article"][];
             /** Subsections */
             subsections?: components["schemas"]["Section"][];
+        };
+        /**
+         * SystemProfileResponse
+         * @description Hardware + local-provider snapshot consumed by the model wizard (#117/#118).
+         *
+         *     Numbers are point-in-time and meant for one-shot wizard logic — the
+         *     frontend should not poll this endpoint. The wizard re-runs detection
+         *     only when the user explicitly relaunches it from Ajustes → Modelos.
+         */
+        SystemProfileResponse: {
+            /**
+             * Total Ram Gb
+             * @description Total physical RAM in GiB.
+             */
+            total_ram_gb: number;
+            /**
+             * Available Ram Gb
+             * @description Free RAM at probe time, GiB.
+             */
+            available_ram_gb: number;
+            /**
+             * Cpu Cores
+             * @description Logical CPU count (hyperthreads included).
+             */
+            cpu_cores: number;
+            /**
+             * Has Nvidia Gpu
+             * @description Whether NVML reported at least one NVIDIA GPU.
+             */
+            has_nvidia_gpu: boolean;
+            /**
+             * Vram Gb
+             * @description VRAM of the first NVIDIA GPU in GiB, or null if no GPU is present.
+             */
+            vram_gb?: number | null;
+            /**
+             * Gpu Name
+             * @description Marketing name of the first NVIDIA GPU (e.g. 'NVIDIA GeForce RTX 4070').
+             */
+            gpu_name?: string | null;
+            /**
+             * Is Apple Silicon
+             * @description True on ARM64 macOS so the wizard can recommend MLX/unified-memory tiers.
+             */
+            is_apple_silicon: boolean;
+            /**
+             * Platform
+             * @description Short OS label: 'linux', 'darwin' or 'windows'.
+             */
+            platform: string;
+            /**
+             * Ollama Running
+             * @description Whether Ollama responded on http://127.0.0.1:11434.
+             */
+            ollama_running: boolean;
+            /**
+             * Ollama Models
+             * @description Model tags currently installed in Ollama (empty when Ollama is not running).
+             */
+            ollama_models?: string[];
+            /**
+             * Lmstudio Running
+             * @description Whether LM Studio responded on http://127.0.0.1:1234.
+             */
+            lmstudio_running: boolean;
         };
         /**
          * TagCount
@@ -2156,6 +2246,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_system_profile_api_v1_system_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemProfileResponse"];
                 };
             };
         };
