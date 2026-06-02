@@ -29,12 +29,11 @@ from typing import Any, TypeVar
 from fastmcp import FastMCP
 
 from lexflow.chat.audit import (
-    ApprovalMethod,
-    Classification,
     Decision,
-    PolicyDecision,
     build_audit_record,
+    evaluate,
     get_audit_log,
+    make_audit_request,
 )
 from lexflow.core.exceptions import LawNotFoundError
 from lexflow.core.registry import get_registry
@@ -46,15 +45,6 @@ mcp: FastMCP = FastMCP("lexflow-legal")
 
 F = TypeVar("F", bound=Callable[..., Any])
 
-# Phase-1 verdict: every call is auto-allowed. Phase 2 will replace this
-# with a real :mod:`lexflow.chat.audit.policy` evaluation.
-_AUTO_ALLOW = PolicyDecision(
-    decision=Decision.ALLOW,
-    classification=Classification.SAFE,
-    reason="auto-allow during phase 1 (#124)",
-    approval_method=ApprovalMethod.NONE,
-)
-
 
 def _audited(tool_name: str) -> Callable[[F], F]:
     """Wrap an MCP tool so each invocation emits start/end audit records.
@@ -65,13 +55,20 @@ def _audited(tool_name: str) -> Callable[[F], F]:
         @_audited("search_law")
         def search_law(...): ...
 
-    The lifecycle is:
+    The lifecycle is (Phase 2, #124):
 
     1. Bind args to the signature, build the canonical ``args`` dict
        used for ``payload_summary`` + ``target`` derivation.
-    2. Append a ``tool_call_start`` record (entries are hash-chained,
+    2. Run :func:`lexflow.chat.audit.policy.evaluate` against the
+       request. The decision is reused for the whole call so the
+       start and end records carry the same verdict.
+    3. Append a ``tool_call_start`` record (entries are hash-chained,
        so any later tampering also breaks this one).
-    3. Run the underlying function. On success record
+    4. If the decision is NOT ``ALLOW``, skip the underlying function
+       and return a denial dict shaped like the rest of the tool
+       error contract. The end record still ships so the chain shows
+       the full lifecycle of the refused call.
+    5. Otherwise run the underlying function. On success record
        ``lexflow_outcome="success"``; on exception record
        ``"error"`` + truncated message and re-raise.
     """
@@ -86,14 +83,37 @@ def _audited(tool_name: str) -> Callable[[F], F]:
             args_dict: dict[str, object] = dict(bound.arguments)
             log = get_audit_log()
 
+            request = make_audit_request(tool_name, args_dict)
+            decision = evaluate(request)
+
             start = build_audit_record(
                 event_type="tool_call_start",
                 tool_name=tool_name,
                 args=args_dict,
-                decision=_AUTO_ALLOW,
+                decision=decision,
                 previous_hash=log.read_last_hash(),
             )
             log.append(start)
+
+            if decision.decision is not Decision.ALLOW:
+                # Policy refused — never enter the underlying function.
+                # Emit the matching end record so the audit chain
+                # captures the full request lifecycle even on denial.
+                end = build_audit_record(
+                    event_type="tool_call_end",
+                    tool_name=tool_name,
+                    args=args_dict,
+                    decision=decision,
+                    previous_hash=log.read_last_hash(),
+                    outcome="denied",
+                )
+                log.append(end)
+                return {
+                    "error": "policy_denied",
+                    "decision": decision.decision.value,
+                    "classification": decision.classification.value,
+                    "reason": decision.reason,
+                }
 
             try:
                 result = fn(*args, **kwargs)
@@ -102,7 +122,7 @@ def _audited(tool_name: str) -> Callable[[F], F]:
                     event_type="tool_call_end",
                     tool_name=tool_name,
                     args=args_dict,
-                    decision=_AUTO_ALLOW,
+                    decision=decision,
                     previous_hash=log.read_last_hash(),
                     outcome="error",
                     error_message=str(exc),
@@ -114,7 +134,7 @@ def _audited(tool_name: str) -> Callable[[F], F]:
                 event_type="tool_call_end",
                 tool_name=tool_name,
                 args=args_dict,
-                decision=_AUTO_ALLOW,
+                decision=decision,
                 previous_hash=log.read_last_hash(),
                 outcome="success",
             )

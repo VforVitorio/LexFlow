@@ -187,6 +187,26 @@ def _derive_target(tool_name: str, args: dict[str, object]) -> str:
     return f"tool:{tool_name}"
 
 
+def make_audit_request(tool_name: str, args: dict[str, object]) -> AuditRequest:
+    """Build the nested ``request`` block independently of an `AuditRecord`.
+
+    The MCP wrapper needs this so it can hand the request to
+    :func:`lexflow.chat.audit.policy.evaluate` BEFORE the record is
+    assembled — the policy decision then feeds back into
+    :func:`build_audit_record` (which also calls this helper internally
+    on a fresh build).
+    """
+    return AuditRequest(
+        actor="lexflow-mcp",
+        source="fastmcp",
+        tool="lexflow",
+        action=tool_name,
+        target=_derive_target(tool_name, args),
+        payload_summary=_payload_summary(args),
+        source_trust=SourceTrust.AGENT_INTERNAL,
+    )
+
+
 def build_audit_record(
     *,
     event_type: str,
@@ -212,15 +232,7 @@ def build_audit_record(
     Until that issue lands we don't validate the value, but the wrapper
     only ever passes those five strings.
     """
-    request = AuditRequest(
-        actor="lexflow-mcp",
-        source="fastmcp",
-        tool="lexflow",
-        action=tool_name,
-        target=_derive_target(tool_name, args),
-        payload_summary=_payload_summary(args),
-        source_trust=SourceTrust.AGENT_INTERNAL,
-    )
+    request = make_audit_request(tool_name, args)
     body = {
         "timestamp": _utc_iso_now(),
         "event_type": event_type,
