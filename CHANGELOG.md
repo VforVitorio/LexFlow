@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.27.0](https://github.com/VforVitorio/LexFlow/compare/v0.26.0...v0.27.0) (2026-06-02)
+
+
+### Features
+
+* **audit:** MCP policy engine replaces auto-allow (closes [#124](https://github.com/VforVitorio/LexFlow/issues/124) Phase 2) ([164dfa7](https://github.com/VforVitorio/LexFlow/commit/164dfa71cc1b755b4e8a4482f01ea5e84e280f63))
+* **audit:** MCP policy engine replaces auto-allow (closes [#124](https://github.com/VforVitorio/LexFlow/issues/124) Phase 2) ([f4acbf9](https://github.com/VforVitorio/LexFlow/commit/f4acbf9beaa71e5461f0aa2c93b0f6edc29cadf2))
+* **onboarding:** 6-step shadowed tutorial via Reactour (closes [#116](https://github.com/VforVitorio/LexFlow/issues/116)) ([b39095c](https://github.com/VforVitorio/LexFlow/commit/b39095cdd853b58dbf924020cb104a52ff6105d4))
+* **onboarding:** 6-step shadowed tutorial via Reactour (closes [#116](https://github.com/VforVitorio/LexFlow/issues/116)) ([23c4551](https://github.com/VforVitorio/LexFlow/commit/23c4551f88ec3a9c60cf3d524c56d8b5fd8f37de))
+* **settings:** Settings → MCP Servers CRUD + Claude Desktop schema persistence (closes [#122](https://github.com/VforVitorio/LexFlow/issues/122)) ([3006810](https://github.com/VforVitorio/LexFlow/commit/30068107ec829405fdb3ff7dcd249392332a26bc))
+* **settings:** Settings → MCP Servers CRUD + Claude Desktop schema persistence (closes [#122](https://github.com/VforVitorio/LexFlow/issues/122)) ([cdfc648](https://github.com/VforVitorio/LexFlow/commit/cdfc64871f72cbc9acf64d636fe695b1f2ef8f7c))
+
+
+### Bug Fixes
+
+* **settings:** restore MCP Servers section after merge conflict resolution ([6e7e40c](https://github.com/VforVitorio/LexFlow/commit/6e7e40cf49c79d1f3701b5fd42c11008159e0735))
+
 ## [0.26.0](https://github.com/VforVitorio/LexFlow/compare/v0.25.0...v0.26.0) (2026-06-02)
 
 
