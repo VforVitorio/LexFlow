@@ -3,6 +3,7 @@ import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-reac
 import { useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { ModelWizard } from '@/components/domain/ModelWizard';
+import { useTutorialRelaunch } from '@/components/domain/TutorialTour';
 import { useModels, useSyncStatus, useRunSync } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
@@ -13,7 +14,7 @@ import type { Lang } from '@/i18n';
 
 // "Personalización" replaces the prior "Perfil" stub (#133) — name +
 // language + a11y now have a home. Other sections kept verbatim.
-const SECTIONS = ['Personalización', 'Apariencia', 'Modelos', 'Datos', 'Actualizaciones', 'Acerca de'] as const;
+const SECTIONS = ['Personalización', 'Apariencia', 'Modelos', 'Datos', 'Ayuda', 'Actualizaciones', 'Acerca de'] as const;
 type Section = typeof SECTIONS[number];
 
 export function SettingsPage() {
@@ -40,6 +41,7 @@ export function SettingsPage() {
         {section === 'Modelos' && <ModelsSection />}
         {section === 'Apariencia' && <AppearanceSection />}
         {section === 'Datos' && <DataSection />}
+        {section === 'Ayuda' && <HelpSection />}
         {(section === 'Actualizaciones' || section === 'Acerca de') && (
           <div className="py-10 text-center text-muted">
             <h1 className="font-display text-2xl font-semibold">{section}</h1>
@@ -270,6 +272,42 @@ function AppearanceSection() {
         <input type="range" min={14} max={22} step={1} value={readingSize} onChange={(e) => setReadingSize(Number(e.target.value))} className="w-64" />
         <span className="font-mono text-[13px]">{readingSize}px</span>
       </div>
+    </>
+  );
+}
+
+function HelpSection() {
+  const relaunch = useTutorialRelaunch();
+  return (
+    <>
+      <h1 className="font-display text-[22px] font-semibold">Ayuda</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
+        Recursos de iniciación. El tutorial sombreado te lleva por las cinco secciones del
+        producto en menos de un minuto.
+      </p>
+
+      <div className="label-caps mb-2">Tutorial interactivo</div>
+      <Card className="mb-5 flex items-center gap-3 p-3.5">
+        <div className="flex-1">
+          <div className="font-semibold">Tour de bienvenida</div>
+          <div className="text-[12px] text-muted">
+            6 pasos: layout, atajos, paleta de comandos, búsqueda, grafo y chat.
+          </div>
+        </div>
+        <Button size="sm" onClick={relaunch}>
+          Repetir tutorial
+        </Button>
+      </Card>
+
+      <div className="label-caps mb-2">Atajos clave</div>
+      <Card className="p-4 text-[13px]">
+        <ul className="space-y-1.5">
+          <li><strong>Ctrl K</strong> · paleta universal de búsqueda y navegación</li>
+          <li><strong>g h / g e / g g / g c / g d / g s</strong> · saltar a Inicio / Explorador / Grafo / Chat / Cuadros / Ajustes</li>
+          <li><strong>Ctrl \</strong> · plegar el panel izquierdo</li>
+          <li><strong>Ctrl .</strong> · cambiar tema claro / oscuro</li>
+        </ul>
+      </Card>
     </>
   );
 }
