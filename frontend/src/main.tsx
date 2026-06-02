@@ -9,6 +9,7 @@ import './i18n'; // side-effect: initialize i18next before render
 import { App } from './App';
 import { ModelWizardGate } from './components/domain/ModelWizard';
 import { SplashGate } from './components/domain/SplashGate';
+import { TutorialAutoLauncher, TutorialProvider } from './components/domain/TutorialTour';
 import { WelcomeFlow } from './components/domain/WelcomeFlow';
 import { ErrorBoundary } from './components/shell/ErrorBoundary';
 import { Toaster } from './components/shell/Toaster';
@@ -81,7 +82,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <SplashGate>
             <WelcomeFlow>
               <ModelWizardGate>
-                <App />
+                {/* TutorialProvider must sit inside the router because
+                    its `beforeClose` callback navigates to `/chat`. */}
+                <TutorialProvider>
+                  <App />
+                  <TutorialAutoLauncher />
+                </TutorialProvider>
               </ModelWizardGate>
             </WelcomeFlow>
           </SplashGate>
