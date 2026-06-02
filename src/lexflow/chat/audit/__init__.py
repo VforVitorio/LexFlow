@@ -13,9 +13,14 @@ Public surface of the audit subsystem:
 * :func:`get_audit_log` — process-wide :class:`AuditLog` singleton bound
   to the location resolved from ``Settings.config_dir``.
 
-Phase 1 (#124, this module) only emits records — every call is
-auto-allowed with classification ``SAFE``. Real policy gating, consent
-prompts and the SPA viewer land in later phases.
+Phase 1 (already in main since 2026-05-29) emits records — auto-allow.
+
+Phase 2 (this PR) adds :func:`lexflow.chat.audit.policy.evaluate` so
+the MCP wrapper makes real ``ALLOW`` / ``DENY`` decisions per call,
+gated by a built-in read-only allow-list + an operator env-var
+block-list. The interactive consent prompt (``REQUIRE_APPROVAL`` /
+``REQUIRE_STRONG_APPROVAL``) lands in Phase 3 once LexFlow hosts an
+MCP server in-process and can show a SPA modal.
 """
 
 from __future__ import annotations
@@ -28,6 +33,11 @@ from lexflow.chat.audit.canonical import (
     verify_chain,
 )
 from lexflow.chat.audit.log import AuditLog, get_audit_log
+from lexflow.chat.audit.policy import (
+    BLOCKED_TOOLS_ENV_VAR,
+    READ_ONLY_TOOLS,
+    evaluate,
+)
 from lexflow.chat.audit.schema import (
     SCHEMA_VERSION,
     ApprovalMethod,
@@ -38,10 +48,13 @@ from lexflow.chat.audit.schema import (
     PolicyDecision,
     SourceTrust,
     build_audit_record,
+    make_audit_request,
 )
 
 __all__ = [
+    "BLOCKED_TOOLS_ENV_VAR",
     "GENESIS_PREVIOUS_HASH",
+    "READ_ONLY_TOOLS",
     "SCHEMA_VERSION",
     "ApprovalMethod",
     "AuditLog",
@@ -55,6 +68,8 @@ __all__ = [
     "build_audit_record",
     "canonicalize_record",
     "compute_entry_hash",
+    "evaluate",
     "get_audit_log",
+    "make_audit_request",
     "verify_chain",
 ]

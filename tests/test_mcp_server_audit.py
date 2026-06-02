@@ -78,6 +78,46 @@ class TestAuditWrapperEmitsPair:
         assert first["request"]["tool"] == "lexflow"
 
 
+class TestAuditWrapperPolicyDeny:
+    def test_blocked_tool_returns_policy_denied_dict_and_skips_function(
+        self, audit_log_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Sprint 4 / #124 Phase 2: the env-var block-list short-circuits
+        the underlying function and the wrapper returns the denial dict."""
+        from lexflow.chat import mcp_server
+        from lexflow.chat.audit import BLOCKED_TOOLS_ENV_VAR
+        from lexflow.core.registry import LawRegistry
+
+        monkeypatch.setenv(BLOCKED_TOOLS_ENV_VAR, "search_law")
+
+        # Sentinel that registers a call if the underlying tool ever
+        # runs — it must NOT for a denied request.
+        called: list[bool] = []
+
+        def _should_not_run(self: object, *args: object, **kwargs: object) -> object:
+            called.append(True)
+            return {"items": [], "total": 0}
+
+        monkeypatch.setattr(LawRegistry, "search_text", _should_not_run)
+
+        result = mcp_server.search_law("anything")
+        assert called == []  # policy refused before function ran
+        assert result == {
+            "error": "policy_denied",
+            "decision": "DENY",
+            "classification": "BLOCKED",
+            "reason": result["reason"],
+        }
+        assert "LEXFLOW_MCP_BLOCKED_TOOLS" in result["reason"]
+
+        lines = _lines(audit_log_path)
+        assert len(lines) == 2
+        assert lines[0]["decision"] == "DENY"
+        assert lines[0]["classification"] == "BLOCKED"
+        assert lines[1]["event_type"] == "tool_call_end"
+        assert lines[1]["lexflow_outcome"] == "denied"
+
+
 class TestAuditWrapperOnError:
     def test_exception_in_tool_still_emits_end_record_with_error_outcome(
         self,
