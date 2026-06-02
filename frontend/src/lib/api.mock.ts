@@ -289,6 +289,24 @@ export const mockApi: ApiClient = {
       await delay(60);
       return MODELS;
     },
+    // Mock pull (#119) — emit 5 fake progress events + a final done. Useful
+    // for SPA dev when no Ollama daemon is running.
+    async *pull(model: string) {
+      const totalBytes = 4_500_000_000;
+      yield { type: 'progress', status: 'pulling manifest', completed: null, total: null, digest: null } as const;
+      for (let i = 1; i <= 4; i++) {
+        await delay(250);
+        yield {
+          type: 'progress',
+          status: 'pulling weights',
+          completed: Math.round((totalBytes * i) / 4),
+          total: totalBytes,
+          digest: `sha256:mock-${i}`,
+        } as const;
+      }
+      await delay(150);
+      yield { type: 'done', model } as const;
+    },
   },
   dashboards: {
     async metrics(preset) {

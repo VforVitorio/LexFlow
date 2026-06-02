@@ -31,18 +31,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle2,
-  Copy,
   Cpu,
+  Download,
   HardDrive,
-  Loader2,
   RefreshCw,
   Sparkles,
   X,
   XCircle,
 } from 'lucide-react';
 
-import { Badge, Button, Card } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import { Skeleton } from '@/components/domain/Skeleton';
+import { api } from '@/lib/api';
 import {
   FIT_LABELS,
   FIT_TONES,
@@ -422,56 +422,156 @@ function StepConfirm({
   }
 
   const isInstalled = profile?.ollamaModels.includes(tier.model) ?? false;
-  const command = `ollama pull ${tier.model}`;
-
   return (
-    <div className="flex flex-col gap-3 text-[13.5px]">
-      <p>
-        Para instalar <strong>{tier.model}</strong> en tu equipo, abre una terminal y ejecuta:
-      </p>
-      <CommandBlock command={command} />
-      <div className="flex items-center justify-between rounded-md border border-border bg-surface p-3">
-        <div className="flex items-center gap-2">
-          {isInstalled ? (
-            <CheckCircle2 className="size-4 text-success" />
-          ) : (
-            <Loader2 className="size-4 text-muted" />
-          )}
-          <span className={isInstalled ? 'text-success font-medium' : 'text-muted'}>
-            {isInstalled ? 'Modelo detectado en Ollama' : 'Esperando a que Ollama lo reporte…'}
-          </span>
-        </div>
-        <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} onClick={onRefetchProfile}>
-          Comprobar
-        </Button>
-      </div>
-      {!profile?.ollamaRunning && (
-        <p className="text-[12px] text-muted">
-          Ollama no está corriendo. Inícialo (en macOS/Windows con la app, en Linux con
-          <code className="mx-1 rounded bg-surface-2 px-1 font-mono">ollama serve</code>)
-          y pulsa Comprobar.
-        </p>
-      )}
-    </div>
+    <OllamaInstall
+      tier={tier}
+      isInstalled={isInstalled}
+      ollamaRunning={profile?.ollamaRunning ?? false}
+      onRefetchProfile={onRefetchProfile}
+    />
   );
 }
 
-function CommandBlock({ command }: { command: string }) {
-  const onCopy = async () => {
+/**
+ * Step 3 — in-app Ollama install (#119).
+ *
+ * Three local states:
+ *   - `idle`: model not yet detected; "Instalar" button kicks the pull.
+ *   - `pulling`: streaming progress from `api.models.pull(tier.model)`.
+ *     Renders a real bar (completed / total bytes) so the user can see the
+ *     download breathe instead of staring at a spinner.
+ *   - `done` / `error`: terminal. `done` re-fetches the system profile so
+ *     ``ollamaModels`` reflects the new tag. `error` shows the structured
+ *     code+message and offers retry.
+ *
+ * Pre-installed shortcut: if the user already pulled the model (or installed
+ * it elsewhere), the `isInstalled` prop is true on mount and we skip the
+ * whole pull flow — they only need the "Listo" button at the bottom.
+ */
+function OllamaInstall({
+  tier,
+  isInstalled,
+  ollamaRunning,
+  onRefetchProfile,
+}: {
+  tier: ModelTier;
+  isInstalled: boolean;
+  ollamaRunning: boolean;
+  onRefetchProfile: () => void;
+}) {
+  type PullState =
+    | { phase: 'idle' }
+    | { phase: 'pulling'; status: string | null; completed: number | null; total: number | null }
+    | { phase: 'done' }
+    | { phase: 'error'; code: string; message: string };
+
+  const [state, setState] = useState<PullState>(isInstalled ? { phase: 'done' } : { phase: 'idle' });
+
+  const startPull = async () => {
+    setState({ phase: 'pulling', status: 'Conectando con Ollama…', completed: null, total: null });
     try {
-      await navigator.clipboard.writeText(command);
-      toast({ tone: 'success', title: 'Copiado', message: command });
-    } catch {
-      toast({ tone: 'danger', title: 'No se pudo copiar', message: 'Cópialo a mano.' });
+      for await (const event of api.models.pull(tier.model)) {
+        if (event.type === 'progress') {
+          setState({
+            phase: 'pulling',
+            status: event.status,
+            completed: event.completed,
+            total: event.total,
+          });
+        } else if (event.type === 'done') {
+          setState({ phase: 'done' });
+          onRefetchProfile();
+          toast({ tone: 'success', title: 'Modelo instalado', message: tier.model });
+          return;
+        } else {
+          setState({ phase: 'error', code: event.code, message: event.message });
+          return;
+        }
+      }
+    } catch (exc) {
+      const message = exc instanceof Error ? exc.message : 'Pull failed';
+      setState({ phase: 'error', code: 'network', message });
     }
   };
+
+  if (state.phase === 'done') {
+    return (
+      <div className="flex flex-col gap-3 text-[13.5px]">
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success-soft p-3">
+          <CheckCircle2 className="size-4 text-success" />
+          <span className="text-success font-medium">
+            <strong>{tier.model}</strong> instalado y listo
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.phase === 'pulling') {
+    const pct = state.total ? Math.round(((state.completed ?? 0) / state.total) * 100) : null;
+    return (
+      <div className="flex flex-col gap-3 text-[13.5px]">
+        <p>
+          Instalando <strong>{tier.model}</strong>…
+        </p>
+        <div className="rounded-md border border-border bg-surface p-3">
+          <div className="mb-2 flex items-center justify-between text-[12px] text-muted">
+            <span>{state.status ?? 'En curso…'}</span>
+            {pct !== null && <span className="font-mono">{pct}%</span>}
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+            <div
+              className="h-full bg-indigo-500 transition-[width] duration-200"
+              style={{ width: `${pct ?? 0}%` }}
+            />
+          </div>
+        </div>
+        <p className="text-[12px] text-muted">
+          Puedes cerrar el asistente y volver más tarde — la descarga sigue de fondo en Ollama.
+        </p>
+      </div>
+    );
+  }
+
+  if (state.phase === 'error') {
+    return (
+      <div className="flex flex-col gap-3 text-[13.5px]">
+        <div className="rounded-md border border-danger/30 bg-danger-soft p-3 text-danger">
+          <strong>No se pudo instalar.</strong> {state.message}
+        </div>
+        <Button size="sm" variant="secondary" onClick={() => void startPull()} className="self-start">
+          Reintentar
+        </Button>
+      </div>
+    );
+  }
+
+  // idle
   return (
-    <Card className="flex items-center justify-between gap-3 p-3">
-      <code className="select-all font-mono text-[12.5px]">{command}</code>
-      <Button size="sm" variant="ghost" icon={<Copy className="size-3.5" />} onClick={onCopy}>
-        Copiar
-      </Button>
-    </Card>
+    <div className="flex flex-col gap-3 text-[13.5px]">
+      <p>
+        Vamos a descargar <strong>{tier.model}</strong> ({tier.sizeGb} GB) e instalarlo en Ollama.
+        Te avisamos cuando termine.
+      </p>
+      {!ollamaRunning && (
+        <div className="rounded-md border border-amber-300/60 bg-amber-soft p-3 text-amber-700 dark:text-amber-300">
+          Ollama no está corriendo. Inícialo y pulsa Instalar.
+        </div>
+      )}
+      <div className="flex items-center gap-2.5">
+        <Button
+          variant="primary"
+          icon={<Download className="size-3.5" />}
+          onClick={() => void startPull()}
+          disabled={!ollamaRunning}
+        >
+          Instalar
+        </Button>
+        <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} onClick={onRefetchProfile}>
+          Re-detectar
+        </Button>
+      </div>
+    </div>
   );
 }
 
