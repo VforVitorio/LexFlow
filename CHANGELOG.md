@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.26.0](https://github.com/VforVitorio/LexFlow/compare/v0.25.0...v0.26.0) (2026-06-02)
+
+
+### Features
+
+* **api:** POST /api/v1/models/pull SSE + wire wizard install flow (closes [#119](https://github.com/VforVitorio/LexFlow/issues/119)) ([a0d0f43](https://github.com/VforVitorio/LexFlow/commit/a0d0f43ff4f1edc4d03a6e6433a61c12c162be27))
+* **api:** POST /api/v1/models/pull SSE + wire wizard install flow (closes [#119](https://github.com/VforVitorio/LexFlow/issues/119)) ([6c4df79](https://github.com/VforVitorio/LexFlow/commit/6c4df798170c1fe28a372724a4c37389e4fceb78))
+
+
+### Refactoring
+
+* **api:** Sprint 5 — drain HIGH findings from API audit (closes [#289](https://github.com/VforVitorio/LexFlow/issues/289)) ([7566b56](https://github.com/VforVitorio/LexFlow/commit/7566b568033c6c9d6720461ecb90f326e4377f14))
+* **api:** Sprint 5 — drain HIGH findings from API audit (closes [#289](https://github.com/VforVitorio/LexFlow/issues/289)) ([7f11aa0](https://github.com/VforVitorio/LexFlow/commit/7f11aa027aa5d728a8fe919c578baf621fddc960))
+* **api:** Sprint 6 — drain MEDIUM findings from API audit (closes [#290](https://github.com/VforVitorio/LexFlow/issues/290)) ([f8bb92d](https://github.com/VforVitorio/LexFlow/commit/f8bb92d190baa640ea8b84387d3e1b9f948a682d))
+* **api:** Sprint 6 — drain MEDIUM findings from API audit (closes [#290](https://github.com/VforVitorio/LexFlow/issues/290)) ([64fec73](https://github.com/VforVitorio/LexFlow/commit/64fec737b415063da3e184ed51939c264e5b47ec))
+* **api:** Sprint 7 — drain LOW findings from API audit (closes [#291](https://github.com/VforVitorio/LexFlow/issues/291)) ([e415a98](https://github.com/VforVitorio/LexFlow/commit/e415a98b872c150ec47616914e5714e0e38418f3))
+* **api:** Sprint 7 — drain LOW findings from API audit (closes [#291](https://github.com/VforVitorio/LexFlow/issues/291)) ([b98b5ba](https://github.com/VforVitorio/LexFlow/commit/b98b5ba501704f61c952f402ba3728f38ea3a93a))
+
 ## [0.25.0](https://github.com/VforVitorio/LexFlow/compare/v0.24.0...v0.25.0) (2026-06-01)
 
 
