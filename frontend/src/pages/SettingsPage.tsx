@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
+import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/TutorialTour';
 import { useModels, useSyncStatus, useRunSync } from '@/lib/queries';
@@ -14,7 +15,7 @@ import type { Lang } from '@/i18n';
 
 // "Personalización" replaces the prior "Perfil" stub (#133) — name +
 // language + a11y now have a home. Other sections kept verbatim.
-const SECTIONS = ['Personalización', 'Apariencia', 'Modelos', 'Datos', 'Ayuda', 'Actualizaciones', 'Acerca de'] as const;
+const SECTIONS = ['Personalización', 'Apariencia', 'Modelos', 'MCP Servers', 'Datos', 'Ayuda', 'Actualizaciones', 'Acerca de'] as const;
 type Section = typeof SECTIONS[number];
 
 export function SettingsPage() {
