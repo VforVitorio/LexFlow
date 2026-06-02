@@ -16,6 +16,7 @@ export function LeftRail() {
   return (
     <nav
       aria-label="Navegación principal"
+      data-tour-id="left-rail"
       className={cn(
         // Hidden on mobile — the BottomTabBar takes over below `md`.
         'hidden shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 overflow-hidden md:flex',

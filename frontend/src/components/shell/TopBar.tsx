@@ -21,6 +21,7 @@ export function TopBar() {
       {/* Search trigger — desktop only; mobile uses the floating button in AppShell. */}
       <button
         onClick={() => setPaletteOpen(true)}
+        data-tour-id="search-trigger"
         className="ml-auto hidden h-8 w-80 items-center gap-2.5 rounded-lg border border-border-strong bg-surface px-2.5 text-[13px] text-muted transition-colors hover:border-indigo-500/60 hover:text-fg md:inline-flex"
       >
         <Search className="size-3.5" />
