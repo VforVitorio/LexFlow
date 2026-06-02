@@ -99,6 +99,13 @@ export interface paths {
         /**
          * List all articles of a law
          * @description Return a paginated list of articles for the given law.
+         *
+         *     Sprint 7 api-13: pagination is computed in-memory by slicing the
+         *     parsed ``law.articles`` list. That's fine while articles live in
+         *     Markdown frontmatter (every law's article list fits comfortably in
+         *     memory + ``total`` is always exact), but the day article storage
+         *     moves to a database we'll want to push the OFFSET/LIMIT down to it.
+         *     Flagging here so the migration touches this spot.
          */
         get: operations["list_articles_api_v1_laws__law_id__articles_get"];
         put?: never;
@@ -202,6 +209,9 @@ export interface paths {
          *
          *     Query params use the `from` / `to` aliases (matches the convention of
          *     the versions diff endpoint and the documented example in the README).
+         *
+         *     Sprint 6 api-6: wraps the path list in an object so the response has
+         *     room to carry metadata later (e.g. path length, intermediate hops).
          */
         get: operations["get_path_api_v1_graph_path_get"];
         put?: never;
@@ -265,10 +275,13 @@ export interface paths {
         };
         /**
          * Get Top
-         * @description Return the top-`limit` most referenced laws by `metric` (PageRank only).
+         * @description Return the top-`limit` most referenced laws by PageRank.
          *
-         *     `metric` accepts `pagerank` today; new metrics will extend the pattern.
-         *     Param names match the README example (`?metric=pagerank&limit=20`).
+         *     Sprint 6 api-7 / rf-7: the `metric` query param used to exist but
+         *     accepted only `pagerank` (single-value regex), and the handler
+         *     discarded it with `del metric`. Dropped here until a second metric
+         *     earns its place; the next ranking algorithm should re-introduce the
+         *     param with a real `Literal["pagerank","betweenness",...]` shape.
          */
         get: operations["get_top_api_v1_graph_top_get"];
         put?: never;
@@ -297,6 +310,30 @@ export interface paths {
         get: operations["list_models_api_v1_models_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/models/pull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Install an Ollama model and stream its progress via SSE (#119).
+         * @description Trigger ``ollama pull <model>`` and stream the progress to the SPA.
+         *
+         *     Consumed by the model wizard's confirm step (#118). The wizard kicks the
+         *     request, renders the byte counters as a progress bar, and treats the
+         *     ``done`` event as "model is installed; re-detect to verify".
+         */
+        post: operations["pull_model_api_v1_models_pull_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -342,11 +379,10 @@ export interface paths {
         put?: never;
         post?: never;
         /**
-         * Delete a thread and all its messages (cascade).
-         * @description Idempotent — but we return 404 when the id is unknown so callers
-         *     can distinguish "I deleted nothing because nothing was there" from
-         *     "I deleted exactly that thread". Cascade on ``ChatThread.messages``
-         *     cleans up child rows.
+         * Delete a thread and all its messages (cascade). Idempotent.
+         * @description Fully idempotent per RFC 7231 (Sprint 5 api-3): repeated calls
+         *     converge on 204 regardless of whether the row existed. Cascade on
+         *     ``ChatThread.messages`` cleans up child rows.
          */
         delete: operations["delete_thread_api_v1_chat_threads__thread_id__delete"];
         options?: never;
@@ -354,6 +390,11 @@ export interface paths {
         /**
          * Rename a thread (only ``title`` is patchable today).
          * @description Apply non-null fields from the body and return the updated row.
+         *
+         *     Sprint 6 api-9: an empty patch (every field None) used to silently
+         *     succeed and bump ``updated_at`` — a no-op write that confused list
+         *     ordering. Now refused with 400 so the client knows to stop sending
+         *     empty bodies.
          */
         patch: operations["patch_thread_api_v1_chat_threads__thread_id__patch"];
         trace?: never;
@@ -372,6 +413,12 @@ export interface paths {
          * @description Append a turn, touch the thread's ``updated_at`` and return the
          *     persisted row. Intentionally non-streaming — see issue #84 for the
          *     SSE counterpart that adds the assistant + tool turns.
+         *
+         *     Sprint 6 api-5: emits ``Location: /api/v1/chat/threads/{thread_id}/
+         *     messages/{message_id}`` per RFC 7231 for 201 responses. There is no
+         *     GET endpoint for an individual message today (the SPA reads them
+         *     nested under the thread), but the header is correct and lets a
+         *     future client distinguish the new row from the thread's full list.
          */
         post: operations["append_message_api_v1_chat_threads__thread_id__messages_post"];
         delete?: never;
@@ -455,9 +502,16 @@ export interface paths {
          * Sync Corpus
          * @description Pull the latest legalize-es revision and refresh state.
          *
-         *     Returns a payload describing what happened: ``mode`` is ``noop`` (nothing
-         *     changed), ``incremental`` (a bounded delta was applied), or ``rebuild``
-         *     (caches dropped for a full rebuild on next use).
+         *     Sprint 5 api-1: returns ``200 OK`` only for the ``noop`` mode (the
+         *     corpus was already at HEAD). Modes that actually mutate state
+         *     (``incremental``, ``rebuild``) return ``201 Created`` with a
+         *     ``Location`` header pointing at the resulting revision. This lets
+         *     cache-friendly clients tell "nothing happened" from "you changed the
+         *     world" without parsing the body.
+         *
+         *     Returns a payload describing what happened: ``mode`` is ``noop``
+         *     (nothing changed), ``incremental`` (a bounded delta was applied),
+         *     or ``rebuild`` (caches dropped for a full rebuild on next use).
          */
         post: operations["sync_corpus_api_v1_sync_post"];
         delete?: never;
@@ -543,7 +597,10 @@ export interface paths {
         };
         /**
          * Tag vocabulary across the corpus, ranked by usage.
-         * @description Return ``[{tag, count}]`` sorted by count desc, then tag asc.
+         * @description Return ``{items: [{tag, count}]}`` sorted by count desc, then tag asc.
+         *
+         *     Sprint 6 api-6: previously returned a bare list. Wrapped now so the
+         *     contract has room to grow (e.g. total distinct tags, pagination).
          */
         get: operations["list_tags_api_v1_tags_get"];
         put?: never;
@@ -859,6 +916,14 @@ export interface components {
             pagerank?: number | null;
         };
         /**
+         * GraphPathResponse
+         * @description Wrapper for ``GET /api/v1/graph/path`` (Sprint 6 api-6).
+         */
+        GraphPathResponse: {
+            /** Path */
+            path: string[];
+        };
+        /**
          * GraphStatsResponse
          * @description High-level statistics about the knowledge graph.
          */
@@ -893,6 +958,18 @@ export interface components {
             score: number;
             /** Title */
             title?: string | null;
+        };
+        /**
+         * GraphTopResponse
+         * @description Wrapper for ``GET /api/v1/graph/top`` (Sprint 6 api-6).
+         *
+         *     Top-level JSON arrays are a known design smell (JSON-hijacking risk
+         *     in some clients, no room to grow metadata). Every list endpoint
+         *     wraps its rows in an object with a single ``items`` key.
+         */
+        GraphTopResponse: {
+            /** Items */
+            items: components["schemas"]["GraphTopItem"][];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1137,6 +1214,17 @@ export interface components {
              */
             error?: string | null;
         };
+        /**
+         * ModelPullRequest
+         * @description Body for ``POST /api/v1/models/pull``.
+         */
+        ModelPullRequest: {
+            /**
+             * Model
+             * @description Ollama model tag, e.g. ``qwen2.5:7b`` or ``llama3.2``.
+             */
+            model: string;
+        };
         /** PaginatedResponse[Article] */
         PaginatedResponse_Article_: {
             /** Items */
@@ -1369,6 +1457,14 @@ export interface components {
              * @description Number of laws tagged with it.
              */
             count: number;
+        };
+        /**
+         * TagsResponse
+         * @description Wrapper for ``GET /api/v1/tags`` (Sprint 6 api-6).
+         */
+        TagsResponse: {
+            /** Items */
+            items: components["schemas"]["TagCount"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -1713,9 +1809,9 @@ export interface operations {
     get_diff_api_v1_laws__law_id__diff_get: {
         parameters: {
             query: {
-                /** @description Source commit hash */
+                /** @description Source commit hash (7-40 hex chars) */
                 from: string;
-                /** @description Target commit hash */
+                /** @description Target commit hash (7-40 hex chars) */
                 to: string;
             };
             header?: never;
@@ -1795,7 +1891,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[];
+                    "application/json": components["schemas"]["GraphPathResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1866,7 +1962,6 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
-                metric?: string;
             };
             header?: never;
             path?: never;
@@ -1880,7 +1975,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["GraphTopItem"][];
+                    "application/json": components["schemas"]["GraphTopResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1911,6 +2006,38 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ModelInfo"][];
                 };
+            };
+        };
+    };
+    pull_model_api_v1_models_pull_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelPullRequest"];
+            };
+        };
+        responses: {
+            /** @description Server-sent events stream with progress / done / error. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "text/event-stream": unknown;
+                };
+            };
+            /** @description Model tag failed validation. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2134,6 +2261,13 @@ export interface operations {
                     "text/event-stream": unknown;
                 };
             };
+            /** @description Thread not found — emitted BEFORE the stream opens. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -2150,7 +2284,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                preset: string;
+                preset: "compliance" | "analytics";
             };
             cookie?: never;
         };
@@ -2285,7 +2419,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TagCount"][];
+                    "application/json": components["schemas"]["TagsResponse"];
                 };
             };
         };

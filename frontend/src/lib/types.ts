@@ -253,6 +253,19 @@ export interface Model {
   available: boolean;
 }
 
+/**
+ * One event from the `POST /api/v1/models/pull` SSE stream (#119).
+ *
+ * Discriminated union — switch on `type`:
+ *   - `progress`: bytes-and-status update; the wizard renders this as a bar.
+ *   - `done`: the model is installed; the wizard re-detects `ollama_models`.
+ *   - `error`: the pull failed; the wizard surfaces `code` + `message`.
+ */
+export type ModelPullEvent =
+  | { type: 'progress'; status: string | null; completed: number | null; total: number | null; digest: string | null }
+  | { type: 'done'; model: string }
+  | { type: 'error'; code: string; message: string };
+
 // ─── Sync / status ───────────────────────────────────────────────────────
 
 export interface SyncStatus {
@@ -395,6 +408,16 @@ export interface ApiClient {
   };
   models: {
     list(): Promise<Model[]>;
+    /**
+     * Install an Ollama model and stream its progress (#119).
+     *
+     * Yields `progress` chunks while bytes flow, then either a `done`
+     * (success) or `error` (failure) terminator. Implementations stop
+     * iterating after either terminator. The wizard's confirm step
+     * consumes this and renders a real progress bar instead of asking
+     * the user to copy/paste `ollama pull <tag>` into a terminal.
+     */
+    pull(model: string): AsyncIterable<ModelPullEvent>;
   };
   dashboards: {
     metrics(preset: 'compliance' | 'analytics'): Promise<DashboardData>;
