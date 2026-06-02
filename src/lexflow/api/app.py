@@ -12,7 +12,19 @@ from fastapi import FastAPI
 
 from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
-from lexflow.api.routers import articles, chat_threads, dashboards, laws, models, search, sync, system, tags, versions
+from lexflow.api.routers import (
+    articles,
+    chat_threads,
+    dashboards,
+    laws,
+    mcp_servers,
+    models,
+    search,
+    sync,
+    system,
+    tags,
+    versions,
+)
 from lexflow.api.routers.graph import router as graph_router
 from lexflow.api.spa import mount_spa
 from lexflow.api.warmup import schedule_background_warmup
@@ -101,6 +113,7 @@ app.include_router(dashboards.router, prefix="/api/v1")
 app.include_router(sync.router, prefix="/api/v1")
 app.include_router(system.router, prefix="/api/v1")
 app.include_router(tags.router, prefix="/api/v1")
+app.include_router(mcp_servers.router, prefix="/api/v1")
 
 
 @app.get("/health")

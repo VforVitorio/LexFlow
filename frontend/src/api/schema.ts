@@ -611,6 +611,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mcp/servers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all MCP servers (built-in + user-added).
+         * @description Return the combined catalog, built-ins first.
+         */
+        get: operations["list_servers_api_v1_mcp_servers_get"];
+        put?: never;
+        /**
+         * Add a user MCP server (Claude Desktop schema).
+         * @description Append *body* to the user list and persist.
+         *
+         *     Rejects names that collide with a built-in (409) or with an
+         *     existing user entry (409). Built-in entries are never editable
+         *     via this endpoint — they're a code-defined catalog.
+         */
+        post: operations["create_server_api_v1_mcp_servers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/servers/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a user MCP server. Idempotent.
+         * @description Remove the user entry identified by *name*. Idempotent.
+         *
+         *     Built-in entries cannot be deleted (409). Missing user entries
+         *     return 204 — the same response a successful delete returns, so
+         *     clients retrying lost responses converge cleanly (Sprint 5 api-3
+         *     convention).
+         */
+        delete: operations["delete_server_api_v1_mcp_servers__name__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Toggle the enabled flag on a user MCP server.
+         * @description Apply patchable fields to the user entry identified by *name*.
+         */
+        patch: operations["patch_server_api_v1_mcp_servers__name__patch"];
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1144,6 +1201,102 @@ export interface components {
              * @description List of affected article identifiers.
              */
             articulos_afectados?: string[];
+        };
+        /**
+         * McpServerCommand
+         * @description One MCP server launch command — matches the Claude Desktop schema.
+         *
+         *     A server can either be launched as a child process (``command`` +
+         *     ``args``) or referenced by URL (``url``); the wire protocol covers
+         *     both styles and we keep both fields so a paste from Claude Desktop's
+         *     ``claude_desktop_config.json`` round-trips losslessly.
+         */
+        McpServerCommand: {
+            /**
+             * Command
+             * @description Executable to launch (e.g. 'npx', 'uvx', '/usr/local/bin/foo').
+             */
+            command?: string | null;
+            /**
+             * Args
+             * @description Args passed to the command. Each entry capped at 512 chars.
+             */
+            args?: string[];
+            /**
+             * Env
+             * @description Extra env vars passed to the child process.
+             */
+            env?: {
+                [key: string]: string;
+            };
+            /**
+             * Url
+             * @description Remote MCP endpoint (mutually exclusive with command).
+             */
+            url?: string | null;
+        };
+        /**
+         * McpServerCreateRequest
+         * @description Body for ``POST /api/v1/mcp/servers`` — adds a user entry.
+         *
+         *     Reuses the user-entry shape; the server-side handler refuses names
+         *     that collide with built-in entries.
+         */
+        McpServerCreateRequest: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            command: components["schemas"]["McpServerCommand"];
+        };
+        /**
+         * McpServerListResponse
+         * @description Wrapper for ``GET /api/v1/mcp/servers`` (Sprint 6 api-6 convention).
+         *
+         *     Wrapped instead of returning a bare list so we can grow metadata
+         *     (counts, schema version, last-modified) without breaking clients.
+         */
+        McpServerListResponse: {
+            /** Items */
+            items: components["schemas"]["McpServerView"][];
+        };
+        /**
+         * McpServerPatchRequest
+         * @description Body for ``PATCH /api/v1/mcp/servers/{name}``.
+         *
+         *     Only ``enabled`` is patchable today; renaming a server is a delete +
+         *     add because the name is the key.
+         */
+        McpServerPatchRequest: {
+            /** Enabled */
+            enabled?: boolean | null;
+        };
+        /**
+         * McpServerView
+         * @description Flat shape returned by ``GET /api/v1/mcp/servers``.
+         *
+         *     ``kind`` is the discriminator the SPA branches on. Built-in rows
+         *     carry ``enabled: true`` purely for symmetry — the SPA refuses to
+         *     flip them locally (the field is informational).
+         */
+        McpServerView: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            command: components["schemas"]["McpServerCommand"];
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "builtin" | "user";
+            /** Enabled */
+            enabled: boolean;
+            /** Docs Url */
+            docs_url?: string | null;
         };
         /**
          * MetricCardPayload
@@ -2420,6 +2573,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TagsResponse"];
+                };
+            };
+        };
+    };
+    list_servers_api_v1_mcp_servers_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpServerListResponse"];
+                };
+            };
+        };
+    };
+    create_server_api_v1_mcp_servers_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["McpServerCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpServerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_server_api_v1_mcp_servers__name__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_server_api_v1_mcp_servers__name__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["McpServerPatchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpServerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
