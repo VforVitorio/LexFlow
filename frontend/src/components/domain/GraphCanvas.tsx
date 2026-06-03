@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -104,7 +104,7 @@ function sizeForNode(kind: GraphNodeKind, pagerank: number): number {
   return Math.round(base + boost);
 }
 
-function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
+const LfNode = memo(function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
   const { label, kind, dim, selected: isSelected, pagerank, onSelect } = data;
   const size = sizeForNode(kind, pagerank);
   const fill = GRAPH_KIND_FILL[kind];
@@ -153,7 +153,7 @@ function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
       </span>
     </button>
   );
-}
+});
 
 const NODE_TYPES = { lf: LfNode } as const;
 
@@ -296,9 +296,27 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
         fitView
         fitViewOptions={{ padding: 0.2 }}
         proOptions={{ hideAttribution: true }}
-        // #87 acceptance criterion — cull off-screen nodes so the canvas
-        // holds 60 fps on the full corpus.
+        // #87 / #73 60-fps target. Each flag below shaves measurable
+        // CPU off pan/zoom on a 1000+ node graph:
+        //
+        // * `onlyRenderVisibleElements` — culls off-screen nodes from
+        //   the React tree during pan/zoom. The single biggest win on
+        //   the full corpus.
+        // * `nodesDraggable / nodesConnectable / nodesFocusable` —
+        //   we never let the user drag or connect nodes (layout is
+        //   computed deterministically). Disabling them skips the
+        //   per-node listener wiring + hit-testing in xyflow's
+        //   pointer handler.
+        // * `edgesFocusable` — same idea for edges; the SPA doesn't
+        //   surface edge-level interactions.
+        // * `elevateNodesOnSelect: false` — avoids the relatively
+        //   expensive z-index reshuffle on every selection.
         onlyRenderVisibleElements
+        nodesDraggable={false}
+        nodesConnectable={false}
+        nodesFocusable={false}
+        edgesFocusable={false}
+        elevateNodesOnSelect={false}
         onPaneClick={handlePaneClick}
         // Plain pan/zoom — no Obsidian-style inertia for this first cut.
         panOnDrag
