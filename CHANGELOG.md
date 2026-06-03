@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.28.0](https://github.com/VforVitorio/LexFlow/compare/v0.27.0...v0.28.0) (2026-06-03)
+
+
+### Features
+
+* **ui:** floating contextual help drawer with per-page content (closes [#132](https://github.com/VforVitorio/LexFlow/issues/132)) ([60e7e50](https://github.com/VforVitorio/LexFlow/commit/60e7e50b4f8f7c8bc72b4e0a6eb50d04c0513fe2))
+* **ui:** floating contextual help drawer with per-page content (closes [#132](https://github.com/VforVitorio/LexFlow/issues/132)) ([b0b7f89](https://github.com/VforVitorio/LexFlow/commit/b0b7f89379c43d6690792a6c2b5ba4b157ce6fa4))
+* **ui:** responsive sweep — Settings + Explorer + page padding (closes [#36](https://github.com/VforVitorio/LexFlow/issues/36)) ([de0c2fd](https://github.com/VforVitorio/LexFlow/commit/de0c2fd2aaa1c0759bff1b383b171ab60ec729e1))
+* **ui:** responsive sweep — Settings + Explorer + page padding (closes [#36](https://github.com/VforVitorio/LexFlow/issues/36)) ([1e322fe](https://github.com/VforVitorio/LexFlow/commit/1e322fe8acaee8108311ef5d5de8924167e1ff87))
+
+
+### Bug Fixes
+
+* **a11y:** drop --browser flag; axe-core/cli default already chrome-headless ([65b3fe0](https://github.com/VforVitorio/LexFlow/commit/65b3fe030bf66954e530eeb51f1154eb1eaa5d55))
+* **a11y:** use chrome-headless instead of chromium for axe-core CLI ([c834ab6](https://github.com/VforVitorio/LexFlow/commit/c834ab6d2cf78f487bca5cb51ef523fa580c3e86))
+
+
+### Documentation
+
+* **planning:** close [#131](https://github.com/VforVitorio/LexFlow/issues/131) audit of manual actions with coverage table ([8ccf5ae](https://github.com/VforVitorio/LexFlow/commit/8ccf5ae6efa1d62eb9cab8f7dda9cb930bea40ba))
+* **planning:** close [#131](https://github.com/VforVitorio/LexFlow/issues/131) audit of manual actions with coverage table ([4600760](https://github.com/VforVitorio/LexFlow/commit/4600760a45c069bbd128f179b77b4cecb08ba83f))
+
 ## [0.27.0](https://github.com/VforVitorio/LexFlow/compare/v0.26.0...v0.27.0) (2026-06-02)
 
 
