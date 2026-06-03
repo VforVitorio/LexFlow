@@ -19,6 +19,7 @@ from lexflow.api.warmup import get_warmup_state
 from lexflow.core.corpus_revision import UNKNOWN_REVISION, submodule_hash
 from lexflow.core.delta_sync import diff_corpus_since
 from lexflow.core.exceptions import LawNotFoundError
+from lexflow.core.health import HealthSnapshot, build_health_snapshot
 from lexflow.core.registry import get_registry
 from lexflow.core.schemas import (
     SystemProfileResponse,
@@ -140,3 +141,18 @@ async def get_system_profile() -> SystemProfileResponse:
         ollama_models=profile.ollama_models,
         lmstudio_running=profile.lmstudio_running,
     )
+
+
+@router.get(
+    "/health",
+    response_model=HealthSnapshot,
+    summary="Extended health snapshot — memory, disk, corpus, chat DB (#74).",
+)
+def get_system_health() -> HealthSnapshot:
+    """Return a structured health snapshot.
+
+    Unlike the unprefixed ``/health`` (which stays a one-liner for cheap
+    liveness probes), this endpoint runs the full set of probes. Aimed
+    at the Settings → Diagnostics panel and external ops dashboards.
+    """
+    return build_health_snapshot()
