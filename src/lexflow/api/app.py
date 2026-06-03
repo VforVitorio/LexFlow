@@ -12,6 +12,7 @@ from fastapi import FastAPI
 
 from lexflow import __version__
 from lexflow.api.error_handlers import register_error_handlers
+from lexflow.api.middleware import RequestIdMiddleware
 from lexflow.api.routers import (
     articles,
     chat_threads,
@@ -32,6 +33,12 @@ from lexflow.api.warmup import schedule_background_warmup
 from lexflow.chat.db import init_db
 from lexflow.core.exceptions import LexFlowError
 from lexflow.core.registry import get_registry
+from lexflow.utils.logging_config import configure_logging
+
+# Configure logging FIRST, before any module-level logger captures a
+# pre-handler reference. Idempotent — safe to call again under pytest's
+# reimport behaviour.
+configure_logging()
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +106,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Request-id correlation + access logging (#92). MUST be added BEFORE
+# error handlers so a 5xx still carries the request-id in the response.
+app.add_middleware(RequestIdMiddleware)
 register_error_handlers(app)
 # Search MUST be registered before the laws router: its canonical route is
 # `/laws/search`, and the laws router's `/laws/{law_id}` would otherwise
