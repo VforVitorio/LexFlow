@@ -58,12 +58,13 @@ function runAxe(url) {
       url,
       '--load-delay',
       '1500',
-      // @axe-core/cli accepts `chrome` / `chrome-headless` / `firefox` /
-      // `safari` — NOT `chromium` (first CI run failed there). Use
-      // `chrome-headless` so the CI runner doesn't try to open a
-      // window.
-      '--browser',
-      'chrome-headless',
+      // No `--browser` flag: @axe-core/cli's parseBrowser only matches
+      // `chrome` / `firefox` / `ie` / `safari` / `edge` (verified in
+      // node_modules/@axe-core/cli/dist/src/lib/utils.js). Passing
+      // `chromium` or `chrome-headless` literally throws, even though
+      // the default (no arg) IS `chrome-headless` internally. Letting
+      // it fall through to the default keeps CI headless without
+      // needing the flag at all.
       '--exit',
       '--no-reporter',
       '--save',
