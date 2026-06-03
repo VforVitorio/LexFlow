@@ -34,6 +34,8 @@ from sqlalchemy import desc
 from sqlmodel import Session, func, select
 
 from lexflow.chat.db import get_session
+from lexflow.chat.rate_limit import RateLimitedError
+from lexflow.chat.rate_limit import acquire as acquire_rate_limit
 from lexflow.chat.schemas import (
     ChatMessageCreate,
     ChatMessageRead,
@@ -45,7 +47,7 @@ from lexflow.chat.schemas import (
     ChatThreadRead,
 )
 from lexflow.chat.storage_models import ChatMessage, ChatThread
-from lexflow.chat.streaming import stream_chat_reply
+from lexflow.chat.streaming import split_model_id, stream_chat_reply
 
 logger = logging.getLogger(__name__)
 
@@ -360,6 +362,31 @@ async def send_message_stream(
     clients that already render those event types keep working.
     """
     thread = _load_thread_or_404(session, thread_id)
+    # Rate limit BEFORE opening the SSE stream — once we return a
+    # streaming response we can't surface 429 with a Retry-After
+    # header. Local providers (ollama / lmstudio) pass through.
+    # Malformed model ids are deferred to the generator so the SSE
+    # `error` event carries the diagnostic message clients already
+    # expect.
+    try:
+        provider_key, _ = split_model_id(body.model)
+    except Exception:
+        provider_key = ""
+    if provider_key:
+        try:
+            await acquire_rate_limit(provider_key)
+        except RateLimitedError as exc:
+            retry_after_int = max(1, round(exc.retry_after_s))
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "error": "rate_limited",
+                    "provider": exc.provider_key,
+                    "retry_after_s": round(exc.retry_after_s, 2),
+                    "message": f"Slow down, retry in {retry_after_int} seconds",
+                },
+                headers={"Retry-After": str(retry_after_int)},
+            ) from exc
     # ``stream_chat_reply`` consumes the session — once the generator is
     # entered we cannot reuse it for the response body. The dependency
     # already opens a fresh session per request, so FastAPI closes it
