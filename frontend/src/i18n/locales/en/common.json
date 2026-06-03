@@ -1,1 +1,52 @@
-{}
+{
+  "nav": {
+    "home": "Home",
+    "explorer": "Explorer",
+    "graph": "Graph",
+    "chat": "Chat",
+    "dashboards": "Dashboards",
+    "settings": "Settings",
+    "main": "Main navigation",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "recent": "Recent"
+  },
+  "settings": {
+    "sections": {
+      "personalization": "Personalization",
+      "appearance": "Appearance",
+      "models": "Models",
+      "mcpServers": "MCP Servers",
+      "data": "Data",
+      "help": "Help",
+      "updates": "Updates",
+      "about": "About"
+    },
+    "title": "Settings",
+    "underConstruction": "Section pending — will connect to the matching endpoint.",
+    "personalization": {
+      "title": "Personalization",
+      "subtitle": "How the app addresses you, interface language, and a shortcut to accessibility options. No account — everything lives in this browser.",
+      "nameLabel": "What should we call you?",
+      "namePlaceholder": "Your name",
+      "nameHint": "No account needed. Saved only in this browser. Leave it empty and save to go back to nameless greetings.",
+      "languageLabel": "Interface language",
+      "languageHint": "Greetings, law names and the corpus stay in Spanish — they're legal content, not UI.",
+      "a11yTitle": "Accessibility",
+      "a11yBody": "Theme (light / dark), table density and reading size live under <strong>Appearance</strong>. They'll move here once we have a wider pack (high contrast, motion-reduce, focus improvements).",
+      "toast": {
+        "nameSavedTitle": "Name updated",
+        "nameSavedBody": "We'll greet you as {{name}} from now on.",
+        "nameClearedTitle": "Name cleared",
+        "nameClearedBody": "Greetings will show without your name again.",
+        "nameFailedTitle": "Couldn't save",
+        "nameFailedBody": "localStorage is unavailable (private mode?)."
+      }
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…"
+  }
+}
