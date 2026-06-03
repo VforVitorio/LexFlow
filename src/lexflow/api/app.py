@@ -23,6 +23,7 @@ from lexflow.api.routers import (
     sync,
     system,
     tags,
+    telemetry,
     versions,
 )
 from lexflow.api.routers.graph import router as graph_router
@@ -114,6 +115,7 @@ app.include_router(sync.router, prefix="/api/v1")
 app.include_router(system.router, prefix="/api/v1")
 app.include_router(tags.router, prefix="/api/v1")
 app.include_router(mcp_servers.router, prefix="/api/v1")
+app.include_router(telemetry.router, prefix="/api/v1")
 
 
 @app.get("/health")
