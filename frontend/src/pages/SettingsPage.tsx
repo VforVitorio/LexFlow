@@ -21,8 +21,32 @@ type Section = typeof SECTIONS[number];
 export function SettingsPage() {
   const [section, setSection] = useState<Section>('Personalización');
   return (
-    <div className="flex h-full min-h-0">
-      <aside className="w-56 shrink-0 border-r border-border p-4.5">
+    // #36 — on mobile (<md) the page stacks: horizontal scroll of
+    // section chips on top, content below. On md+ keeps the
+    // sidebar + content split that desktop expects.
+    <div className="flex h-full min-h-0 flex-col md:flex-row">
+      {/* Mobile-only section chips. Scrolls horizontally; selected
+          chip wears the indigo treatment so the user knows where
+          they are. */}
+      <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-border bg-surface px-4 py-3 scrollbar-thin md:hidden">
+        {SECTIONS.map((s) => (
+          <button
+            key={`mobile-${s}`}
+            onClick={() => setSection(s)}
+            className={cn(
+              'shrink-0 rounded-full border px-3 py-1 text-[12.5px] font-medium transition-colors',
+              section === s
+                ? 'border-indigo-500 bg-primary-soft text-indigo-700 dark:text-indigo-200'
+                : 'border-border bg-bg text-muted hover:bg-surface-2',
+            )}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop sidebar — unchanged on md+, hidden on mobile. */}
+      <aside className="hidden w-56 shrink-0 border-r border-border p-4.5 md:block">
         <h2 className="mb-3.5 font-display text-lg font-semibold">Ajustes</h2>
         {SECTIONS.map((s) => (
           <button
@@ -37,7 +61,10 @@ export function SettingsPage() {
           </button>
         ))}
       </aside>
-      <div className="flex-1 overflow-auto px-10 py-7 scrollbar-thin">
+
+      {/* Content. Reduced padding on mobile so 375 px stays usable;
+          the desktop px-10 stays for md+. */}
+      <div className="flex-1 overflow-auto px-5 py-5 scrollbar-thin md:px-10 md:py-7">
         {section === 'Personalización' && <PersonalizacionSection />}
         {section === 'Modelos' && <ModelsSection />}
         {section === 'MCP Servers' && <McpServersSection />}

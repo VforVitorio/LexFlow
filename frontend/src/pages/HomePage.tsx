@@ -70,7 +70,7 @@ export function HomePage() {
 
   return (
     <div className="h-full overflow-auto scrollbar-thin">
-      <div className="mx-auto w-full max-w-[1200px] px-10 py-7">
+      <div className="mx-auto w-full max-w-[1200px] px-5 md:px-10 py-7">
         {/* Greeting — time-of-day aware; appends the user's name when
             stored (see #115 / #229 step 2). Plug-in seam for the
             randomised welcome pool (#248) is `lib/greeting.ts`. */}
