@@ -35,6 +35,12 @@ interface FilterRailProps {
   setTags: (next: Set<string>) => void;
   /** Live tag vocabulary from `/api/v1/tags` (top-N shown). */
   vocab: Array<{ tag: string; count: number }>;
+  /**
+   * When `true`, the rail renders as a plain `<section>` without the
+   * fixed-width / hidden-on-mobile chrome — used inside the mobile
+   * filter sheet where the parent owns the dialog wrapper.
+   */
+  inline?: boolean;
 }
 
 export function FilterRail({
@@ -47,9 +53,58 @@ export function FilterRail({
   allTags,
   setTags,
   vocab,
+  inline = false,
 }: FilterRailProps) {
+  if (inline) {
+    return (
+      <section aria-label="Filtros">
+        <FilterRailBody
+          status={status}
+          setStatus={setStatus}
+          rango={rango}
+          setRango={setRango}
+          ambito={ambito}
+          setAmbito={setAmbito}
+          allTags={allTags}
+          setTags={setTags}
+          vocab={vocab}
+        />
+      </section>
+    );
+  }
   return (
-    <aside aria-label="Filtros" className="w-64 shrink-0 overflow-auto border-r border-border bg-bg p-5 scrollbar-thin">
+    // #36 — hidden on mobile; the Explorer header's `Filtrar` button (in
+    // ExplorerPage) opens it as a slide-in sheet on <md via `inline`.
+    // From md+ upwards it stays as the persistent left rail.
+    <aside aria-label="Filtros" className="hidden w-64 shrink-0 overflow-auto border-r border-border bg-bg p-5 scrollbar-thin md:block">
+      <FilterRailBody
+        status={status}
+        setStatus={setStatus}
+        rango={rango}
+        setRango={setRango}
+        ambito={ambito}
+        setAmbito={setAmbito}
+        allTags={allTags}
+        setTags={setTags}
+        vocab={vocab}
+      />
+    </aside>
+  );
+}
+
+function FilterRailBody({
+  status,
+  setStatus,
+  rango,
+  setRango,
+  ambito,
+  setAmbito,
+  allTags,
+  setTags,
+  vocab,
+}: Omit<FilterRailProps, 'inline'>) {
+  return (
+    <>
       <div className="label-caps mb-2.5">Filtros</div>
 
       <FilterGroup title="Estado">
@@ -120,7 +175,7 @@ export function FilterRail({
           })}
         </div>
       </FilterGroup>
-    </aside>
+    </>
   );
 }
 

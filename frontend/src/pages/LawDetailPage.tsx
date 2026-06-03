@@ -46,7 +46,7 @@ export function LawDetailPage() {
           onTagClick={(t) => navigate(`/explorer?tags=${encodeURIComponent(t)}`)}
         />
 
-        <div className="border-b border-border px-8">
+        <div className="border-b border-border px-5 md:px-8">
           <Tabs
             value={tab}
             onChange={(v) => setTab(v as Tab)}
@@ -116,7 +116,7 @@ export function LawDetailPage() {
 function TextoTab({ articles, readingSize, onRefClick }: { articles: Article[]; readingSize: number; onRefClick: (r: ArticleRef) => void }) {
   return (
     <div className="flex-1 overflow-auto scrollbar-thin">
-      <div className="reading-col px-8 py-9">
+      <div className="reading-col px-5 md:px-8 py-9">
         <Callout tone="warning" title="Modificada por norma posterior">
           El art. 18.4 está parcialmente desarrollado por la <strong>LO 3/2018</strong>.{' '}
           <a className="underline" href="#">Ver diff →</a>
@@ -201,7 +201,7 @@ function LoadingSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col" aria-busy>
       {/* Header (matches LawHeader's height + badge strip) */}
-      <div className="border-b border-border px-8 py-6">
+      <div className="border-b border-border px-5 md:px-8 py-6">
         <div className="mb-3 flex items-center gap-2">
           <Skeleton className="h-5 w-16 rounded-full" />
           <Skeleton className="h-3.5 w-24" />
@@ -211,7 +211,7 @@ function LoadingSkeleton() {
       </div>
 
       {/* Tab strip */}
-      <div className="border-b border-border px-8">
+      <div className="border-b border-border px-5 md:px-8">
         <div className="flex gap-6 py-3">
           {[0, 1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-4 w-20" />
@@ -220,7 +220,7 @@ function LoadingSkeleton() {
       </div>
 
       {/* Reading column — two article blocks worth */}
-      <div className="reading-col flex-1 overflow-auto px-8 py-8 scrollbar-thin">
+      <div className="reading-col flex-1 overflow-auto px-5 md:px-8 py-8 scrollbar-thin">
         {[0, 1].map((blockIdx) => (
           <div key={blockIdx} className="mb-10">
             <Skeleton className="mb-3 h-5 w-32" />

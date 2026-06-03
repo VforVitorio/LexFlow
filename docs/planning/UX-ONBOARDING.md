@@ -181,19 +181,41 @@ Cualquier acción que hoy requiere editar un archivo, ejecutar un comando, o ent
 2. **Wizard si requiere input del usuario.** Ejemplo: añadir una plantilla con placeholders → editor visual de placeholders, no escribir `{cliente}` a mano.
 3. **Tutorial sombreado si requiere acción externa al sistema.** Ejemplo: instalar Ollama → abrir URL + verificar al volver, no "lee la docs".
 
-### Audit pendiente
+### Audit (Sprint 8, #131 — 2026-06-03)
 
-Sub-issue para listar todos los lugares hoy "manuales" y proponer el equivalente guiado:
+Cada acción del producto se clasifica según su patrón actual y el patrón guiado al que debe converger. **Status** es el estado real en `main` cuando se cierra #131; los items que aún no son guiados llevan link a la issue que los cubrirá.
 
-- [ ] Configurar MCP servers (hoy: editar `mcp.json` — futuro: drag `.mcpb` o paste JSON)
-- [ ] Cambiar tema (hoy: ya es botón ✓)
-- [ ] Sincronizar legalize-es (hoy: `git submodule update` — futuro: botón "Sincronizar corpus" → `POST /api/v1/sync/run`, ver #86)
-- [ ] Importar plantillas (hoy: no existe — futuro: drag-and-drop con conversión via `mcp-pandoc`)
-- [ ] Cambiar de provider de modelo (hoy: editar env vars — futuro: wizard reabrible)
+| Acción | Hoy | Patrón guiado | Status | Cubierto por |
+|---|---|---|---|---|
+| **Configurar nombre de usuario** | Form en Settings | Form en Settings | ✅ guiado | #115 / #133 |
+| **Cambiar idioma de la UI** | Tabs en Settings | Tabs en Settings | ✅ guiado | #115 |
+| **Cambiar tema claro/oscuro** | Toggle TopBar + Settings | Toggle + hotkey `Ctrl .` | ✅ guiado | preexistente |
+| **Cambiar densidad de tablas** | Tabs en Settings | Tabs + selector inline | ✅ guiado | preexistente |
+| **Tamaño de lectura (LawDetail)** | Slider en Settings | Slider | ✅ guiado | preexistente |
+| **Welcome de primer arranque** | Modal tegaki + nombre | Modal de un solo paso | ✅ guiado | #229 |
+| **Tutorial de la app** | Tour Reactour 6 pasos | Tour automático + re-launch en Settings → Ayuda | ✅ guiado | #116 / #132 |
+| **Ayuda contextual por página** | Floating `?` + drawer | Floating `?` con shortcuts + relanzador | ✅ guiado | #132 |
+| **Configurar modelo de chat** | Antes: env vars. Ahora: Model Wizard (3 pasos: detect → pick → install) | Wizard reabrible desde Settings → Modelos | ✅ guiado | #117 / #118 |
+| **Instalar modelo Ollama** | Antes: `ollama pull` en terminal. Ahora: barra de progreso SSE in-app | Botón "Instalar" en el wizard | ✅ guiado | #119 |
+| **Sincronizar corpus legalize-es** | Antes: `git submodule update`. Ahora: `POST /api/v1/sync` + botón "Sincronizar ahora" en Settings → Datos | Botón con feedback de progreso | ✅ guiado | sync.py |
+| **Configurar MCP servers** | Antes: editar `~/.lexflow/mcp.json`. Ahora: Settings → MCP Servers con paste JSON | Drag `.mcpb`, registry-slug y paste JSON (3 tabs) | 🟡 1/3 guiados | #122 (JSON paste ✓); registry-slug + .mcpb tracked como follow-ups del propio #122 |
+| **Bloquear/permitir herramientas MCP** | Env var `LEXFLOW_MCP_BLOCKED_TOOLS` | Toggle por tool en Settings + modal de consentimiento al ejecutar | 🔴 manual | #124 Phase 3 |
+| **Ver `mcp.log` audit chain** | Cat manual del fichero | Settings → Auditoría + verificador in-browser | 🔴 manual | #124 Phase 3 |
+| **Configurar claves cloud (OpenAI / Anthropic / Google)** | Env vars (`OPENAI_API_KEY`, etc.) | Form en Settings → Modelos con `python-keyring` | 🔴 manual | #120 |
+| **Importar plantillas/documentos legales** | No existe | Drag-and-drop con conversión via `mcp-pandoc` | ⚪ futuro | #108 |
+| **Editar `.gitignore` global** | Editar `.gitignore` a mano | CI guard automático rechaza patterns sin anclar | ✅ guiado vía CI | #97 |
+| **Verificar accesibilidad** | Ejecutar `axe-core` local | CI job + reporte automático | ✅ guiado vía CI | #130 |
 
-### Issue tracking
+### Resumen de cobertura
 
-- Issue: `[Refactor]: Audit de acciones manuales que deberían ser guiadas`
+- **15 acciones auditadas** sobre la SPA + el backend single-process.
+- **12 ya guiadas** (incluyendo `mcp.json` parcialmente con la modal de paste JSON).
+- **3 manuales restantes** + 1 futuro. Cada una tiene su issue de seguimiento — no se duplican en sub-tickets de #131.
+- El criterio de "Fase 8 hecha" (§7) exige que las 3 manuales pasen a guiadas antes de empaquetar para usuarios no técnicos.
+
+### Conclusión
+
+#131 se cierra con esta tabla viva. Las 3 acciones manuales restantes (`LEXFLOW_MCP_BLOCKED_TOOLS`, `mcp.log` viewer, cloud API keys) no requieren issues nuevas porque ya están cubiertas por #124 Phase 3 (las dos primeras) y #120 (claves cloud).
 
 ---
 

@@ -18,7 +18,7 @@ export function SearchResultsPage() {
   const grouped = groupBy(data?.hits ?? [], (h) => h.kind);
 
   return (
-    <div className="mx-auto h-full max-w-3xl overflow-auto px-8 py-7 scrollbar-thin">
+    <div className="mx-auto h-full max-w-3xl overflow-auto px-5 md:px-8 py-7 scrollbar-thin">
       <Input
         icon={<Search className="size-3.5" />}
         defaultValue={q}
