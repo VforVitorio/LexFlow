@@ -4,6 +4,7 @@ import { LeftRail } from './LeftRail';
 import { BottomTabBar } from './BottomTabBar';
 import { TopBar } from './TopBar';
 import { CommandPalette } from './CommandPalette';
+import { HelpDrawer } from '@/components/domain/HelpDrawer';
 import { useUi } from '@/lib/store';
 import { useHotkey, useGoToHotkey } from '@/lib/hotkeys';
 
@@ -47,6 +48,8 @@ export function AppShell() {
       >
         <Search className="size-5" />
       </button>
+      {/* #132 — contextual help drawer (desktop-only floating ?). */}
+      <HelpDrawer />
     </div>
   );
 }
