@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Settings, PanelLeft, PanelRightOpen } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BrandMark } from '@/components/BrandMark';
 import { Kbd } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -10,12 +11,13 @@ import { NAV } from './nav-items';
 export function LeftRail() {
   const expanded = useUi((s) => s.leftExpanded);
   const toggle = useUi((s) => s.toggleLeft);
+  const { t } = useTranslation();
   const { data: laws } = useLawsList({}, { staleTime: 60_000 });
   const recent = laws?.items.slice(0, 3) ?? [];
 
   return (
     <nav
-      aria-label="Navegación principal"
+      aria-label={t('nav.main')}
       data-tour-id="left-rail"
       className={cn(
         // Hidden on mobile — the BottomTabBar takes over below `md`.
@@ -37,7 +39,7 @@ export function LeftRail() {
           <NavLink
             key={it.to}
             to={it.to}
-            title={!expanded ? it.label : undefined}
+            title={!expanded ? t(it.labelKey) : undefined}
             className={({ isActive }) =>
               cn(
                 'group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium transition-colors',
@@ -52,7 +54,7 @@ export function LeftRail() {
               <>
                 {isActive && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-indigo-500" />}
                 <it.icon className={cn('size-[17px]', isActive ? 'stroke-[2]' : 'stroke-[1.75]')} />
-                {expanded && <span className="flex-1 text-left">{it.label}</span>}
+                {expanded && <span className="flex-1 text-left">{t(it.labelKey)}</span>}
                 {expanded && <Kbd>{it.k}</Kbd>}
               </>
             )}
@@ -63,7 +65,7 @@ export function LeftRail() {
       {/* Recent */}
       {expanded && recent.length > 0 && (
         <div className="mt-auto border-t border-border px-3.5 py-3">
-          <div className="label-caps mb-1.5">Reciente</div>
+          <div className="label-caps mb-1.5">{t('nav.recent')}</div>
           <div className="flex flex-col gap-1">
             {recent.map((l) => (
               <NavLink
@@ -83,7 +85,7 @@ export function LeftRail() {
       <div className={cn('border-t border-border p-2 flex flex-col gap-0.5', !expanded && 'items-center')}>
         <NavLink
           to="/settings"
-          title={!expanded ? 'Ajustes' : undefined}
+          title={!expanded ? t('nav.settings') : undefined}
           className={({ isActive }) =>
             cn(
               'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
@@ -93,19 +95,19 @@ export function LeftRail() {
           }
         >
           <Settings className="size-[17px]" />
-          {expanded && <span className="flex-1 text-left">Ajustes</span>}
+          {expanded && <span className="flex-1 text-left">{t('nav.settings')}</span>}
           {expanded && <Kbd>g s</Kbd>}
         </NavLink>
         <button
           onClick={toggle}
-          title={expanded ? 'Colapsar' : 'Expandir'}
+          title={expanded ? t('nav.collapse') : t('nav.expand')}
           className={cn(
             'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-muted hover:bg-surface-2',
             !expanded && 'justify-center px-0 py-2.5',
           )}
         >
           {expanded ? <PanelLeft className="size-4" /> : <PanelRightOpen className="size-4" />}
-          {expanded && <span className="flex-1 text-left">Colapsar</span>}
+          {expanded && <span className="flex-1 text-left">{t('nav.collapse')}</span>}
           {expanded && <Kbd>⌘ \\</Kbd>}
         </button>
       </div>
