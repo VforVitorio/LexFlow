@@ -135,6 +135,11 @@ _BUCKETS: dict[str, TokenBucket] = {}
 _REGISTRY_LOCK = asyncio.Lock()
 
 
+def _sanitize_for_log(value: str) -> str:
+    """Remove control characters that could forge/split log entries."""
+    return "".join(ch for ch in value if ch >= " " and ch != "\x7f")
+
+
 def _read_rpm(provider_key: str) -> int | None:
     """Read ``LEXFLOW_RATE_<PROVIDER>_RPM`` and parse it.
 
@@ -151,7 +156,8 @@ def _read_rpm(provider_key: str) -> int | None:
     try:
         rpm = int(raw)
     except ValueError:
-        logger.warning("Invalid %s=%r; disabling rate limit for %s", env_name, raw, provider_key)
+        safe_provider_key = _sanitize_for_log(provider_key)
+        logger.warning("Invalid %s=%r; disabling rate limit for %s", env_name, raw, safe_provider_key)
         return None
     if rpm <= 0:
         return None
