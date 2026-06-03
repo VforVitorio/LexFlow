@@ -125,6 +125,10 @@ def record_events(events: list[TelemetryEvent]) -> int:
             for line in lines:
                 fh.write(line + "\n")
     except OSError:
-        logger.warning("Telemetry write failed for %s", target, exc_info=True)
+        # ``target`` derives from ``LEXFLOW_CONFIG_DIR`` (operator-set,
+        # not request-controlled) but CodeQL's py/log-injection flags
+        # any ``%s`` interpolation of external input. Use explicit
+        # ``repr()`` — the only sanitiser the query recognises.
+        logger.warning("Telemetry write failed for %s", repr(str(target)), exc_info=True)
         return 0
     return len(lines)
