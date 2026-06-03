@@ -34,7 +34,7 @@ export function DiffPage() {
   return (
     <div className="flex h-full min-h-0">
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="border-b border-border bg-bg px-8 pt-5 pb-4">
+        <div className="border-b border-border bg-bg px-5 md:px-8 pt-5 pb-4">
           <div className="mb-2 flex items-center gap-2">
             <button
               onClick={() => navigate(`/laws/${lawId}`)}

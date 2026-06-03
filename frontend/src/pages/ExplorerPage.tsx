@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash } from 'lucide-react';
+import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
 import { Badge, Button, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
@@ -62,6 +62,8 @@ export function ExplorerPage() {
     return next;
   };
 
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   return (
     <div className="flex h-full min-h-0">
       <FilterRail
@@ -76,10 +78,51 @@ export function ExplorerPage() {
         vocab={vocab}
       />
 
+      {/* Mobile filter sheet — same FilterRail wrapped in a slide-in panel
+          when `filtersOpen` is true. The desktop rail above is hidden on
+          mobile via its own `hidden md:block`. (#36) */}
+      {filtersOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filtros"
+          className="fixed inset-0 z-[40] bg-black/30 backdrop-blur-[2px] md:hidden"
+          onClick={(e) => e.target === e.currentTarget && setFiltersOpen(false)}
+        >
+          <div className="absolute left-0 top-0 flex h-full w-[80vw] max-w-[320px] flex-col bg-bg shadow-2xl animate-in slide-in-from-left duration-200">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <span className="font-display text-base font-semibold">Filtros</span>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                aria-label="Cerrar filtros"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-5 scrollbar-thin">
+              <FilterRail
+                status={status}
+                setStatus={setStatus}
+                rango={rango}
+                setRango={setRango}
+                ambito={ambito}
+                setAmbito={setAmbito}
+                allTags={allTags}
+                setTags={setTags}
+                vocab={vocab}
+                inline
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
-        <div className="border-b border-border px-8 pt-5 pb-3.5">
+        <div className="border-b border-border px-5 pt-4 pb-3.5 md:px-8 md:pt-5">
           <h1 className="mb-3.5 font-display text-2xl font-semibold">Explorador</h1>
           <div className="flex flex-wrap items-center gap-2.5">
             <Input
@@ -87,15 +130,23 @@ export function ExplorerPage() {
               placeholder="Buscar por título, BOE, #tag…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="flex-1 min-w-[280px] max-w-[480px]"
+              className="flex-1 min-w-[200px] max-w-[480px]"
             />
+            <Button
+              variant="secondary"
+              icon={<SlidersHorizontal className="size-3.5" />}
+              onClick={() => setFiltersOpen(true)}
+              className="md:hidden"
+            >
+              Filtros
+            </Button>
             <SortButton sort={sort} setSort={setSort} />
             <Tabs variant="segmented" value={density} onChange={(v) => setDensity(v as 'compact' | 'comfortable' | 'cozy')} tabs={[
               { id: 'compact', label: '≡' },
               { id: 'comfortable', label: '≣' },
               { id: 'cozy', label: '☰' },
             ]} />
-            <Button variant="secondary" icon={<Download className="size-3.5" />}>Exportar</Button>
+            <Button variant="secondary" icon={<Download className="size-3.5" />} className="hidden sm:inline-flex">Exportar</Button>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
             <span className="font-mono text-fg">{items.length}</span> de <span className="font-mono">{data?.total ?? 0}</span> normas ·
