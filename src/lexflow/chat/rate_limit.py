@@ -135,11 +135,6 @@ _BUCKETS: dict[str, TokenBucket] = {}
 _REGISTRY_LOCK = asyncio.Lock()
 
 
-def _sanitize_for_log(value: str) -> str:
-    """Remove control characters that could forge/split log entries."""
-    return "".join(ch for ch in value if ch >= " " and ch != "\x7f")
-
-
 def _read_rpm(provider_key: str) -> int | None:
     """Read ``LEXFLOW_RATE_<PROVIDER>_RPM`` and parse it.
 
@@ -156,8 +151,19 @@ def _read_rpm(provider_key: str) -> int | None:
     try:
         rpm = int(raw)
     except ValueError:
-        safe_provider_key = _sanitize_for_log(provider_key)
-        logger.warning("Invalid %s=%r; disabling rate limit for %s", env_name, raw, safe_provider_key)
+        # ``raw`` is an env var (operator-controlled) and ``provider_key``
+        # is derived from the request body. CodeQL's py/log-injection
+        # query does NOT recognise the ``%r`` / ``%s`` format specs as
+        # sanitisers (alerts surfaced on the original PR). Explicit
+        # ``repr()`` calls match the query's sanitiser pattern — same
+        # bytes on the wire as ``%r``, different static-analysis signal.
+        # See the matching note in ``chat/streaming.py``.
+        logger.warning(
+            "Invalid env var; disabling rate limit. env=%s value=%s provider=%s",
+            repr(env_name),
+            repr(raw),
+            repr(provider_key),
+        )
         return None
     if rpm <= 0:
         return None
@@ -179,7 +185,10 @@ async def _get_or_create_bucket(provider_key: str) -> TokenBucket | None:
             return None
         bucket = TokenBucket(rpm)
         _BUCKETS[provider_key] = bucket
-        logger.info("Rate limit enabled for %s at %d rpm", provider_key, rpm)
+        # ``provider_key`` is request-derived; explicit ``repr()`` is
+        # the only form CodeQL's py/log-injection accepts as sanitised
+        # (see ``_read_rpm`` for the longer note).
+        logger.info("Rate limit enabled at %d rpm for provider=%s", rpm, repr(provider_key))
         return bucket
 
 
