@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.28.1](https://github.com/VforVitorio/LexFlow/compare/v0.28.0...v0.28.1) (2026-06-03)
+
+
+### Performance
+
+* **graph:** tighten xyflow flags + memo LfNode for 60-fps at 1000+ nodes (closes [#73](https://github.com/VforVitorio/LexFlow/issues/73)) ([84c4aaa](https://github.com/VforVitorio/LexFlow/commit/84c4aaa9f3fe909b4fa5c731260580d14d2e1fa7))
+
 ## [0.28.0](https://github.com/VforVitorio/LexFlow/compare/v0.27.0...v0.28.0) (2026-06-03)
 
 
