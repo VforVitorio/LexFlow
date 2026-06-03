@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { NAV } from './nav-items';
 
@@ -15,9 +16,10 @@ import { NAV } from './nav-items';
  * - Respects the iOS home-indicator safe area via `pb-[env(safe-area-inset-bottom)]`.
  */
 export function BottomTabBar() {
+  const { t } = useTranslation();
   return (
     <nav
-      aria-label="Navegación principal"
+      aria-label={t('nav.main')}
       className="flex shrink-0 items-stretch justify-around border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       {NAV.map((it) => (
@@ -34,7 +36,7 @@ export function BottomTabBar() {
           {({ isActive }) => (
             <>
               <it.icon className={cn('size-[22px]', isActive ? 'stroke-[2.25]' : 'stroke-[1.75]')} />
-              <span>{it.label}</span>
+              <span>{t(it.labelKey)}</span>
             </>
           )}
         </NavLink>
