@@ -72,10 +72,15 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
             duration_ms = (time.perf_counter() - start) * 1000
             response.headers["X-Request-Id"] = request_id
             if request.url.path not in self._skip_paths:
+                # ``request.method`` and ``request.url.path`` are
+                # user-controllable. CodeQL's py/log-injection does NOT
+                # treat ``%s`` as a sanitiser; explicit ``repr()`` is the
+                # one form it accepts (same trick used in chat/streaming
+                # and chat/rate_limit logs).
                 logger.info(
                     "%s %s -> %d",
-                    request.method,
-                    request.url.path,
+                    repr(request.method),
+                    repr(request.url.path),
                     response.status_code,
                     extra={
                         "path": request.url.path,
