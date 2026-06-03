@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.29.0](https://github.com/VforVitorio/LexFlow/compare/v0.28.1...v0.29.0) (2026-06-03)
+
+
+### Features
+
+* **chat:** per-provider rate limiting for cloud APIs ([#93](https://github.com/VforVitorio/LexFlow/issues/93)) ([2315783](https://github.com/VforVitorio/LexFlow/commit/2315783cee66f7b4efbb234e7a4be3c717b1439c))
+* **chat:** per-provider token-bucket rate limiting for cloud APIs (closes [#93](https://github.com/VforVitorio/LexFlow/issues/93)) ([28479d1](https://github.com/VforVitorio/LexFlow/commit/28479d17b7618bc77dc844e32e50bce6512409af))
+* **health:** extended /api/v1/system/health snapshot (part of [#74](https://github.com/VforVitorio/LexFlow/issues/74)) ([4f4a5cc](https://github.com/VforVitorio/LexFlow/commit/4f4a5ccdf02957b284a3bcc172282da47429707c))
+* **health:** extended /api/v1/system/health snapshot (part of [#74](https://github.com/VforVitorio/LexFlow/issues/74)) ([056b10f](https://github.com/VforVitorio/LexFlow/commit/056b10fb885d446a8e8276b50aec54959b64f2c5))
+* **i18n:** populate dictionaries; migrate nav + settings (first slice of [#74](https://github.com/VforVitorio/LexFlow/issues/74)) ([3cad999](https://github.com/VforVitorio/LexFlow/commit/3cad999663f737d54d23d1b50bfff079b361415d))
+* **i18n:** populate ES/EN dictionaries; migrate nav + settings first slice ([7a22795](https://github.com/VforVitorio/LexFlow/commit/7a22795322e6f47bb180b948fcc9c9d3d9675d36))
+* **logging:** structured JSON logs + request-id correlation ([#92](https://github.com/VforVitorio/LexFlow/issues/92)) ([6d6929e](https://github.com/VforVitorio/LexFlow/commit/6d6929e911ade1d6d36ff708a33c756b3813d3f9))
+* **logging:** structured JSON logs + request-id correlation (closes [#92](https://github.com/VforVitorio/LexFlow/issues/92)) ([26e0254](https://github.com/VforVitorio/LexFlow/commit/26e02543a57064a19f091043fc817551cbf28838))
+* **telemetry:** opt-in usage telemetry endpoint (part of [#74](https://github.com/VforVitorio/LexFlow/issues/74)) ([6a55cb8](https://github.com/VforVitorio/LexFlow/commit/6a55cb88270ddd35570dbc1227e91c19917d3a1d))
+* **telemetry:** opt-in usage telemetry endpoint (part of [#74](https://github.com/VforVitorio/LexFlow/issues/74)) ([5eb5fee](https://github.com/VforVitorio/LexFlow/commit/5eb5fee21387d342e3da6000105bdab08ddbe8de))
+
+
+### Bug Fixes
+
+* **rate-limit:** explicit repr() to silence CodeQL log-injection ([#93](https://github.com/VforVitorio/LexFlow/issues/93)) ([ba34ccc](https://github.com/VforVitorio/LexFlow/commit/ba34cccd3d41dc8bf9a88f06699e125185c2cdd5))
+* **telemetry:** explicit repr() to silence CodeQL log-injection ([8f2d05e](https://github.com/VforVitorio/LexFlow/commit/8f2d05eceb5f6e98865a7ebd6839cb59a392d5f3))
+
 ## [0.28.1](https://github.com/VforVitorio/LexFlow/compare/v0.28.0...v0.28.1) (2026-06-03)
 
 
