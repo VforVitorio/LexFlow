@@ -13,11 +13,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
+    "generate:api": "openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.ts",
     "preview:ci": "vite preview --port 4173 --strictPort",
-    "generate:api": "openapi-typescript http://localhost:8000/openapi.json -o src/api/schema.ts"
+    "a11y": "start-server-and-test preview:ci http://localhost:4173 a11y:run",
+    "a11y:run": "node scripts/a11y.mjs"
   },
   "dependencies": {
     "@reactour/tour": "^3.8.0",
@@ -37,6 +36,7 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@axe-core/cli": "^4.11.3",
     "@eslint/js": "^9.39.4",
     "@playwright/test": "^1.60.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -57,6 +57,7 @@
     "jsdom": "^29.1.1",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.4.49",
+    "start-server-and-test": "^3.0.6",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",
     "vite": "^6.4.3",

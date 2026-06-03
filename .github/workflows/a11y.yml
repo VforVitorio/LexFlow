@@ -1,0 +1,70 @@
+name: a11y
+
+# Axe-core accessibility gate (#130). Runs the production build through
+# `@axe-core/cli` for the six golden routes (Home / Explorer / Graph /
+# Chat / Dashboards / Settings) and fails on any WCAG 2.0/2.1 A or AA
+# violation. Best-practice findings print but don't gate.
+#
+# Triggered on PRs that touch the SPA + nightly via cron — keeps every
+# PR scan under a couple of minutes while still catching drift that
+# slips in between PR merges (eg. a content edit that breaks contrast).
+#
+# A failed run uploads `frontend/axe-report.json` so the reviewer can
+# read the offending selectors without re-running locally.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/a11y.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+  schedule:
+    # 06:00 UTC = 08:00 Madrid. Catches drift from cross-PR merges that
+    # individually passed but combine into a regression.
+    - cron: "0 6 * * *"
+
+concurrency:
+  group: a11y-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  axe:
+    name: axe-core
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Run axe-core against the production build
+        # `npm run a11y` boots `vite preview` on 4173 via
+        # start-server-and-test, then runs `node scripts/a11y.mjs`,
+        # then tears the preview down. The script exits non-zero on
+        # any WCAG 2.x A/AA violation.
+        run: npm run a11y
+
+      - name: Upload axe report on failure
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: axe-report
+          path: frontend/axe-report.json
+          if-no-files-found: ignore
+          retention-days: 14
