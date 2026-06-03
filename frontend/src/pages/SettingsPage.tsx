@@ -15,11 +15,23 @@ import type { Lang } from '@/i18n';
 
 // "Personalización" replaces the prior "Perfil" stub (#133) — name +
 // language + a11y now have a home. Other sections kept verbatim.
-const SECTIONS = ['Personalización', 'Apariencia', 'Modelos', 'MCP Servers', 'Datos', 'Ayuda', 'Actualizaciones', 'Acerca de'] as const;
-type Section = typeof SECTIONS[number];
+// Each entry pairs a stable id (used to drive switching + content
+// dispatch) with the i18n key that renders the visible label.
+const SECTIONS = [
+  { id: 'personalization', labelKey: 'settings.sections.personalization' },
+  { id: 'appearance', labelKey: 'settings.sections.appearance' },
+  { id: 'models', labelKey: 'settings.sections.models' },
+  { id: 'mcpServers', labelKey: 'settings.sections.mcpServers' },
+  { id: 'data', labelKey: 'settings.sections.data' },
+  { id: 'help', labelKey: 'settings.sections.help' },
+  { id: 'updates', labelKey: 'settings.sections.updates' },
+  { id: 'about', labelKey: 'settings.sections.about' },
+] as const;
+type SectionId = typeof SECTIONS[number]['id'];
 
 export function SettingsPage() {
-  const [section, setSection] = useState<Section>('Personalización');
+  const { t } = useTranslation();
+  const [section, setSection] = useState<SectionId>('personalization');
   return (
     // #36 — on mobile (<md) the page stacks: horizontal scroll of
     // section chips on top, content below. On md+ keeps the
@@ -31,33 +43,33 @@ export function SettingsPage() {
       <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-border bg-surface px-4 py-3 scrollbar-thin md:hidden">
         {SECTIONS.map((s) => (
           <button
-            key={`mobile-${s}`}
-            onClick={() => setSection(s)}
+            key={`mobile-${s.id}`}
+            onClick={() => setSection(s.id)}
             className={cn(
               'shrink-0 rounded-full border px-3 py-1 text-[12.5px] font-medium transition-colors',
-              section === s
+              section === s.id
                 ? 'border-indigo-500 bg-primary-soft text-indigo-700 dark:text-indigo-200'
                 : 'border-border bg-bg text-muted hover:bg-surface-2',
             )}
           >
-            {s}
+            {t(s.labelKey)}
           </button>
         ))}
       </div>
 
       {/* Desktop sidebar — unchanged on md+, hidden on mobile. */}
       <aside className="hidden w-56 shrink-0 border-r border-border p-4.5 md:block">
-        <h2 className="mb-3.5 font-display text-lg font-semibold">Ajustes</h2>
+        <h2 className="mb-3.5 font-display text-lg font-semibold">{t('settings.title')}</h2>
         {SECTIONS.map((s) => (
           <button
-            key={s}
-            onClick={() => setSection(s)}
+            key={s.id}
+            onClick={() => setSection(s.id)}
             className={cn(
               'mb-0.5 block w-full rounded px-2.5 py-1.5 text-left text-[13.5px] transition-colors',
-              section === s ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',
+              section === s.id ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',
             )}
           >
-            {s}
+            {t(s.labelKey)}
           </button>
         ))}
       </aside>
@@ -65,16 +77,16 @@ export function SettingsPage() {
       {/* Content. Reduced padding on mobile so 375 px stays usable;
           the desktop px-10 stays for md+. */}
       <div className="flex-1 overflow-auto px-5 py-5 scrollbar-thin md:px-10 md:py-7">
-        {section === 'Personalización' && <PersonalizacionSection />}
-        {section === 'Modelos' && <ModelsSection />}
-        {section === 'MCP Servers' && <McpServersSection />}
-        {section === 'Apariencia' && <AppearanceSection />}
-        {section === 'Datos' && <DataSection />}
-        {section === 'Ayuda' && <HelpSection />}
-        {(section === 'Actualizaciones' || section === 'Acerca de') && (
+        {section === 'personalization' && <PersonalizacionSection />}
+        {section === 'models' && <ModelsSection />}
+        {section === 'mcpServers' && <McpServersSection />}
+        {section === 'appearance' && <AppearanceSection />}
+        {section === 'data' && <DataSection />}
+        {section === 'help' && <HelpSection />}
+        {(section === 'updates' || section === 'about') && (
           <div className="py-10 text-center text-muted">
-            <h1 className="font-display text-2xl font-semibold">{section}</h1>
-            <p className="mt-2 text-sm">Sección por completar — se conectará al endpoint correspondiente.</p>
+            <h1 className="font-display text-2xl font-semibold">{t(`settings.sections.${section}`)}</h1>
+            <p className="mt-2 text-sm">{t('settings.underConstruction')}</p>
           </div>
         )}
       </div>
@@ -99,7 +111,7 @@ export function SettingsPage() {
  * duplicating the controls here.
  */
 function PersonalizacionSection() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const initialName = readStoredUserName() ?? '';
   const [name, setName] = useState(initialName);
   const trimmed = name.trim();
@@ -115,16 +127,18 @@ function PersonalizacionSection() {
       }
       toast({
         tone: 'info',
-        title: trimmed.length === 0 ? 'Nombre borrado' : 'Nombre actualizado',
+        title: trimmed.length === 0
+          ? t('settings.personalization.toast.nameClearedTitle')
+          : t('settings.personalization.toast.nameSavedTitle'),
         message: trimmed.length === 0
-          ? 'Los saludos volverán a mostrarse sin tu nombre.'
-          : `A partir de ahora te saludaremos como ${trimmed}.`,
+          ? t('settings.personalization.toast.nameClearedBody')
+          : t('settings.personalization.toast.nameSavedBody', { name: trimmed }),
       });
     } catch {
       toast({
         tone: 'danger',
-        title: 'No se pudo guardar',
-        message: 'localStorage no está disponible (modo privado?).',
+        title: t('settings.personalization.toast.nameFailedTitle'),
+        message: t('settings.personalization.toast.nameFailedBody'),
       });
     }
   };
@@ -135,34 +149,30 @@ function PersonalizacionSection() {
 
   return (
     <>
-      <h1 className="font-display text-[22px] font-semibold">Personalización</h1>
-      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
-        Nombre con el que la app se dirige a ti, idioma de la interfaz y atajo a las opciones de accesibilidad. Sin cuenta — todo vive en el navegador.
-      </p>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.personalization.title')}</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">{t('settings.personalization.subtitle')}</p>
 
       {/* Name */}
       <form onSubmit={saveName} className="mb-7">
-        <label htmlFor="user-name-input" className="label-caps mb-2 block">¿Cómo deberíamos llamarte?</label>
+        <label htmlFor="user-name-input" className="label-caps mb-2 block">{t('settings.personalization.nameLabel')}</label>
         <div className="flex max-w-md items-center gap-2.5">
           <input
             id="user-name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Tu nombre"
+            placeholder={t('settings.personalization.namePlaceholder')}
             maxLength={48}
             className="flex-1 rounded-md border border-border-strong bg-bg px-3 py-2 text-[14px] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
           />
-          <Button type="submit" size="sm" disabled={!nameDirty}>Guardar</Button>
+          <Button type="submit" size="sm" disabled={!nameDirty}>{t('common.save')}</Button>
         </div>
-        <p className="mt-1.5 text-[11.5px] text-muted">
-          No hace falta cuenta. Solo se guarda en este navegador. Déjalo vacío y guarda para volver a los saludos sin nombre.
-        </p>
+        <p className="mt-1.5 text-[11.5px] text-muted">{t('settings.personalization.nameHint')}</p>
       </form>
 
       {/* Language */}
       <div className="mb-7">
-        <div className="label-caps mb-2">Idioma de la interfaz</div>
+        <div className="label-caps mb-2">{t('settings.personalization.languageLabel')}</div>
         <Tabs
           variant="segmented"
           value={i18n.resolvedLanguage ?? 'es'}
@@ -172,18 +182,20 @@ function PersonalizacionSection() {
             label: lng === 'es' ? 'Español' : 'English',
           }))}
         />
-        <p className="mt-1.5 text-[11.5px] text-muted">
-          La cabecera de saludo, los nombres de norma y el corpus permanecen en español — son contenido legal, no UI.
-        </p>
+        <p className="mt-1.5 text-[11.5px] text-muted">{t('settings.personalization.languageHint')}</p>
       </div>
 
-      {/* Accessibility pointer */}
+      {/* Accessibility pointer — body has inline <strong> so we render
+          the translated HTML safely; the only markup is a known tag. */}
       <div className="rounded-lg border border-border bg-surface/60 p-4">
-        <div className="font-display text-[14.5px] font-semibold">Accesibilidad</div>
-        <p className="mt-1 text-[12.5px] text-muted">
-          El tema (claro / oscuro), la densidad de las tablas y el tamaño de lectura viven en{' '}
-          <span className="font-semibold text-fg">Apariencia</span>. Pasarán a esta sección cuando tengamos un pack más amplio (alto contraste, motion-reduce, focus mejorado).
-        </p>
+        <div className="font-display text-[14.5px] font-semibold">{t('settings.personalization.a11yTitle')}</div>
+        <p
+          className="mt-1 text-[12.5px] text-muted"
+          // Body contains a single <strong>…</strong> — no user input
+          // ever flows through here, so the dangerouslySetInnerHTML is
+          // bounded to a static, code-owned dictionary value.
+          dangerouslySetInnerHTML={{ __html: t('settings.personalization.a11yBody') }}
+        />
       </div>
     </>
   );

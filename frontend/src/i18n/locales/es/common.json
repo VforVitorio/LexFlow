@@ -1,1 +1,52 @@
-{}
+{
+  "nav": {
+    "home": "Inicio",
+    "explorer": "Explorador",
+    "graph": "Grafo",
+    "chat": "Chat",
+    "dashboards": "Cuadros",
+    "settings": "Ajustes",
+    "main": "Navegación principal",
+    "collapse": "Colapsar",
+    "expand": "Expandir",
+    "recent": "Reciente"
+  },
+  "settings": {
+    "sections": {
+      "personalization": "Personalización",
+      "appearance": "Apariencia",
+      "models": "Modelos",
+      "mcpServers": "MCP Servers",
+      "data": "Datos",
+      "help": "Ayuda",
+      "updates": "Actualizaciones",
+      "about": "Acerca de"
+    },
+    "title": "Ajustes",
+    "underConstruction": "Sección por completar — se conectará al endpoint correspondiente.",
+    "personalization": {
+      "title": "Personalización",
+      "subtitle": "Nombre con el que la app se dirige a ti, idioma de la interfaz y atajo a las opciones de accesibilidad. Sin cuenta — todo vive en el navegador.",
+      "nameLabel": "¿Cómo deberíamos llamarte?",
+      "namePlaceholder": "Tu nombre",
+      "nameHint": "No hace falta cuenta. Solo se guarda en este navegador. Déjalo vacío y guarda para volver a los saludos sin nombre.",
+      "languageLabel": "Idioma de la interfaz",
+      "languageHint": "La cabecera de saludo, los nombres de norma y el corpus permanecen en español — son contenido legal, no UI.",
+      "a11yTitle": "Accesibilidad",
+      "a11yBody": "El tema (claro / oscuro), la densidad de las tablas y el tamaño de lectura viven en <strong>Apariencia</strong>. Pasarán a esta sección cuando tengamos un pack más amplio (alto contraste, motion-reduce, focus mejorado).",
+      "toast": {
+        "nameSavedTitle": "Nombre actualizado",
+        "nameSavedBody": "A partir de ahora te saludaremos como {{name}}.",
+        "nameClearedTitle": "Nombre borrado",
+        "nameClearedBody": "Los saludos volverán a mostrarse sin tu nombre.",
+        "nameFailedTitle": "No se pudo guardar",
+        "nameFailedBody": "localStorage no está disponible (modo privado?)."
+      }
+    }
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "loading": "Cargando…"
+  }
+}
