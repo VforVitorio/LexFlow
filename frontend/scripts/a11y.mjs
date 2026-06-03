@@ -58,8 +58,12 @@ function runAxe(url) {
       url,
       '--load-delay',
       '1500',
+      // @axe-core/cli accepts `chrome` / `chrome-headless` / `firefox` /
+      // `safari` — NOT `chromium` (first CI run failed there). Use
+      // `chrome-headless` so the CI runner doesn't try to open a
+      // window.
       '--browser',
-      'chromium',
+      'chrome-headless',
       '--exit',
       '--no-reporter',
       '--save',
