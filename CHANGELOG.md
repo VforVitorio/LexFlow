@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.30.0](https://github.com/VforVitorio/LexFlow/compare/v0.29.0...v0.30.0) (2026-06-04)
+
+
+### Features
+
+* **i18n:** migrate ExplorerPage + FilterRail UI chrome ([6371123](https://github.com/VforVitorio/LexFlow/commit/6371123d4ccfc38d5bf2ec45da7b82aa9d09e954))
+* **i18n:** migrate ExplorerPage + FilterRail UI chrome ([#334](https://github.com/VforVitorio/LexFlow/issues/334)) ([fe8620e](https://github.com/VforVitorio/LexFlow/commit/fe8620ee0abf66baabb78a9ae93b04c26f862ebc))
+* **i18n:** migrate HomePage + NotFoundPage UI chrome ([ce7f6ef](https://github.com/VforVitorio/LexFlow/commit/ce7f6efacc278196d0b951199bf0aa5cecbb0d69))
+* **i18n:** migrate HomePage + NotFoundPage UI chrome ([#333](https://github.com/VforVitorio/LexFlow/issues/333)) ([6164597](https://github.com/VforVitorio/LexFlow/commit/6164597486795da317cb73fa4ea0719e931bb887))
+
+
+### Documentation
+
+* document CORS policy (single-origin = OFF) ([5852efb](https://github.com/VforVitorio/LexFlow/commit/5852efb6e2a220fef15502a88b04853fdf79caed))
+* document CORS policy (single-origin = OFF) ([#338](https://github.com/VforVitorio/LexFlow/issues/338)) ([6f6a13b](https://github.com/VforVitorio/LexFlow/commit/6f6a13b625a7131b1b306d71a3750de0001194ae))
+
 ## [0.29.0](https://github.com/VforVitorio/LexFlow/compare/v0.28.1...v0.29.0) (2026-06-03)
 
 
