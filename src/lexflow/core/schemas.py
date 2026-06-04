@@ -198,11 +198,17 @@ class GraphNodeData(BaseModel):
 
 
 class GraphEdgeData(BaseModel):
-    """Edge representation for subgraph responses."""
+    """Edge representation for subgraph responses.
+
+    ``kind`` carries the relationship type (cites / modifies / repeals /
+    develops, #144). Older cached graphs that pre-date the typing
+    surface ``None`` here — the frontend treats it as ``cites``.
+    """
 
     source: str
     target: str
     source_article: str | None = None
+    kind: str | None = None
 
 
 class GraphSubgraphResponse(BaseModel):

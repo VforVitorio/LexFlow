@@ -22,6 +22,7 @@ from lexflow.core.enums import (
     Jurisdiction,
     LawRank,
     LawStatus,
+    ReferenceKind,
     Scope,
 )
 from lexflow.core.exceptions import ParserError
@@ -329,30 +330,96 @@ _ARTICLE_REF_RE = re.compile(
 )
 
 
+# Number of characters of preceding context fed into the classifier.
+# 120 covers the typical "se modifica el ... Ley X/YYYY" distance
+# without dragging in unrelated sentences from earlier paragraphs.
+_CLASSIFY_CONTEXT_CHARS = 120
+
+# Heuristic markers, ordered by precedence: REPEALS wins over MODIFIES
+# wins over DEVELOPS. ``cites`` is the default fallback.
+_REPEALS_PATTERNS = re.compile(
+    r"derog|queda\s+derogad|pierde\s+su\s+vigencia",
+    re.IGNORECASE,
+)
+_MODIFIES_PATTERNS = re.compile(
+    r"modifica|se\s+da\s+nueva\s+redacci[oó]n|se\s+sustituye",
+    re.IGNORECASE,
+)
+_DEVELOPS_PATTERNS = re.compile(
+    r"desarroll|en\s+aplicaci[oó]n\s+de|en\s+cumplimiento\s+de",
+    re.IGNORECASE,
+)
+
+
+def _classify_reference(context: str) -> ReferenceKind:
+    """Pick a :class:`ReferenceKind` from the preceding context (#144).
+
+    Precedence is REPEALS → MODIFIES → DEVELOPS → CITES (default). The
+    heuristic favours the "stronger" relation when multiple markers
+    co-occur, e.g. "se modifica la Ley X, y queda derogada la Ley Y"
+    parsed near "Ley Y" should classify as REPEALS.
+    """
+    if _REPEALS_PATTERNS.search(context):
+        return ReferenceKind.REPEALS
+    if _MODIFIES_PATTERNS.search(context):
+        return ReferenceKind.MODIFIES
+    if _DEVELOPS_PATTERNS.search(context):
+        return ReferenceKind.DEVELOPS
+    return ReferenceKind.CITES
+
+
+_SENTENCE_BOUNDARIES = ".;\n"
+
+
+def _context_before(text: str, start: int) -> str:
+    """Return the citation's preceding context, sentence-bounded.
+
+    Take up to ``_CLASSIFY_CONTEXT_CHARS`` characters before ``start``,
+    then trim to the last sentence boundary (``.``, ``;`` or newline) so
+    a marker from the previous sentence doesn't bleed into this
+    classification. Example: "Se modifica la Ley 1/1990 en su artículo 3.
+    Lo dispuesto en la Ley 2/1995 sigue vigente." — the second citation
+    must classify as CITES, not MODIFIES.
+    """
+    raw = text[max(0, start - _CLASSIFY_CONTEXT_CHARS) : start]
+    last_boundary = max(raw.rfind(ch) for ch in _SENTENCE_BOUNDARIES)
+    if last_boundary >= 0:
+        return raw[last_boundary + 1 :]
+    return raw
+
+
 def extract_references(
     text: str,
     source_article: str | None = None,
 ) -> list[Reference]:
-    """Find all cross-references in a text block."""
+    """Find all cross-references in a text block.
+
+    Each reference is classified by inspecting the ~120 characters of
+    preceding context — see :func:`_classify_reference`.
+    """
     refs: list[Reference] = []
 
     for match in _LAW_REF_RE.finditer(text):
         ref_text = match.group(0)
+        kind = _classify_reference(_context_before(text, match.start()))
         refs.append(
             Reference(
                 target_id=_resolve_reference_id(ref_text),
                 target_text=ref_text,
                 source_article=source_article,
+                kind=kind,
             )
         )
 
     for match in _BOE_REF_RE.finditer(text):
         ref_text = match.group(0)
+        kind = _classify_reference(_context_before(text, match.start()))
         refs.append(
             Reference(
                 target_id=ref_text,
                 target_text=ref_text,
                 source_article=source_article,
+                kind=kind,
             )
         )
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import networkx as nx
 
+from lexflow.core.enums import ReferenceKind
 from lexflow.core.models import LawMetadata
 
 
@@ -55,16 +56,24 @@ class LegalGraph:
         *,
         source_article: str | None = None,
         reference_text: str = "",
+        kind: ReferenceKind = ReferenceKind.CITES,
     ) -> bool:
         """Add a directed edge from source to target law.
 
         Returns True if the edge was added, False if either endpoint is not
-        a known node. Returning a flag lets callers keep accurate counters
-        instead of guessing from `edge_count()` deltas.
+        a known node. ``kind`` carries the relationship type (cites /
+        modifies / repeals / develops, #144) — defaults to ``cites`` so
+        callers built before the typing landed still get a sensible edge.
         """
         if source_id not in self._g or target_id not in self._g:
             return False
-        self._g.add_edge(source_id, target_id, source_article=source_article, reference_text=reference_text)
+        self._g.add_edge(
+            source_id,
+            target_id,
+            source_article=source_article,
+            reference_text=reference_text,
+            kind=kind.value,
+        )
         return True
 
     # ------------------------------------------------------------------
@@ -105,10 +114,27 @@ class LegalGraph:
             return []
         return [(pred, dict(self._g[pred][law_id])) for pred in self._g.predecessors(law_id)]
 
-    def add_dangling(self, target_id: str, source_id: str, *, source_article: str | None, reference_text: str) -> None:
-        """Park an unresolved reference from *source_id* to absent *target_id*."""
+    def add_dangling(
+        self,
+        target_id: str,
+        source_id: str,
+        *,
+        source_article: str | None,
+        reference_text: str,
+        kind: ReferenceKind = ReferenceKind.CITES,
+    ) -> None:
+        """Park an unresolved reference from *source_id* to absent *target_id*.
+
+        Carries ``kind`` so when the target later appears the resolved
+        edge keeps its original relationship type (#144).
+        """
         self.dangling.setdefault(target_id, []).append(
-            {"source": source_id, "source_article": source_article, "reference_text": reference_text}
+            {
+                "source": source_id,
+                "source_article": source_article,
+                "reference_text": reference_text,
+                "kind": kind.value,
+            }
         )
 
     def pop_dangling(self, target_id: str) -> list[dict[str, str | None]]:

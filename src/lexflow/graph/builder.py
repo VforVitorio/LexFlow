@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 
 from lexflow.core.delta_sync import CorpusDiff
+from lexflow.core.enums import ReferenceKind
 from lexflow.core.exceptions import LexFlowError
 from lexflow.core.models import Law
 from lexflow.core.registry import LawRegistry
@@ -66,6 +67,8 @@ def _add_law_edges(graph: LegalGraph, law_id: str, law: Law) -> int:
     """Add one law's outgoing edges; park unresolved targets as dangling.
 
     Returns the number of edges actually inserted (target was a known node).
+    Propagates ``ref.kind`` (cites/modifies/repeals/develops, #144) into
+    the edge attribute so frontend renders can colour by relation.
     """
     added = 0
     for ref in law.references:
@@ -76,6 +79,7 @@ def _add_law_edges(graph: LegalGraph, law_id: str, law: Law) -> int:
             ref.target_id,
             source_article=ref.source_article,
             reference_text=ref.target_text,
+            kind=ref.kind,
         )
         if inserted:
             added += 1
@@ -85,6 +89,7 @@ def _add_law_edges(graph: LegalGraph, law_id: str, law: Law) -> int:
                 law_id,
                 source_article=ref.source_article,
                 reference_text=ref.target_text,
+                kind=ref.kind,
             )
     return added
 
@@ -115,11 +120,22 @@ def _upsert_law(graph: LegalGraph, registry: LawRegistry, law_id: str) -> None:
 
 
 def _resolve_incoming(graph: LegalGraph, law_id: str) -> None:
-    """Turn references that were waiting on a now-added law into real edges."""
+    """Turn references that were waiting on a now-added law into real edges.
+
+    Carries ``kind`` forward from the dangling record so resolved edges
+    keep the same relationship type as the original reference (#144).
+    Older cached graphs that pre-date the typing fall back to ``cites``.
+    """
     for ref in graph.pop_dangling(law_id):
+        raw_kind = ref.get("kind") or ReferenceKind.CITES.value
+        try:
+            kind = ReferenceKind(raw_kind)
+        except ValueError:
+            kind = ReferenceKind.CITES
         graph.add_reference(
             ref["source"] or "",
             law_id,
             source_article=ref["source_article"],
             reference_text=ref["reference_text"] or "",
+            kind=kind,
         )

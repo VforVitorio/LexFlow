@@ -46,6 +46,20 @@ class Scope(StrEnum):
     LOCAL = "Local"
 
 
+class ReferenceKind(StrEnum):
+    """How one law relates to another via a cross-reference (#144).
+
+    Heuristically inferred from the textual context immediately preceding
+    the citation. ``CITES`` is the fallback when no stronger marker shows
+    up — the vast majority of references in the corpus are plain cites.
+    """
+
+    CITES = "cites"
+    MODIFIES = "modifies"
+    REPEALS = "repeals"
+    DEVELOPS = "develops"
+
+
 class Jurisdiction(StrEnum):
     """Jurisdiction codes for Spanish autonomous communities.
 

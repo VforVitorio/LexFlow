@@ -11,6 +11,7 @@ from lexflow.core.enums import (
     Jurisdiction,
     LawRank,
     LawStatus,
+    ReferenceKind,
     Scope,
 )
 
@@ -35,6 +36,10 @@ class Reference(BaseModel):
     source_article: str | None = Field(
         None,
         description="Article number where this reference appears.",
+    )
+    kind: ReferenceKind = Field(
+        default=ReferenceKind.CITES,
+        description="Relationship type inferred from the citation context (#144).",
     )
 
 
