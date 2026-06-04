@@ -44,6 +44,47 @@
       }
     }
   },
+  "home": {
+    "searchPlaceholder": "Pregunta o busca cualquier norma…",
+    "popularTags": "Tags populares",
+    "syncPrefix": "El corpus está al día. Última sincronización con",
+    "whatChanged": "Qué ha cambiado",
+    "seeAll": "Ver todo",
+    "shortcuts": "Atajos",
+    "recent": "Reciente",
+    "openExplorer": "Abrir explorador →",
+    "empty": {
+      "title": "Sin novedades",
+      "description": "El corpus no tiene publicaciones recientes. Sincroniza con legalize-es para traer los últimos cambios."
+    },
+    "buckets": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "this-week": "Esta semana",
+      "this-month": "Este mes",
+      "older": "Anteriores"
+    },
+    "tiles": {
+      "graphTitle": "Grafo de referencias",
+      "graphSub": "Ver cómo se citan las normas",
+      "chatTitle": "Chat con el corpus",
+      "chatSub": "Pregunta en lenguaje natural",
+      "diffTitle": "Comparar versiones",
+      "diffSub": "LOPDGDD · v1.0 → v1.3",
+      "dashboardsTitle": "Cuadros de mando",
+      "dashboardsSub": "Compliance · 6 indicadores"
+    },
+    "units": {
+      "articles": "arts.",
+      "versions": "versiones",
+      "refs": "refs."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "No encontramos esa página",
+    "notFoundDescription": "Comprueba la URL o vuelve al inicio.",
+    "home": "Inicio"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
