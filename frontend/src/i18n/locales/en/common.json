@@ -37,6 +37,159 @@
       "lastModified": "Last modified"
     }
   },
+  "whatsNew": {
+    "title": "What's new in the corpus",
+    "added": "Added",
+    "modified": "Modified",
+    "removed_one": "{{count}} law removed",
+    "removed_other": "{{count}} laws removed",
+    "andMore": "and {{n}} more…"
+  },
+  "welcome": {
+    "nameTitle": "What should we call you?",
+    "nameSubtitle": "No account needed — just so we can address you by name in greetings. You can skip it.",
+    "namePlaceholder": "Your name",
+    "skip": "Skip",
+    "continue": "Continue"
+  },
+  "mcp": {
+    "title": "MCP Servers",
+    "introPre": "Model Context Protocol servers that clients (Claude Desktop, Cursor, …) can launch to talk to the legislation. The configuration is saved in",
+    "introMid": "in the same format as",
+    "introEnd": "so it's portable.",
+    "builtin": "Built-in",
+    "custom": "Custom",
+    "addServer": "Add server",
+    "emptyPre": "You haven't added any yet. Press",
+    "emptyPost": "to paste the configuration exactly as you have it in Claude Desktop.",
+    "badgeBuiltin": "Built-in",
+    "badgePersonal": "Personal",
+    "noCommand": "— no command —",
+    "deleteAria": "Delete {{name}}",
+    "confirmDelete": "Delete {{name}}?",
+    "deleted": "Deleted",
+    "loadError": "Couldn't load MCP",
+    "updateError": "Couldn't update",
+    "deleteError": "Couldn't delete",
+    "unknownError": "Unknown error",
+    "dialogTitle": "Add MCP server",
+    "dialogIntroPre": "Paste the",
+    "dialogIntroMid": "block from your",
+    "dialogIntroEnd": "You can include several servers at once.",
+    "close": "Close",
+    "add": "Add",
+    "invalidJson": "Invalid JSON",
+    "invalidJsonDetail": "Invalid JSON: {{detail}}",
+    "missingKey": "Missing the \"mcpServers\" key or it isn't an object.",
+    "emptyKey": "\"mcpServers\" is empty.",
+    "addFailed": "Couldn't add {{name}}",
+    "addedToast_one": "{{count}} server added",
+    "addedToast_other": "{{count}} servers added",
+    "addedToastBody": "Loaded into mcp.json",
+    "noneAdded": "No server could be added. Check the details in the alerts."
+  },
+  "wizard": {
+    "dialogAria": "Configure AI model",
+    "stepOf": "Step {{step}} of {{total}}",
+    "step1Title": "Detecting your machine",
+    "step2Title": "Choose a model",
+    "step3Title": "Almost ready",
+    "closeAria": "Close the wizard",
+    "back": "Back",
+    "continue": "Continue",
+    "use": "Use {{tier}}",
+    "platformLabel": "Platform",
+    "ramValue": "{{total}} GB ({{free}} GB free)",
+    "cpuValue": "{{cores}} logical cores",
+    "gpuNvidia": "{{name}} ({{vram}} GB VRAM)",
+    "gpuApple": "Apple Silicon (unified memory)",
+    "gpuNone": "No dedicated GPU detected",
+    "ollamaRunning_one": "running · {{count}} model installed",
+    "ollamaRunning_other": "running · {{count}} models installed",
+    "notDetected": "not detected",
+    "lmstudioRunning": "running",
+    "redetectHint": "If you're going to use a local model, start Ollama and press Re-detect. Either way you can pick a cloud model in the next step.",
+    "redetect": "Re-detect",
+    "recommended": "Recommended",
+    "cloudChosen": "You chose",
+    "cloudKeyInstructions": "To use it you need to paste your Anthropic API key in <strong>Settings → Models</strong>. The key is stored only on your machine; LexFlow never sends it to any server.",
+    "cloudCreateKey": "If you don't have one yet, you can create it at console.anthropic.com.",
+    "openSettings": "Open Settings",
+    "installedReady": "installed and ready",
+    "installing": "Installing",
+    "connecting": "Connecting to Ollama…",
+    "inProgress": "In progress…",
+    "pullBackgroundHint": "You can close the wizard and come back later — the download keeps running in Ollama in the background.",
+    "installFailed": "Couldn't install.",
+    "retry": "Retry",
+    "downloadIntroPre": "We'll download",
+    "downloadIntroPost": "({{size}} GB) and install it in Ollama. We'll let you know when it's done.",
+    "ollamaNotRunning": "Ollama isn't running. Start it and press Install.",
+    "install": "Install",
+    "configuredToast": "Model configured",
+    "installedToast": "Model installed",
+    "pullFailed": "Pull failed"
+  },
+  "help": {
+    "label": "Help",
+    "openAria": "Open contextual help",
+    "closeAria": "Close help",
+    "dialogAria": "Help: {{title}}",
+    "whatIsThis": "What is this page",
+    "shortcutsHeading": "Relevant shortcuts",
+    "tutorialHeading": "Tutorial",
+    "tutorialBody": "The 6-step tour walks through the layout, shortcuts and main sections. You can launch it again any time.",
+    "replay": "Replay tutorial",
+    "shortcuts": {
+      "openPalette": "Open the command palette",
+      "toggleSidebar": "Collapse / expand the sidebar",
+      "toggleTheme": "Toggle light / dark theme",
+      "explorerSearch": "Search by title, BOE or #tag",
+      "focusSearch": "Focus the search input",
+      "lawGraph": "Jump to this law's graph",
+      "backToExplorer": "Back to the explorer",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "resetZoom": "Reset zoom",
+      "sendMessage": "Send message",
+      "newlineNoSend": "New line without sending",
+      "newChat": "New conversation"
+    },
+    "pages": {
+      "home": {
+        "title": "Home",
+        "description": "Your starting point. It summarises the latest published laws, the most active topics and suggested graphs. Use the palette (Ctrl K) to jump to any law from here."
+      },
+      "explorer": {
+        "title": "Explorer",
+        "description": "Full list of laws with filters by rank, status, jurisdiction and tags. Each row opens the detail view; filters combine with AND."
+      },
+      "law": {
+        "title": "Law detail",
+        "description": "Consolidated text of the law with per-article anchors, hierarchy on the left and outgoing references on the right. Change the reading size in Settings → Appearance."
+      },
+      "graph": {
+        "title": "Reference graph",
+        "description": "Each node is a law; edges are citations, amendments or repeals between laws. Drag to pan, scroll to zoom; the right panel sets the exploration depth."
+      },
+      "chat": {
+        "title": "Legal chat",
+        "description": "Chat with a model (local or cloud) that has access to the law corpus. Answers come with citations; each citation is clickable and opens the law in the side panel."
+      },
+      "dashboards": {
+        "title": "Dashboards",
+        "description": "Aggregated dashboards over the corpus: distribution by rank, amendment pace, jurisdictions. Useful for an overview before diving into a specific law."
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Configure personalization (name, language), appearance, chat models, MCP servers and data. Everything persists locally; no account."
+      },
+      "fallback": {
+        "title": "LexFlow",
+        "description": "Open source platform to explore and analyze Spanish legislation. Use the command palette (Ctrl K) to jump anywhere."
+      }
+    }
+  },
   "chat": {
     "newThread": "New conversation",
     "emptyRailPre": "No conversations yet. Press",

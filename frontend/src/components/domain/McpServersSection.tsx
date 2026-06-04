@@ -12,7 +12,8 @@
  * Wire format documented in the API client (`lib/api/mcp-servers.ts`).
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2 } from 'lucide-react';
 import { Badge, Button, Card, Switch } from '@/components/ui';
 import {
@@ -23,11 +24,12 @@ import {
 import { toast } from '@/lib/toast';
 
 export function McpServersSection() {
+  const { t } = useTranslation();
   const [servers, setServers] = useState<McpServerView[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true);
     try {
       const next = await liveMcpServersApi.list();
@@ -35,33 +37,32 @@ export function McpServersSection() {
     } catch (exc) {
       toast({
         tone: 'danger',
-        title: 'No se pudo cargar MCP',
-        message: exc instanceof Error ? exc.message : 'Error desconocido',
+        title: t('mcp.loadError'),
+        message: exc instanceof Error ? exc.message : t('mcp.unknownError'),
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   const builtinRows = useMemo(() => servers.filter((s) => s.kind === 'builtin'), [servers]);
   const userRows = useMemo(() => servers.filter((s) => s.kind === 'user'), [servers]);
 
   return (
     <>
-      <h1 className="font-display text-[22px] font-semibold">MCP Servers</h1>
+      <h1 className="font-display text-[22px] font-semibold">{t('mcp.title')}</h1>
       <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
-        Servidores Model Context Protocol que los clientes (Claude Desktop, Cursor, …) pueden lanzar
-        para hablar con la legislación. La configuración se guarda en{' '}
-        <code className="font-mono">~/.lexflow/mcp.json</code> con el mismo formato que{' '}
-        <code className="font-mono">claude_desktop_config.json</code>, así que es portable.
+        {t('mcp.introPre')}{' '}
+        <code className="font-mono">~/.lexflow/mcp.json</code> {t('mcp.introMid')}{' '}
+        <code className="font-mono">claude_desktop_config.json</code>, {t('mcp.introEnd')}
       </p>
 
       {/* Built-in catalog */}
-      <div className="label-caps mb-2">Integrados</div>
+      <div className="label-caps mb-2">{t('mcp.builtin')}</div>
       <div className="mb-7 flex flex-col gap-2">
         {builtinRows.map((row) => (
           <ServerRow key={row.name} row={row} onChange={refresh} />
@@ -70,20 +71,19 @@ export function McpServersSection() {
 
       {/* User entries */}
       <div className="mb-2 flex items-center justify-between">
-        <div className="label-caps">Personalizados</div>
+        <div className="label-caps">{t('mcp.custom')}</div>
         <Button
           size="sm"
           variant="secondary"
           icon={<Plus className="size-3.5" />}
           onClick={() => setAdding(true)}
         >
-          Añadir server
+          {t('mcp.addServer')}
         </Button>
       </div>
       {userRows.length === 0 && !loading && (
         <Card className="p-4 text-[13px] text-muted">
-          Aún no has añadido ninguno. Pulsa <strong>Añadir server</strong> para pegar la
-          configuración tal cual la tienes en Claude Desktop.
+          {t('mcp.emptyPre')} <strong>{t('mcp.addServer')}</strong> {t('mcp.emptyPost')}
         </Card>
       )}
       <div className="flex flex-col gap-2">
@@ -100,7 +100,8 @@ export function McpServersSection() {
 // ─── Row ─────────────────────────────────────────────────────────────────
 
 function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Promise<void> }) {
-  const summary = renderCommand(row.command);
+  const { t } = useTranslation();
+  const summary = renderCommand(row.command, t('mcp.noCommand'));
   const isBuiltin = row.kind === 'builtin';
 
   const onToggle = async (next: boolean) => {
@@ -111,24 +112,24 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
     } catch (exc) {
       toast({
         tone: 'danger',
-        title: 'No se pudo actualizar',
-        message: exc instanceof Error ? exc.message : 'Error desconocido',
+        title: t('mcp.updateError'),
+        message: exc instanceof Error ? exc.message : t('mcp.unknownError'),
       });
     }
   };
 
   const onDelete = async () => {
     if (isBuiltin) return;
-    if (!window.confirm(`Eliminar ${row.name}?`)) return;
+    if (!window.confirm(t('mcp.confirmDelete', { name: row.name }))) return;
     try {
       await liveMcpServersApi.remove(row.name);
       await onChange();
-      toast({ tone: 'success', title: 'Eliminado', message: row.name });
+      toast({ tone: 'success', title: t('mcp.deleted'), message: row.name });
     } catch (exc) {
       toast({
         tone: 'danger',
-        title: 'No se pudo eliminar',
-        message: exc instanceof Error ? exc.message : 'Error desconocido',
+        title: t('mcp.deleteError'),
+        message: exc instanceof Error ? exc.message : t('mcp.unknownError'),
       });
     }
   };
@@ -138,7 +139,7 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="font-semibold">{row.name}</span>
-          <Badge tone={isBuiltin ? 'info' : 'neutral'}>{isBuiltin ? 'Integrado' : 'Personal'}</Badge>
+          <Badge tone={isBuiltin ? 'info' : 'neutral'}>{isBuiltin ? t('mcp.badgeBuiltin') : t('mcp.badgePersonal')}</Badge>
         </div>
         {row.description && (
           <div className="mt-0.5 text-[12px] text-muted">{row.description}</div>
@@ -150,7 +151,7 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
         <Button
           size="icon"
           variant="ghost"
-          aria-label={`Eliminar ${row.name}`}
+          aria-label={t('mcp.deleteAria', { name: row.name })}
           onClick={() => void onDelete()}
         >
           <Trash2 className="size-3.5" />
@@ -160,9 +161,9 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
   );
 }
 
-function renderCommand(cmd: McpServerCommand): string {
+function renderCommand(cmd: McpServerCommand, noCommandLabel: string): string {
   if (cmd.url) return `url=${cmd.url}`;
-  if (!cmd.command) return '— sin comando —';
+  if (!cmd.command) return noCommandLabel;
   const args = cmd.args.length ? ` ${cmd.args.join(' ')}` : '';
   return `${cmd.command}${args}`;
 }
@@ -191,6 +192,7 @@ function AddServerDialog({
   onClose: () => void;
   onAdded: () => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [json, setJson] = useState(EXAMPLE_PASTE);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -201,7 +203,7 @@ function AddServerDialog({
     try {
       parsed = JSON.parse(json);
     } catch (exc) {
-      setError(exc instanceof Error ? `JSON inválido: ${exc.message}` : 'JSON inválido');
+      setError(exc instanceof Error ? t('mcp.invalidJsonDetail', { detail: exc.message }) : t('mcp.invalidJson'));
       return;
     }
     if (
@@ -210,14 +212,14 @@ function AddServerDialog({
       !('mcpServers' in parsed) ||
       typeof (parsed as { mcpServers: unknown }).mcpServers !== 'object'
     ) {
-      setError('Falta la clave "mcpServers" o no es un objeto.');
+      setError(t('mcp.missingKey'));
       return;
     }
     const entries = Object.entries(
       (parsed as { mcpServers: Record<string, unknown> }).mcpServers,
     );
     if (entries.length === 0) {
-      setError('"mcpServers" está vacío.');
+      setError(t('mcp.emptyKey'));
       return;
     }
 
@@ -248,8 +250,8 @@ function AddServerDialog({
         failed++;
         toast({
           tone: 'warning',
-          title: `No se pudo añadir ${name}`,
-          message: exc instanceof Error ? exc.message : 'Error desconocido',
+          title: t('mcp.addFailed', { name }),
+          message: exc instanceof Error ? exc.message : t('mcp.unknownError'),
         });
       }
     }
@@ -257,13 +259,13 @@ function AddServerDialog({
     if (added > 0) {
       toast({
         tone: 'success',
-        title: `${added} server${added === 1 ? '' : 's'} añadido${added === 1 ? '' : 's'}`,
-        message: 'Cargados en mcp.json',
+        title: t('mcp.addedToast', { count: added }),
+        message: t('mcp.addedToastBody'),
       });
       await onAdded();
       onClose();
     } else if (failed > 0) {
-      setError('Ningún server pudo añadirse. Revisa el detalle en los avisos.');
+      setError(t('mcp.noneAdded'));
     }
   };
 
@@ -271,20 +273,19 @@ function AddServerDialog({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Añadir MCP server"
+      aria-label={t('mcp.dialogTitle')}
       className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
     >
       <div className="air-glass-strong w-full max-w-2xl p-6">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-display text-xl font-semibold tracking-tight">Añadir MCP server</h2>
+            <h2 className="font-display text-xl font-semibold tracking-tight">{t('mcp.dialogTitle')}</h2>
             <p className="mt-1 text-[12.5px] text-muted">
-              Pega el bloque <code className="font-mono">mcpServers</code> de tu
-              <code className="mx-1 font-mono">claude_desktop_config.json</code>. Puedes incluir
-              varios servers a la vez.
+              {t('mcp.dialogIntroPre')} <code className="font-mono">mcpServers</code> {t('mcp.dialogIntroMid')}
+              <code className="mx-1 font-mono">claude_desktop_config.json</code>. {t('mcp.dialogIntroEnd')}
             </p>
           </div>
-          <Button size="icon" variant="ghost" aria-label="Cerrar" onClick={onClose}>
+          <Button size="icon" variant="ghost" aria-label={t('mcp.close')} onClick={onClose}>
             ×
           </Button>
         </div>
@@ -302,10 +303,10 @@ function AddServerDialog({
         )}
         <div className="mt-4 flex items-center justify-end gap-2.5">
           <Button variant="ghost" onClick={onClose} disabled={busy}>
-            Cancelar
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" onClick={() => void submit()} loading={busy}>
-            Añadir
+            {t('mcp.add')}
           </Button>
         </div>
       </div>

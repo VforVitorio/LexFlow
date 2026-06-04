@@ -29,6 +29,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle2,
   Cpu,
@@ -107,6 +108,7 @@ export function ModelWizard({
   onComplete: (tier: TierKey) => void;
   onSkip: () => void;
 }) {
+  const { t } = useTranslation();
   const profileQuery = useSystemProfile();
   const [step, setStep] = useState<Step>(1);
   const [selectedKey, setSelectedKey] = useState<TierKey | null>(null);
@@ -130,7 +132,7 @@ export function ModelWizard({
 
   const finish = () => {
     persistPreferredModel(selectedTier);
-    toast({ tone: 'success', title: 'Modelo configurado', message: selectedTier.model });
+    toast({ tone: 'success', title: t('wizard.configuredToast'), message: selectedTier.model });
     onComplete(selectedTier.key);
   };
 
@@ -138,7 +140,7 @@ export function ModelWizard({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Configurar modelo de IA"
+      aria-label={t('wizard.dialogAria')}
       className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
     >
       <div className="air-glass-strong w-full max-w-2xl p-7 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -170,20 +172,21 @@ export function ModelWizard({
 // ─── Header + footer ─────────────────────────────────────────────────────
 
 function WizardHeader({ step, stepCount, onSkip }: { step: Step; stepCount: number; onSkip: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="mb-5 flex items-start justify-between gap-4">
       <div>
-        <div className="label-caps text-muted">Paso {step} de {stepCount}</div>
+        <div className="label-caps text-muted">{t('wizard.stepOf', { step, total: stepCount })}</div>
         <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">
-          {step === 1 && 'Detectando tu equipo'}
-          {step === 2 && 'Elige un modelo'}
-          {step === 3 && 'Casi listo'}
+          {step === 1 && t('wizard.step1Title')}
+          {step === 2 && t('wizard.step2Title')}
+          {step === 3 && t('wizard.step3Title')}
         </h2>
       </div>
       <button
         type="button"
         onClick={onSkip}
-        aria-label="Cerrar el asistente"
+        aria-label={t('wizard.closeAria')}
         className="rounded-md p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-fg"
       >
         <X className="size-4" />
@@ -207,12 +210,13 @@ function WizardFooter({
   onNext: () => void;
   onFinish: () => void;
 }) {
+  const { t } = useTranslation();
   const isLast = step === 3;
   return (
     <div className="mt-6 flex items-center justify-between gap-3">
       {step > 1 ? (
         <Button variant="ghost" onClick={onBack}>
-          Atrás
+          {t('wizard.back')}
         </Button>
       ) : (
         <span />
@@ -222,7 +226,7 @@ function WizardFooter({
         onClick={isLast ? onFinish : onNext}
         disabled={step === 1 && !profileReady}
       >
-        {isLast ? `Usar ${tier.title.split(' — ')[0].toLowerCase()}` : 'Continuar'}
+        {isLast ? t('wizard.use', { tier: tier.title.split(' — ')[0].toLowerCase() }) : t('wizard.continue')}
       </Button>
     </div>
   );
@@ -239,6 +243,7 @@ function StepDetect({
   loading: boolean;
   onRefetch: () => void;
 }) {
+  const { t } = useTranslation();
   if (loading || !profile) {
     return (
       <div className="flex flex-col gap-2.5">
@@ -251,22 +256,22 @@ function StepDetect({
 
   return (
     <div className="flex flex-col gap-2.5">
-      <DetectRow icon={<HardDrive className="size-3.5" />} label="RAM" value={`${profile.totalRamGb} GB (${profile.availableRamGb} GB libres)`} />
-      <DetectRow icon={<Cpu className="size-3.5" />} label="CPU" value={`${profile.cpuCores} núcleos lógicos`} />
+      <DetectRow icon={<HardDrive className="size-3.5" />} label="RAM" value={t('wizard.ramValue', { total: profile.totalRamGb, free: profile.availableRamGb })} />
+      <DetectRow icon={<Cpu className="size-3.5" />} label="CPU" value={t('wizard.cpuValue', { cores: profile.cpuCores })} />
       <DetectRow
         icon={<Sparkles className="size-3.5" />}
         label="GPU"
         value={
           profile.hasNvidiaGpu && profile.vramGb
-            ? `${profile.gpuName ?? 'NVIDIA'} (${profile.vramGb} GB VRAM)`
+            ? t('wizard.gpuNvidia', { name: profile.gpuName ?? 'NVIDIA', vram: profile.vramGb })
             : profile.isAppleSilicon
-              ? `Apple Silicon (memoria unificada)`
-              : 'Sin GPU dedicada detectada'
+              ? t('wizard.gpuApple')
+              : t('wizard.gpuNone')
         }
       />
       <DetectRow
         icon={<Cpu className="size-3.5" />}
-        label="Plataforma"
+        label={t('wizard.platformLabel')}
         value={profile.platform}
       />
       <DetectRow
@@ -274,24 +279,23 @@ function StepDetect({
         label="Ollama"
         value={
           profile.ollamaRunning
-            ? `corriendo · ${profile.ollamaModels.length} ${profile.ollamaModels.length === 1 ? 'modelo' : 'modelos'} instalado${profile.ollamaModels.length === 1 ? '' : 's'}`
-            : 'no detectado'
+            ? t('wizard.ollamaRunning', { count: profile.ollamaModels.length })
+            : t('wizard.notDetected')
         }
       />
       <DetectRow
         icon={profile.lmstudioRunning ? <CheckCircle2 className="size-3.5 text-success" /> : <XCircle className="size-3.5 text-muted" />}
         label="LM Studio"
-        value={profile.lmstudioRunning ? 'corriendo' : 'no detectado'}
+        value={profile.lmstudioRunning ? t('wizard.lmstudioRunning') : t('wizard.notDetected')}
       />
 
       {!profile.ollamaRunning && (
         <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-border bg-surface p-3 text-[12.5px] text-muted">
           <span>
-            Si vas a usar un modelo local, inicia Ollama y pulsa Re-detectar.
-            En cualquier caso puedes elegir un modelo en nube en el siguiente paso.
+            {t('wizard.redetectHint')}
           </span>
           <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} onClick={onRefetch}>
-            Re-detectar
+            {t('wizard.redetect')}
           </Button>
         </div>
       )}
@@ -357,6 +361,7 @@ function TierCard({
   recommended: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const tone = FIT_TONES[fit];
   return (
     <button
@@ -373,7 +378,7 @@ function TierCard({
             <span className="font-display text-[15px] font-semibold">{tier.title}</span>
             {recommended && (
               <Badge tone="info" icon={<Sparkles className="size-3" />}>
-                Recomendado
+                {t('wizard.recommended')}
               </Badge>
             )}
           </div>
@@ -397,17 +402,18 @@ function StepConfirm({
   profile: SystemProfile | null;
   onRefetchProfile: () => void;
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   if (tier.cloud) {
     return (
       <div className="flex flex-col gap-3 text-[13.5px]">
         <p>
-          Has elegido <strong>{tier.title}</strong>. Para usarlo tienes que pegar tu API key de
-          Anthropic en <strong>Ajustes → Modelos</strong>. La key se guarda solo en tu equipo;
-          LexFlow no la envía a ningún servidor.
+          {t('wizard.cloudChosen')} <strong>{tier.title}</strong>.{' '}
+          {/* Static translator copy with one <strong> — safe to render as HTML. */}
+          <span dangerouslySetInnerHTML={{ __html: t('wizard.cloudKeyInstructions') }} />
         </p>
         <p className="text-muted">
-          Si todavía no tienes una, puedes crearla en console.anthropic.com.
+          {t('wizard.cloudCreateKey')}
         </p>
         <Button
           size="sm"
@@ -415,7 +421,7 @@ function StepConfirm({
           onClick={() => navigate('/settings')}
           className="self-start"
         >
-          Abrir Ajustes
+          {t('wizard.openSettings')}
         </Button>
       </div>
     );
@@ -459,6 +465,7 @@ function OllamaInstall({
   ollamaRunning: boolean;
   onRefetchProfile: () => void;
 }) {
+  const { t } = useTranslation();
   type PullState =
     | { phase: 'idle' }
     | { phase: 'pulling'; status: string | null; completed: number | null; total: number | null }
@@ -468,7 +475,7 @@ function OllamaInstall({
   const [state, setState] = useState<PullState>(isInstalled ? { phase: 'done' } : { phase: 'idle' });
 
   const startPull = async () => {
-    setState({ phase: 'pulling', status: 'Conectando con Ollama…', completed: null, total: null });
+    setState({ phase: 'pulling', status: t('wizard.connecting'), completed: null, total: null });
     try {
       for await (const event of api.models.pull(tier.model)) {
         if (event.type === 'progress') {
@@ -481,7 +488,7 @@ function OllamaInstall({
         } else if (event.type === 'done') {
           setState({ phase: 'done' });
           onRefetchProfile();
-          toast({ tone: 'success', title: 'Modelo instalado', message: tier.model });
+          toast({ tone: 'success', title: t('wizard.installedToast'), message: tier.model });
           return;
         } else {
           setState({ phase: 'error', code: event.code, message: event.message });
@@ -489,7 +496,7 @@ function OllamaInstall({
         }
       }
     } catch (exc) {
-      const message = exc instanceof Error ? exc.message : 'Pull failed';
+      const message = exc instanceof Error ? exc.message : t('wizard.pullFailed');
       setState({ phase: 'error', code: 'network', message });
     }
   };
@@ -500,7 +507,7 @@ function OllamaInstall({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success-soft p-3">
           <CheckCircle2 className="size-4 text-success" />
           <span className="text-success font-medium">
-            <strong>{tier.model}</strong> instalado y listo
+            <strong>{tier.model}</strong> {t('wizard.installedReady')}
           </span>
         </div>
       </div>
@@ -512,11 +519,11 @@ function OllamaInstall({
     return (
       <div className="flex flex-col gap-3 text-[13.5px]">
         <p>
-          Instalando <strong>{tier.model}</strong>…
+          {t('wizard.installing')} <strong>{tier.model}</strong>…
         </p>
         <div className="rounded-md border border-border bg-surface p-3">
           <div className="mb-2 flex items-center justify-between text-[12px] text-muted">
-            <span>{state.status ?? 'En curso…'}</span>
+            <span>{state.status ?? t('wizard.inProgress')}</span>
             {pct !== null && <span className="font-mono">{pct}%</span>}
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-surface-2">
@@ -527,7 +534,7 @@ function OllamaInstall({
           </div>
         </div>
         <p className="text-[12px] text-muted">
-          Puedes cerrar el asistente y volver más tarde — la descarga sigue de fondo en Ollama.
+          {t('wizard.pullBackgroundHint')}
         </p>
       </div>
     );
@@ -537,10 +544,10 @@ function OllamaInstall({
     return (
       <div className="flex flex-col gap-3 text-[13.5px]">
         <div className="rounded-md border border-danger/30 bg-danger-soft p-3 text-danger">
-          <strong>No se pudo instalar.</strong> {state.message}
+          <strong>{t('wizard.installFailed')}</strong> {state.message}
         </div>
         <Button size="sm" variant="secondary" onClick={() => void startPull()} className="self-start">
-          Reintentar
+          {t('wizard.retry')}
         </Button>
       </div>
     );
@@ -550,12 +557,11 @@ function OllamaInstall({
   return (
     <div className="flex flex-col gap-3 text-[13.5px]">
       <p>
-        Vamos a descargar <strong>{tier.model}</strong> ({tier.sizeGb} GB) e instalarlo en Ollama.
-        Te avisamos cuando termine.
+        {t('wizard.downloadIntroPre')} <strong>{tier.model}</strong> {t('wizard.downloadIntroPost', { size: tier.sizeGb })}
       </p>
       {!ollamaRunning && (
         <div className="rounded-md border border-amber-300/60 bg-amber-soft p-3 text-amber-700 dark:text-amber-300">
-          Ollama no está corriendo. Inícialo y pulsa Instalar.
+          {t('wizard.ollamaNotRunning')}
         </div>
       )}
       <div className="flex items-center gap-2.5">
@@ -565,10 +571,10 @@ function OllamaInstall({
           onClick={() => void startPull()}
           disabled={!ollamaRunning}
         >
-          Instalar
+          {t('wizard.install')}
         </Button>
         <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} onClick={onRefetchProfile}>
-          Re-detectar
+          {t('wizard.redetect')}
         </Button>
       </div>
     </div>
