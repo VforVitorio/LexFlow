@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Bookmark, Share2, Download, ChevronDown, Hash } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { formatDate, statusLabel } from '@/lib/utils';
@@ -13,6 +14,7 @@ export interface LawHeaderProps {
 }
 
 export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick }: LawHeaderProps) {
+  const { t } = useTranslation();
   const tone =
     law.status === 'vigente' ? 'success' :
     law.status === 'derogada' ? 'danger' : 'amber';
@@ -24,21 +26,21 @@ export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick }: La
         <span className="text-[12px] text-muted">·</span>
         <span className="text-[12px] text-muted">{law.rango}</span>
         <span className="ml-auto flex gap-1.5">
-          <Button size="sm" variant="ghost" icon={<Bookmark className="size-3.5" />} onClick={onBookmark}>Guardar</Button>
-          <Button size="sm" variant="ghost" icon={<Share2 className="size-3.5" />} onClick={onShare}>Compartir</Button>
-          <Button size="sm" variant="secondary" icon={<Download className="size-3.5" />} onClick={onExport}>Exportar</Button>
+          <Button size="sm" variant="ghost" icon={<Bookmark className="size-3.5" />} onClick={onBookmark}>{t('lawHeader.save')}</Button>
+          <Button size="sm" variant="ghost" icon={<Share2 className="size-3.5" />} onClick={onShare}>{t('lawHeader.share')}</Button>
+          <Button size="sm" variant="secondary" icon={<Download className="size-3.5" />} onClick={onExport}>{t('lawHeader.export')}</Button>
         </span>
       </div>
       <h1 className="text-3xl font-display font-semibold tracking-tight">{law.short}</h1>
       <p className="mt-1.5 max-w-3xl text-[13.5px] text-muted">{law.title}</p>
 
       <div className="mt-3.5 flex flex-wrap items-center gap-6 text-[13px]">
-        <Stat label="Artículos" value={String(law.articulos)} />
-        <Stat label="Versiones" value={String(law.versiones)} />
-        <Stat label="Referencias" value={String(law.referencias)} />
-        <Stat label="Última modificación" value={law.ultimaModificacion ? formatDate(law.ultimaModificacion) : '—'} />
+        <Stat label={t('lawHeader.stats.articles')} value={String(law.articulos)} />
+        <Stat label={t('lawHeader.stats.versions')} value={String(law.versiones)} />
+        <Stat label={t('lawHeader.stats.references')} value={String(law.referencias)} />
+        <Stat label={t('lawHeader.stats.lastModified')} value={law.ultimaModificacion ? formatDate(law.ultimaModificacion) : '—'} />
         <span className="ml-auto inline-flex items-center gap-2">
-          <span className="label-caps">Versión</span>
+          <span className="label-caps">{t('lawHeader.version')}</span>
           <Button size="sm" variant="secondary" iconRight={<ChevronDown className="size-3.5" />}>v1.3 (vigente)</Button>
         </span>
       </div>

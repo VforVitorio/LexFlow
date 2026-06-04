@@ -11,6 +11,32 @@
     "expand": "Expand",
     "recent": "Recent"
   },
+  "shell": {
+    "searchPlaceholder": "Search laws, articles…",
+    "toggleTheme": "Toggle theme",
+    "toggleRightPanel": "Toggle right panel",
+    "breadcrumb": "Breadcrumb",
+    "diff": "Diff"
+  },
+  "model": {
+    "local": "local",
+    "cloud": "cloud",
+    "notConfigured": "not configured",
+    "changeModelsPre": "Change models in",
+    "changeModelsKbd": "Settings › Models"
+  },
+  "lawHeader": {
+    "save": "Save",
+    "share": "Share",
+    "export": "Export",
+    "version": "Version",
+    "stats": {
+      "articles": "Articles",
+      "versions": "Versions",
+      "references": "References",
+      "lastModified": "Last modified"
+    }
+  },
   "chat": {
     "newThread": "New conversation",
     "emptyRailPre": "No conversations yet. Press",
@@ -223,7 +249,10 @@
   "errors": {
     "notFoundTitle": "We couldn't find that page",
     "notFoundDescription": "Check the URL or go back home.",
-    "home": "Home"
+    "home": "Home",
+    "somethingWrong": "Something went wrong",
+    "retry": "Retry",
+    "reportBug": "Report bug"
   },
   "graph": {
     "searchPlaceholder": "Search the graph…",
