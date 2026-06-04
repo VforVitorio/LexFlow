@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.34.0](https://github.com/VforVitorio/LexFlow/compare/v0.33.0...v0.34.0) (2026-06-04)
+
+
+### Features
+
+* **api:** dedicated GET /api/v1/laws/{id}/references endpoint (closes [#96](https://github.com/VforVitorio/LexFlow/issues/96)) ([b221708](https://github.com/VforVitorio/LexFlow/commit/b221708e20072f0334a43821f8c2c33006db58e4))
+* **api:** dedicated GET /laws/{id}/references endpoint ([#96](https://github.com/VforVitorio/LexFlow/issues/96)) ([db845bc](https://github.com/VforVitorio/LexFlow/commit/db845bc887fd335396d8ab1523d098d185742af1))
+* **api:** global graph endpoint GET /api/v1/graph ([#146](https://github.com/VforVitorio/LexFlow/issues/146)) ([91bb6a2](https://github.com/VforVitorio/LexFlow/commit/91bb6a2e2769dd0786c543144954d577f523f063))
+* **api:** global graph endpoint GET /api/v1/graph (closes [#146](https://github.com/VforVitorio/LexFlow/issues/146)) ([905b281](https://github.com/VforVitorio/LexFlow/commit/905b281d86ab6093851a5658c3e9fdce616a6b74))
+* **chat:** MCP tool-use loop on top of SSE chat stream ([#195](https://github.com/VforVitorio/LexFlow/issues/195)) ([2f5e6c9](https://github.com/VforVitorio/LexFlow/commit/2f5e6c9a509a9700045b3ee9b1eacd2e6dbd4372))
+* **chat:** MCP tool-use loop on top of SSE chat stream (closes [#195](https://github.com/VforVitorio/LexFlow/issues/195)) ([089b5c6](https://github.com/VforVitorio/LexFlow/commit/089b5c6f8bc0bbe5f5e1040559cba34a861bf5fd))
+* **graph:** edge typing — cites/modifies/repeals/develops ([#144](https://github.com/VforVitorio/LexFlow/issues/144)) ([739e3de](https://github.com/VforVitorio/LexFlow/commit/739e3de0c2a281850e923e6f31bea002d87cc8b2))
+* **graph:** edge typing — cites/modifies/repeals/develops (closes [#144](https://github.com/VforVitorio/LexFlow/issues/144)) ([eac8bd3](https://github.com/VforVitorio/LexFlow/commit/eac8bd3752bf88d056ba0432b50a9bd1d657660b))
+
+
+### Documentation
+
+* **claude:** mark rtk read + rtk grep as CRITICAL token sinks ([f249bb8](https://github.com/VforVitorio/LexFlow/commit/f249bb8c32d3b82db8f158bbfcb554d8d320a533))
+* **claude:** mark rtk read + rtk grep as CRITICAL token sinks ([cc34913](https://github.com/VforVitorio/LexFlow/commit/cc349130fe76c361d6447e273e5687d6369a641e))
+
 ## [0.33.0](https://github.com/VforVitorio/LexFlow/compare/v0.32.0...v0.33.0) (2026-06-04)
 
 
