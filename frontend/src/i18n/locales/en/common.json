@@ -11,6 +11,28 @@
     "expand": "Expand",
     "recent": "Recent"
   },
+  "chat": {
+    "newThread": "New conversation",
+    "emptyRailPre": "No conversations yet. Press",
+    "emptyRailPost": "to start.",
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "week": "This week"
+    },
+    "threadFallback": "Conversation",
+    "turns": "{{n}} turns",
+    "sourcesCited": "{{n}} cited sources",
+    "startTitle": "Start by asking the corpus",
+    "startHintPre": "Type your question below. Cite an article with",
+    "startHintMid": "or filter by",
+    "placeholder": "Ask the corpus something…",
+    "attach": "Attach",
+    "citeArticle": "Cite article…",
+    "onlyInForce": "In-force only",
+    "send": "Send",
+    "sources": "Sources"
+  },
   "settings": {
     "sections": {
       "personalization": "Personalization",
