@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.35.0](https://github.com/VforVitorio/LexFlow/compare/v0.34.0...v0.35.0) (2026-06-04)
+
+
+### Features
+
+* **secrets:** OS-keyring store for cloud API keys ([#120](https://github.com/VforVitorio/LexFlow/issues/120)) ([d606317](https://github.com/VforVitorio/LexFlow/commit/d6063179ef49180aeb1cfd12e4cefb9ab70eb809))
+* **secrets:** OS-keyring store for cloud API keys (closes [#120](https://github.com/VforVitorio/LexFlow/issues/120)) ([d70d2d8](https://github.com/VforVitorio/LexFlow/commit/d70d2d876d63d3829b58098906635d91bada72d3))
+
 ## [0.34.0](https://github.com/VforVitorio/LexFlow/compare/v0.33.0...v0.34.0) (2026-06-04)
 
 
