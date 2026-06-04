@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
 import { GraphCanvas, NODE_KIND_LABELS } from '@/components/domain/GraphCanvas';
@@ -21,6 +22,7 @@ const FALLBACK_SEED_LAW_ID = 'BOE-A-1978-31229';
 
 export function GraphPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<Set<GraphNodeKind>>(new Set(ALL_KINDS));
   // #221 — pick the seed dynamically. Hardcoding "CE-1978" 404'd because
   // the real ID is "BOE-A-1978-31229"; using the top-PageRank law also
@@ -69,14 +71,14 @@ export function GraphPage() {
     return (
       <div className="p-10">
         <EmptyState
-          title="No se pudo cargar el subgrafo desde esa norma"
+          title={t('graph.error.title')}
           description={
             <>
-              <span className="block">La norma seed pidida ({seedLawId}) no está en el grafo actual.</span>
-              <span className="mt-1 block">Prueba con una de las más conectadas del corpus:</span>
+              <span className="block">{t('graph.error.seedMissing', { seed: seedLawId })}</span>
+              <span className="mt-1 block">{t('graph.error.trySuggestions')}</span>
             </>
           }
-          primaryAction={{ label: 'Reintentar', onClick: () => refetch() }}
+          primaryAction={{ label: t('graph.retry'), onClick: () => refetch() }}
         />
         <div className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2">
           {suggestions.map((law) => (
@@ -99,8 +101,8 @@ export function GraphPage() {
     // a concrete hint instead of the generic spinner — the user knows
     // why it's slow ("primera vez") and roughly how long it'll take.
     const hint = warmup && !warmup.graphReady
-      ? 'Construyendo el grafo por primera vez. Puede tardar uno o dos minutos…'
-      : 'Cargando grafo…';
+      ? t('graph.buildingFirstTime')
+      : t('graph.loading');
     return (
       <div className="h-full p-6">
         <SkeletonCanvas hint={hint} />
@@ -115,7 +117,7 @@ export function GraphPage() {
     <div className="flex h-full min-h-0">
       <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2.5 border-b border-border bg-bg p-4">
-          <Input icon={<Search className="size-3.5" />} placeholder="Buscar en el grafo…" className="w-72" />
+          <Input icon={<Search className="size-3.5" />} placeholder={t('graph.searchPlaceholder')} className="w-72" />
           <span className="h-6 w-px bg-border" />
           {ALL_KINDS.map((t) => (
             <Chip
@@ -128,7 +130,7 @@ export function GraphPage() {
             </Chip>
           ))}
           <span className="ml-auto flex gap-2">
-            <Button size="sm" variant="ghost" icon={<Filter className="size-3.5" />}>Filtros avanzados</Button>
+            <Button size="sm" variant="ghost" icon={<Filter className="size-3.5" />}>{t('graph.advancedFilters')}</Button>
             <Button size="sm" variant="ghost" icon={<Download className="size-3.5" />}>PNG</Button>
           </span>
         </div>
@@ -138,7 +140,7 @@ export function GraphPage() {
 
           {/* Legend — frosted glass overlay (Opera Air language) */}
           <div className="air-glass absolute bottom-4 left-4 px-3.5 py-2.5">
-            <div className="label-caps mb-2">Leyenda</div>
+            <div className="label-caps mb-2">{t('graph.legend')}</div>
             <div className="flex flex-col gap-1.5 text-[12px]">
               {ALL_KINDS.map((t) => (
                 <div key={t} className="flex items-center gap-2">
@@ -151,8 +153,8 @@ export function GraphPage() {
 
           {/* Zoom — same glass shell as the legend so they read as a pair */}
           <div className="air-glass absolute bottom-4 right-4 flex flex-col gap-1 p-1">
-            <Button size="icon" variant="ghost" aria-label="Acercar" icon={<Plus className="size-3.5" />} />
-            <Button size="icon" variant="ghost" aria-label="Alejar" icon={<Minus className="size-3.5" />} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.zoomIn')} icon={<Plus className="size-3.5" />} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.zoomOut')} icon={<Minus className="size-3.5" />} />
           </div>
         </div>
       </div>
@@ -165,20 +167,14 @@ export function GraphPage() {
                 {NODE_KIND_LABELS[node.kind]}
               </Badge>
               <span className="ml-auto flex gap-1">
-                <Button size="icon-sm" variant="ghost" aria-label="Fijar" icon={<Pin className="size-3.5" />} />
-                <Button size="icon-sm" variant="ghost" aria-label="Cerrar" onClick={() => setSelected(null)} icon={<X className="size-3.5" />} />
+                <Button size="icon-sm" variant="ghost" aria-label={t('graph.pin')} icon={<Pin className="size-3.5" />} />
+                <Button size="icon-sm" variant="ghost" aria-label={t('graph.close')} onClick={() => setSelected(null)} icon={<X className="size-3.5" />} />
               </span>
             </div>
             <h2 className="font-display text-xl font-semibold">{node.label}</h2>
-            <p className="mt-1.5 text-[13px] text-muted">
-              {node.kind === 'law' && 'Norma con 169 artículos y 1.248 referencias entrantes.'}
-              {node.kind === 'article' && 'Artículo perteneciente al Título I, Capítulo II.'}
-              {node.kind === 'reference' && 'Norma supranacional o doctrina citada por la norma activa.'}
-              {node.kind === 'amendment' && 'Norma que modifica la activa.'}
-              {node.kind === 'repealed' && 'Norma derogada — visible para contexto histórico.'}
-            </p>
+            <p className="mt-1.5 text-[13px] text-muted">{t(`graph.kindDesc.${node.kind}`)}</p>
 
-            <div className="label-caps mb-2 mt-4">Conexiones</div>
+            <div className="label-caps mb-2 mt-4">{t('graph.connections')}</div>
             <div className="flex flex-wrap gap-1.5">
               {neighbours.map((e) => {
                 const other = e.source === node.id ? e.target : e.source;
@@ -193,12 +189,12 @@ export function GraphPage() {
               onClick={() => selected && navigate(`/laws/${selected}`)}
               disabled={!selected}
             >
-              Abrir norma
+              {t('graph.openLaw')}
             </Button>
           </>
         ) : (
           <div className="text-[13px] text-muted">
-            Selecciona un nodo del grafo para ver detalles.
+            {t('graph.selectNode')}
           </div>
         )}
       </RightRail>

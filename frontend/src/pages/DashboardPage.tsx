@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, SlidersHorizontal, Download, ExternalLink } from 'lucide-react';
 import { Button, Card, Tabs } from '@/components/ui';
 import { Skeleton } from '@/components/domain/Skeleton';
@@ -14,20 +15,21 @@ const CHART_PRIMARY_SOFT = GRAPH_PRIMARY_FILL_SOFT;
 const CHART_RECENT = GRAPH_KIND_FILL.article;
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const [preset, setPreset] = useState<'compliance' | 'analytics'>('compliance');
   const { data, isLoading } = useDashboard(preset);
 
   return (
     <div className="h-full overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
       <div className="mb-5 flex flex-wrap items-baseline gap-3">
-        <h1 className="font-display text-2xl font-semibold">Cuadros de mando</h1>
+        <h1 className="font-display text-2xl font-semibold">{t('dashboards.title')}</h1>
         <Tabs variant="segmented" value={preset} onChange={(v) => setPreset(v as 'compliance' | 'analytics')} tabs={[
           { id: 'compliance', label: 'Compliance' },
           { id: 'analytics', label: 'Analytics' },
         ]} />
         <span className="ml-auto flex gap-2">
-          <Button size="sm" variant="secondary" icon={<Clock className="size-3.5" />}>Últimos 12 meses</Button>
-          <Button size="sm" variant="secondary" icon={<SlidersHorizontal className="size-3.5" />}>Sector: Todos</Button>
+          <Button size="sm" variant="secondary" icon={<Clock className="size-3.5" />}>{t('dashboards.last12Months')}</Button>
+          <Button size="sm" variant="secondary" icon={<SlidersHorizontal className="size-3.5" />}>{t('dashboards.sectorAll')}</Button>
           <Button size="sm" variant="secondary" icon={<Download className="size-3.5" />}>CSV</Button>
         </span>
       </div>
@@ -42,9 +44,9 @@ export function DashboardPage() {
 
           <Card className="p-5">
             <div className="mb-3 flex items-baseline gap-2">
-              <h3 className="font-display text-base font-semibold">Reformas legislativas por mes</h3>
-              <span className="text-[12px] text-muted">2023 – 2024 · acumulado</span>
-              <span className="ml-auto"><Button size="sm" variant="ghost" icon={<ExternalLink className="size-3.5" />}>Abrir en Plotly</Button></span>
+              <h3 className="font-display text-base font-semibold">{t('dashboards.chartTitle')}</h3>
+              <span className="text-[12px] text-muted">{t('dashboards.chartSubtitle')}</span>
+              <span className="ml-auto"><Button size="sm" variant="ghost" icon={<ExternalLink className="size-3.5" />}>{t('dashboards.openInPlotly')}</Button></span>
             </div>
             <BigChart values={data.series.values} labels={data.series.labels} recentFrom={data.series.recentFrom} />
           </Card>

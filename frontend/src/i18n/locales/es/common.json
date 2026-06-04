@@ -145,6 +145,41 @@
     "notFoundDescription": "Comprueba la URL o vuelve al inicio.",
     "home": "Inicio"
   },
+  "graph": {
+    "searchPlaceholder": "Buscar en el grafo…",
+    "advancedFilters": "Filtros avanzados",
+    "legend": "Leyenda",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "pin": "Fijar",
+    "close": "Cerrar",
+    "connections": "Conexiones",
+    "openLaw": "Abrir norma",
+    "selectNode": "Selecciona un nodo del grafo para ver detalles.",
+    "retry": "Reintentar",
+    "loading": "Cargando grafo…",
+    "buildingFirstTime": "Construyendo el grafo por primera vez. Puede tardar uno o dos minutos…",
+    "error": {
+      "title": "No se pudo cargar el subgrafo desde esa norma",
+      "seedMissing": "La norma seed pedida ({{seed}}) no está en el grafo actual.",
+      "trySuggestions": "Prueba con una de las más conectadas del corpus:"
+    },
+    "kindDesc": {
+      "law": "Norma con 169 artículos y 1.248 referencias entrantes.",
+      "article": "Artículo perteneciente al Título I, Capítulo II.",
+      "reference": "Norma supranacional o doctrina citada por la norma activa.",
+      "amendment": "Norma que modifica la activa.",
+      "repealed": "Norma derogada — visible para contexto histórico."
+    }
+  },
+  "dashboards": {
+    "title": "Cuadros de mando",
+    "last12Months": "Últimos 12 meses",
+    "sectorAll": "Sector: Todos",
+    "chartTitle": "Reformas legislativas por mes",
+    "chartSubtitle": "2023 – 2024 · acumulado",
+    "openInPlotly": "Abrir en Plotly"
+  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
