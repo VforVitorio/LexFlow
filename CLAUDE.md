@@ -145,6 +145,7 @@ Read this before touching either side.
 
 - **Dev mode**: backend on `:8000`, Vite on `:5173`. Vite proxies `/api/*` → `http://localhost:8000/api/*`. No CORS configuration needed in dev.
 - **Prod mode**: single FastAPI process. Serves the API under `/api/v1/*` and mounts `frontend/dist/` at `/` as static files (`StaticFiles` + a catch-all returning `index.html` for SPA routes).
+- **CORS is OFF and stays OFF** while the stack is single-origin: in prod the same process serves API + SPA, and in dev Vite proxies `/api/*`, so the browser never makes a cross-origin request — there is no `CORSMiddleware`. A dev fetch failure is a proxy/backend-down problem, never CORS; don't add the middleware to "fix" it, and always call the API with the relative `/api/v1/...` path. The only thing that would justify `CORSMiddleware` is a separate-origin deployment (SPA on a different host than the API), with an explicit origin allowlist. Full contract: [`docs/architecture/api-contract.md`](docs/architecture/api-contract.md#cors).
 - **API versioning**: every endpoint lives under `/api/v1/`. Breaking changes bump to `/api/v2/` — never silently change `/api/v1/` responses.
 - **Types**: regenerate `frontend/src/api/schema.ts` whenever a Pydantic model or endpoint signature changes. CI will eventually fail if the committed `schema.ts` is stale.
 - **Error contract**: backend returns `{ "detail": "<message>" }` on 4xx/5xx (FastAPI default). Frontend has a single error boundary that reads `detail` and surfaces a toast.
