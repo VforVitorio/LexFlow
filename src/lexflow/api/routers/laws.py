@@ -16,7 +16,7 @@ from fastapi import APIRouter, Depends, Query
 from lexflow.api.dependencies import PaginationParams, get_law_registry
 from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.registry import LawRegistry
-from lexflow.core.schemas import LawDetail, LawSummary, PaginatedResponse
+from lexflow.core.schemas import LawDetail, LawReferencesResponse, LawSummary, PaginatedResponse
 
 router = APIRouter(prefix="/laws", tags=["Laws"])
 
@@ -63,3 +63,30 @@ def get_law(
         references=law.references,
         article_count=law.article_count,
     )
+
+
+@router.get(
+    "/{law_id}/references",
+    response_model=LawReferencesResponse,
+    summary="Get just the cross-references for a law (#96)",
+)
+def get_law_references(
+    law_id: str,
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
+    include_unresolved: bool = Query(
+        False,
+        description="If False (default), only references whose target_id resolves to a known law. If True, also includes raw textual mentions whose target is not in the corpus.",
+    ),
+) -> LawReferencesResponse:
+    """Return just the cross-references for ``law_id``.
+
+    The legacy path was for the frontend to call ``/laws/{id}`` and
+    filter ``articles[].references`` client-side — that transferred
+    the entire law body (often MB) just to read a few KB of refs.
+    This endpoint returns only what's needed.
+    """
+    law = registry.get_law(law_id)
+    refs = law.references
+    if not include_unresolved:
+        refs = [r for r in refs if r.target_id is not None]
+    return LawReferencesResponse(references=list(refs), total=len(refs))
