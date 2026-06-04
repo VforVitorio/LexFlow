@@ -993,11 +993,12 @@ wheels = [
 
 [[package]]
 name = "lexflow"
-version = "0.25.0"
+version = "0.34.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
+    { name = "keyring" },
     { name = "networkx" },
     { name = "numpy" },
     { name = "nvidia-ml-py" },
@@ -1041,6 +1042,7 @@ requires-dist = [
     { name = "fastmcp", marker = "extra == 'chat'", specifier = ">=2.0" },
     { name = "google-genai", marker = "extra == 'chat'", specifier = ">=1.5" },
     { name = "httpx", specifier = ">=0.28" },
+    { name = "keyring", specifier = ">=25.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.14" },
     { name = "networkx", specifier = ">=3.4" },
     { name = "numpy", specifier = ">=1.26" },
