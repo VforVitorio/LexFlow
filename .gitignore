@@ -36,6 +36,10 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+# ...except the hand-maintained backend spec (#126). The default
+# template assumes specs are auto-generated; ours is the source of
+# truth for the packaging build.
+!packaging/backend.spec
 
 # Installer logs
 pip-log.txt

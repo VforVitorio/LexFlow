@@ -1,0 +1,86 @@
+name: Packaging
+
+# Opt-in: don't run on every PR. Triggers:
+#  * push to main with paths under packaging/ or main.py
+#  * manual via workflow_dispatch (for ad-hoc smoke tests)
+#
+# The pytest job + ruff/mypy already cover the runtime correctness of
+# the backend; this workflow only validates that PyInstaller can
+# produce an executable on each supported OS.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "packaging/**"
+      - "main.py"
+      - "pyproject.toml"
+  workflow_dispatch:
+  # Allow PRs that touch the spec to verify cross-platform build.
+  pull_request:
+    paths:
+      - "packaging/**"
+
+concurrency:
+  group: packaging-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-backend:
+    name: PyInstaller backend on ${{ matrix.os }}
+    strategy:
+      # Don't cancel the other OSes when one fails — the matrix is
+      # informational, the spec needs visibility on every host.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The submodule (legalize-es) is NOT needed for packaging
+          # — the corpus lives outside the binary at runtime — so we
+          # skip the heavy clone.
+          submodules: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install with packaging extras
+        run: uv sync --extra packaging --frozen
+
+      - name: Build backend binary
+        run: uv run pyinstaller packaging/backend.spec --clean --noconfirm
+
+      - name: Smoke-check the binary exists
+        shell: bash
+        run: |
+          # Resolve the produced executable (Windows has a .exe suffix).
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            bin="dist/lexflow-backend.exe"
+          else
+            bin="dist/lexflow-backend"
+          fi
+          if [ ! -f "$bin" ]; then
+            echo "::error::Expected PyInstaller output at $bin but it was not produced"
+            ls -laR dist/ || true
+            exit 1
+          fi
+          # Report size so a regression in spec excludes shows up in
+          # the Actions log.
+          ls -lh "$bin"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lexflow-backend-${{ matrix.os }}
+          path: |
+            dist/lexflow-backend*
+          retention-days: 14
+          if-no-files-found: error
