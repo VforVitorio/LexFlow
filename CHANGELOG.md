@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.31.0](https://github.com/VforVitorio/LexFlow/compare/v0.30.0...v0.31.0) (2026-06-04)
+
+
+### Features
+
+* **i18n:** migrate ChatPage UI chrome ([83c1979](https://github.com/VforVitorio/LexFlow/commit/83c1979c0da5d452d93d7a5ea0366fdf0559dbe3))
+* **i18n:** migrate GraphPage + DashboardPage UI chrome ([b000777](https://github.com/VforVitorio/LexFlow/commit/b000777edd152f60049f420a3b4ad1c9a42c26d7))
+* **i18n:** migrate GraphPage + DashboardPage UI chrome ([#336](https://github.com/VforVitorio/LexFlow/issues/336)) ([6ea2056](https://github.com/VforVitorio/LexFlow/commit/6ea2056fb7272cc8fac98735c3c2a51b26ccd458))
+* **i18n:** migrate LawDetail, Diff, Search & Onboarding chrome ([c279e98](https://github.com/VforVitorio/LexFlow/commit/c279e98ba73db84e2ffdd978a4ab9e6e4ef0a1db))
+* **i18n:** migrate LawDetail, Diff, Search and Onboarding chrome ([#337](https://github.com/VforVitorio/LexFlow/issues/337)) ([2595602](https://github.com/VforVitorio/LexFlow/commit/2595602ce753aea85f94f28fa79efe18a3f79aec))
+
 ## [0.30.0](https://github.com/VforVitorio/LexFlow/compare/v0.29.0...v0.30.0) (2026-06-04)
 
 
