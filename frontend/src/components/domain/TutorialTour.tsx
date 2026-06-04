@@ -235,19 +235,6 @@ export function TutorialAutoLauncher() {
   return null;
 }
 
-/**
- * Imperative re-launch — wired to the "Repetir tutorial" button in
- * Settings → Ayuda. Calling this clears the completed flag so the next
- * close also re-marks it (idempotent).
- */
-export function useTutorialRelaunch() {
-  const { setIsOpen } = useTour();
-  return () => {
-    try {
-      localStorage.removeItem(TUTORIAL_COMPLETED_STORAGE_KEY);
-    } catch {
-      /* private mode — ignore */
-    }
-    setIsOpen(true);
-  };
-}
+// `useTutorialRelaunch` moved to `./use-tutorial-relaunch` so this file
+// exports only components (react-refresh). Re-launch consumers import it
+// from there.

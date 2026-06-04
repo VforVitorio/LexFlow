@@ -22,7 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { HelpCircle, RotateCcw, X } from 'lucide-react';
 import { Button, Kbd } from '@/components/ui';
-import { useTutorialRelaunch } from '@/components/domain/TutorialTour';
+import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
 import { cn, modKey } from '@/lib/utils';
 
 interface HelpPageContent {

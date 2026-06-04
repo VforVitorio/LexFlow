@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
-import { useTutorialRelaunch } from '@/components/domain/TutorialTour';
+import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
 import { useModels, useSyncStatus, useRunSync } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';

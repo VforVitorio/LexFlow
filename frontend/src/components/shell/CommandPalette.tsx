@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, BookOpenText, FileText, Command as CmdIcon, Moon, Network, MessagesSquare, BarChart3, Download, Hash } from 'lucide-react';
+import { Search, BookOpenText, FileText, Moon, Network, MessagesSquare, BarChart3, Download, Hash } from 'lucide-react';
 import { Kbd } from '@/components/ui';
 import { useUi } from '@/lib/store';
 import { useSearch, useTags } from '@/lib/queries';
@@ -37,55 +37,59 @@ export function CommandPalette() {
   const { data: searchData } = useSearch(q);
   const { data: vocab = [] } = useTags();
 
-  // Detect `#tag` typing: suggest matching tag names; also surface them when
-  // the input is empty as quick filters.
-  const tagQuery = (() => {
+  // Build the palette item list inside a single memo so the keydown
+  // effect below doesn't re-subscribe on every render
+  // (react-hooks/exhaustive-deps). Recomputes only when the query, the
+  // tag vocabulary or the search results change.
+  const items: PaletteItem[] = useMemo(() => {
+    // Detect `#tag` typing: suggest matching tag names; also surface them
+    // when the input is empty as quick filters.
     const m = q.match(/(^|\s)#(\S*)$/);
-    return m ? m[2].toLowerCase() : null;
-  })();
-  const tagSuggestions = tagQuery !== null
-    ? vocab.filter(({ tag }) => tag.toLowerCase().includes(tagQuery)).slice(0, 6)
-    : (q.trim() === '' ? vocab.slice(0, 5) : []);
+    const tagQuery = m ? m[2].toLowerCase() : null;
+    const tagSuggestions = tagQuery !== null
+      ? vocab.filter(({ tag }) => tag.toLowerCase().includes(tagQuery)).slice(0, 6)
+      : (q.trim() === '' ? vocab.slice(0, 5) : []);
 
-  const commands: PaletteItem[] = ([
-    { id: 'theme',     group: 'Comandos', icon: <Moon className="size-3.5" />,        title: 'Cambiar tema',            kbd: '⌘ .', run: () => { toggleTheme(); setPaletteOpen(false); } },
-    { id: 'go-graph',  group: 'Comandos', icon: <Network className="size-3.5" />,     title: 'Ir al grafo',             kbd: 'g g', run: () => { navigate('/graph'); setPaletteOpen(false); } },
-    { id: 'go-chat',   group: 'Comandos', icon: <MessagesSquare className="size-3.5" />,title: 'Ir al chat',           kbd: 'g c', run: () => { navigate('/chat'); setPaletteOpen(false); } },
-    { id: 'go-dash',   group: 'Comandos', icon: <BarChart3 className="size-3.5" />,   title: 'Cuadros de mando',        kbd: 'g d', run: () => { navigate('/dashboards'); setPaletteOpen(false); } },
-    { id: 'export',    group: 'Comandos', icon: <Download className="size-3.5" />,    title: 'Exportar página como PDF', run: () => { window.print(); setPaletteOpen(false); } },
-  ] as PaletteItem[]).filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()));
+    const commands: PaletteItem[] = ([
+      { id: 'theme',     group: 'Comandos', icon: <Moon className="size-3.5" />,        title: 'Cambiar tema',            kbd: '⌘ .', run: () => { toggleTheme(); setPaletteOpen(false); } },
+      { id: 'go-graph',  group: 'Comandos', icon: <Network className="size-3.5" />,     title: 'Ir al grafo',             kbd: 'g g', run: () => { navigate('/graph'); setPaletteOpen(false); } },
+      { id: 'go-chat',   group: 'Comandos', icon: <MessagesSquare className="size-3.5" />,title: 'Ir al chat',           kbd: 'g c', run: () => { navigate('/chat'); setPaletteOpen(false); } },
+      { id: 'go-dash',   group: 'Comandos', icon: <BarChart3 className="size-3.5" />,   title: 'Cuadros de mando',        kbd: 'g d', run: () => { navigate('/dashboards'); setPaletteOpen(false); } },
+      { id: 'export',    group: 'Comandos', icon: <Download className="size-3.5" />,    title: 'Exportar página como PDF', run: () => { window.print(); setPaletteOpen(false); } },
+    ] as PaletteItem[]).filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()));
 
-  const items: PaletteItem[] = [
-    ...tagSuggestions.map<PaletteItem>(({ tag, count }) => ({
-      id: `tag-${tag}`,
-      group: 'Tags',
-      icon: <Hash className="size-3.5" />,
-      title: `#${tag}`,
-      subtitle: `${count} ${count === 1 ? 'norma' : 'normas'} con este tag`,
-      run: () => { navigate(`/explorer?tags=${encodeURIComponent(tag)}`); setPaletteOpen(false); },
-    })),
-    ...(searchData?.hits ?? []).map<PaletteItem>((h) => ({
-      id: h.id,
-      group: h.kind === 'law' ? 'Leyes' : 'Artículos',
-      icon: h.kind === 'law' ? <BookOpenText className="size-3.5" /> : <FileText className="size-3.5" />,
-      title: h.title,
-      subtitle: h.snippet ? (
-        <HighlightedSnippet
-          text={h.snippet}
-          match={h.match}
-          prefix={h.articleNumber ? `Art. ${h.articleNumber} — ` : undefined}
-        />
-      ) : (
-        h.subtitle
-      ),
-      run: () => {
-        const p = h.payload as { lawId?: string };
-        if (p?.lawId) navigate(`/laws/${p.lawId}`);
-        setPaletteOpen(false);
-      },
-    })),
-    ...commands,
-  ];
+    return [
+      ...tagSuggestions.map<PaletteItem>(({ tag, count }) => ({
+        id: `tag-${tag}`,
+        group: 'Tags',
+        icon: <Hash className="size-3.5" />,
+        title: `#${tag}`,
+        subtitle: `${count} ${count === 1 ? 'norma' : 'normas'} con este tag`,
+        run: () => { navigate(`/explorer?tags=${encodeURIComponent(tag)}`); setPaletteOpen(false); },
+      })),
+      ...(searchData?.hits ?? []).map<PaletteItem>((h) => ({
+        id: h.id,
+        group: h.kind === 'law' ? 'Leyes' : 'Artículos',
+        icon: h.kind === 'law' ? <BookOpenText className="size-3.5" /> : <FileText className="size-3.5" />,
+        title: h.title,
+        subtitle: h.snippet ? (
+          <HighlightedSnippet
+            text={h.snippet}
+            match={h.match}
+            prefix={h.articleNumber ? `Art. ${h.articleNumber} — ` : undefined}
+          />
+        ) : (
+          h.subtitle
+        ),
+        run: () => {
+          const p = h.payload as { lawId?: string };
+          if (p?.lawId) navigate(`/laws/${p.lawId}`);
+          setPaletteOpen(false);
+        },
+      })),
+      ...commands,
+    ];
+  }, [q, vocab, searchData, navigate, toggleTheme, setPaletteOpen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
