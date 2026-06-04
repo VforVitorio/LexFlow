@@ -32,6 +32,7 @@ from lexflow.core.search_cache import CACHE_FILENAME as SEARCH_CACHE_FILENAME
 from lexflow.core.search_cache import save_search_index
 from lexflow.graph.builder import apply_diff_to_graph
 from lexflow.graph.cache import save_graph
+from lexflow.search.semantic_index import reset_semantic_index
 from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -146,4 +147,8 @@ def _fallback_rebuild() -> None:
     """
     get_registry.cache_clear()
     reset_graph_cache()
+    # Drop the semantic index too (#43) so the next semantic query
+    # rebuilds against the fresh corpus. Cheap: the index re-embed
+    # finishes in ~1 s for the 12 K-article corpus.
+    reset_semantic_index()
     logger.info("Sync fell back to full rebuild (diff unavailable or too large)")

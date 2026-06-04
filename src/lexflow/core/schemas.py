@@ -142,6 +142,28 @@ class SearchResponse(BaseModel):
     page_size: int
 
 
+class SemanticSearchHit(BaseModel):
+    """One row of a semantic-search response (#43).
+
+    Distinct from :class:`SearchResult` because the wire fields differ:
+    semantic hits expose a normalised cosine ``score`` in
+    ``[-1, 1]`` (rank-relative, not absolute), and they don't carry
+    text-match offsets — there's no literal substring to highlight.
+    """
+
+    law_id: str
+    article_number: str
+    snippet: str
+    score: float = Field(..., ge=-1.0, le=1.0)
+
+
+class SemanticSearchResponse(BaseModel):
+    """Wrapper around the semantic-search hit list (Sprint 6 api-6)."""
+
+    query: str
+    items: list[SemanticSearchHit]
+
+
 # ---------------------------------------------------------------------------
 # Tags (#145)
 # ---------------------------------------------------------------------------
