@@ -18,9 +18,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response
 
-from lexflow.api.dependencies import get_law_registry
+from lexflow.api.dependencies import get_law_registry, get_search_index
 from lexflow.core.registry import LawRegistry
-from lexflow.core.schemas import SearchResponse
+from lexflow.core.schemas import SearchResponse, SemanticSearchHit, SemanticSearchResponse
+from lexflow.search.semantic_index import SemanticIndex
 
 router = APIRouter(tags=["Search"])
 
@@ -48,6 +49,45 @@ def search_laws(
 ) -> SearchResponse:
     """Search across all laws and articles for the given query string."""
     return _run_search(q, page, page_size, registry)
+
+
+@router.get(
+    "/laws/search/semantic",
+    response_model=SemanticSearchResponse,
+    summary="Semantic search over the corpus's articles (#43).",
+)
+def search_semantic(
+    index: Annotated[SemanticIndex, Depends(get_search_index)],
+    q: str = Query(..., min_length=2, max_length=500, description="Natural-language query"),
+    limit: int = Query(10, ge=1, le=50, description="Top-N hits by cosine similarity"),
+) -> SemanticSearchResponse:
+    """Rank articles by cosine similarity to the query embedding.
+
+    The index is built lazily on the first call (one embed pass over
+    every article in the corpus). Subsequent queries reuse the
+    cached vectors. After a ``POST /sync`` triggers a corpus refresh,
+    the sync router calls ``reset_semantic_index`` so the next query
+    rebuilds against the new data.
+
+    Out of scope of this endpoint (separate follow-ups):
+      * Hybrid ranking that combines this with ``/laws/search``.
+      * Cross-encoder re-ranking on the top-K.
+      * The real embedder (today's ``HashEmbedder`` is a placeholder;
+        see ``search/embeddings.py``).
+    """
+    hits = index.query(q, limit=limit)
+    return SemanticSearchResponse(
+        query=q,
+        items=[
+            SemanticSearchHit(
+                law_id=hit.law_id,
+                article_number=hit.article_number,
+                snippet=hit.snippet,
+                score=hit.score,
+            )
+            for hit in hits
+        ],
+    )
 
 
 @router.get(

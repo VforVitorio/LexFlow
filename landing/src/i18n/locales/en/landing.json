@@ -249,6 +249,26 @@
       }
     ]
   },
+  "downloads": {
+    "eyebrow": "Downloads",
+    "title": "Download it for your platform.",
+    "subtitle": "Desktop app is pre-alpha — no signed binaries yet, but upcoming releases will land here.",
+    "cta": "View releases",
+    "detectedCta": "Recommended for you",
+    "fallbackPre": "Need a specific version?",
+    "fallbackLink": "Browse the Releases page on GitHub",
+    "os": {
+      "windows": {
+        "name": "Windows"
+      },
+      "macos": {
+        "name": "macOS"
+      },
+      "linux": {
+        "name": "Linux"
+      }
+    }
+  },
   "ctaEyebrow": "Try it locally",
   "ctaTitle": "Spin it up in under a minute.",
   "ctaSub": "Clone the repo, run `uv sync`, and the full API is live at `localhost:8000` with interactive docs ready to go. If the project direction resonates, drop a star.",
