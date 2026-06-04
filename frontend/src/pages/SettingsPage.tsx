@@ -5,7 +5,7 @@ import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
-import { useModels, useSyncStatus, useRunSync } from '@/lib/queries';
+import { useHealth, useModels, useSyncStatus, useRunSync } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
 import { USER_NAME_STORAGE_KEY } from '@/lib/greeting';
@@ -23,6 +23,7 @@ const SECTIONS = [
   { id: 'models', labelKey: 'settings.sections.models' },
   { id: 'mcpServers', labelKey: 'settings.sections.mcpServers' },
   { id: 'data', labelKey: 'settings.sections.data' },
+  { id: 'diagnostics', labelKey: 'settings.sections.diagnostics' },
   { id: 'help', labelKey: 'settings.sections.help' },
   { id: 'updates', labelKey: 'settings.sections.updates' },
   { id: 'about', labelKey: 'settings.sections.about' },
@@ -82,6 +83,7 @@ export function SettingsPage() {
         {section === 'mcpServers' && <McpServersSection />}
         {section === 'appearance' && <AppearanceSection />}
         {section === 'data' && <DataSection />}
+        {section === 'diagnostics' && <DiagnosticsSection />}
         {section === 'help' && <HelpSection />}
         {(section === 'updates' || section === 'about') && (
           <div className="py-10 text-center text-muted">
@@ -352,6 +354,109 @@ function HelpSection() {
     </>
   );
 }
+
+/**
+ * Settings → Diagnostics (#330 SPA surface).
+ *
+ * Polls ``GET /api/v1/system/health`` every 30 s and renders the four
+ * probes (memory, disk, corpus, chat DB) plus the overall ``ok`` /
+ * ``degraded`` status. Each row stays terse — the user wants a
+ * glanceable health summary, not a metrics dashboard.
+ */
+function DiagnosticsSection() {
+  const { t } = useTranslation();
+  const { data: health, isLoading, error } = useHealth();
+
+  if (isLoading) {
+    return (
+      <>
+        <h1 className="font-display text-[22px] font-semibold">{t('settings.sections.diagnostics')}</h1>
+        <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">{t('settings.diagnostics.subtitle')}</p>
+        <Card className="p-4 text-[13px] text-muted">{t('common.loading')}</Card>
+      </>
+    );
+  }
+
+  if (error || !health) {
+    return (
+      <>
+        <h1 className="font-display text-[22px] font-semibold">{t('settings.sections.diagnostics')}</h1>
+        <Card className="mt-5 flex items-center gap-2 border-danger/40 bg-danger-soft p-4 text-[13.5px] text-danger">
+          <AlertTriangle className="size-4" />
+          {t('settings.diagnostics.error')}
+        </Card>
+      </>
+    );
+  }
+
+  const statusTone: 'success' | 'amber' = health.status === 'ok' ? 'success' : 'amber';
+  const memoryTone: 'success' | 'amber' = health.memory.systemUsedPercent >= 92 ? 'amber' : 'success';
+  const diskTone: 'success' | 'amber' = health.disk.usedPercent >= 90 ? 'amber' : 'success';
+
+  return (
+    <>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.sections.diagnostics')}</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">{t('settings.diagnostics.subtitle')}</p>
+
+      <Card className="mb-3 flex items-center gap-3 p-3.5">
+        <Badge tone={statusTone}>{t(`settings.diagnostics.status.${health.status}`)}</Badge>
+        <div className="flex-1">
+          <div className="font-mono text-[13px]">v{health.version}</div>
+          <div className="text-[12px] text-muted">
+            {t('settings.diagnostics.uptime', { seconds: Math.round(health.uptimeSeconds) })}
+          </div>
+        </div>
+      </Card>
+
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <Card className="p-3.5">
+          <div className="label-caps mb-1">{t('settings.diagnostics.memory.label')}</div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-mono text-[13px]">{health.memory.rssMb.toFixed(1)} MB RSS</span>
+            <Badge tone={memoryTone}>{health.memory.systemUsedPercent.toFixed(1)}%</Badge>
+          </div>
+          <div className="text-[11.5px] text-muted">{t('settings.diagnostics.memory.systemUsed')}</div>
+        </Card>
+
+        <Card className="p-3.5">
+          <div className="label-caps mb-1">{t('settings.diagnostics.disk.label')}</div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-mono text-[13px]">
+              {health.disk.freeGb.toFixed(1)} / {health.disk.totalGb.toFixed(0)} GB
+            </span>
+            <Badge tone={diskTone}>{health.disk.usedPercent.toFixed(1)}%</Badge>
+          </div>
+          <div className="break-all text-[11.5px] text-muted">{health.disk.path}</div>
+        </Card>
+
+        <Card className="p-3.5">
+          <div className="label-caps mb-1">{t('settings.diagnostics.corpus.label')}</div>
+          <div className="flex items-center gap-2">
+            {health.corpus.submodulePresent
+              ? <CheckCircle2 className="size-4 text-success" />
+              : <AlertTriangle className="size-4 text-amber-600" />}
+            <span className="font-mono text-[13px]">
+              {t('settings.diagnostics.corpus.lawsIndexed', { count: health.corpus.lawsIndexed })}
+            </span>
+          </div>
+        </Card>
+
+        <Card className="p-3.5">
+          <div className="label-caps mb-1">{t('settings.diagnostics.chatDb.label')}</div>
+          <div className="flex items-center gap-2">
+            {health.chatDb.reachable
+              ? <CheckCircle2 className="size-4 text-success" />
+              : <AlertTriangle className="size-4 text-amber-600" />}
+            <span className="text-[13px]">
+              {t(`settings.diagnostics.chatDb.${health.chatDb.reachable ? 'reachable' : 'unreachable'}`)}
+            </span>
+          </div>
+        </Card>
+      </div>
+    </>
+  );
+}
+
 
 function DataSection() {
   const { data: sync } = useSyncStatus();

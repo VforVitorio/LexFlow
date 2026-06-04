@@ -16,8 +16,29 @@ import type {
   BackendWarmupStatus,
   BackendWhatsNewResponse,
 } from '../../api';
-import type { ApiClient } from '../types';
+import type { ApiClient, HealthSnapshot } from '../types';
 import { http } from './http';
+
+/**
+ * Wire shape of ``GET /api/v1/system/health``. The Pydantic model is
+ * snake_case + nested; we keep the types local to the file so the
+ * SPA-facing ``HealthSnapshot`` stays camelCase.
+ */
+interface BackendHealthSnapshot {
+  status: 'ok' | 'degraded';
+  version: string;
+  uptime_seconds: number;
+  memory: { rss_mb: number; system_used_percent: number };
+  disk: {
+    path: string;
+    total_gb: number;
+    used_gb: number;
+    free_gb: number;
+    used_percent: number;
+  };
+  corpus: { submodule_present: boolean; laws_indexed: number };
+  chat_db: { reachable: boolean };
+}
 
 export const liveSystemApi: ApiClient['system'] = {
   warmup: async () => {
@@ -57,6 +78,32 @@ export const liveSystemApi: ApiClient['system'] = {
       ollamaRunning: raw.ollama_running,
       ollamaModels: raw.ollama_models ?? [],
       lmstudioRunning: raw.lmstudio_running,
+    };
+  },
+  health: async (): Promise<HealthSnapshot> => {
+    const raw = await http<BackendHealthSnapshot>('/system/health');
+    return {
+      status: raw.status,
+      version: raw.version,
+      uptimeSeconds: raw.uptime_seconds,
+      memory: {
+        rssMb: raw.memory.rss_mb,
+        systemUsedPercent: raw.memory.system_used_percent,
+      },
+      disk: {
+        path: raw.disk.path,
+        totalGb: raw.disk.total_gb,
+        usedGb: raw.disk.used_gb,
+        freeGb: raw.disk.free_gb,
+        usedPercent: raw.disk.used_percent,
+      },
+      corpus: {
+        submodulePresent: raw.corpus.submodule_present,
+        lawsIndexed: raw.corpus.laws_indexed,
+      },
+      chatDb: {
+        reachable: raw.chat_db.reachable,
+      },
     };
   },
 };

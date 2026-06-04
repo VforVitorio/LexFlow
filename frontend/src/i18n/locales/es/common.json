@@ -299,12 +299,39 @@
       "models": "Modelos",
       "mcpServers": "MCP Servers",
       "data": "Datos",
+      "diagnostics": "Diagnóstico",
       "help": "Ayuda",
       "updates": "Actualizaciones",
       "about": "Acerca de"
     },
     "title": "Ajustes",
     "underConstruction": "Sección por completar — se conectará al endpoint correspondiente.",
+    "diagnostics": {
+      "subtitle": "Estado en vivo del proceso: memoria, disco, corpus y base de chats. Se refresca automáticamente cada 30 s.",
+      "error": "No se pudo cargar el estado del proceso.",
+      "uptime": "Activo desde hace {{seconds}} s",
+      "status": {
+        "ok": "Sano",
+        "degraded": "Atención"
+      },
+      "memory": {
+        "label": "Memoria",
+        "systemUsed": "uso del sistema"
+      },
+      "disk": {
+        "label": "Disco"
+      },
+      "corpus": {
+        "label": "Corpus",
+        "lawsIndexed_one": "{{count}} ley indexada",
+        "lawsIndexed_other": "{{count}} leyes indexadas"
+      },
+      "chatDb": {
+        "label": "Base de chats",
+        "reachable": "accesible",
+        "unreachable": "no responde"
+      }
+    },
     "personalization": {
       "title": "Personalización",
       "subtitle": "Nombre con el que la app se dirige a ti, idioma de la interfaz y atajo a las opciones de accesibilidad. Sin cuenta — todo vive en el navegador.",

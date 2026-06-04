@@ -299,12 +299,39 @@
       "models": "Models",
       "mcpServers": "MCP Servers",
       "data": "Data",
+      "diagnostics": "Diagnostics",
       "help": "Help",
       "updates": "Updates",
       "about": "About"
     },
     "title": "Settings",
     "underConstruction": "Section pending — will connect to the matching endpoint.",
+    "diagnostics": {
+      "subtitle": "Live process state: memory, disk, corpus, chat DB. Auto-refreshes every 30 s.",
+      "error": "Couldn't load process state.",
+      "uptime": "Up for {{seconds}} s",
+      "status": {
+        "ok": "Healthy",
+        "degraded": "Attention"
+      },
+      "memory": {
+        "label": "Memory",
+        "systemUsed": "system usage"
+      },
+      "disk": {
+        "label": "Disk"
+      },
+      "corpus": {
+        "label": "Corpus",
+        "lawsIndexed_one": "{{count}} law indexed",
+        "lawsIndexed_other": "{{count}} laws indexed"
+      },
+      "chatDb": {
+        "label": "Chat DB",
+        "reachable": "reachable",
+        "unreachable": "not responding"
+      }
+    },
     "personalization": {
       "title": "Personalization",
       "subtitle": "How the app addresses you, interface language, and a shortcut to accessibility options. No account — everything lives in this browser.",
