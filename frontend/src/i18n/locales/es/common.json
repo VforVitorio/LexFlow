@@ -11,6 +11,32 @@
     "expand": "Expandir",
     "recent": "Reciente"
   },
+  "shell": {
+    "searchPlaceholder": "Buscar leyes, artículos…",
+    "toggleTheme": "Cambiar tema",
+    "toggleRightPanel": "Alternar panel derecho",
+    "breadcrumb": "Migas",
+    "diff": "Diff"
+  },
+  "model": {
+    "local": "local",
+    "cloud": "nube",
+    "notConfigured": "sin configurar",
+    "changeModelsPre": "Cambia modelos en",
+    "changeModelsKbd": "Ajustes › Modelos"
+  },
+  "lawHeader": {
+    "save": "Guardar",
+    "share": "Compartir",
+    "export": "Exportar",
+    "version": "Versión",
+    "stats": {
+      "articles": "Artículos",
+      "versions": "Versiones",
+      "references": "Referencias",
+      "lastModified": "Última modificación"
+    }
+  },
   "chat": {
     "newThread": "Nueva conversación",
     "emptyRailPre": "Aún no hay conversaciones. Pulsa",
@@ -223,7 +249,10 @@
   "errors": {
     "notFoundTitle": "No encontramos esa página",
     "notFoundDescription": "Comprueba la URL o vuelve al inicio.",
-    "home": "Inicio"
+    "home": "Inicio",
+    "somethingWrong": "Algo ha ido mal",
+    "retry": "Reintentar",
+    "reportBug": "Reportar bug"
   },
   "graph": {
     "searchPlaceholder": "Buscar en el grafo…",

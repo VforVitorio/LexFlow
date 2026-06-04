@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import { Badge, Kbd } from '@/components/ui';
 import { useModels } from '@/lib/queries';
@@ -6,6 +7,7 @@ import { useUi } from '@/lib/store';
 import { cn } from '@/lib/utils';
 
 export function ModelChip() {
+  const { t } = useTranslation();
   const { defaultModel, setDefaultModel } = useUi();
   const { data: models = [] } = useModels();
   const [open, setOpen] = useState(false);
@@ -20,7 +22,7 @@ export function ModelChip() {
         className="inline-flex h-8 items-center gap-2 rounded-lg border border-border-strong bg-surface px-2.5 text-[13px] hover:bg-surface-2"
       >
         <span className="font-medium">{m.label}</span>
-        <Badge tone={m.kind === 'local' ? 'success' : 'info'}>{m.kind === 'local' ? 'local' : 'nube'}</Badge>
+        <Badge tone={m.kind === 'local' ? 'success' : 'info'}>{m.kind === 'local' ? t('model.local') : t('model.cloud')}</Badge>
         <ChevronDown className="size-3.5" />
       </button>
       {open && (
@@ -40,13 +42,13 @@ export function ModelChip() {
               >
                 <div className="flex-1 text-left">
                   <div className={cn('font-medium', opt.id === m.id && 'font-semibold')}>{opt.label}</div>
-                  <div className="text-[11.5px] text-muted">{opt.vendor}{!opt.available && ' · sin configurar'}</div>
+                  <div className="text-[11.5px] text-muted">{opt.vendor}{!opt.available && ` · ${t('model.notConfigured')}`}</div>
                 </div>
-                <Badge tone={opt.kind === 'local' ? 'success' : 'info'}>{opt.kind === 'local' ? 'local' : 'nube'}</Badge>
+                <Badge tone={opt.kind === 'local' ? 'success' : 'info'}>{opt.kind === 'local' ? t('model.local') : t('model.cloud')}</Badge>
               </button>
             ))}
             <div className="mt-1 border-t border-border px-2.5 pt-2 pb-1 text-[11px] text-muted">
-              Cambia modelos en <Kbd>Ajustes › Modelos</Kbd>
+              {t('model.changeModelsPre')} <Kbd>{t('model.changeModelsKbd')}</Kbd>
             </div>
           </div>
         </>
