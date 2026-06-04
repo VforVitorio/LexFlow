@@ -11,6 +11,28 @@
     "expand": "Expandir",
     "recent": "Reciente"
   },
+  "chat": {
+    "newThread": "Nueva conversación",
+    "emptyRailPre": "Aún no hay conversaciones. Pulsa",
+    "emptyRailPost": "para empezar.",
+    "groups": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "week": "Esta semana"
+    },
+    "threadFallback": "Conversación",
+    "turns": "{{n}} turnos",
+    "sourcesCited": "{{n}} fuentes citadas",
+    "startTitle": "Empieza preguntando al corpus",
+    "startHintPre": "Escribe tu pregunta abajo. Cita un artículo con",
+    "startHintMid": "o filtra por",
+    "placeholder": "Pregunta algo al corpus…",
+    "attach": "Adjuntar",
+    "citeArticle": "Citar artículo…",
+    "onlyInForce": "Solo vigentes",
+    "send": "Enviar",
+    "sources": "Fuentes"
+  },
   "settings": {
     "sections": {
       "personalization": "Personalización",
