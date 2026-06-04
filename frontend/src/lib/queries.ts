@@ -13,7 +13,7 @@ import { liveTelemetryApi, type TelemetryStatus } from './api/telemetry';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults, SystemProfile, WarmupStatus, WhatsNewStatus,
+  SearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot,
 } from './types';
 
 export const qk = {
@@ -202,6 +202,22 @@ export function useWhatsNew(since: string | null) {
     queryKey: ['system', 'whats-new', since ?? ''] as const,
     queryFn: () => api.system.whatsNew(since),
     staleTime: 0,
+  });
+}
+
+/**
+ * Extended health snapshot (#330). Powers Settings → Diagnostics.
+ *
+ * Auto-refreshes every 30 s while the panel is open — short enough to
+ * catch a disk filling up or the chat DB falling over, long enough not
+ * to thrash the backend with probe work.
+ */
+export function useHealth() {
+  return useQuery<HealthSnapshot>({
+    queryKey: ['system', 'health'] as const,
+    queryFn: () => api.system.health(),
+    refetchInterval: 30_000,
+    staleTime: 10_000,
   });
 }
 

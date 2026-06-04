@@ -299,6 +299,7 @@
       "models": "Modelos",
       "mcpServers": "MCP Servers",
       "data": "Datos",
+      "diagnostics": "Diagnóstico",
       "privacy": "Privacidad",
       "help": "Ayuda",
       "updates": "Actualizaciones",
@@ -306,6 +307,32 @@
     },
     "title": "Ajustes",
     "underConstruction": "Sección por completar — se conectará al endpoint correspondiente.",
+    "diagnostics": {
+      "subtitle": "Estado en vivo del proceso: memoria, disco, corpus y base de chats. Se refresca automáticamente cada 30 s.",
+      "error": "No se pudo cargar el estado del proceso.",
+      "uptime": "Activo desde hace {{seconds}} s",
+      "status": {
+        "ok": "Sano",
+        "degraded": "Atención"
+      },
+      "memory": {
+        "label": "Memoria",
+        "systemUsed": "uso del sistema"
+      },
+      "disk": {
+        "label": "Disco"
+      },
+      "corpus": {
+        "label": "Corpus",
+        "lawsIndexed_one": "{{count}} ley indexada",
+        "lawsIndexed_other": "{{count}} leyes indexadas"
+      },
+      "chatDb": {
+        "label": "Base de chats",
+        "reachable": "accesible",
+        "unreachable": "no responde"
+      }
+    },
     "privacy": {
       "title": "Privacidad",
       "subtitle": "LexFlow puede registrar uso anónimo (páginas vistas, comandos del palette, errores) en un archivo local — nunca se envía a un servidor remoto. Apagado por defecto: hay dos interruptores y ambos tienen que estar en ON para que se registre algo.",

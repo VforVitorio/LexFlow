@@ -299,6 +299,7 @@
       "models": "Models",
       "mcpServers": "MCP Servers",
       "data": "Data",
+      "diagnostics": "Diagnostics",
       "privacy": "Privacy",
       "help": "Help",
       "updates": "Updates",
@@ -306,6 +307,32 @@
     },
     "title": "Settings",
     "underConstruction": "Section pending — will connect to the matching endpoint.",
+    "diagnostics": {
+      "subtitle": "Live process state: memory, disk, corpus, chat DB. Auto-refreshes every 30 s.",
+      "error": "Couldn't load process state.",
+      "uptime": "Up for {{seconds}} s",
+      "status": {
+        "ok": "Healthy",
+        "degraded": "Attention"
+      },
+      "memory": {
+        "label": "Memory",
+        "systemUsed": "system usage"
+      },
+      "disk": {
+        "label": "Disk"
+      },
+      "corpus": {
+        "label": "Corpus",
+        "lawsIndexed_one": "{{count}} law indexed",
+        "lawsIndexed_other": "{{count}} laws indexed"
+      },
+      "chatDb": {
+        "label": "Chat DB",
+        "reachable": "reachable",
+        "unreachable": "not responding"
+      }
+    },
     "privacy": {
       "title": "Privacy",
       "subtitle": "LexFlow can log anonymous usage (page views, palette commands, errors) to a local file — never sent to a remote server. Off by default: there are two gates and both must be ON for anything to be recorded.",
