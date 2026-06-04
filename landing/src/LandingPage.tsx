@@ -14,6 +14,7 @@ import { PoweredBy } from './sections/PoweredBy';
 import { Stack } from './sections/Stack';
 import { Roadmap } from './sections/Roadmap';
 import { CTA } from './sections/CTA';
+import { Downloads } from './sections/Downloads';
 import { Authors } from './sections/Authors';
 import { DevContrib } from './sections/DevContrib';
 import { HowItWorks } from './sections/HowItWorks';
@@ -71,6 +72,7 @@ export function LandingPage() {
         <RevealSection><Layers lang={lang} /></RevealSection>
         <RevealSection><UserFlow /></RevealSection>
         <RevealSection><Authors /></RevealSection>
+        <RevealSection><Downloads /></RevealSection>
         <RevealSection><CTA /></RevealSection>
 
         {/* "Para devs" zone (#184). Same components as before but wrapped in

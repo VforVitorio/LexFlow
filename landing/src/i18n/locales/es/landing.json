@@ -249,6 +249,26 @@
       }
     ]
   },
+  "downloads": {
+    "eyebrow": "Descargas",
+    "title": "Descárgalo para tu sistema.",
+    "subtitle": "App de escritorio en pre-alpha — todavía no hay binarios firmados, pero las próximas releases aterrizarán aquí.",
+    "cta": "Ver releases",
+    "detectedCta": "Recomendado para ti",
+    "fallbackPre": "¿Quieres una versión específica?",
+    "fallbackLink": "Mira la página de Releases en GitHub",
+    "os": {
+      "windows": {
+        "name": "Windows"
+      },
+      "macos": {
+        "name": "macOS"
+      },
+      "linux": {
+        "name": "Linux"
+      }
+    }
+  },
   "ctaEyebrow": "Pruébalo en local",
   "ctaTitle": "Levántalo en menos de un minuto.",
   "ctaSub": "Clona el repo, lanza `uv sync` y la API queda escuchando en `localhost:8000` con la documentación interactiva lista. Si te interesa el rumbo del proyecto, pon una estrella.",
