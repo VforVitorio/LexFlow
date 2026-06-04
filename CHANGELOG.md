@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.36.1](https://github.com/VforVitorio/LexFlow/compare/v0.36.0...v0.36.1) (2026-06-04)
+
+
+### Bug Fixes
+
+* **ci:** pin astral-sh/setup-uv to [@v7](https://github.com/v7) in packaging workflow ([5e26a1f](https://github.com/VforVitorio/LexFlow/commit/5e26a1fb08ea3696314c927bd14635214a46586b))
+* **ci:** pin packaging workflow to setup-uv@v7 ([d3be437](https://github.com/VforVitorio/LexFlow/commit/d3be43746f2547cf80782580058690d88e5db494))
+
 ## [0.36.0](https://github.com/VforVitorio/LexFlow/compare/v0.35.0...v0.36.0) (2026-06-04)
 
 
