@@ -73,6 +73,20 @@ class LawDetail(BaseModel):
     article_count: int
 
 
+class LawReferencesResponse(BaseModel):
+    """References for a single law (#96).
+
+    Returned by ``GET /api/v1/laws/{law_id}/references``. Wrapped in an
+    object (rather than a bare ``list[Reference]``) per the Sprint 6
+    api-6 convention — leaves room for future metadata fields (e.g.
+    pagination once a law's reference set grows) without breaking the
+    client.
+    """
+
+    references: list[Reference]
+    total: int
+
+
 # ---------------------------------------------------------------------------
 # Articles
 # ---------------------------------------------------------------------------
