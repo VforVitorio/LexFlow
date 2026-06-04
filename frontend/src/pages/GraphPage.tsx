@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
-import { GraphCanvas, NODE_KIND_LABELS } from '@/components/domain/GraphCanvas';
+import { GraphCanvas } from '@/components/domain/GraphCanvas';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { SkeletonCanvas } from '@/components/domain/Skeleton';
 import { RightRail } from '@/components/shell/RightRail';
 import { useGraph, useGraphTop, useWarmup } from '@/lib/queries';
-import { GRAPH_KIND_FILL } from '@/lib/graph-colors';
+import { GRAPH_KIND_FILL, NODE_KIND_LABELS } from '@/lib/graph-colors';
 import type { GraphNodeKind } from '@/lib/types';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];

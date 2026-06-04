@@ -38,7 +38,6 @@ export class ErrorBoundary extends Component<Props, State> {
     // CLAUDE.md). For now we log to the console so the error survives
     // a recovery click. When the logger lands, replace this with the
     // real client call.
-    // eslint-disable-next-line no-console
     console.error('[ErrorBoundary] uncaught render error', error, info.componentStack);
   }
 

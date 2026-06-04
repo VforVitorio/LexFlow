@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui';
 import { BrandMark } from '@/components/BrandMark';
 import { CitationCard } from './CitationCard';
 import type { ChatMessage as ChatMessageT, ChatSource } from '@/lib/types';
-import { cn } from '@/lib/utils';
 
 export interface ChatMessageProps {
   message: ChatMessageT;

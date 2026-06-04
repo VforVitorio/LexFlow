@@ -23,6 +23,21 @@
 
 import type { GraphNodeKind } from './types';
 
+/**
+ * Display label per node kind. Spanish on purpose — these are
+ * legal-taxonomy categories (Ley / Artículo / …), kept untranslated like
+ * rango/ámbito (see the i18n convention). Lives here, next to
+ * `GRAPH_KIND_FILL`, so the canvas and the page share one source and the
+ * canvas file stays a pure component module (react-refresh).
+ */
+export const NODE_KIND_LABELS: Record<GraphNodeKind, string> = {
+  law: 'Ley',
+  article: 'Artículo',
+  reference: 'Referencia',
+  amendment: 'Reforma',
+  repealed: 'Derogada',
+};
+
 /** Solid fill per node kind. */
 export const GRAPH_KIND_FILL: Record<GraphNodeKind, string> = {
   law:       'hsl(232 72% 52%)', // indigo — primary anchor

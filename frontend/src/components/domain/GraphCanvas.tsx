@@ -15,16 +15,9 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { cn } from '@/lib/utils';
-import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_GLOW, GRAPH_PRIMARY_SOFT } from '@/lib/graph-colors';
+import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_GLOW, GRAPH_PRIMARY_SOFT, NODE_KIND_LABELS } from '@/lib/graph-colors';
 import type { GraphData, GraphNode, GraphNodeKind } from '@/lib/types';
 
-export const NODE_KIND_LABELS: Record<GraphNodeKind, string> = {
-  law: 'Ley',
-  article: 'Artículo',
-  reference: 'Referencia',
-  amendment: 'Reforma',
-  repealed: 'Derogada',
-};
 /** Node size (px) per kind. Law nodes anchor the canvas; articles ring them. */
 const KIND_SIZE: Record<GraphNodeKind, number> = {
   law: 56,
