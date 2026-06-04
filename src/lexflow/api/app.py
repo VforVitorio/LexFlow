@@ -21,6 +21,7 @@ from lexflow.api.routers import (
     mcp_servers,
     models,
     search,
+    secrets,
     sync,
     system,
     tags,
@@ -125,6 +126,7 @@ app.include_router(sync.router, prefix="/api/v1")
 app.include_router(system.router, prefix="/api/v1")
 app.include_router(tags.router, prefix="/api/v1")
 app.include_router(mcp_servers.router, prefix="/api/v1")
+app.include_router(secrets.router, prefix="/api/v1")
 app.include_router(telemetry.router, prefix="/api/v1")
 
 

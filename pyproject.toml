@@ -43,6 +43,11 @@ dependencies = [
     # source. Installs cleanly on non-NVIDIA hosts — the binding only
     # fails when NVML init is actually called.
     "nvidia-ml-py>=12.0",
+    # OS keyring for cloud-provider API keys (#120). On Windows uses
+    # Credential Manager, on macOS Keychain, on Linux the freedesktop
+    # Secret Service (gnome-keyring / kwallet). Pure-Python, no compiled
+    # backend needed in CI — headless boxes get a no-op stub backend.
+    "keyring>=25.0",
 ]
 
 [project.optional-dependencies]

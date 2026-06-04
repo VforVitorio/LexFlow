@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import AsyncGenerator
 from typing import cast
 
@@ -11,13 +10,23 @@ from openai import AsyncStream
 from openai.types.chat import ChatCompletionChunk
 
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
+from lexflow.chat.secrets import get_api_key
 
 
 class OpenAIProvider(ChatProvider):
-    """Chat provider backed by the OpenAI API."""
+    """Chat provider backed by the OpenAI API.
+
+    Key resolution order (see ``chat/secrets.py``):
+      1. Explicit ``api_key`` argument (tests, scripted use).
+      2. ``OPENAI_API_KEY`` env var (back-compat, headless deploys).
+      3. OS keyring (the user-facing path on desktop installs).
+    ``None`` is fine for ``list_models`` (will surface a clean
+    ``ChatProviderError`` on call) — we don't validate eagerly at
+    construction so the provider stays cheap to instantiate.
+    """
 
     def __init__(self, api_key: str | None = None) -> None:
-        resolved_key = api_key or os.environ.get("OPENAI_API_KEY")
+        resolved_key = api_key or get_api_key("openai")
         self._client = openai.AsyncOpenAI(api_key=resolved_key)
 
     async def list_models(self) -> list[str]:
