@@ -5,7 +5,7 @@ import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
-import { useHealth, useModels, useSyncStatus, useRunSync } from '@/lib/queries';
+import { useHealth, useModels, useSyncStatus, useRunSync, useTelemetryStatus } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
 import { USER_NAME_STORAGE_KEY } from '@/lib/greeting';
@@ -24,6 +24,7 @@ const SECTIONS = [
   { id: 'mcpServers', labelKey: 'settings.sections.mcpServers' },
   { id: 'data', labelKey: 'settings.sections.data' },
   { id: 'diagnostics', labelKey: 'settings.sections.diagnostics' },
+  { id: 'privacy', labelKey: 'settings.sections.privacy' },
   { id: 'help', labelKey: 'settings.sections.help' },
   { id: 'updates', labelKey: 'settings.sections.updates' },
   { id: 'about', labelKey: 'settings.sections.about' },
@@ -84,6 +85,7 @@ export function SettingsPage() {
         {section === 'appearance' && <AppearanceSection />}
         {section === 'data' && <DataSection />}
         {section === 'diagnostics' && <DiagnosticsSection />}
+        {section === 'privacy' && <PrivacySection />}
         {section === 'help' && <HelpSection />}
         {(section === 'updates' || section === 'about') && (
           <div className="py-10 text-center text-muted">
@@ -475,6 +477,80 @@ function DataSection() {
           </div>
           <Button size="sm" loading={run.isPending} onClick={() => run.mutate()}>Sincronizar ahora</Button>
         </div>
+      </Card>
+    </>
+  );
+}
+
+/**
+ * Settings → Privacidad (Privacy) — telemetry opt-in toggle (#331 SPA gate).
+ *
+ * Two-gate model the user can see at a glance:
+ *
+ *  1. **Backend gate** — read from ``GET /api/v1/telemetry/status``.
+ *     When false, the user's toggle is informational only; events
+ *     wouldn't reach disk even if fired.
+ *  2. **User gate** — Zustand ``telemetryConsent``, persisted to
+ *     ``localStorage`` so the choice survives reloads.
+ *
+ * The toggle stays interactive even when the backend gate is off so
+ * the user can pre-commit their preference for whenever the operator
+ * enables it. The status pill makes the dependency explicit.
+ */
+function PrivacySection() {
+  const { t } = useTranslation();
+  const telemetryConsent = useUi((s) => s.telemetryConsent);
+  const setTelemetryConsent = useUi((s) => s.setTelemetryConsent);
+  const { data: backendStatus, isLoading } = useTelemetryStatus();
+  const backendEnabled = backendStatus?.enabled ?? false;
+  const effective = telemetryConsent && backendEnabled;
+
+  const toggle = () => {
+    const next = !telemetryConsent;
+    setTelemetryConsent(next);
+    toast({
+      tone: 'info',
+      title: next ? t('settings.privacy.toast.optedInTitle') : t('settings.privacy.toast.optedOutTitle'),
+      message: next ? t('settings.privacy.toast.optedInBody') : t('settings.privacy.toast.optedOutBody'),
+    });
+  };
+
+  return (
+    <>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.privacy.title')}</h1>
+      <p className="mt-1 mb-5 max-w-2xl text-[13.5px] text-muted">{t('settings.privacy.subtitle')}</p>
+
+      <Card className="mb-3 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="font-display text-[15px] font-semibold">{t('settings.privacy.toggleLabel')}</div>
+            <p className="mt-1 text-[12.5px] text-muted">{t('settings.privacy.toggleHint')}</p>
+          </div>
+          <Button size="sm" variant={telemetryConsent ? 'secondary' : 'primary'} onClick={toggle}>
+            {telemetryConsent ? t('settings.privacy.disable') : t('settings.privacy.enable')}
+          </Button>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2 text-[12px]">
+          <Badge tone={telemetryConsent ? 'success' : 'neutral'}>
+            {t('settings.privacy.userGate')}: {telemetryConsent ? t('settings.privacy.on') : t('settings.privacy.off')}
+          </Badge>
+          <Badge tone={backendEnabled ? 'success' : 'neutral'}>
+            {t('settings.privacy.backendGate')}:{' '}
+            {isLoading
+              ? '…'
+              : backendEnabled
+                ? t('settings.privacy.on')
+                : t('settings.privacy.off')}
+          </Badge>
+          <Badge tone={effective ? 'success' : 'neutral'}>
+            {t('settings.privacy.effective')}: {effective ? t('settings.privacy.on') : t('settings.privacy.off')}
+          </Badge>
+        </div>
+      </Card>
+
+      <Card className="border-border bg-surface/60 p-4">
+        <div className="font-display text-[14.5px] font-semibold">{t('settings.privacy.whatWeCollectTitle')}</div>
+        <p className="mt-1 text-[12.5px] text-muted">{t('settings.privacy.whatWeCollectBody')}</p>
       </Card>
     </>
   );

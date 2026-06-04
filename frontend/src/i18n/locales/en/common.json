@@ -300,6 +300,7 @@
       "mcpServers": "MCP Servers",
       "data": "Data",
       "diagnostics": "Diagnostics",
+      "privacy": "Privacy",
       "help": "Help",
       "updates": "Updates",
       "about": "About"
@@ -330,6 +331,27 @@
         "label": "Chat DB",
         "reachable": "reachable",
         "unreachable": "not responding"
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "subtitle": "LexFlow can log anonymous usage (page views, palette commands, errors) to a local file — never sent to a remote server. Off by default: there are two gates and both must be ON for anything to be recorded.",
+      "toggleLabel": "Usage telemetry",
+      "toggleHint": "Your consent lives in this browser. If the backend operator hasn't enabled persistence, this toggle is informational only — events won't be written even when ON.",
+      "enable": "Enable",
+      "disable": "Disable",
+      "userGate": "You",
+      "backendGate": "Operator",
+      "effective": "Effective",
+      "on": "ON",
+      "off": "OFF",
+      "whatWeCollectTitle": "What gets logged",
+      "whatWeCollectBody": "Pages you visit inside the app, commands you fire from the palette, and unhandled errors. Never the content of your searches, laws, or chat conversations. The log is a daily JSONL file on your local disk; inspect or delete it any time.",
+      "toast": {
+        "optedInTitle": "Telemetry enabled",
+        "optedInBody": "Anonymous usage will be recorded from now on (when the operator allows it too).",
+        "optedOutTitle": "Telemetry disabled",
+        "optedOutBody": "We'll stop recording usage from this browser."
       }
     },
     "personalization": {

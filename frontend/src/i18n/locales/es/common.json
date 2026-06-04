@@ -300,6 +300,7 @@
       "mcpServers": "MCP Servers",
       "data": "Datos",
       "diagnostics": "Diagnóstico",
+      "privacy": "Privacidad",
       "help": "Ayuda",
       "updates": "Actualizaciones",
       "about": "Acerca de"
@@ -330,6 +331,27 @@
         "label": "Base de chats",
         "reachable": "accesible",
         "unreachable": "no responde"
+      }
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "subtitle": "LexFlow puede registrar uso anónimo (páginas vistas, comandos del palette, errores) en un archivo local — nunca se envía a un servidor remoto. Apagado por defecto: hay dos interruptores y ambos tienen que estar en ON para que se registre algo.",
+      "toggleLabel": "Telemetría de uso",
+      "toggleHint": "Tu consentimiento se guarda en este navegador. Si el operador del backend no ha activado la persistencia, este interruptor queda informativo — los eventos no se guardarán igualmente.",
+      "enable": "Activar",
+      "disable": "Desactivar",
+      "userGate": "Tú",
+      "backendGate": "Operador",
+      "effective": "Efectivo",
+      "on": "ON",
+      "off": "OFF",
+      "whatWeCollectTitle": "Qué se registra",
+      "whatWeCollectBody": "Páginas que visitas dentro de la app, comandos que usas en la paleta, y errores no controlados. Nunca el contenido de tus búsquedas, leyes, ni conversaciones del chat. El log es un fichero JSONL diario en tu disco local; lo puedes inspeccionar o borrar cuando quieras.",
+      "toast": {
+        "optedInTitle": "Telemetría activada",
+        "optedInBody": "A partir de ahora se registrará el uso anónimo (si el operador también lo permite).",
+        "optedOutTitle": "Telemetría desactivada",
+        "optedOutBody": "Dejaremos de registrar uso desde este navegador."
       }
     },
     "personalization": {
