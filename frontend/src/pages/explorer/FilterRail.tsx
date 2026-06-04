@@ -7,6 +7,7 @@
  * is pure UI and emits all changes via the setters it receives.
  */
 
+import { useTranslation } from 'react-i18next';
 import { Hash } from 'lucide-react';
 import { Checkbox, Input } from '@/components/ui';
 import { cn, statusLabel } from '@/lib/utils';
@@ -55,9 +56,10 @@ export function FilterRail({
   vocab,
   inline = false,
 }: FilterRailProps) {
+  const { t } = useTranslation();
   if (inline) {
     return (
-      <section aria-label="Filtros">
+      <section aria-label={t('explorer.filters')}>
         <FilterRailBody
           status={status}
           setStatus={setStatus}
@@ -76,7 +78,7 @@ export function FilterRail({
     // #36 — hidden on mobile; the Explorer header's `Filtrar` button (in
     // ExplorerPage) opens it as a slide-in sheet on <md via `inline`.
     // From md+ upwards it stays as the persistent left rail.
-    <aside aria-label="Filtros" className="hidden w-64 shrink-0 overflow-auto border-r border-border bg-bg p-5 scrollbar-thin md:block">
+    <aside aria-label={t('explorer.filters')} className="hidden w-64 shrink-0 overflow-auto border-r border-border bg-bg p-5 scrollbar-thin md:block">
       <FilterRailBody
         status={status}
         setStatus={setStatus}
@@ -103,11 +105,12 @@ function FilterRailBody({
   setTags,
   vocab,
 }: Omit<FilterRailProps, 'inline'>) {
+  const { t } = useTranslation();
   return (
     <>
-      <div className="label-caps mb-2.5">Filtros</div>
+      <div className="label-caps mb-2.5">{t('explorer.filters')}</div>
 
-      <FilterGroup title="Estado">
+      <FilterGroup title={t('explorer.groups.status')}>
         {STATUSES.map((s) => (
           <Checkbox
             key={s}
@@ -118,7 +121,7 @@ function FilterRailBody({
         ))}
       </FilterGroup>
 
-      <FilterGroup title="Rango normativo">
+      <FilterGroup title={t('explorer.groups.rango')}>
         {RANGOS.map((r) => (
           <Checkbox
             key={r}
@@ -129,7 +132,7 @@ function FilterRailBody({
         ))}
       </FilterGroup>
 
-      <FilterGroup title="Ámbito territorial">
+      <FilterGroup title={t('explorer.groups.ambito')}>
         {AMBITOS.map((a) => (
           <Checkbox
             key={a}
@@ -140,7 +143,7 @@ function FilterRailBody({
         ))}
       </FilterGroup>
 
-      <FilterGroup title="Año">
+      <FilterGroup title={t('explorer.groups.year')}>
         <div className="flex items-center gap-2.5">
           <Input placeholder="1978" defaultValue="1978" className="h-8 w-20" />
           <span className="text-[12px] text-muted">—</span>
@@ -148,9 +151,9 @@ function FilterRailBody({
         </div>
       </FilterGroup>
 
-      <FilterGroup title="Tags">
+      <FilterGroup title={t('explorer.groups.tags')}>
         <p className="-mt-1 mb-1.5 text-[11px] text-muted">
-          Click para alternar · escribe <code className="font-mono">#tag</code> en el buscador
+          {t('explorer.tagsHintPre')} <code className="font-mono">#tag</code> {t('explorer.tagsHintPost')}
         </p>
         <div className="flex flex-wrap gap-1.5">
           {vocab.slice(0, 16).map(({ tag, count }) => {

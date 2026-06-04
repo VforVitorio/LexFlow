@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
 import { Badge, Button, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
@@ -12,6 +13,7 @@ import type { LawStatus, RangoNormativo, Ambito } from '@/lib/types';
 
 export function ExplorerPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { density, setDensity } = useUi();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<Set<LawStatus>>(new Set(['vigente']));
@@ -85,17 +87,17 @@ export function ExplorerPage() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Filtros"
+          aria-label={t('explorer.filters')}
           className="fixed inset-0 z-[40] bg-black/30 backdrop-blur-[2px] md:hidden"
           onClick={(e) => e.target === e.currentTarget && setFiltersOpen(false)}
         >
           <div className="absolute left-0 top-0 flex h-full w-[80vw] max-w-[320px] flex-col bg-bg shadow-2xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <span className="font-display text-base font-semibold">Filtros</span>
+              <span className="font-display text-base font-semibold">{t('explorer.filters')}</span>
               <button
                 type="button"
                 onClick={() => setFiltersOpen(false)}
-                aria-label="Cerrar filtros"
+                aria-label={t('explorer.closeFilters')}
                 className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
               >
                 <X className="size-4" />
@@ -123,11 +125,11 @@ export function ExplorerPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
         <div className="border-b border-border px-5 pt-4 pb-3.5 md:px-8 md:pt-5">
-          <h1 className="mb-3.5 font-display text-2xl font-semibold">Explorador</h1>
+          <h1 className="mb-3.5 font-display text-2xl font-semibold">{t('explorer.title')}</h1>
           <div className="flex flex-wrap items-center gap-2.5">
             <Input
               icon={<Search className="size-3.5" />}
-              placeholder="Buscar por título, BOE, #tag…"
+              placeholder={t('explorer.searchPlaceholder')}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="flex-1 min-w-[200px] max-w-[480px]"
@@ -138,7 +140,7 @@ export function ExplorerPage() {
               onClick={() => setFiltersOpen(true)}
               className="md:hidden"
             >
-              Filtros
+              {t('explorer.filters')}
             </Button>
             <SortButton sort={sort} setSort={setSort} />
             <Tabs variant="segmented" value={density} onChange={(v) => setDensity(v as 'compact' | 'comfortable' | 'cozy')} tabs={[
@@ -146,10 +148,10 @@ export function ExplorerPage() {
               { id: 'comfortable', label: '≣' },
               { id: 'cozy', label: '☰' },
             ]} />
-            <Button variant="secondary" icon={<Download className="size-3.5" />} className="hidden sm:inline-flex">Exportar</Button>
+            <Button variant="secondary" icon={<Download className="size-3.5" />} className="hidden sm:inline-flex">{t('explorer.export')}</Button>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
-            <span className="font-mono text-fg">{items.length}</span> de <span className="font-mono">{data?.total ?? 0}</span> normas ·
+            <span className="font-mono text-fg">{items.length}</span> {t('explorer.countOf')} <span className="font-mono">{data?.total ?? 0}</span> {t('explorer.countUnit')} ·
             {[...status].map((s) => (
               <Chip key={s} dismissable onDismiss={() => setStatus(toggle(status, s))}>{statusLabel(s)}</Chip>
             ))}
@@ -178,22 +180,22 @@ export function ExplorerPage() {
           {!isLoading && items.length === 0 ? (
             <div className="p-8">
               <EmptyState
-                title="Sin resultados para esa búsqueda"
-                description="Prueba con menos filtros o explora el grafo de referencias para encontrar normas relacionadas."
-                primaryAction={{ label: 'Limpiar filtros', onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); } }}
-                secondaryAction={{ label: 'Cómo buscar', onClick: () => {} }}
+                title={t('explorer.empty.title')}
+                description={t('explorer.empty.description')}
+                primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); } }}
+                secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => {} }}
               />
             </div>
           ) : (
             <table className="w-full border-collapse text-[13.5px]">
               <thead className="sticky top-0 z-[1] bg-bg">
                 <tr className="border-b border-border">
-                  <Th className="w-[40%] pl-8">Norma</Th>
-                  <Th sortable>Estado</Th>
-                  <Th sortable>Rango</Th>
-                  <Th sortable>Publicada</Th>
-                  <Th sortable className="text-right">Arts.</Th>
-                  <Th sortable className="text-right">Refs.</Th>
+                  <Th className="w-[40%] pl-8">{t('explorer.cols.law')}</Th>
+                  <Th sortable>{t('explorer.cols.status')}</Th>
+                  <Th sortable>{t('explorer.cols.rango')}</Th>
+                  <Th sortable>{t('explorer.cols.published')}</Th>
+                  <Th sortable className="text-right">{t('explorer.cols.articles')}</Th>
+                  <Th sortable className="text-right">{t('explorer.cols.refs')}</Th>
                   <Th className="w-10" />
                 </tr>
               </thead>
@@ -298,24 +300,21 @@ function Th({ children, sortable, className }: { children?: React.ReactNode; sor
 // Literal union shared with ``ExplorerPage``'s ``sort`` useState so
 // adding a new sort key surfaces as a TS error at the call sites, not as
 // a runtime "unknown sort" bug. The pre-refactor signature was
-// ``setSort: (v: any) => void`` — proper typing now.
+// ``setSort: (v: any) => void`` — proper typing now. Labels resolve via
+// `explorer.sort.<key>` in the locale files.
 type SortKey = 'relevance' | 'date' | 'refs' | 'title';
-const SORT_LABELS: Record<SortKey, string> = {
-  relevance: 'Relevancia',
-  date: 'Fecha',
-  refs: 'Refs',
-  title: 'Título',
-};
+const SORT_KEYS: SortKey[] = ['relevance', 'date', 'refs', 'title'];
 
 function SortButton({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => void }) {
+  const { t } = useTranslation();
   return (
     <select
       value={sort}
       onChange={(e) => setSort(e.target.value as SortKey)}
       className="h-9 rounded-md border border-border-strong bg-surface px-3 text-sm hover:bg-surface-2"
     >
-      {(Object.entries(SORT_LABELS) as [SortKey, string][]).map(([k, v]) => (
-        <option key={k} value={k}>{v}</option>
+      {SORT_KEYS.map((k) => (
+        <option key={k} value={k}>{t(`explorer.sort.${k}`)}</option>
       ))}
     </select>
   );

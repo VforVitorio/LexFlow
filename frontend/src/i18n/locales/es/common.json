@@ -44,6 +44,44 @@
       }
     }
   },
+  "explorer": {
+    "title": "Explorador",
+    "searchPlaceholder": "Buscar por título, BOE, #tag…",
+    "filters": "Filtros",
+    "closeFilters": "Cerrar filtros",
+    "export": "Exportar",
+    "countOf": "de",
+    "countUnit": "normas",
+    "clearFilters": "Limpiar filtros",
+    "howToSearch": "Cómo buscar",
+    "empty": {
+      "title": "Sin resultados para esa búsqueda",
+      "description": "Prueba con menos filtros o explora el grafo de referencias para encontrar normas relacionadas."
+    },
+    "cols": {
+      "law": "Norma",
+      "status": "Estado",
+      "rango": "Rango",
+      "published": "Publicada",
+      "articles": "Arts.",
+      "refs": "Refs."
+    },
+    "sort": {
+      "relevance": "Relevancia",
+      "date": "Fecha",
+      "refs": "Refs",
+      "title": "Título"
+    },
+    "groups": {
+      "status": "Estado",
+      "rango": "Rango normativo",
+      "ambito": "Ámbito territorial",
+      "year": "Año",
+      "tags": "Tags"
+    },
+    "tagsHintPre": "Click para alternar · escribe",
+    "tagsHintPost": "en el buscador"
+  },
   "home": {
     "searchPlaceholder": "Pregunta o busca cualquier norma…",
     "popularTags": "Tags populares",
