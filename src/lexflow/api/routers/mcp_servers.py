@@ -14,8 +14,10 @@ clashes with a built-in is refused).
 from __future__ import annotations
 
 import logging
+import tempfile
+from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from lexflow.mcp_servers import (
     BUILTIN_SERVERS,
@@ -28,6 +30,8 @@ from lexflow.mcp_servers import (
     load_user_servers,
     save_user_servers,
 )
+from lexflow.mcp_servers.bundle import BundleError, install_bundle
+from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -167,3 +171,78 @@ def delete_server(name: str) -> None:
     remaining = [entry for entry in entries if entry.name != name]
     if len(remaining) != len(entries):
         save_user_servers(remaining)
+
+
+# Max bundle upload size in bytes. Matches the unzipped cap in
+# ``mcp_servers/bundle.py`` so an oversize payload is rejected before
+# we even open the zip.
+_MAX_BUNDLE_UPLOAD_BYTES = 50 * 1024 * 1024
+
+
+@router.post(
+    "/bundles",
+    response_model=McpServerView,
+    status_code=status.HTTP_201_CREATED,
+    summary="Install a .mcpb bundle (Anthropic Desktop Extensions, #123).",
+)
+async def install_mcp_bundle(file: UploadFile = File(...)) -> McpServerView:
+    """Accept a ``.mcpb`` upload, extract + validate, then persist.
+
+    Wire contract:
+      * multipart upload, single ``file`` field.
+      * 201 + the new ``McpServerView`` on success.
+      * 409 if the manifest's ``name`` clashes with a built-in or an
+        existing user entry.
+      * 400 with ``{"code": ..., "message": ...}`` for any bundle
+        validation failure (bad zip, missing manifest, oversize, …).
+
+    The bundle is staged to a temp file first so a too-big upload
+    can be rejected without touching the persistent ``mcp-bundles/``
+    tree. Only after validation do we move the contents into place
+    and append the entry to ``mcp.json``.
+    """
+    payload = await file.read()
+    if len(payload) > _MAX_BUNDLE_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "bundle_too_large",
+                "message": f"Bundle exceeds {_MAX_BUNDLE_UPLOAD_BYTES // (1024 * 1024)} MB",
+            },
+        )
+    settings = get_settings()
+    with tempfile.NamedTemporaryFile(suffix=".mcpb", delete=False) as staged:
+        staged.write(payload)
+        staged_path = Path(staged.name)
+    try:
+        try:
+            entry = install_bundle(staged_path, settings.config_dir)
+        except BundleError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "invalid_bundle", "message": str(exc)},
+            ) from exc
+    finally:
+        # Best-effort cleanup; the install copied the bytes already.
+        staged_path.unlink(missing_ok=True)
+
+    if entry.name in _BUILTIN_NAMES:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "name_reserved",
+                "message": f"{entry.name!r} is a built-in server name and cannot be overridden.",
+            },
+        )
+    entries = load_user_servers()
+    if any(existing.name == entry.name for existing in entries):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "name_taken",
+                "message": f"A user server named {entry.name!r} already exists. Delete it first.",
+            },
+        )
+    entries.append(entry)
+    save_user_servers(entries)
+    return _as_view_user(entry)
