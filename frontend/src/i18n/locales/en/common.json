@@ -44,6 +44,47 @@
       }
     }
   },
+  "home": {
+    "searchPlaceholder": "Ask or search any law…",
+    "popularTags": "Popular tags",
+    "syncPrefix": "The corpus is up to date. Last sync with",
+    "whatChanged": "What changed",
+    "seeAll": "See all",
+    "shortcuts": "Shortcuts",
+    "recent": "Recent",
+    "openExplorer": "Open explorer →",
+    "empty": {
+      "title": "Nothing new",
+      "description": "The corpus has no recent publications. Sync with legalize-es to pull the latest changes."
+    },
+    "buckets": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "this-week": "This week",
+      "this-month": "This month",
+      "older": "Earlier"
+    },
+    "tiles": {
+      "graphTitle": "Reference graph",
+      "graphSub": "See how laws cite each other",
+      "chatTitle": "Chat with the corpus",
+      "chatSub": "Ask in natural language",
+      "diffTitle": "Compare versions",
+      "diffSub": "LOPDGDD · v1.0 → v1.3",
+      "dashboardsTitle": "Dashboards",
+      "dashboardsSub": "Compliance · 6 indicators"
+    },
+    "units": {
+      "articles": "arts.",
+      "versions": "versions",
+      "refs": "refs."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "We couldn't find that page",
+    "notFoundDescription": "Check the URL or go back home.",
+    "home": "Home"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
