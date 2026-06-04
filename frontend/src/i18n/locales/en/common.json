@@ -225,6 +225,41 @@
     "notFoundDescription": "Check the URL or go back home.",
     "home": "Home"
   },
+  "graph": {
+    "searchPlaceholder": "Search the graph…",
+    "advancedFilters": "Advanced filters",
+    "legend": "Legend",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "pin": "Pin",
+    "close": "Close",
+    "connections": "Connections",
+    "openLaw": "Open law",
+    "selectNode": "Select a node in the graph to see details.",
+    "retry": "Retry",
+    "loading": "Loading graph…",
+    "buildingFirstTime": "Building the graph for the first time. This may take a minute or two…",
+    "error": {
+      "title": "Couldn't load the subgraph from that law",
+      "seedMissing": "The requested seed law ({{seed}}) isn't in the current graph.",
+      "trySuggestions": "Try one of the most connected laws in the corpus:"
+    },
+    "kindDesc": {
+      "law": "Law with 169 articles and 1,248 incoming references.",
+      "article": "Article belonging to Title I, Chapter II.",
+      "reference": "Supranational law or doctrine cited by the active law.",
+      "amendment": "Law that amends the active one.",
+      "repealed": "Repealed law — shown for historical context."
+    }
+  },
+  "dashboards": {
+    "title": "Dashboards",
+    "last12Months": "Last 12 months",
+    "sectorAll": "Sector: All",
+    "chartTitle": "Legislative amendments per month",
+    "chartSubtitle": "2023 – 2024 · cumulative",
+    "openInPlotly": "Open in Plotly"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
