@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.33.0](https://github.com/VforVitorio/LexFlow/compare/v0.32.0...v0.33.0) (2026-06-04)
+
+
+### Features
+
+* **i18n:** migrate remaining shared components ([#349](https://github.com/VforVitorio/LexFlow/issues/349) follow-up) ([d3fcf17](https://github.com/VforVitorio/LexFlow/commit/d3fcf1714fb12d4fdca2f2b131384f03f51f07d6))
+* **i18n:** migrate remaining shared components (WhatsNew, Welcome, MCP, Wizard, Help) ([94ee181](https://github.com/VforVitorio/LexFlow/commit/94ee18156337661c772dc3ba58142e538fe06f20))
+
 ## [0.32.0](https://github.com/VforVitorio/LexFlow/compare/v0.31.0...v0.32.0) (2026-06-04)
 
 
