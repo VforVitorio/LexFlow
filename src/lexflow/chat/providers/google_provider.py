@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import AsyncGenerator
 
 from google import genai
 
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
+from lexflow.chat.secrets import get_api_key
 
 _GOOGLE_MODELS: list[str] = [
     "gemini-2.0-flash",
@@ -26,7 +26,9 @@ class GoogleProvider(ChatProvider):
     """Chat provider backed by the Google Gemini API."""
 
     def __init__(self, api_key: str | None = None) -> None:
-        resolved_key = api_key or os.environ.get("GOOGLE_API_KEY")
+        # Key resolution: explicit arg → env var → OS keyring. See
+        # ``chat/secrets.py`` for the full contract.
+        resolved_key = api_key or get_api_key("google")
         self._client = genai.Client(api_key=resolved_key)
 
     async def list_models(self) -> list[str]:
