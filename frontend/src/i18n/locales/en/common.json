@@ -66,6 +66,44 @@
       }
     }
   },
+  "explorer": {
+    "title": "Explorer",
+    "searchPlaceholder": "Search by title, BOE, #tag…",
+    "filters": "Filters",
+    "closeFilters": "Close filters",
+    "export": "Export",
+    "countOf": "of",
+    "countUnit": "laws",
+    "clearFilters": "Clear filters",
+    "howToSearch": "How to search",
+    "empty": {
+      "title": "No results for that search",
+      "description": "Try fewer filters or explore the reference graph to find related laws."
+    },
+    "cols": {
+      "law": "Law",
+      "status": "Status",
+      "rango": "Type",
+      "published": "Published",
+      "articles": "Arts.",
+      "refs": "Refs."
+    },
+    "sort": {
+      "relevance": "Relevance",
+      "date": "Date",
+      "refs": "Refs",
+      "title": "Title"
+    },
+    "groups": {
+      "status": "Status",
+      "rango": "Legal rank",
+      "ambito": "Territorial scope",
+      "year": "Year",
+      "tags": "Tags"
+    },
+    "tagsHintPre": "Click to toggle · type",
+    "tagsHintPost": "in the search box"
+  },
   "home": {
     "searchPlaceholder": "Ask or search any law…",
     "popularTags": "Popular tags",
