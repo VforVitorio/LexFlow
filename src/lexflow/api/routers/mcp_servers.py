@@ -5,6 +5,9 @@ Surface:
     * ``POST   /api/v1/mcp/servers``       — add a user server.
     * ``PATCH  /api/v1/mcp/servers/{name}`` — toggle the enabled flag.
     * ``DELETE /api/v1/mcp/servers/{name}`` — remove a user server.
+    * ``GET    /api/v1/mcp/tools``         — merged catalogue from every
+                                              attached external server
+                                              (#121).
 
 Persistence lives in :mod:`lexflow.mcp_servers.config`; this router
 only validates input and resolves name conflicts (a user name that
@@ -18,7 +21,9 @@ import tempfile
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from pydantic import BaseModel
 
+from lexflow.chat.mcp_client import list_all_external_tools
 from lexflow.mcp_servers import (
     BUILTIN_SERVERS,
     BuiltinMcpServer,
@@ -36,6 +41,22 @@ from lexflow.utils.config import get_settings
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/mcp", tags=["MCP"])
+
+
+class McpToolView(BaseModel):
+    """One tool surfaced by an attached external MCP server."""
+
+    server_name: str
+    name: str
+    qualified_name: str
+    description: str
+
+
+class McpToolListResponse(BaseModel):
+    """Wrapper around the merged catalogue (per Sprint 6 api-6)."""
+
+    items: list[McpToolView]
+
 
 _BUILTIN_NAMES = {b.name for b in BUILTIN_SERVERS}
 
@@ -171,6 +192,39 @@ def delete_server(name: str) -> None:
     remaining = [entry for entry in entries if entry.name != name]
     if len(remaining) != len(entries):
         save_user_servers(remaining)
+
+
+@router.get(
+    "/tools",
+    response_model=McpToolListResponse,
+    summary="List every tool exposed by attached external MCP servers (#121).",
+)
+async def list_mcp_tools() -> McpToolListResponse:
+    """Merged catalogue across every enabled MCP server.
+
+    Built-in LexFlow tools (``search_law`` etc.) are NOT included
+    here — they live in-process and the agentic loop dispatches them
+    directly. This endpoint is the discovery surface for external
+    servers (``fetch``, ``filesystem``, ``mcp-pandoc``, ``boe-mcp``,
+    plus anything the user added in Settings).
+
+    A server that fails to connect or list tools is silently skipped
+    — the catalogue degrades to whatever did respond. The originating
+    server is preserved on each item so the SPA can render badges
+    and the agentic loop can route dispatches.
+    """
+    tools = await list_all_external_tools()
+    return McpToolListResponse(
+        items=[
+            McpToolView(
+                server_name=tool.server_name,
+                name=tool.name,
+                qualified_name=tool.qualified_name,
+                description=tool.description,
+            )
+            for tool in tools
+        ]
+    )
 
 
 # Max bundle upload size in bytes. Matches the unzipped cap in

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import AsyncGenerator
 
 import anthropic
 
 from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
+from lexflow.chat.secrets import get_api_key
 
 _ANTHROPIC_MODELS: list[str] = [
     # Stay aligned with the current Claude 4.X family (#104 #14). Opus
@@ -24,7 +24,9 @@ class AnthropicProvider(ChatProvider):
     """Chat provider backed by the Anthropic API."""
 
     def __init__(self, api_key: str | None = None) -> None:
-        resolved_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        # Key resolution: explicit arg → env var → OS keyring. See
+        # ``chat/secrets.py`` for the full contract.
+        resolved_key = api_key or get_api_key("anthropic")
         self._client = anthropic.AsyncAnthropic(api_key=resolved_key)
 
     async def list_models(self) -> list[str]:
