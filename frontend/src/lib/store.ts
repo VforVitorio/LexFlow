@@ -39,6 +39,16 @@ interface UiState {
   /** Default chat model (id). */
   defaultModel: string;
   setDefaultModel(id: string): void;
+
+  /**
+   * User-side consent for opt-in telemetry (#331 SPA gate).
+   *
+   * Off by default. Even with this on, events only ship when the
+   * backend env ``LEXFLOW_TELEMETRY_ENABLED=1`` is also set — the
+   * two flags are intentionally independent (operator + user gates).
+   */
+  telemetryConsent: boolean;
+  setTelemetryConsent(value: boolean): void;
 }
 
 export const useUi = create<UiState>()(
@@ -67,6 +77,9 @@ export const useUi = create<UiState>()(
 
       defaultModel: import.meta.env.VITE_DEFAULT_MODEL || 'claude-sonnet-4-5',
       setDefaultModel: (id) => set({ defaultModel: id }),
+
+      telemetryConsent: false,
+      setTelemetryConsent: (value) => set({ telemetryConsent: value }),
     }),
     {
       name: 'lexflow.ui',
@@ -79,6 +92,7 @@ export const useUi = create<UiState>()(
         density: s.density,
         readingSize: s.readingSize,
         defaultModel: s.defaultModel,
+        telemetryConsent: s.telemetryConsent,
       }),
     }
   )

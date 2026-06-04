@@ -9,6 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query';
 import { api } from './api';
+import { liveTelemetryApi, type TelemetryStatus } from './api/telemetry';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
@@ -201,6 +202,21 @@ export function useWhatsNew(since: string | null) {
     queryKey: ['system', 'whats-new', since ?? ''] as const,
     queryFn: () => api.system.whatsNew(since),
     staleTime: 0,
+  });
+}
+
+/**
+ * Backend telemetry opt-in gate (#331 SPA surface).
+ *
+ * Read on Settings → Privacidad open. The user-side gate lives in the
+ * Zustand store (``telemetryConsent``); events only flow when both
+ * the backend and the user have opted in.
+ */
+export function useTelemetryStatus() {
+  return useQuery<TelemetryStatus>({
+    queryKey: ['telemetry', 'status'] as const,
+    queryFn: () => liveTelemetryApi.status(),
+    staleTime: 5 * 60_000,
   });
 }
 
