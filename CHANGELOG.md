@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.36.0](https://github.com/VforVitorio/LexFlow/compare/v0.35.0...v0.36.0) (2026-06-04)
+
+
+### Features
+
+* **landing:** downloads section with OS detection (closes [#129](https://github.com/VforVitorio/LexFlow/issues/129)) ([8ebe271](https://github.com/VforVitorio/LexFlow/commit/8ebe2717ada70c12755bbb2d6d603bb0995096e7))
+* **mcp:** install .mcpb bundles via POST /api/v1/mcp/bundles ([#123](https://github.com/VforVitorio/LexFlow/issues/123)) ([f7b7f18](https://github.com/VforVitorio/LexFlow/commit/f7b7f18c51d4dbe771ea739da02fc84ca4bbdc74))
+* **mcp:** install .mcpb bundles via POST /api/v1/mcp/bundles (closes [#123](https://github.com/VforVitorio/LexFlow/issues/123)) ([2c50229](https://github.com/VforVitorio/LexFlow/commit/2c50229da1b4ae0453c40db000af73e75895f2ec))
+* **mcp:** internal MCP client + /mcp/tools endpoint ([#121](https://github.com/VforVitorio/LexFlow/issues/121)) ([527ce01](https://github.com/VforVitorio/LexFlow/commit/527ce0115c728c3da4d27cc55aa82e2f0442235d))
+* **packaging:** PyInstaller spec + cross-OS CI smoke build (closes [#126](https://github.com/VforVitorio/LexFlow/issues/126)) ([1343e0d](https://github.com/VforVitorio/LexFlow/commit/1343e0d807a9aeac330c499aa8d922fb04a90f1e))
+* **packaging:** PyInstaller spec for the backend ([#126](https://github.com/VforVitorio/LexFlow/issues/126)) ([0130912](https://github.com/VforVitorio/LexFlow/commit/01309122d084a30f1eeb24ba73b4cd9667ad0ba5))
+* **search:** semantic search infrastructure + endpoint ([#42](https://github.com/VforVitorio/LexFlow/issues/42), [#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([9f89117](https://github.com/VforVitorio/LexFlow/commit/9f8911755ad079ba77e2f3153b600e4c13a16667))
+* **search:** semantic search infrastructure + endpoint ([#42](https://github.com/VforVitorio/LexFlow/issues/42), [#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([247a8fe](https://github.com/VforVitorio/LexFlow/commit/247a8fe7387bd11b9d416360a7efe9995631a962))
+* **settings:** Diagnostics tab consuming /api/v1/system/health ([00ccf3d](https://github.com/VforVitorio/LexFlow/commit/00ccf3dae182b40f6135ae21b0e595bdf6bc2081))
+* **settings:** Diagnostics tab consuming /api/v1/system/health ([#330](https://github.com/VforVitorio/LexFlow/issues/330) SPA) ([3c8374f](https://github.com/VforVitorio/LexFlow/commit/3c8374fb321ba358a9de25f4fef4bc88c8602fde))
+* **settings:** Privacy tab with telemetry opt-in toggle ([#331](https://github.com/VforVitorio/LexFlow/issues/331) SPA gate) ([e70421d](https://github.com/VforVitorio/LexFlow/commit/e70421da9f8ce2bfe988afdef469411ec374fa3b))
+* **settings:** Privacy tab with telemetry opt-in toggle ([#331](https://github.com/VforVitorio/LexFlow/issues/331) SPA gate) ([f21e1c0](https://github.com/VforVitorio/LexFlow/commit/f21e1c09d3749d3e1c9bc2c2f1f5c5960cdfc396))
+
 ## [0.35.0](https://github.com/VforVitorio/LexFlow/compare/v0.34.0...v0.35.0) (2026-06-04)
 
 
