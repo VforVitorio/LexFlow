@@ -14,8 +14,10 @@ import networkx as nx
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from lexflow.api.dependencies import get_graph
+from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.schemas import (
     GraphEdgeData,
+    GraphGlobalResponse,
     GraphNeighborsResponse,
     GraphNodeData,
     GraphPathResponse,
@@ -28,6 +30,85 @@ from lexflow.graph.algorithms import shortest_path, top_laws
 from lexflow.graph.model import LegalGraph
 
 router = APIRouter(prefix="/graph", tags=["Graph"])
+
+
+# Hard ceiling so an honest "give me everything" query (limit unset) on a
+# corpus growing past tens of thousands of laws doesn't accidentally
+# serialise the universe. legalize-es is at ~12k today; 50k is the next
+# decade's headroom. Hit this and the client should narrow with filters.
+_GLOBAL_GRAPH_HARD_CAP = 50_000
+
+
+def _node_matches_filters(
+    attrs: dict[str, object],
+    *,
+    status: LawStatus | None,
+    rank: LawRank | None,
+    scope: Scope | None,
+    jurisdiction: str | None,
+) -> bool:
+    """Return whether a node's metadata satisfies every active filter.
+
+    Each ``None`` filter means "any value". String comparison matches the
+    way ``add_law`` stores the attributes (``enum.value``), so the caller
+    can pass enums or raw strings interchangeably.
+    """
+    if status is not None and attrs.get("status") != status.value:
+        return False
+    if rank is not None and attrs.get("rank") != rank.value:
+        return False
+    if scope is not None and attrs.get("scope") != scope.value:
+        return False
+    return not (jurisdiction is not None and attrs.get("jurisdiction") != jurisdiction)
+
+
+@router.get("", response_model=GraphGlobalResponse)
+def get_global_graph(
+    graph: Annotated[LegalGraph, Depends(get_graph)],
+    status: LawStatus | None = Query(None, description="Filter by enforcement status"),
+    rank: LawRank | None = Query(None, description="Filter by hierarchical rank"),
+    scope: Scope | None = Query(None, description="Filter by territorial scope"),
+    jurisdiction: str | None = Query(None, description="Filter by jurisdiction code (e.g. es-md)"),
+    limit: int | None = Query(
+        None,
+        ge=1,
+        le=_GLOBAL_GRAPH_HARD_CAP,
+        description="Return only the top-N matching nodes by PageRank. Omit to return everything.",
+    ),
+) -> GraphGlobalResponse:
+    """Return the whole graph (no seed) — Obsidian-style corpus view (#146).
+
+    Walk every node, apply the metadata filters, optionally truncate to
+    the top-``limit`` by PageRank, and return the induced subgraph (only
+    edges where both endpoints survived the filter+truncate pass).
+    """
+    g = graph.graph
+    matching = [
+        n
+        for n in g.nodes
+        if _node_matches_filters(g.nodes[n], status=status, rank=rank, scope=scope, jurisdiction=jurisdiction)
+    ]
+    total_available = len(matching)
+    if limit is not None and total_available > limit:
+        scores = nx.pagerank(g) if g.number_of_nodes() > 0 else {}
+        matching.sort(key=lambda nid: scores.get(nid, 0.0), reverse=True)
+        matching = matching[:limit]
+    selected = set(matching)
+    sub = g.subgraph(selected).copy()
+    pagerank_by_node, community_by_node = _enrich_subgraph(sub)
+    nodes = [
+        GraphNodeData(
+            id=n,
+            **{k: v for k, v in sub.nodes[n].items() if k in {"title", "rank", "status"}},
+            community=community_by_node.get(n),
+            pagerank=pagerank_by_node.get(n),
+        )
+        for n in sub.nodes
+    ]
+    edges = [
+        GraphEdgeData(source=u, target=v, source_article=sub.edges[u, v].get("source_article")) for u, v in sub.edges
+    ]
+    return GraphGlobalResponse(nodes=nodes, edges=edges, total_available=total_available)
 
 
 @router.get("/neighbors/{law_id}", response_model=GraphNeighborsResponse)

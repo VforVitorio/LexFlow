@@ -204,6 +204,19 @@ class GraphSubgraphResponse(BaseModel):
     edges: list[GraphEdgeData]
 
 
+class GraphGlobalResponse(BaseModel):
+    """Response for the global graph endpoint (#146).
+
+    Same shape as ``GraphSubgraphResponse`` plus ``total_available``,
+    which carries the number of nodes that matched the filters BEFORE
+    ``limit`` truncated. Lets the SPA show "showing N of M laws".
+    """
+
+    nodes: list[GraphNodeData]
+    edges: list[GraphEdgeData]
+    total_available: int
+
+
 class GraphStatsResponse(BaseModel):
     """High-level statistics about the knowledge graph."""
 

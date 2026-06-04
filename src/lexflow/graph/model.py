@@ -31,12 +31,20 @@ class LegalGraph:
         return instance
 
     def add_law(self, metadata: LawMetadata) -> None:
-        """Add a law node with its metadata as attributes."""
+        """Add a law node with its metadata as attributes.
+
+        ``scope`` is included so the global graph endpoint (#146) can
+        filter on it without round-tripping through the registry. Older
+        cached graphs that pre-date this attribute degrade gracefully:
+        ``nodes[id].get("scope")`` returns ``None`` and the filter
+        accepts everything when no scope is requested.
+        """
         self._g.add_node(
             metadata.identifier,
             title=metadata.title,
             rank=metadata.rank.value,
             status=metadata.status.value,
+            scope=metadata.scope.value,
             jurisdiction=metadata.jurisdiction.value if metadata.jurisdiction else None,
             publication_date=str(metadata.publication_date) if metadata.publication_date else None,
         )
