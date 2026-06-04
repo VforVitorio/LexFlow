@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Plus, X, GitCompareArrows, ExternalLink } from 'lucide-react';
 import { LawHeader } from '@/components/domain/LawHeader';
 import { ArticleBlock } from '@/components/domain/ArticleBlock';
@@ -20,6 +21,7 @@ type Tab = 'texto' | 'versiones' | 'grafo' | 'refs' | 'disc';
 export function LawDetailPage() {
   const { lawId } = useParams<{ lawId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const readingSize = useUi((s) => s.readingSize);
   const [tab, setTab] = useState<Tab>('texto');
   const [articles, setArticles] = useState<Article[]>([]);
@@ -51,11 +53,11 @@ export function LawDetailPage() {
             value={tab}
             onChange={(v) => setTab(v as Tab)}
             tabs={[
-              { id: 'texto', label: 'Texto', count: law.articulos },
-              { id: 'versiones', label: 'Versiones', count: law.versiones },
-              { id: 'grafo', label: 'Grafo' },
-              { id: 'refs', label: 'Referencias', count: law.referencias },
-              { id: 'disc', label: 'Discusión' },
+              { id: 'texto', label: t('lawDetail.tabs.texto'), count: law.articulos },
+              { id: 'versiones', label: t('lawDetail.tabs.versiones'), count: law.versiones },
+              { id: 'grafo', label: t('lawDetail.tabs.grafo') },
+              { id: 'refs', label: t('lawDetail.tabs.refs'), count: law.referencias },
+              { id: 'disc', label: t('lawDetail.tabs.disc') },
             ]}
           />
         </div>
@@ -66,10 +68,10 @@ export function LawDetailPage() {
             <VersionTimeline versions={versions} current={versions[versions.length - 1]?.tag} />
             <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-display text-base font-semibold">Cambios por versión</h3>
+                <h3 className="font-display text-base font-semibold">{t('lawDetail.changesByVersion')}</h3>
                 <Button size="sm" variant="secondary" icon={<GitCompareArrows className="size-3.5" />}
                   onClick={() => navigate(`/laws/${lawId}/diff`)}>
-                  Comparar v1.0 ↔ v1.3
+                  {t('lawDetail.compareVersions')}
                 </Button>
               </div>
               {[...versions].reverse().map((v, i) => (
@@ -85,7 +87,7 @@ export function LawDetailPage() {
                     </div>
                     <div className="mt-0.5 text-[12px] text-muted">{formatDate(v.date)}</div>
                   </div>
-                  <Button size="sm" variant="ghost" onClick={() => navigate(`/laws/${lawId}/diff`)}>Ver cambios →</Button>
+                  <Button size="sm" variant="ghost" onClick={() => navigate(`/laws/${lawId}/diff`)}>{t('lawDetail.viewChanges')}</Button>
                 </div>
               ))}
             </div>
@@ -93,9 +95,9 @@ export function LawDetailPage() {
         )}
         {(tab === 'grafo' || tab === 'refs' || tab === 'disc') && (
           <div className="flex-1 overflow-auto p-12 text-center text-muted">
-            <p>Pestaña <strong>{tab}</strong> — disponible en el backend.</p>
+            <p>{t('lawDetail.tabPending', { tab: t(`lawDetail.tabs.${tab}`) })}</p>
             {tab === 'grafo' && (
-              <Button className="mt-4" onClick={() => navigate('/graph')}>Abrir grafo global</Button>
+              <Button className="mt-4" onClick={() => navigate('/graph')}>{t('lawDetail.openGlobalGraph')}</Button>
             )}
           </div>
         )}
@@ -143,6 +145,7 @@ function DetailRightRail({
   onDismiss: () => void;
   onNavigate: (to: string) => void;
 }) {
+  const { t } = useTranslation();
   const mockSource: ChatSource = useMemo(() => ({
     law: 'Ley Orgánica 3/2018, de Protección de Datos',
     article: 'Art. 1',
@@ -154,7 +157,7 @@ function DetailRightRail({
   return (
     <>
       <div className="mb-3.5 flex items-center justify-between">
-        <span className="label-caps">{selectedRef ? 'Cita seleccionada' : 'Información de la norma'}</span>
+        <span className="label-caps">{selectedRef ? t('lawDetail.citationSelected') : t('lawDetail.lawInfo')}</span>
         {selectedRef && (
           <button onClick={onDismiss} className="text-muted hover:text-fg">
             <X className="size-3.5" />
@@ -166,19 +169,19 @@ function DetailRightRail({
         <>
           <div className="mb-4">
             <h3 className="font-display text-base font-semibold">{selectedRef.label}</h3>
-            <p className="mt-1 text-[12.5px] text-muted">Norma citada desde {law.short}.</p>
+            <p className="mt-1 text-[12.5px] text-muted">{t('lawDetail.citedFrom', { law: law.short })}</p>
           </div>
           <CitationCard source={mockSource} onClick={() => selectedRef.target && onNavigate(`/laws/${selectedRef.target.lawId}`)} />
         </>
       ) : (
         <div className="space-y-2">
           <p className="text-[13px] text-muted">
-            Selecciona una cita en el texto (superíndices) para ver la norma citada y su contexto.
+            {t('lawDetail.selectCitation')}
           </p>
         </div>
       )}
 
-      <div className="label-caps mb-2 mt-5">Referencias relacionadas</div>
+      <div className="label-caps mb-2 mt-5">{t('lawDetail.relatedRefs')}</div>
       <div className="flex flex-col gap-0.5">
         {['LO 1/1982 · Honor', 'LECrim · art. 588', 'RGPD (UE) 2016/679', 'STC 292/2000'].map((r) => (
           <button key={r} className="flex items-center gap-2 rounded px-1.5 py-1.5 text-[13px] hover:bg-surface-2">
