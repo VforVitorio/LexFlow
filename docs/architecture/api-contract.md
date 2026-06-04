@@ -23,6 +23,34 @@ app.include_router(search.router, prefix="/api/v1")
 app.include_router(graph_router, prefix="/api/v1")
 ```
 
+## CORS
+
+**There is no `CORSMiddleware`, and there should not be one** under the
+current single-origin architecture. The browser never makes a
+cross-origin request to the API, so CORS simply does not apply:
+
+| Environment | Why CORS is OFF |
+|-------------|-----------------|
+| Prod / packaged | One FastAPI process serves both the API (`/api/v1/*`) and the SPA (`mount_spa`, see [`api/app.py`](../../src/lexflow/api/app.py)) from the **same origin**. Same-origin → no preflight, no `Access-Control-*` headers. |
+| Dev | Vite (`:5173`) proxies `/api/*` → backend (`:8000`) — see [`frontend/vite.config.ts`](../../frontend/vite.config.ts). From the browser's view every request is same-origin (`:5173`); the proxy hop is server-to-server and never triggers CORS. |
+
+Practical consequences for contributors:
+
+- **Do not add `app.add_middleware(CORSMiddleware, ...)`** to "fix" a
+  fetch failure in dev. A failing `/api/*` call in dev is a **proxy or
+  backend-down** problem, not CORS — check the Vite proxy and that the
+  backend is running on `:8000`.
+- **Do not call the backend with an absolute origin** (`http://localhost:8000/...`)
+  from frontend code. Always use the relative `/api/v1/...` path so the
+  same-origin contract holds in both dev and prod.
+
+The **only** future scenario that would require `CORSMiddleware` is a
+**separate-origin deployment** — e.g. the SPA served from a CDN/different
+host than the API. If that day comes, add the middleware with an
+**explicit origin allowlist** (never `allow_origins=["*"]` alongside
+credentials) and document the allowed origins here. Until then, the seam
+stays closed.
+
 ## Versioning
 
 - All endpoints live under `/api/v1/`.
