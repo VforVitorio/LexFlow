@@ -39,8 +39,21 @@ from sqlmodel import Session
 
 from lexflow.chat import provider_registry
 from lexflow.chat.base import ChatMessage as ProviderMessage
-from lexflow.chat.base import ChatProvider, ChatProviderError
+from lexflow.chat.base import (
+    ChatProvider,
+    ChatProviderError,
+    FinishChunk,
+    TextChunk,
+    ToolCallChunk,
+    ToolSpec,
+)
+from lexflow.chat.mcp_server import TOOL_SPECS, dispatch_tool
 from lexflow.chat.storage_models import ChatMessage, ChatThread
+
+# Hard cap on the agentic loop (#195). Once hit, we stop iterating even
+# if the model keeps asking for more tool calls — runaway loops would
+# pin the server + burn cloud quota.
+_MAX_TOOL_ITERATIONS = 5
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +114,41 @@ def format_sse(event: str, data: Any) -> str:
     """
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     return f"event: {event}\ndata: {payload}\n\n"
+
+
+def _extract_citations(result: dict[str, Any]) -> list[dict[str, Any]]:
+    """Pull law/article citations out of an MCP tool result (#195).
+
+    Handles three shapes the tools emit today:
+
+    * ``search_law`` → ``{"items": [{"law_id", "article_number", ...}, ...]}``
+    * ``get_law``    → ``{"metadata": {"identifier": "BOE-..."} , ...}``
+    * ``get_article``→ a single article (``{"number": "1", ...}``) — too
+      thin on its own; left out for now.
+
+    Each surfaced citation has ``law_id`` (always) and ``article_number``
+    (optional). The frontend already renders these on the ``source``
+    SSE event into clickable badges.
+    """
+    citations: list[dict[str, Any]] = []
+    items = result.get("items") if isinstance(result, dict) else None
+    if isinstance(items, list):
+        for hit in items:
+            if not isinstance(hit, dict):
+                continue
+            law_id = hit.get("law_id")
+            if isinstance(law_id, str) and law_id:
+                citation: dict[str, Any] = {"law_id": law_id}
+                article = hit.get("article_number")
+                if isinstance(article, str) and article:
+                    citation["article_number"] = article
+                citations.append(citation)
+    metadata = result.get("metadata") if isinstance(result, dict) else None
+    if isinstance(metadata, dict):
+        identifier = metadata.get("identifier")
+        if isinstance(identifier, str) and identifier:
+            citations.append({"law_id": identifier})
+    return citations
 
 
 def _thread_history(thread: ChatThread) -> list[ProviderMessage]:
@@ -166,15 +214,56 @@ async def stream_chat_reply(
     session.refresh(thread)
     history = _thread_history(thread)
 
-    # 3. Stream. Accumulate chunks so we can persist the full reply at
-    #    the end.
+    # 3. Stream. The agentic loop (#195) iterates ``stream_chat_typed``
+    #    up to ``_MAX_TOOL_ITERATIONS`` times: each iteration either
+    #    finishes with text (``stop`` → break) or with tool calls
+    #    (``tool_use`` → dispatch + feed result back). Text deltas are
+    #    accumulated so the assistant turn can be persisted whole at the
+    #    end. Providers that haven't been upgraded to native tool-use
+    #    yet fall back to ``stream_chat`` via the default
+    #    ``stream_chat_typed`` impl on ``ChatProvider`` — behaves
+    #    identically to the pre-#195 path (one iteration, text only).
     assistant_chunks: list[str] = []
+    tools = [ToolSpec(**spec) for spec in TOOL_SPECS]
     try:
-        async for chunk in provider.stream_chat(history, model_name):
-            if not chunk:
-                continue
-            assistant_chunks.append(chunk)
-            yield format_sse(SseEvent.TEXT, {"delta": chunk})
+        for _ in range(_MAX_TOOL_ITERATIONS):
+            finish_reason: str | None = None
+            pending_calls: list[ToolCallChunk] = []
+            async for typed in provider.stream_chat_typed(history, model_name, tools=tools):
+                if isinstance(typed, TextChunk):
+                    if not typed.delta:
+                        continue
+                    assistant_chunks.append(typed.delta)
+                    yield format_sse(SseEvent.TEXT, {"delta": typed.delta})
+                elif isinstance(typed, ToolCallChunk):
+                    pending_calls.append(typed)
+                    yield format_sse(
+                        SseEvent.TOOL_CALL,
+                        {"call_id": typed.call_id, "name": typed.name, "args": typed.arguments},
+                    )
+                elif isinstance(typed, FinishChunk):
+                    finish_reason = typed.reason
+                    break
+            if not pending_calls or finish_reason == "stop":
+                break
+            for call in pending_calls:
+                try:
+                    result = dispatch_tool(call.name, call.arguments)
+                except KeyError:
+                    result = {"error": "unknown_tool", "name": call.name}
+                except Exception as exc:
+                    logger.exception("Tool %s failed during agentic loop", repr(call.name))
+                    result = {"error": "tool_error", "detail": str(exc)}
+                for citation in _extract_citations(result):
+                    yield format_sse(SseEvent.SOURCE, citation)
+                history.append(
+                    ProviderMessage(
+                        role="tool",
+                        content=json.dumps(result, ensure_ascii=False, default=str),
+                        tool_call_id=call.call_id,
+                        name=call.name,
+                    )
+                )
     except ChatProviderError as exc:
         # Both `provider_key` (from `split_model_id(body.model)`) and
         # `exc` (built by the provider wrapping the original SDK error)

@@ -24,7 +24,7 @@ import functools
 import inspect
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from fastmcp import FastMCP
 
@@ -220,6 +220,80 @@ def get_stats() -> dict:  # type: ignore[type-arg]
     """
     registry = get_registry()
     return {"total_laws": registry.total_count}
+
+
+# ---------------------------------------------------------------------------
+# In-process dispatch (#195)
+# ---------------------------------------------------------------------------
+#
+# The MCP server exposes tools to external clients via stdio. The chat
+# agentic loop runs INSIDE the same Python process, so going through
+# stdio is wasteful — we keep a parallel registry here so the bridge in
+# ``streaming.py`` can call the same audited function directly.
+
+TOOLS: dict[str, Callable[..., dict[str, Any]]] = cast(
+    dict[str, Callable[..., dict[str, Any]]],
+    {
+        "search_law": search_law,
+        "get_law": get_law,
+        "get_article": get_article,
+        "get_stats": get_stats,
+    },
+)
+
+
+# JSON-schema specs handed to the provider so it knows what each tool
+# accepts. Kept here next to ``TOOLS`` so adding a tool is a single
+# diff. The shape matches the OpenAI / Anthropic / Google convention.
+TOOL_SPECS: list[dict[str, Any]] = [
+    {
+        "name": "search_law",
+        "description": "Search for laws by free-text query. Returns ids, titles, article numbers and snippets.",
+        "parameters": {
+            "type": "object",
+            "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "get_law",
+        "description": "Retrieve the full content of a law by its BOE identifier.",
+        "parameters": {
+            "type": "object",
+            "properties": {"law_id": {"type": "string"}},
+            "required": ["law_id"],
+        },
+    },
+    {
+        "name": "get_article",
+        "description": "Retrieve a specific article from a law.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "law_id": {"type": "string"},
+                "article_number": {"type": "string"},
+            },
+            "required": ["law_id", "article_number"],
+        },
+    },
+    {
+        "name": "get_stats",
+        "description": "Aggregate statistics about the LexFlow law registry.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+]
+
+
+def dispatch_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    """Run an MCP tool by name and return its dict result.
+
+    Raises ``KeyError`` for an unknown tool — the bridge translates that
+    into an SSE ``error`` event. The underlying audited tool functions
+    already log their own structured records via ``_audited``, so this
+    layer adds no extra logging.
+    """
+    fn = TOOLS[name]
+    return fn(**arguments)
 
 
 # ---------------------------------------------------------------------------

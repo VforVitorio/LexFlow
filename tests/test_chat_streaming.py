@@ -20,15 +20,19 @@ import pytest
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
-from lexflow.chat.base import ChatProviderError
+from lexflow.chat.base import ChatProvider, ChatProviderError
 
 
-class _FakeProvider:
+class _FakeProvider(ChatProvider):
     """Yields a canned sequence of text chunks.
 
     ``chunks`` may include ``ChatProviderError(...)`` instances — when
     the generator hits one, it raises instead of yielding. Lets a single
     fixture exercise both happy-path and mid-stream-failure cases.
+
+    Subclasses :class:`ChatProvider` so the default
+    ``stream_chat_typed`` (#195) bridges this text-only fake into the
+    agentic loop — same behaviour as before, no tool calls ever.
     """
 
     def __init__(self, chunks: list[str | Exception]) -> None:
@@ -37,7 +41,7 @@ class _FakeProvider:
     async def list_models(self) -> list[str]:
         return ["fake-model"]
 
-    async def stream_chat(self, messages: list[object], model: str) -> AsyncIterator[str]:
+    async def stream_chat(self, messages: list[object], model: str) -> AsyncIterator[str]:  # type: ignore[override]
         for chunk in self._chunks:
             if isinstance(chunk, Exception):
                 raise chunk
