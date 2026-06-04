@@ -330,6 +330,18 @@ For deep React work, install from `claudemarketplaces.com`: `vercel-labs/agent-s
 <!-- rtk-instructions v2 -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
 
+## CRITICAL: `rtk read` and `rtk grep` are the highest-volume token sinks
+
+Per `rtk gain --history`, these two are the most frequently invoked commands in every long session: ~300 `rtk read` calls and ~400 `rtk grep` calls **per session**. They individually save less per call (~16-23%) than tests/builds (~90%), but multiplied by their volume they are the single biggest lever on total token cost.
+
+Therefore:
+
+- **Prefer `rtk read <file>` over the built-in `Read` tool** for any source file > ~60 lines (RTK strips boilerplate/comments and dedupes blank lines while keeping code intact). Use `Read` only when you genuinely need exact line numbers for a follow-up `Edit`, or for binary/PDF/notebook files RTK can't filter.
+- **Prefer `rtk grep <pattern>` over the built-in `Grep` tool** for any content search. RTK groups by file with hit counts and skips noise; `Grep` dumps raw matches.
+- **Never bypass them by stringing together `cat`/`head`/`tail`/`find`** in a Bash call — that hides the savings AND costs more output tokens than the equivalent `rtk read`/`rtk grep` (which is what they're designed to replace).
+
+If you find yourself reaching for `Read` on a known-large file (>500 lines) or `Grep` on the whole tree, stop and switch to `rtk read` / `rtk grep` first.
+
 ## Golden Rule
 
 **Always prefix commands with `rtk`**. If RTK has a dedicated filter, it uses it. If not, it passes through unchanged. This means RTK is always safe to use.
