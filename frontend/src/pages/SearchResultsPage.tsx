@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Badge, Input } from '@/components/ui';
 import { Search } from 'lucide-react';
 import { useSearch, useWarmup } from '@/lib/queries';
@@ -11,6 +12,7 @@ export function SearchResultsPage() {
   const [params, setParams] = useSearchParams();
   const q = params.get('q') ?? '';
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data, isLoading } = useSearch(q);
   const { data: warmup } = useWarmup();
   const searchWarming = warmup && !warmup.searchReady;
@@ -22,30 +24,30 @@ export function SearchResultsPage() {
       <Input
         icon={<Search className="size-3.5" />}
         defaultValue={q}
-        placeholder="Buscar leyes, artículos, conversaciones…"
+        placeholder={t('search.placeholder')}
         onChange={(e) => setParams({ q: e.target.value })}
         className="w-full"
       />
       <p className="mt-3 text-[12.5px] text-muted">
         {searchWarming
-          ? 'Indexando el corpus por primera vez. Los resultados aparecerán en breve…'
+          ? t('search.indexing')
           : isLoading
-            ? 'Buscando…'
-            : `${data?.total ?? 0} resultados para "${q}"`}
+            ? t('search.searching')
+            : t('search.resultsFor', { n: data?.total ?? 0, q })}
       </p>
       {isLoading && q && <SkeletonRows className="mt-6" count={5} />}
       {!isLoading && data && data.total === 0 && (
         <EmptyState
           className="mt-8"
-          title="Sin resultados"
-          description="Prueba a reducir el número de palabras o eliminar acentos."
+          title={t('search.empty.title')}
+          description={t('search.empty.description')}
         />
       )}
       {Object.entries(grouped).map(([kind, hits]) => (
         <section key={kind} className="mt-6">
           <div className="label-caps mb-2 flex items-baseline justify-between">
-            <span>{kind === 'law' ? 'Leyes' : kind === 'article' ? 'Artículos' : kind}</span>
-            <button className="text-[12px] text-indigo-600 dark:text-indigo-300">Ver todo →</button>
+            <span>{kind === 'law' ? t('search.groups.law') : kind === 'article' ? t('search.groups.article') : kind}</span>
+            <button className="text-[12px] text-indigo-600 dark:text-indigo-300">{t('search.seeAll')}</button>
           </div>
           <div className="flex flex-col gap-1.5">
             {hits.map((h) => (

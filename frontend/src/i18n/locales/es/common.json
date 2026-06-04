@@ -33,6 +33,86 @@
     "send": "Enviar",
     "sources": "Fuentes"
   },
+  "lawDetail": {
+    "tabs": {
+      "texto": "Texto",
+      "versiones": "Versiones",
+      "grafo": "Grafo",
+      "refs": "Referencias",
+      "disc": "Discusión"
+    },
+    "changesByVersion": "Cambios por versión",
+    "compareVersions": "Comparar v1.0 ↔ v1.3",
+    "viewChanges": "Ver cambios →",
+    "tabPending": "Pestaña {{tab}} — disponible en el backend.",
+    "openGlobalGraph": "Abrir grafo global",
+    "citationSelected": "Cita seleccionada",
+    "lawInfo": "Información de la norma",
+    "citedFrom": "Norma citada desde {{law}}.",
+    "selectCitation": "Selecciona una cita en el texto (superíndices) para ver la norma citada y su contexto.",
+    "relatedRefs": "Referencias relacionadas"
+  },
+  "diff": {
+    "loading": "Cargando diff…",
+    "noChanges": "No hay artículos modificados en este rango de versiones.",
+    "backTo": "Volver a {{law}}",
+    "theLaw": "la norma",
+    "sideBySide": "Lado a lado",
+    "inline": "En línea",
+    "exportDiff": "Exportar diff",
+    "added": "añadidos",
+    "removed": "eliminados",
+    "nextPrev": "siguiente / anterior",
+    "changedArticles": "Artículos modificados"
+  },
+  "search": {
+    "placeholder": "Buscar leyes, artículos, conversaciones…",
+    "indexing": "Indexando el corpus por primera vez. Los resultados aparecerán en breve…",
+    "searching": "Buscando…",
+    "resultsFor": "{{n}} resultados para \"{{q}}\"",
+    "empty": {
+      "title": "Sin resultados",
+      "description": "Prueba a reducir el número de palabras o eliminar acentos."
+    },
+    "groups": {
+      "law": "Leyes",
+      "article": "Artículos"
+    },
+    "seeAll": "Ver todo →"
+  },
+  "onboarding": {
+    "welcome": "Bienvenida a LexFlow",
+    "back": "Atrás",
+    "skip": "Omitir",
+    "continue": "Continuar",
+    "start": "Empezar a usar LexFlow",
+    "theme": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "lightDesc": "Recomendado para juzgados y proyectores",
+      "darkDesc": "Recomendado para uso prolongado"
+    },
+    "modelKind": {
+      "local": "local",
+      "cloud": "nube"
+    },
+    "step1": {
+      "title": "Elige tu tema",
+      "body": "Puedes alternar entre claro y oscuro en cualquier momento con"
+    },
+    "step2": {
+      "title": "Modelo de chat",
+      "body": "Elige un modelo por defecto. Los <strong>locales</strong> funcionan sin Internet; los de <strong>nube</strong> requieren clave API."
+    },
+    "step3": {
+      "title": "Telemetría",
+      "body": "Opcional. Si la activas, enviaremos métricas anónimas de uso (sin texto de consultas) para mejorar el producto.",
+      "shareMetrics": "Compartir métricas anónimas",
+      "optIn": "opt-in · desactivado por defecto",
+      "notSentTitle": "Qué no se envía",
+      "notSentBody": "Nunca enviamos el texto de tus búsquedas ni el contenido de tus chats. Sólo: cuáles pantallas usas, cuántos artículos abres por sesión, y errores."
+    }
+  },
   "settings": {
     "sections": {
       "personalization": "Personalización",

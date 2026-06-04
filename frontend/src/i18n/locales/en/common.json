@@ -33,6 +33,86 @@
     "send": "Send",
     "sources": "Sources"
   },
+  "lawDetail": {
+    "tabs": {
+      "texto": "Text",
+      "versiones": "Versions",
+      "grafo": "Graph",
+      "refs": "References",
+      "disc": "Discussion"
+    },
+    "changesByVersion": "Changes by version",
+    "compareVersions": "Compare v1.0 ↔ v1.3",
+    "viewChanges": "View changes →",
+    "tabPending": "{{tab}} tab — available in the backend.",
+    "openGlobalGraph": "Open global graph",
+    "citationSelected": "Selected citation",
+    "lawInfo": "Law information",
+    "citedFrom": "Law cited from {{law}}.",
+    "selectCitation": "Select a citation in the text (superscripts) to see the cited law and its context.",
+    "relatedRefs": "Related references"
+  },
+  "diff": {
+    "loading": "Loading diff…",
+    "noChanges": "No articles changed in this version range.",
+    "backTo": "Back to {{law}}",
+    "theLaw": "the law",
+    "sideBySide": "Side by side",
+    "inline": "Inline",
+    "exportDiff": "Export diff",
+    "added": "added",
+    "removed": "removed",
+    "nextPrev": "next / previous",
+    "changedArticles": "Changed articles"
+  },
+  "search": {
+    "placeholder": "Search laws, articles, conversations…",
+    "indexing": "Indexing the corpus for the first time. Results will appear shortly…",
+    "searching": "Searching…",
+    "resultsFor": "{{n}} results for \"{{q}}\"",
+    "empty": {
+      "title": "No results",
+      "description": "Try using fewer words or removing accents."
+    },
+    "groups": {
+      "law": "Laws",
+      "article": "Articles"
+    },
+    "seeAll": "See all →"
+  },
+  "onboarding": {
+    "welcome": "Welcome to LexFlow",
+    "back": "Back",
+    "skip": "Skip",
+    "continue": "Continue",
+    "start": "Start using LexFlow",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "lightDesc": "Recommended for courtrooms and projectors",
+      "darkDesc": "Recommended for prolonged use"
+    },
+    "modelKind": {
+      "local": "local",
+      "cloud": "cloud"
+    },
+    "step1": {
+      "title": "Choose your theme",
+      "body": "You can switch between light and dark at any time with"
+    },
+    "step2": {
+      "title": "Chat model",
+      "body": "Pick a default model. <strong>Local</strong> ones work without Internet; <strong>cloud</strong> ones require an API key."
+    },
+    "step3": {
+      "title": "Telemetry",
+      "body": "Optional. If you enable it, we'll send anonymous usage metrics (no query text) to improve the product.",
+      "shareMetrics": "Share anonymous metrics",
+      "optIn": "opt-in · off by default",
+      "notSentTitle": "What we don't send",
+      "notSentBody": "We never send the text of your searches or the contents of your chats. Only: which screens you use, how many articles you open per session, and errors."
+    }
+  },
   "settings": {
     "sections": {
       "personalization": "Personalization",

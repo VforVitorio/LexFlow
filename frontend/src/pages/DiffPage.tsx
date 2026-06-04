@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, Download, ArrowRight } from 'lucide-react';
 import { Button, Kbd, Tabs } from '@/components/ui';
 import { DiffViewer } from '@/components/domain/DiffViewer';
@@ -12,6 +13,7 @@ export function DiffPage() {
   const { lawId } = useParams<{ lawId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [view, setView] = useState<'side' | 'inline'>('side');
   const [active, setActive] = useState(0);
 
@@ -22,12 +24,12 @@ export function DiffPage() {
   const { data: diff, isLoading, error, refetch } = useDiff(lawId, fromTag, toTag);
 
   if (error) return <div className="p-10"><ErrorState description={String(error)} onRetry={() => refetch()} /></div>;
-  if (!diff || isLoading) return <div className="p-10 text-muted">Cargando diff…</div>;
+  if (!diff || isLoading) return <div className="p-10 text-muted">{t('diff.loading')}</div>;
 
   const article = diff.articles[active];
   if (!article) {
     return (
-      <div className="p-10 text-muted">No hay artículos modificados en este rango de versiones.</div>
+      <div className="p-10 text-muted">{t('diff.noChanges')}</div>
     );
   }
 
@@ -40,14 +42,14 @@ export function DiffPage() {
               onClick={() => navigate(`/laws/${lawId}`)}
               className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg"
             >
-              <ChevronLeft className="size-3.5" /> Volver a {law?.short ?? 'la norma'}
+              <ChevronLeft className="size-3.5" /> {t('diff.backTo', { law: law?.short ?? t('diff.theLaw') })}
             </button>
             <span className="ml-auto flex items-center gap-2">
               <Tabs variant="segmented" value={view} onChange={(v) => setView(v as 'side' | 'inline')} tabs={[
-                { id: 'side', label: 'Lado a lado' },
-                { id: 'inline', label: 'En línea' },
+                { id: 'side', label: t('diff.sideBySide') },
+                { id: 'inline', label: t('diff.inline') },
               ]} />
-              <Button size="sm" variant="ghost" icon={<Download className="size-3.5" />}>Exportar diff</Button>
+              <Button size="sm" variant="ghost" icon={<Download className="size-3.5" />}>{t('diff.exportDiff')}</Button>
             </span>
           </div>
           <h1 className="font-display text-2xl font-semibold">
@@ -59,9 +61,9 @@ export function DiffPage() {
             <ArrowRight className="size-3.5" />
             <span className="font-mono">{diff.to.tag} <span className="text-fg">{formatDate(diff.to.date)}</span></span>
             <span className="ml-auto inline-flex items-center gap-3">
-              <span><span className="font-semibold text-success">+{article.totals.added}</span> añadidos</span>
-              <span><span className="font-semibold text-danger">−{article.totals.removed}</span> eliminados</span>
-              <span className="inline-flex items-center gap-1.5"><Kbd>j</Kbd><Kbd>k</Kbd> siguiente / anterior</span>
+              <span><span className="font-semibold text-success">+{article.totals.added}</span> {t('diff.added')}</span>
+              <span><span className="font-semibold text-danger">−{article.totals.removed}</span> {t('diff.removed')}</span>
+              <span className="inline-flex items-center gap-1.5"><Kbd>j</Kbd><Kbd>k</Kbd> {t('diff.nextPrev')}</span>
             </span>
           </div>
         </div>
@@ -72,7 +74,7 @@ export function DiffPage() {
       </div>
 
       <RightRail>
-        <div className="label-caps mb-3">Artículos modificados · {diff.articles.length}</div>
+        <div className="label-caps mb-3">{t('diff.changedArticles')} · {diff.articles.length}</div>
         <div className="flex flex-col gap-1">
           {diff.articles.map((a, i) => (
             <button
