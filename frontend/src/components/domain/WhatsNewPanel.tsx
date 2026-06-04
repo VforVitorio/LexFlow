@@ -14,6 +14,7 @@
  */
 
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { useWhatsNew } from '../../lib/queries';
 import type { WhatsNewLaw } from '../../lib/types';
@@ -37,6 +38,7 @@ function saveCommit(commit: string | null): void {
 }
 
 export function WhatsNewPanel() {
+  const { t } = useTranslation();
   const since = loadLastCommit();
   const { data } = useWhatsNew(since);
 
@@ -49,12 +51,12 @@ export function WhatsNewPanel() {
 
   return (
     <div className="w-72 rounded-lg border border-border bg-card p-4 text-sm text-card-foreground shadow-sm">
-      <p className="mb-2 font-medium text-foreground">Novedades en el corpus</p>
-      <LawList label="Añadidas" laws={data.added} />
-      <LawList label="Modificadas" laws={data.modified} />
+      <p className="mb-2 font-medium text-foreground">{t('whatsNew.title')}</p>
+      <LawList label={t('whatsNew.added')} laws={data.added} />
+      <LawList label={t('whatsNew.modified')} laws={data.modified} />
       {data.removed.length > 0 && (
         <p className="mt-1 text-xs text-muted-foreground">
-          {data.removed.length} {data.removed.length === 1 ? 'ley eliminada' : 'leyes eliminadas'}
+          {t('whatsNew.removed', { count: data.removed.length })}
         </p>
       )}
     </div>
@@ -62,6 +64,7 @@ export function WhatsNewPanel() {
 }
 
 function LawList({ label, laws }: { label: string; laws: WhatsNewLaw[] }) {
+  const { t } = useTranslation();
   if (laws.length === 0) return null;
   const visible = laws.slice(0, 4);
   const rest = laws.length - visible.length;
@@ -75,7 +78,7 @@ function LawList({ label, laws }: { label: string; laws: WhatsNewLaw[] }) {
           </li>
         ))}
         {rest > 0 && (
-          <li className="text-xs text-muted-foreground">y {rest} más…</li>
+          <li className="text-xs text-muted-foreground">{t('whatsNew.andMore', { n: rest })}</li>
         )}
       </ul>
     </div>

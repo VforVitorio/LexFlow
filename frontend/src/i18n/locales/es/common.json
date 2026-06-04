@@ -37,6 +37,159 @@
       "lastModified": "Última modificación"
     }
   },
+  "whatsNew": {
+    "title": "Novedades en el corpus",
+    "added": "Añadidas",
+    "modified": "Modificadas",
+    "removed_one": "{{count}} ley eliminada",
+    "removed_other": "{{count}} leyes eliminadas",
+    "andMore": "y {{n}} más…"
+  },
+  "welcome": {
+    "nameTitle": "¿Cómo deberíamos llamarte?",
+    "nameSubtitle": "No hace falta cuenta — solo para tratarte por tu nombre en los saludos. Puedes saltarlo.",
+    "namePlaceholder": "Tu nombre",
+    "skip": "Saltar",
+    "continue": "Continuar"
+  },
+  "mcp": {
+    "title": "MCP Servers",
+    "introPre": "Servidores Model Context Protocol que los clientes (Claude Desktop, Cursor, …) pueden lanzar para hablar con la legislación. La configuración se guarda en",
+    "introMid": "con el mismo formato que",
+    "introEnd": "así que es portable.",
+    "builtin": "Integrados",
+    "custom": "Personalizados",
+    "addServer": "Añadir server",
+    "emptyPre": "Aún no has añadido ninguno. Pulsa",
+    "emptyPost": "para pegar la configuración tal cual la tienes en Claude Desktop.",
+    "badgeBuiltin": "Integrado",
+    "badgePersonal": "Personal",
+    "noCommand": "— sin comando —",
+    "deleteAria": "Eliminar {{name}}",
+    "confirmDelete": "¿Eliminar {{name}}?",
+    "deleted": "Eliminado",
+    "loadError": "No se pudo cargar MCP",
+    "updateError": "No se pudo actualizar",
+    "deleteError": "No se pudo eliminar",
+    "unknownError": "Error desconocido",
+    "dialogTitle": "Añadir MCP server",
+    "dialogIntroPre": "Pega el bloque",
+    "dialogIntroMid": "de tu",
+    "dialogIntroEnd": "Puedes incluir varios servers a la vez.",
+    "close": "Cerrar",
+    "add": "Añadir",
+    "invalidJson": "JSON inválido",
+    "invalidJsonDetail": "JSON inválido: {{detail}}",
+    "missingKey": "Falta la clave \"mcpServers\" o no es un objeto.",
+    "emptyKey": "\"mcpServers\" está vacío.",
+    "addFailed": "No se pudo añadir {{name}}",
+    "addedToast_one": "{{count}} server añadido",
+    "addedToast_other": "{{count}} servers añadidos",
+    "addedToastBody": "Cargados en mcp.json",
+    "noneAdded": "Ningún server pudo añadirse. Revisa el detalle en los avisos."
+  },
+  "wizard": {
+    "dialogAria": "Configurar modelo de IA",
+    "stepOf": "Paso {{step}} de {{total}}",
+    "step1Title": "Detectando tu equipo",
+    "step2Title": "Elige un modelo",
+    "step3Title": "Casi listo",
+    "closeAria": "Cerrar el asistente",
+    "back": "Atrás",
+    "continue": "Continuar",
+    "use": "Usar {{tier}}",
+    "platformLabel": "Plataforma",
+    "ramValue": "{{total}} GB ({{free}} GB libres)",
+    "cpuValue": "{{cores}} núcleos lógicos",
+    "gpuNvidia": "{{name}} ({{vram}} GB VRAM)",
+    "gpuApple": "Apple Silicon (memoria unificada)",
+    "gpuNone": "Sin GPU dedicada detectada",
+    "ollamaRunning_one": "corriendo · {{count}} modelo instalado",
+    "ollamaRunning_other": "corriendo · {{count}} modelos instalados",
+    "notDetected": "no detectado",
+    "lmstudioRunning": "corriendo",
+    "redetectHint": "Si vas a usar un modelo local, inicia Ollama y pulsa Re-detectar. En cualquier caso puedes elegir un modelo en nube en el siguiente paso.",
+    "redetect": "Re-detectar",
+    "recommended": "Recomendado",
+    "cloudChosen": "Has elegido",
+    "cloudKeyInstructions": "Para usarlo tienes que pegar tu API key de Anthropic en <strong>Ajustes → Modelos</strong>. La key se guarda solo en tu equipo; LexFlow no la envía a ningún servidor.",
+    "cloudCreateKey": "Si todavía no tienes una, puedes crearla en console.anthropic.com.",
+    "openSettings": "Abrir Ajustes",
+    "installedReady": "instalado y listo",
+    "installing": "Instalando",
+    "connecting": "Conectando con Ollama…",
+    "inProgress": "En curso…",
+    "pullBackgroundHint": "Puedes cerrar el asistente y volver más tarde — la descarga sigue de fondo en Ollama.",
+    "installFailed": "No se pudo instalar.",
+    "retry": "Reintentar",
+    "downloadIntroPre": "Vamos a descargar",
+    "downloadIntroPost": "({{size}} GB) e instalarlo en Ollama. Te avisamos cuando termine.",
+    "ollamaNotRunning": "Ollama no está corriendo. Inícialo y pulsa Instalar.",
+    "install": "Instalar",
+    "configuredToast": "Modelo configurado",
+    "installedToast": "Modelo instalado",
+    "pullFailed": "Pull failed"
+  },
+  "help": {
+    "label": "Ayuda",
+    "openAria": "Abrir ayuda contextual",
+    "closeAria": "Cerrar ayuda",
+    "dialogAria": "Ayuda: {{title}}",
+    "whatIsThis": "Qué es esta página",
+    "shortcutsHeading": "Atajos relevantes",
+    "tutorialHeading": "Tutorial",
+    "tutorialBody": "El tour de 6 pasos repasa el layout, los atajos y las secciones principales. Lo puedes lanzar de nuevo en cualquier momento.",
+    "replay": "Repetir tutorial",
+    "shortcuts": {
+      "openPalette": "Abrir la paleta de comandos",
+      "toggleSidebar": "Plegar / desplegar la barra lateral",
+      "toggleTheme": "Cambiar tema claro / oscuro",
+      "explorerSearch": "Buscar por título, BOE o #tag",
+      "focusSearch": "Foco en el input de búsqueda",
+      "lawGraph": "Saltar al grafo de esta ley",
+      "backToExplorer": "Volver al explorador",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "resetZoom": "Reset zoom",
+      "sendMessage": "Enviar mensaje",
+      "newlineNoSend": "Salto de línea sin enviar",
+      "newChat": "Conversación nueva"
+    },
+    "pages": {
+      "home": {
+        "title": "Inicio",
+        "description": "Tu punto de partida. Resume las últimas leyes publicadas, los temas con más actividad y los grafos sugeridos. Usa la paleta (Ctrl K) para saltar a cualquier ley desde aquí."
+      },
+      "explorer": {
+        "title": "Explorador",
+        "description": "Lista completa de leyes con filtros por rango, estado, jurisdicción y etiquetas. Cada fila se abre en la vista de detalle; los filtros se combinan con AND."
+      },
+      "law": {
+        "title": "Detalle de la ley",
+        "description": "Texto consolidado de la norma con anclas por artículo, jerarquía a la izquierda y referencias salientes a la derecha. Cambia el tamaño de lectura en Ajustes → Apariencia."
+      },
+      "graph": {
+        "title": "Grafo de referencias",
+        "description": "Cada nodo es una ley; las aristas son citas, modificaciones o derogaciones entre normas. Arrastra para mover, rueda para zoom; el panel derecho fija la profundidad de exploración."
+      },
+      "chat": {
+        "title": "Chat legal",
+        "description": "Conversa con un modelo (local o en nube) que tiene acceso al corpus de leyes. Las respuestas vienen con citas; cada cita es clickable y abre la ley en el panel lateral."
+      },
+      "dashboards": {
+        "title": "Cuadros",
+        "description": "Dashboards agregados sobre el corpus: distribución por rango, ritmo de reformas, jurisdicciones. Útiles para tener una panorámica antes de bucear en una ley concreta."
+      },
+      "settings": {
+        "title": "Ajustes",
+        "description": "Configura personalización (nombre, idioma), apariencia, modelos de chat, servidores MCP y datos. Todo persiste en local; sin cuenta."
+      },
+      "fallback": {
+        "title": "LexFlow",
+        "description": "Plataforma open source para explorar y analizar la legislación española. Usa la paleta de comandos (Ctrl K) para saltar a cualquier sitio."
+      }
+    }
+  },
   "chat": {
     "newThread": "Nueva conversación",
     "emptyRailPre": "Aún no hay conversaciones. Pulsa",

@@ -23,6 +23,7 @@
  */
 
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { USER_NAME_STORAGE_KEY } from '../../lib/greeting';
 
@@ -75,6 +76,7 @@ export function WelcomeFlow({ children }: { children: React.ReactNode }) {
 }
 
 function NamePromptModal({ onSubmit }: { onSubmit: (name: string | null) => void }) {
+  const { t } = useTranslation();
   const [value, setValue] = useState('');
 
   useEffect(() => {
@@ -95,23 +97,23 @@ function NamePromptModal({ onSubmit }: { onSubmit: (name: string | null) => void
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="¿Cómo deberíamos llamarte?"
+      aria-label={t('welcome.nameTitle')}
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm"
     >
       <form
         onSubmit={submit}
         className="air-glass-strong w-full max-w-md p-7 animate-in fade-in slide-in-from-bottom-2 duration-300"
       >
-        <h2 className="font-display text-2xl font-semibold tracking-tight">¿Cómo deberíamos llamarte?</h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight">{t('welcome.nameTitle')}</h2>
         <p className="mt-1 text-[12.5px] text-muted">
-          No hace falta cuenta — solo para tratarte por tu nombre en los saludos. Puedes saltarlo.
+          {t('welcome.nameSubtitle')}
         </p>
 
         <input
           type="text"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Tu nombre"
+          placeholder={t('welcome.namePlaceholder')}
           autoFocus
           maxLength={48}
           className="mt-5 w-full rounded-md border border-border-strong bg-bg px-3.5 py-2.5 text-[15px] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
@@ -123,13 +125,13 @@ function NamePromptModal({ onSubmit }: { onSubmit: (name: string | null) => void
             onClick={() => onSubmit(null)}
             className="text-[13px] text-muted hover:text-fg"
           >
-            Saltar
+            {t('welcome.skip')}
           </button>
           <button
             type="submit"
             className="rounded-md bg-indigo-600 px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700"
           >
-            Continuar
+            {t('welcome.continue')}
           </button>
         </div>
       </form>

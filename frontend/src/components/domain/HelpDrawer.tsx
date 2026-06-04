@@ -20,6 +20,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { HelpCircle, RotateCcw, X } from 'lucide-react';
 import { Button, Kbd } from '@/components/ui';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
@@ -39,19 +40,22 @@ interface HelpShortcut {
 // Shortcuts that exist on every page. Per-route content can override
 // or extend these; the drawer renders the per-route shortcuts FIRST
 // (most relevant) then the globals.
+// `label` holds an i18n key (resolved with `t()` at render), not display
+// text — so the per-page content map stays a plain static const while the
+// drawer flips language live. Nav labels reuse the shared `nav.*` keys.
 const GLOBAL_SHORTCUTS: HelpShortcut[] = [
-  { keys: [modKey, 'K'], label: 'Abrir la paleta de comandos' },
-  { keys: [modKey, '\\'], label: 'Plegar / desplegar la barra lateral' },
-  { keys: [modKey, '.'], label: 'Cambiar tema claro / oscuro' },
+  { keys: [modKey, 'K'], label: 'help.shortcuts.openPalette' },
+  { keys: [modKey, '\\'], label: 'help.shortcuts.toggleSidebar' },
+  { keys: [modKey, '.'], label: 'help.shortcuts.toggleTheme' },
 ];
 
 const NAV_SHORTCUTS: HelpShortcut[] = [
-  { keys: ['g', 'h'], label: 'Inicio' },
-  { keys: ['g', 'e'], label: 'Explorador' },
-  { keys: ['g', 'g'], label: 'Grafo' },
-  { keys: ['g', 'c'], label: 'Chat' },
-  { keys: ['g', 'd'], label: 'Cuadros' },
-  { keys: ['g', 's'], label: 'Ajustes' },
+  { keys: ['g', 'h'], label: 'nav.home' },
+  { keys: ['g', 'e'], label: 'nav.explorer' },
+  { keys: ['g', 'g'], label: 'nav.graph' },
+  { keys: ['g', 'c'], label: 'nav.chat' },
+  { keys: ['g', 'd'], label: 'nav.dashboards' },
+  { keys: ['g', 's'], label: 'nav.settings' },
 ];
 
 // Each entry's key is a path PREFIX (longest match wins). Sub-routes
@@ -60,21 +64,19 @@ const HELP_CONTENT: Array<readonly [string, HelpPageContent]> = [
   [
     '/home',
     {
-      title: 'Inicio',
-      description:
-        'Tu punto de partida. Resume las últimas leyes publicadas, los temas con más actividad y los grafos sugeridos. Usa la paleta (Ctrl K) para saltar a cualquier ley desde aquí.',
+      title: 'help.pages.home.title',
+      description: 'help.pages.home.description',
       shortcuts: NAV_SHORTCUTS,
     },
   ],
   [
     '/explorer',
     {
-      title: 'Explorador',
-      description:
-        'Lista completa de leyes con filtros por rango, estado, jurisdicción y etiquetas. Cada fila se abre en la vista de detalle; los filtros se combinan con AND.',
+      title: 'help.pages.explorer.title',
+      description: 'help.pages.explorer.description',
       shortcuts: [
-        { keys: [modKey, 'K'], label: 'Buscar por título, BOE o #tag' },
-        { keys: ['/'], label: 'Foco en el input de búsqueda' },
+        { keys: [modKey, 'K'], label: 'help.shortcuts.explorerSearch' },
+        { keys: ['/'], label: 'help.shortcuts.focusSearch' },
         ...NAV_SHORTCUTS,
       ],
     },
@@ -82,25 +84,23 @@ const HELP_CONTENT: Array<readonly [string, HelpPageContent]> = [
   [
     '/laws/',
     {
-      title: 'Detalle de la ley',
-      description:
-        'Texto consolidado de la norma con anclas por artículo, jerarquía a la izquierda y referencias salientes a la derecha. Cambia el tamaño de lectura en Ajustes → Apariencia.',
+      title: 'help.pages.law.title',
+      description: 'help.pages.law.description',
       shortcuts: [
-        { keys: ['g', 'g'], label: 'Saltar al grafo de esta ley' },
-        { keys: ['g', 'e'], label: 'Volver al explorador' },
+        { keys: ['g', 'g'], label: 'help.shortcuts.lawGraph' },
+        { keys: ['g', 'e'], label: 'help.shortcuts.backToExplorer' },
       ],
     },
   ],
   [
     '/graph',
     {
-      title: 'Grafo de referencias',
-      description:
-        'Cada nodo es una ley; las aristas son citas, modificaciones o derogaciones entre normas. Arrastra para mover, rueda para zoom; el panel derecho fija la profundidad de exploración.',
+      title: 'help.pages.graph.title',
+      description: 'help.pages.graph.description',
       shortcuts: [
-        { keys: ['+'], label: 'Zoom in' },
-        { keys: ['-'], label: 'Zoom out' },
-        { keys: ['0'], label: 'Reset zoom' },
+        { keys: ['+'], label: 'help.shortcuts.zoomIn' },
+        { keys: ['-'], label: 'help.shortcuts.zoomOut' },
+        { keys: ['0'], label: 'help.shortcuts.resetZoom' },
         ...NAV_SHORTCUTS,
       ],
     },
@@ -108,13 +108,12 @@ const HELP_CONTENT: Array<readonly [string, HelpPageContent]> = [
   [
     '/chat',
     {
-      title: 'Chat legal',
-      description:
-        'Conversa con un modelo (local o en nube) que tiene acceso al corpus de leyes. Las respuestas vienen con citas; cada cita es clickable y abre la ley en el panel lateral.',
+      title: 'help.pages.chat.title',
+      description: 'help.pages.chat.description',
       shortcuts: [
-        { keys: ['Enter'], label: 'Enviar mensaje' },
-        { keys: ['Shift', 'Enter'], label: 'Salto de línea sin enviar' },
-        { keys: [modKey, 'N'], label: 'Conversación nueva' },
+        { keys: ['Enter'], label: 'help.shortcuts.sendMessage' },
+        { keys: ['Shift', 'Enter'], label: 'help.shortcuts.newlineNoSend' },
+        { keys: [modKey, 'N'], label: 'help.shortcuts.newChat' },
         ...NAV_SHORTCUTS,
       ],
     },
@@ -122,27 +121,24 @@ const HELP_CONTENT: Array<readonly [string, HelpPageContent]> = [
   [
     '/dashboards',
     {
-      title: 'Cuadros',
-      description:
-        'Dashboards agregados sobre el corpus: distribución por rango, ritmo de reformas, jurisdicciones. Útiles para tener una panorámica antes de bucear en una ley concreta.',
+      title: 'help.pages.dashboards.title',
+      description: 'help.pages.dashboards.description',
       shortcuts: NAV_SHORTCUTS,
     },
   ],
   [
     '/settings',
     {
-      title: 'Ajustes',
-      description:
-        'Configura personalización (nombre, idioma), apariencia, modelos de chat, servidores MCP y datos. Todo persiste en local; sin cuenta.',
+      title: 'help.pages.settings.title',
+      description: 'help.pages.settings.description',
       shortcuts: NAV_SHORTCUTS,
     },
   ],
 ];
 
 const FALLBACK_CONTENT: HelpPageContent = {
-  title: 'LexFlow',
-  description:
-    'Plataforma open source para explorar y analizar la legislación española. Usa la paleta de comandos (Ctrl K) para saltar a cualquier sitio.',
+  title: 'help.pages.fallback.title',
+  description: 'help.pages.fallback.description',
   shortcuts: NAV_SHORTCUTS,
 };
 
@@ -160,6 +156,7 @@ function resolveContent(pathname: string): HelpPageContent {
 // ─── Component ───────────────────────────────────────────────────────────
 
 export function HelpDrawer() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const relaunchTutorial = useTutorialRelaunch();
@@ -192,7 +189,7 @@ export function HelpDrawer() {
           bottom-tab-bar (BottomTabBar sits at ~56 px). */}
       <button
         type="button"
-        aria-label="Abrir ayuda contextual"
+        aria-label={t('help.openAria')}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
@@ -214,7 +211,7 @@ export function HelpDrawer() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={`Ayuda: ${content.title}`}
+          aria-label={t('help.dialogAria', { title: t(content.title) })}
           className="fixed inset-0 z-[50] bg-black/30 backdrop-blur-[2px]"
           onClick={(e) => {
             // Click on the backdrop dismisses; click inside the panel
@@ -234,15 +231,15 @@ export function HelpDrawer() {
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
               <div>
-                <div className="label-caps text-muted">Ayuda</div>
+                <div className="label-caps text-muted">{t('help.label')}</div>
                 <h2 className="mt-1 font-display text-xl font-semibold tracking-tight">
-                  {content.title}
+                  {t(content.title)}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Cerrar ayuda"
+                aria-label={t('help.closeAria')}
                 className="rounded-md p-1.5 text-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 <X className="size-4" />
@@ -252,19 +249,19 @@ export function HelpDrawer() {
             {/* Body */}
             <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin">
               <section>
-                <h3 className="label-caps mb-2">Qué es esta página</h3>
-                <p className="text-[13.5px] leading-relaxed text-fg">{content.description}</p>
+                <h3 className="label-caps mb-2">{t('help.whatIsThis')}</h3>
+                <p className="text-[13.5px] leading-relaxed text-fg">{t(content.description)}</p>
               </section>
 
               <section className="mt-6">
-                <h3 className="label-caps mb-2">Atajos relevantes</h3>
+                <h3 className="label-caps mb-2">{t('help.shortcutsHeading')}</h3>
                 <ul className="flex flex-col gap-1.5">
                   {allShortcuts.map((shortcut, i) => (
                     <li
                       key={`${shortcut.label}-${i}`}
                       className="flex items-center justify-between gap-3 text-[12.5px]"
                     >
-                      <span className="text-fg">{shortcut.label}</span>
+                      <span className="text-fg">{t(shortcut.label)}</span>
                       <span className="flex shrink-0 items-center gap-1">
                         {shortcut.keys.map((k, idx) => (
                           <Kbd key={`${k}-${idx}`}>{k}</Kbd>
@@ -276,9 +273,9 @@ export function HelpDrawer() {
               </section>
 
               <section className="mt-6">
-                <h3 className="label-caps mb-2">Tutorial</h3>
+                <h3 className="label-caps mb-2">{t('help.tutorialHeading')}</h3>
                 <p className="mb-2 text-[12.5px] text-muted">
-                  El tour de 6 pasos repasa el layout, los atajos y las secciones principales. Lo puedes lanzar de nuevo en cualquier momento.
+                  {t('help.tutorialBody')}
                 </p>
                 <Button
                   variant="secondary"
@@ -289,7 +286,7 @@ export function HelpDrawer() {
                     relaunchTutorial();
                   }}
                 >
-                  Repetir tutorial
+                  {t('help.replay')}
                 </Button>
               </section>
             </div>
