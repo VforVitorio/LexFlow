@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.32.0](https://github.com/VforVitorio/LexFlow/compare/v0.31.0...v0.32.0) (2026-06-04)
+
+
+### Features
+
+* **i18n:** migrate shared chrome components ([#349](https://github.com/VforVitorio/LexFlow/issues/349)) ([c3e2e1b](https://github.com/VforVitorio/LexFlow/commit/c3e2e1bf7e518cbb511b395257b010d04e3c7107))
+* **i18n:** migrate shared chrome components (TopBar, ErrorState, ModelChip, LawHeader) ([c20ca15](https://github.com/VforVitorio/LexFlow/commit/c20ca15716b89cc394a98e6b85e3870a83a99c74))
+
 ## [0.31.0](https://github.com/VforVitorio/LexFlow/compare/v0.30.0...v0.31.0) (2026-06-04)
 
 
