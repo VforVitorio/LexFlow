@@ -367,6 +367,26 @@ export const mockApi: ApiClient = {
         lmstudioRunning: false,
       };
     },
+    async health() {
+      // Mock-mode diagnostics: everything green, plausible numbers so
+      // the Diagnostics panel renders the "ok" path during dev.
+      await delay(30);
+      return {
+        status: 'ok' as const,
+        version: '0.36.0',
+        uptimeSeconds: 12_345,
+        memory: { rssMb: 184.3, systemUsedPercent: 38.7 },
+        disk: {
+          path: '/data/legalize-es',
+          totalGb: 512,
+          usedGb: 96,
+          freeGb: 416,
+          usedPercent: 18.7,
+        },
+        corpus: { submodulePresent: true, lawsIndexed: 12_847 },
+        chatDb: { reachable: true },
+      };
+    },
   },
 };
 

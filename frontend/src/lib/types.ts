@@ -434,6 +434,40 @@ export interface ApiClient {
     whatsNew(since: string | null): Promise<WhatsNewStatus>;
     /** Hardware + local LLM providers (#117). Consumed by the model wizard. */
     profile(): Promise<SystemProfile>;
+    /** Extended health snapshot (#330). Polled by Settings → Diagnostics. */
+    health(): Promise<HealthSnapshot>;
+  };
+}
+
+/**
+ * Extended health snapshot (#330).
+ *
+ * The legacy `/health` is a one-liner for liveness probes; this comes
+ * from ``GET /api/v1/system/health`` and carries every probe (memory,
+ * disk, corpus, chat DB). ``status`` is ``ok`` when every probe is
+ * green, ``degraded`` when at least one is red but the API still serves.
+ */
+export interface HealthSnapshot {
+  status: 'ok' | 'degraded';
+  version: string;
+  uptimeSeconds: number;
+  memory: {
+    rssMb: number;
+    systemUsedPercent: number;
+  };
+  disk: {
+    path: string;
+    totalGb: number;
+    usedGb: number;
+    freeGb: number;
+    usedPercent: number;
+  };
+  corpus: {
+    submodulePresent: boolean;
+    lawsIndexed: number;
+  };
+  chatDb: {
+    reachable: boolean;
   };
 }
 
