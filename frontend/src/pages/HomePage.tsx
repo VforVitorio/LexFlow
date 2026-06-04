@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Search, ArrowRight, ChevronRight, Plus, GitCompareArrows, BookOpenText, Network, MessagesSquare, BarChart3, Hash } from 'lucide-react';
 import { Badge, Card, Chip, Kbd } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
@@ -18,16 +19,9 @@ const EXAMPLE_QUERIES = [
   'Leyes autonómicas sobre vivienda',
 ];
 
-/** Date buckets for the "Qué ha cambiado" section. */
+/** Date buckets for the "Qué ha cambiado" section. Labels live under
+ *  `home.buckets.<bucket>` in the locale files — render via `t()`. */
 type RecencyBucket = 'today' | 'yesterday' | 'this-week' | 'this-month' | 'older';
-
-const BUCKET_LABEL: Record<RecencyBucket, string> = {
-  today: 'Hoy',
-  yesterday: 'Ayer',
-  'this-week': 'Esta semana',
-  'this-month': 'Este mes',
-  older: 'Anteriores',
-};
 
 const BUCKET_ORDER: RecencyBucket[] = ['today', 'yesterday', 'this-week', 'this-month', 'older'];
 
@@ -54,6 +48,7 @@ function groupByRecency(laws: Law[], now: Date): Array<{ bucket: RecencyBucket; 
 
 export function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const setPaletteOpen = useUi((s) => s.setPaletteOpen);
   // Most recent laws by publication date — drives both the "Qué ha
   // cambiado" feed and the "Reciente" cards below. Limit handled at the
@@ -77,7 +72,7 @@ export function HomePage() {
         <header className="mb-7">
           <h1 className="font-display text-4xl font-semibold -tracking-[0.015em]">{greeting.text}</h1>
           <p className="mt-1 text-[14.5px] text-muted">
-            El corpus está al día. Última sincronización con{' '}
+            {t('home.syncPrefix')}{' '}
             <code className="font-mono text-[12.5px] text-indigo-600 dark:text-indigo-300">{sync?.upstream ?? 'legalize-es@main'}</code>{' '}
             {timeAgo(sync?.lastSyncAt)}.
           </p>
@@ -90,7 +85,7 @@ export function HomePage() {
             className="flex h-11 w-full items-center gap-2.5 rounded-lg border border-border-strong bg-bg px-3.5 text-left"
           >
             <Search className="size-[18px] text-muted" />
-            <span className="flex-1 text-[15px] text-muted">Pregunta o busca cualquier norma…</span>
+            <span className="flex-1 text-[15px] text-muted">{t('home.searchPlaceholder')}</span>
             <Kbd>{modKey} K</Kbd>
           </button>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -101,7 +96,7 @@ export function HomePage() {
 
           {vocab.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-              <span className="label-caps mr-1">Tags populares</span>
+              <span className="label-caps mr-1">{t('home.popularTags')}</span>
               {vocab.slice(0, 10).map(({ tag, count }) => (
                 <button
                   key={tag}
@@ -120,12 +115,12 @@ export function HomePage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.4fr_1fr]">
           <section>
             <div className="mb-3.5 flex items-baseline justify-between">
-              <h2 className="font-display text-lg font-semibold">Qué ha cambiado</h2>
+              <h2 className="font-display text-lg font-semibold">{t('home.whatChanged')}</h2>
               <button
                 onClick={() => navigate('/explorer?sort=date')}
                 className="inline-flex items-center gap-1 text-[13px] font-medium text-indigo-600 hover:underline dark:text-indigo-300"
               >
-                Ver todo <ArrowRight className="size-3" />
+                {t('home.seeAll')} <ArrowRight className="size-3" />
               </button>
             </div>
             <div className="overflow-hidden rounded-lg border border-border bg-surface">
@@ -133,13 +128,13 @@ export function HomePage() {
               {!lawsLoading && changedByDate.length === 0 && (
                 <EmptyState
                   className="border-0"
-                  title="Sin novedades"
-                  description="El corpus no tiene publicaciones recientes. Sincroniza con legalize-es para traer los últimos cambios."
+                  title={t('home.empty.title')}
+                  description={t('home.empty.description')}
                 />
               )}
               {!lawsLoading && changedByDate.map((group, gi) => (
                 <div key={group.bucket} className={cn(gi < changedByDate.length - 1 && 'border-b border-border')}>
-                  <div className="label-caps px-4 pt-2.5 pb-1">{BUCKET_LABEL[group.bucket]}</div>
+                  <div className="label-caps px-4 pt-2.5 pb-1">{t(`home.buckets.${group.bucket}`)}</div>
                   {group.items.map((law) => (
                     <button
                       key={law.id}
@@ -162,12 +157,12 @@ export function HomePage() {
           </section>
 
           <section>
-            <h2 className="mb-3.5 font-display text-lg font-semibold">Atajos</h2>
+            <h2 className="mb-3.5 font-display text-lg font-semibold">{t('home.shortcuts')}</h2>
             <div className="grid grid-cols-2 gap-2.5">
-              <QuickTile icon={Network} tone="indigo" title="Grafo de referencias" sub="Ver cómo se citan las normas" onClick={() => navigate('/graph')} />
-              <QuickTile icon={MessagesSquare} tone="amber" title="Chat con el corpus" sub="Pregunta en lenguaje natural" onClick={() => navigate('/chat')} />
-              <QuickTile icon={GitCompareArrows} tone="violet" title="Comparar versiones" sub="LOPDGDD · v1.0 → v1.3" onClick={() => navigate('/laws/LO-3-2018/diff')} />
-              <QuickTile icon={BarChart3} tone="cyan" title="Cuadros de mando" sub="Compliance · 6 indicadores" onClick={() => navigate('/dashboards')} />
+              <QuickTile icon={Network} tone="indigo" title={t('home.tiles.graphTitle')} sub={t('home.tiles.graphSub')} onClick={() => navigate('/graph')} />
+              <QuickTile icon={MessagesSquare} tone="amber" title={t('home.tiles.chatTitle')} sub={t('home.tiles.chatSub')} onClick={() => navigate('/chat')} />
+              <QuickTile icon={GitCompareArrows} tone="violet" title={t('home.tiles.diffTitle')} sub={t('home.tiles.diffSub')} onClick={() => navigate('/laws/LO-3-2018/diff')} />
+              <QuickTile icon={BarChart3} tone="cyan" title={t('home.tiles.dashboardsTitle')} sub={t('home.tiles.dashboardsSub')} onClick={() => navigate('/dashboards')} />
             </div>
           </section>
         </div>
@@ -175,8 +170,8 @@ export function HomePage() {
         {/* Recent laws */}
         <section className="mt-10">
           <div className="mb-3.5 flex items-baseline justify-between">
-            <h2 className="font-display text-lg font-semibold">Reciente</h2>
-            <button onClick={() => navigate('/explorer')} className="text-[13px] font-medium text-indigo-600 dark:text-indigo-300">Abrir explorador →</button>
+            <h2 className="font-display text-lg font-semibold">{t('home.recent')}</h2>
+            <button onClick={() => navigate('/explorer')} className="text-[13px] font-medium text-indigo-600 dark:text-indigo-300">{t('home.openExplorer')}</button>
           </div>
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
             {recent.map((l) => (
@@ -197,9 +192,9 @@ export function HomePage() {
                   </div>
                 )}
                 <div className="mt-3 flex gap-3.5 text-[11.5px] text-muted">
-                  <span><span className="font-mono text-fg">{l.articulos}</span> arts.</span>
-                  <span><span className="font-mono text-fg">{l.versiones}</span> versiones</span>
-                  <span><span className="font-mono text-fg">{formatNumber(l.referencias)}</span> refs.</span>
+                  <span><span className="font-mono text-fg">{l.articulos}</span> {t('home.units.articles')}</span>
+                  <span><span className="font-mono text-fg">{l.versiones}</span> {t('home.units.versions')}</span>
+                  <span><span className="font-mono text-fg">{formatNumber(l.referencias)}</span> {t('home.units.refs')}</span>
                 </div>
               </Card>
             ))}
