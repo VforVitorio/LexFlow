@@ -13,9 +13,14 @@ surface. For each provider we:
 - assert ``stream_chat`` yields the expected text chunks,
 - assert SDK errors are wrapped as :class:`ChatProviderError`.
 
-We deliberately don't add stream tests for Anthropic / Google here —
-their SDK streaming surfaces use context managers + async iterators
-that need a heavier fake. They get their own follow-up issue.
+Anthropic + Google land here too. Anthropic streams via
+``client.messages.stream(...)`` (async context manager whose
+``text_stream`` is an async iterator); Google via
+``await client.aio.models.generate_content_stream(...)`` (a coroutine
+that returns an async iterator). Each gets a class-level fake that
+matches the shape; tests assert the same three contracts as the
+others: yield the expected chunks, wrap SDK errors, let real bugs
+escape.
 """
 
 from __future__ import annotations
@@ -239,3 +244,268 @@ class TestLMStudioStreamChat:
         provider = lmstudio_mod.LMStudioProvider()
         chunks = [c async for c in provider.stream_chat([ChatMessage(role="user", content="x")], "local-llama")]
         assert chunks == ["a", "b"]
+
+
+# ─── Anthropic ──────────────────────────────────────────────────────────
+
+
+class _FakeAnthropicStream:
+    """Stand-in for the object returned by ``client.messages.stream(...)``.
+
+    Real Anthropic stream is an *async context manager* whose
+    ``text_stream`` attribute is an *async iterator* of strings. We
+    reproduce that shape (and let canned ``Exception`` values raise
+    when iterated, same trick the OpenAI fake uses).
+    """
+
+    text_chunks: ClassVar[list[Any]] = []
+
+    async def __aenter__(self) -> _FakeAnthropicStream:
+        return self
+
+    async def __aexit__(self, exc_type: object, exc: object, tb: object) -> None:
+        return None
+
+    @property
+    def text_stream(self) -> AsyncIterator[str]:
+        async def _gen() -> AsyncIterator[str]:
+            for chunk in self.text_chunks:
+                if isinstance(chunk, Exception):
+                    raise chunk
+                yield chunk
+
+        return _gen()
+
+
+class _FakeAnthropicMessagesAPI:
+    """Stand-in for ``client.messages``. Only ``stream(...)`` is touched."""
+
+    def __init__(self, *, raise_on_call: Exception | None = None) -> None:
+        self._raise = raise_on_call
+
+    def stream(self, **kwargs: object) -> _FakeAnthropicStream:
+        if self._raise is not None:
+            raise self._raise
+        return _FakeAnthropicStream()
+
+
+class _FakeAnthropicClient:
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        del args, kwargs
+        self.messages = _FakeAnthropicMessagesAPI()
+
+
+def _fake_anthropic_response() -> Any:
+    """Anthropic's exception classes need an ``httpx.Response`` too."""
+    request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    response = MagicMock(spec=httpx.Response)
+    response.request = request
+    response.status_code = 401
+    response.headers = {}
+    return response
+
+
+class TestAnthropicStreamChat:
+    @pytest.mark.asyncio
+    async def test_yields_text_stream_chunks(self, monkeypatch: MonkeyPatch) -> None:
+        from lexflow.chat.providers import anthropic_provider as anthropic_mod
+
+        _FakeAnthropicStream.text_chunks = ["Hola ", "mundo."]
+        monkeypatch.setattr(anthropic_mod.anthropic, "AsyncAnthropic", _FakeAnthropicClient)
+        provider = anthropic_mod.AnthropicProvider(api_key="sk-test")
+        chunks = [c async for c in provider.stream_chat([ChatMessage(role="user", content="?")], "claude-sonnet-4-6")]
+        assert chunks == ["Hola ", "mundo."]
+
+    @pytest.mark.asyncio
+    async def test_separates_system_message_from_history(self, monkeypatch: MonkeyPatch) -> None:
+        """System messages get extracted to the top-level ``system`` param.
+
+        Regression guard: a bug here would forward system content as a
+        ``user`` turn and silently change model behaviour.
+        """
+        from lexflow.chat.providers import anthropic_provider as anthropic_mod
+
+        captured: dict[str, object] = {}
+
+        class _CapturingMessagesAPI(_FakeAnthropicMessagesAPI):
+            def stream(self, **kwargs: object) -> _FakeAnthropicStream:
+                captured.update(kwargs)
+                return _FakeAnthropicStream()
+
+        class _CapturingClient:
+            def __init__(self, *args: object, **kwargs: object) -> None:
+                self.messages = _CapturingMessagesAPI()
+
+        _FakeAnthropicStream.text_chunks = []
+        monkeypatch.setattr(anthropic_mod.anthropic, "AsyncAnthropic", _CapturingClient)
+        provider = anthropic_mod.AnthropicProvider(api_key="sk-test")
+        async for _ in provider.stream_chat(
+            [
+                ChatMessage(role="system", content="be terse"),
+                ChatMessage(role="user", content="hi"),
+            ],
+            "claude-sonnet-4-6",
+        ):
+            pass
+        assert captured["system"] == "be terse"
+        assert captured["messages"] == [{"role": "user", "content": "hi"}]
+
+    @pytest.mark.asyncio
+    async def test_wraps_auth_error_as_chat_provider_error(self, monkeypatch: MonkeyPatch) -> None:
+        import anthropic as anthropic_pkg
+
+        from lexflow.chat.providers import anthropic_provider as anthropic_mod
+
+        class _AuthErroringClient:
+            def __init__(self, *args: object, **kwargs: object) -> None:
+                self.messages = _FakeAnthropicMessagesAPI(
+                    raise_on_call=anthropic_pkg.AuthenticationError(
+                        message="bad key",
+                        response=_fake_anthropic_response(),
+                        body=None,
+                    )
+                )
+
+        monkeypatch.setattr(anthropic_mod.anthropic, "AsyncAnthropic", _AuthErroringClient)
+        provider = anthropic_mod.AnthropicProvider(api_key="sk-test")
+        with pytest.raises(ChatProviderError, match="authentication"):
+            async for _ in provider.stream_chat([ChatMessage(role="user", content="?")], "claude-sonnet-4-6"):
+                pass
+
+    @pytest.mark.asyncio
+    async def test_wraps_rate_limit_as_chat_provider_error(self, monkeypatch: MonkeyPatch) -> None:
+        import anthropic as anthropic_pkg
+
+        from lexflow.chat.providers import anthropic_provider as anthropic_mod
+
+        _FakeAnthropicStream.text_chunks = [
+            anthropic_pkg.RateLimitError(
+                message="slow down",
+                response=_fake_anthropic_response(),
+                body=None,
+            )
+        ]
+        monkeypatch.setattr(anthropic_mod.anthropic, "AsyncAnthropic", _FakeAnthropicClient)
+        provider = anthropic_mod.AnthropicProvider(api_key="sk-test")
+        with pytest.raises(ChatProviderError, match="rate limit"):
+            async for _ in provider.stream_chat([ChatMessage(role="user", content="?")], "claude-sonnet-4-6"):
+                pass
+
+
+# ─── Google Gemini ──────────────────────────────────────────────────────
+
+
+class _FakeGoogleChunk:
+    def __init__(self, text: str | None) -> None:
+        self.text = text
+
+
+class _FakeGoogleStream:
+    """Async iterator for chunks from Gemini's stream API."""
+
+    chunks: ClassVar[list[Any]] = []
+
+    def __aiter__(self) -> _FakeGoogleStream:
+        self._idx = 0
+        return self
+
+    async def __anext__(self) -> Any:
+        if self._idx >= len(self.chunks):
+            raise StopAsyncIteration
+        chunk = self.chunks[self._idx]
+        self._idx += 1
+        if isinstance(chunk, Exception):
+            raise chunk
+        return chunk
+
+
+class _FakeGoogleModelsAPI:
+    def __init__(self, *, raise_on_call: Exception | None = None) -> None:
+        self._raise = raise_on_call
+
+    async def generate_content_stream(self, **kwargs: object) -> _FakeGoogleStream:
+        if self._raise is not None:
+            raise self._raise
+        return _FakeGoogleStream()
+
+
+class _FakeGoogleAio:
+    def __init__(self, **kwargs: object) -> None:
+        self.models = _FakeGoogleModelsAPI(**kwargs)
+
+
+class _FakeGoogleClient:
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        del args, kwargs
+        self.aio = _FakeGoogleAio()
+
+
+class TestGoogleStreamChat:
+    @pytest.mark.asyncio
+    async def test_yields_text_chunks_and_skips_empty(self, monkeypatch: MonkeyPatch) -> None:
+        from lexflow.chat.providers import google_provider as google_mod
+
+        _FakeGoogleStream.chunks = [
+            _FakeGoogleChunk("Hola "),
+            _FakeGoogleChunk(None),  # provider must skip None text
+            _FakeGoogleChunk("mundo."),
+            _FakeGoogleChunk(""),  # empty too
+        ]
+        monkeypatch.setattr(google_mod.genai, "Client", _FakeGoogleClient)
+        provider = google_mod.GoogleProvider(api_key="sk-test")
+        chunks = [c async for c in provider.stream_chat([ChatMessage(role="user", content="?")], "gemini-2.0-flash")]
+        assert chunks == ["Hola ", "mundo."]
+
+    @pytest.mark.asyncio
+    async def test_maps_assistant_role_to_model(self, monkeypatch: MonkeyPatch) -> None:
+        """The ``assistant`` → ``model`` mapping is a documented adapter
+        rule; regression guard so a refactor doesn't silently drop it.
+        """
+        from lexflow.chat.providers import google_provider as google_mod
+
+        captured: dict[str, object] = {}
+
+        class _CapturingModelsAPI(_FakeGoogleModelsAPI):
+            async def generate_content_stream(self, **kwargs: object) -> _FakeGoogleStream:
+                captured.update(kwargs)
+                return _FakeGoogleStream()
+
+        class _CapturingAio:
+            def __init__(self) -> None:
+                self.models = _CapturingModelsAPI()
+
+        class _CapturingClient:
+            def __init__(self, *args: object, **kwargs: object) -> None:
+                self.aio = _CapturingAio()
+
+        _FakeGoogleStream.chunks = []
+        monkeypatch.setattr(google_mod.genai, "Client", _CapturingClient)
+        provider = google_mod.GoogleProvider(api_key="sk-test")
+        async for _ in provider.stream_chat(
+            [
+                ChatMessage(role="user", content="hi"),
+                ChatMessage(role="assistant", content="hello"),
+            ],
+            "gemini-2.0-flash",
+        ):
+            pass
+        roles = [c["role"] for c in captured["contents"]]  # type: ignore[union-attr,index]
+        assert roles == ["user", "model"]
+
+    @pytest.mark.asyncio
+    async def test_wraps_sdk_error_as_chat_provider_error(self, monkeypatch: MonkeyPatch) -> None:
+        from lexflow.chat.providers import google_provider as google_mod
+
+        class _ErroringAio:
+            def __init__(self) -> None:
+                self.models = _FakeGoogleModelsAPI(raise_on_call=RuntimeError("quota exhausted"))
+
+        class _ErroringClient:
+            def __init__(self, *args: object, **kwargs: object) -> None:
+                self.aio = _ErroringAio()
+
+        monkeypatch.setattr(google_mod.genai, "Client", _ErroringClient)
+        provider = google_mod.GoogleProvider(api_key="sk-test")
+        with pytest.raises(ChatProviderError, match="Google Gemini"):
+            async for _ in provider.stream_chat([ChatMessage(role="user", content="?")], "gemini-2.0-flash"):
+                pass
