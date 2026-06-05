@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.36.3](https://github.com/VforVitorio/LexFlow/compare/v0.36.2...v0.36.3) (2026-06-05)
+
+
+### Documentation
+
+* **api:** full inventory of /api/v1 endpoints ([#375](https://github.com/VforVitorio/LexFlow/issues/375)) ([4ee5987](https://github.com/VforVitorio/LexFlow/commit/4ee5987a315ac72af705848951cf733ab4aff650))
+* **architecture+planning:** refresh after Sprints 9-14 (closes [#375](https://github.com/VforVitorio/LexFlow/issues/375)) ([31d4dc7](https://github.com/VforVitorio/LexFlow/commit/31d4dc78513287e46407d495abdd7a78b49f3676))
+* **architecture+planning:** refresh after Sprints 9-14 (closes [#375](https://github.com/VforVitorio/LexFlow/issues/375)) ([981d0f1](https://github.com/VforVitorio/LexFlow/commit/981d0f11c6d626becb18d6ff6032c6ca04fa37ce))
+
 ## [0.36.2](https://github.com/VforVitorio/LexFlow/compare/v0.36.1...v0.36.2) (2026-06-05)
 
 
