@@ -1,5 +1,17 @@
 # MCP Integration (Fase 9)
 
+> **Estado (2026-06-05): ✅ Hecho.** Sprint 4 (#122) + Sprint 11 (#121 / #123) cerraron la fase. Resumen:
+>
+> - ✅ Settings → MCP Servers UI con catálogo built-in + JSON paste estilo Claude Desktop (#122).
+> - ✅ `MCPMultiClient` interno con fan-out lazy + cache por server (#121, [src/lexflow/chat/mcp_client.py](../../src/lexflow/chat/mcp_client.py)).
+> - ✅ `GET /api/v1/mcp/tools` merged catalogue.
+> - ✅ `POST /api/v1/mcp/bundles` — `.mcpb` install con guard de zip-slip + 50 MB cap (#123).
+> - ✅ Audit log hash-chained de cada llamada a tool MCP (#124 Phase 1).
+>
+> El resto del documento es el plan original que guio esos PRs. Léelo como contexto histórico — la verdad operacional vive en [api-endpoints.md §MCP](../backend/api-endpoints.md) + [backend.md §Chat](../architecture/backend.md).
+
+---
+
 LexFlow ya **expone** un servidor MCP (`src/lexflow/chat/mcp_server.py`) con tools propias (`search_law`, `get_law`, `get_article`, `get_stats`, `get_neighbors`).
 
 Lo que falta — y es lo que esta fase añade — es que **LexFlow también consuma servidores MCP externos**: filesystem, fetch web, parsing de documentos, queries directas al BOE, plantillas de usuario, etc. Y que el usuario pueda traer los suyos sin tocar código.

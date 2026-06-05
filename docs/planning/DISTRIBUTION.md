@@ -1,5 +1,20 @@
 # Distribución como app de escritorio (Fase 6)
 
+> **Estado (2026-06-05): parcial.** Lo shippeado y lo bloqueado:
+>
+> | Pieza | Estado |
+> |---|---|
+> | `packaging/backend.spec` PyInstaller (23.7 MB single-file Windows local) + matrix CI ubuntu/macos/windows | ✅ #367 |
+> | Landing downloads section con OS detection (`navigator.userAgent`) | ✅ #368 |
+> | Single-process serving (FastAPI sirve API + SPA en un proceso) | ✅ Sprint 1 (#66) |
+> | Tauri 2 wrapper + PyInstaller sidecar | ⏸️ #125 — necesita Rust toolchain + pipeline Tauri |
+> | Code signing Windows (Azure Trusted Signing) + macOS (Apple Developer) | ⏸️ #127 — necesita certs |
+> | Auto-update con Tauri Updater | ⏸️ #128 — necesita release server |
+>
+> El resto del documento es el plan técnico; las cuatro piezas bloqueadas están bloqueadas en infraestructura externa, no en decisión de diseño.
+
+---
+
 Cómo empaquetar LexFlow para que un usuario sin Python, sin terminal y sin saber qué es `npm` pueda descargar un instalador, hacer doble clic, y tener la app abierta en 30 segundos.
 
 ---

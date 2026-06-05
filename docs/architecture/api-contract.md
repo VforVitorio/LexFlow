@@ -13,15 +13,27 @@ under `/api/v1/`.
 
 The proxy is configured in [`frontend/vite.config.ts`](../../frontend/vite.config.ts);
 no CORS configuration is needed in dev. The router prefixes are applied in
-[`src/lexflow/api/app.py`](../../src/lexflow/api/app.py):
+[`src/lexflow/api/app.py`](../../src/lexflow/api/app.py) — 13 routers under
+`/api/v1` as of release 0.36.x:
 
 ```python
-app.include_router(laws.router, prefix="/api/v1")
-app.include_router(articles.router, prefix="/api/v1")
-app.include_router(versions.router, prefix="/api/v1")
-app.include_router(search.router, prefix="/api/v1")
-app.include_router(graph_router, prefix="/api/v1")
+app.include_router(search.router,       prefix="/api/v1")  # MUST come before laws — see laws router note
+app.include_router(laws.router,         prefix="/api/v1")
+app.include_router(articles.router,     prefix="/api/v1")
+app.include_router(versions.router,     prefix="/api/v1")
+app.include_router(graph_router,        prefix="/api/v1")
+app.include_router(models.router,       prefix="/api/v1")
+app.include_router(chat_threads.router, prefix="/api/v1")
+app.include_router(dashboards.router,   prefix="/api/v1")
+app.include_router(sync.router,         prefix="/api/v1")
+app.include_router(system.router,       prefix="/api/v1")
+app.include_router(tags.router,         prefix="/api/v1")
+app.include_router(mcp_servers.router,  prefix="/api/v1")
+app.include_router(secrets.router,      prefix="/api/v1")
+app.include_router(telemetry.router,    prefix="/api/v1")
 ```
+
+See [api-endpoints.md](../backend/api-endpoints.md) for the per-route inventory.
 
 ## CORS
 
@@ -101,48 +113,61 @@ Status codes: 404 / 404 / 500 / 503.
 
 Or for 422, FastAPI's structured `{ "detail": [ { "loc": [...], "msg": "...", "type": "..." } ] }`.
 
-The frontend error boundary must handle both shapes. A unification ticket
-is tracked in the backend epic (#TBD).
+The frontend error boundary handles both shapes.
 
-## Type generation (planned)
+## Type generation (live)
 
-Per [`CLAUDE.md` §6](../../CLAUDE.md), the frontend will consume types
-generated from `/openapi.json` via `openapi-typescript`. The command (not yet
-wired into CI):
+The SPA consumes types generated from `/openapi.json` via
+`openapi-typescript`:
 
 ```bash
-pnpm generate:api      # → frontend/src/api/schema.ts
+npm --prefix frontend run generate:api      # → frontend/src/api/schema.ts
 ```
 
-CI will fail when `schema.ts` is stale relative to the running backend.
+Re-run whenever a Pydantic model or endpoint signature changes. CI does
+not yet enforce that the committed `schema.ts` matches the live backend
+— that gate is on the follow-up list.
 
-## Chat streaming (planned)
+## Chat streaming (live)
 
-Per [`CLAUDE.md` §6](../../CLAUDE.md): SSE over
-`GET /api/v1/chat/stream?...`. The chat router is not yet implemented; track
-the SSE schema in the chat epic. Reference frame format from
-[`frontend/README.md`](../../frontend/README.md):
+`POST /api/v1/chat/threads/{thread_id}/send` returns a Server-Sent Events
+stream. The agentic loop (#84 + #195) drives it: text deltas, tool-call
+events when the provider asks for an MCP tool, source events when a tool
+result carries citations, finally a `done` event. Wire format:
 
 ```
-event: chunk
-data: {"type":"text","delta":"…"}
+event: text
+data: {"delta":"Hola "}
 
-event: chunk
-data: {"type":"tool_call","name":"search_corpus","args":{...}}
+event: tool_call
+data: {"call_id":"c1","name":"search_law","args":{"query":"…"}}
 
-event: chunk
-data: {"type":"source","source":{...}}
+event: source
+data: {"law_id":"BOE-A-2018-16673","article_number":"22"}
+
+event: text
+data: {"delta":"El artículo dice…"}
 
 event: done
-data: {"type":"done"}
+data: {}
 ```
+
+Pre-stream errors emerge as standard HTTP responses (`404` for unknown
+thread, `429 Retry-After` when the per-provider rate-limit bucket
+(#93) runs dry).
+
+`POST /api/v1/models/pull` is also SSE — wire format
+`progress` / `done` / `error` events for the wizard's installer UI (#119).
 
 ## Auth (not yet)
 
-Per [`CLAUDE.md` §6](../../CLAUDE.md): cookie-based session, `SameSite=Lax`,
-`HttpOnly`, `Secure` in prod. JWTs in localStorage are forbidden.
+Per [`CLAUDE.md` §6](../../CLAUDE.md): when auth lands, cookie-based session,
+`SameSite=Lax`, `HttpOnly`, `Secure` in prod. JWTs in localStorage are
+forbidden.
 
 ## Health
 
-`GET /health` returns `{ "status": "ok", "version": "<x.y.z>" }`. Used by
-the Docker healthcheck — see [`docker-compose.yml`](../../docker-compose.yml).
+`GET /health` returns `{ "status": "ok", "version": "<x.y.z>" }` — the
+cheap liveness probe used by docker / uvicorn. The extended snapshot
+(memory, disk, corpus, chat DB) lives at `GET /api/v1/system/health`
+(#330).

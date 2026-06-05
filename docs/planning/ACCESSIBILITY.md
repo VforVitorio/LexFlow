@@ -1,5 +1,17 @@
 # Accesibilidad (parte de Fase 8)
 
+> **Estado (2026-06-05): ✅ Infraestructura en CI.** Sprint 8 cerró las piezas técnicas:
+>
+> - ✅ axe-core CI sobre el build de producción (#130) con `start-server-and-test` orquestando Vite preview + axe; corre en cada PR + push a `main` + cron nocturno.
+> - ✅ Playwright e2e (#91) con fixtures para los golden paths.
+> - ✅ Responsive a 375 px en todas las páginas (#36).
+> - ✅ Reduced-motion respetado en transiciones del shell y graph.
+> - ✅ Focus visible en todos los primitives (`Button`, `Tabs`, `Card`, `Dialog`).
+>
+> Lighthouse a11y ≥ 95 en Home / Explorer / LawDetail / Graph es el criterio de cierre — confirmar en cada release que sigue verde.
+
+---
+
 LexFlow apunta a **WCAG 2.1 nivel AA** desde el primer release público. Esto no es un nice-to-have — es un requisito para una app legal que puede usar gente con discapacidad visual, motora o cognitiva.
 
 ---
