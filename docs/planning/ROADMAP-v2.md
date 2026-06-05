@@ -1,5 +1,11 @@
 # LexFlow — Roadmap v2
 
+> **Estado (2026-06-05): superseded.** Las fases 0-5 + 8 + 9 ya están ✅ cerradas en `main` (release 0.36.x). La fuente de verdad actualizada vive en [`../../ROADMAP.md`](../../ROADMAP.md), que ahora refleja el estado real de cada fase + un sub-table de strands transversales (observability / rate-limit / keyring / MCP client / telemetry / i18n) que se shippearon en Sprints 9-14.
+>
+> Este documento queda como contexto histórico — sirvió para planificar los sprints, pero ya no se actualiza. Lee `ROADMAP.md` si solo quieres saber qué está hecho.
+
+---
+
 Documento vivo. Actualizado el 2026-05-23 tras consolidar las Fases 0-4 backend y el scaffold del frontend React.
 
 El roadmap original en [`ROADMAP.md`](../../ROADMAP.md) está desfasado: lista todo como "Pendiente" cuando Fases 1-4 backend ya están cerradas. Esta v2 lo reemplaza y añade las fases 8 y 9, descubiertas mientras se diseñaba el producto para usuarios no técnicos.

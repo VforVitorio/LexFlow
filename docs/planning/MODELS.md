@@ -2,7 +2,7 @@
 
 Guía para elegir qué modelo correr en cada máquina. La aplica el **wizard de modelos** (Fase 8, [`UX-ONBOARDING.md`](UX-ONBOARDING.md) §3) pero también es útil leerla directamente.
 
-Estado a 2026-05-23. Los precios cloud cambian; revisar las URLs oficiales antes de un release público.
+Estado a 2026-06-05. El wizard ya está live (#117 + #118): consume `GET /api/v1/system/profile` para detectar RAM / VRAM / GPU y aplica la heurística de tiering en `frontend/src/lib/model-tiering.ts`. Los precios cloud cambian; revisar las URLs oficiales antes de un release público.
 
 ---
 

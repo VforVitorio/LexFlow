@@ -1,5 +1,19 @@
 # UX & Onboarding (Fase 8)
 
+> **Estado (2026-06-05): ✅ Hecho.** Sprints 2-4 + a11y sprint cerraron la fase:
+>
+> - ✅ Greeting flow sin cuenta (#229) + nombre opcional + saludos randomised (#248).
+> - ✅ Tutorial sombreado Reactour v3 de 6 pasos (#116).
+> - ✅ Wizard de modelos (Detect → Pick → Confirm) con 5-status fit vocabulary (#117 / #118).
+> - ✅ Help drawer contextual con `?` flotante (#132).
+> - ✅ a11y: axe-core CI sobre el build de producción (#130), Playwright e2e (#91), 375 px responsive (#36), audit guided actions (#131).
+> - ✅ Onboarding gate (`OnboardingPage`) que dirige el primer arranque.
+> - ✅ i18n full pass ES + EN (Sprint 9 + i18n full pass session).
+>
+> Este documento es el plan original que guio esos PRs. La verdad operacional vive en [frontend.md](../architecture/frontend.md) + el código en [frontend/src/components/domain/{ModelWizard,TutorialTour,HelpDrawer,WelcomeFlow}.tsx].
+
+---
+
 Plan detallado para que LexFlow sea utilizable por alguien que nunca ha tocado una terminal. Cubre greeting, tutorial sombreado, wizard de modelos, guided actions y accesibilidad.
 
 ---
