@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.36.2](https://github.com/VforVitorio/LexFlow/compare/v0.36.1...v0.36.2) (2026-06-05)
+
+
+### Documentation
+
+* refresh README + ROADMAP after Sprints 9-14 ([#375](https://github.com/VforVitorio/LexFlow/issues/375)) ([ac2bd8f](https://github.com/VforVitorio/LexFlow/commit/ac2bd8f2b5f7781b305a05c5029ff4bf7de250a1))
+* refresh README + ROADMAP after Sprints 9-14 (part of [#375](https://github.com/VforVitorio/LexFlow/issues/375)) ([90d68a4](https://github.com/VforVitorio/LexFlow/commit/90d68a43653bd6c39723776681f9701f0f3000e6))
+
 ## [0.36.1](https://github.com/VforVitorio/LexFlow/compare/v0.36.0...v0.36.1) (2026-06-04)
 
 

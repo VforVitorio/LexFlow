@@ -37,16 +37,16 @@ Backend en **Python 3.12** (FastAPI + Pydantic + NetworkX + FastMCP). Frontend e
 
 | Fase | Estado |
 |------|--------|
-| 0 — Fundación (repo, CI/CD, branch protection, dependabot) | Hecho |
-| 1 — API base + parseo legalize-es + búsqueda full-text | Hecho |
-| 2 — Grafo de conocimiento (modelo + algoritmos + endpoints + persistencia) | Backend hecho |
-| 3 — Chatbot (Ollama + LM Studio + OpenAI + Anthropic + Google + FastMCP) | Backend hecho |
-| 4 — Dashboards (Plotly: compliance + analytics) | Backend hecho |
-| 5 — Frontend React (layout, explorador, grafo, chat, dashboards) | En curso |
-| 6 — Empaquetado y distribución (Docker, PyInstaller, instaladores) | Docker hecho, resto pendiente |
-| 7 — Búsqueda semántica y RAG | Planificado |
-| 8 — UX y onboarding (greeting, tour, wizard de modelos, accesibilidad) | Planificado |
-| 9 — Personalización y MCP extensibility (plantillas, servers MCP externos) | Planificado |
+| 0 — Fundación (repo, CI/CD, branch protection, dependabot) | ✅ Hecho |
+| 1 — API base + parseo legalize-es + búsqueda full-text | ✅ Hecho |
+| 2 — Grafo de conocimiento (modelo + algoritmos + endpoints + persistencia + xyflow viz) | ✅ Hecho |
+| 3 — Chatbot (Ollama + LM Studio + OpenAI + Anthropic + Google + FastMCP + tool-use loop) | ✅ Hecho |
+| 4 — Dashboards (Plotly: compliance + analytics) | ✅ Hecho |
+| 5 — Frontend React (layout + explorador + grafo + chat + dashboards + i18n + settings) | ✅ Hecho |
+| 6 — Empaquetado y distribución (PyInstaller spec + landing) | Parcial — Tauri/signing/auto-update pendientes |
+| 7 — Búsqueda semántica y RAG | Infra placeholder en main — falta embedder real |
+| 8 — UX y onboarding (greeting, tour, wizard de modelos, accesibilidad) | ✅ Hecho |
+| 9 — Personalización y MCP extensibility (plantillas, servers externos, `.mcpb`) | ✅ Hecho |
 
 Roadmap detallado: [ROADMAP.md](ROADMAP.md). Issues activas: [GitHub Issues](https://github.com/VforVitorio/LexFlow/issues).
 
@@ -92,7 +92,7 @@ npm run lint           # ESLint
 ### Producción (un único proceso)
 
 ```bash
-cd frontend && pnpm build && cd ..
+cd frontend && npm run build && cd ..
 uv run python main.py          # FastAPI sirve la API en /api/v1 y el SPA en /
 ```
 
@@ -160,11 +160,12 @@ LexFlow/
 | Server state | TanStack Query |
 | Client state | Zustand |
 | Styling | Tailwind CSS + shadcn/ui (Radix) |
-| Graph viz | react-flow |
+| Graph viz | `@xyflow/react` (formerly react-flow, migrated in #73) |
 | Charts | plotly.js-dist + react-plotly.js |
 | HTTP client | `ky` sobre tipos generados con `openapi-typescript` |
 | Tests | Vitest + Playwright |
-| Gestor de paquetes | pnpm |
+| i18n | `react-i18next` (ES por defecto, EN como segundo idioma) |
+| Gestor de paquetes | npm |
 
 > **Reflex** fue el framework original. Se descartó el 2026-05-22 — los detalles del cambio y el contrato FastAPI ↔ React están en [CLAUDE.md](CLAUDE.md) §2 y §6.
 
@@ -173,26 +174,38 @@ LexFlow/
 ## Ejemplos de la API
 
 ```bash
-# Listar leyes (paginado)
+# Listar leyes (paginado, con filtros opcionales)
 curl http://localhost:8000/api/v1/laws?page=1
 
 # Detalle de una ley
 curl http://localhost:8000/api/v1/laws/BOE-A-2018-16673
 
-# Vecinos en el grafo
+# Solo las cross-referencias (payload ~10× más pequeño que el detalle)
+curl http://localhost:8000/api/v1/laws/BOE-A-2018-16673/references
+
+# Búsqueda full-text
+curl "http://localhost:8000/api/v1/search?q=protección+de+datos"
+
+# Búsqueda semántica (cosine sobre embeddings)
+curl "http://localhost:8000/api/v1/laws/search/semantic?q=protección+de+datos&limit=10"
+
+# Grafo: vecinos directos
 curl http://localhost:8000/api/v1/graph/neighbors/BOE-A-2018-16673
+
+# Grafo: el corpus entero filtrado (Obsidian-style)
+curl "http://localhost:8000/api/v1/graph?rank=ley_organica&limit=200"
 
 # Camino más corto entre dos normas
 curl "http://localhost:8000/api/v1/graph/path?from=BOE-A-2018-16673&to=BOE-A-1978-31229"
 
-# Top 20 leyes por PageRank
-curl http://localhost:8000/api/v1/graph/top?metric=pagerank&limit=20
+# Top 20 por PageRank
+curl "http://localhost:8000/api/v1/graph/top?limit=20"
 
-# Búsqueda full-text
-curl "http://localhost:8000/api/v1/search?q=protección+de+datos"
+# Salud extendida (memoria, disco, corpus, chat DB)
+curl http://localhost:8000/api/v1/system/health
 ```
 
-Toda la API vive bajo `/api/v1/*`. Cambios breaking bumpean a `/api/v2/`.
+Toda la API vive bajo `/api/v1/*`. Cambios breaking bumpean a `/api/v2/`. Inventario completo: [`docs/backend/api-endpoints.md`](docs/backend/api-endpoints.md).
 
 ---
 
@@ -200,16 +213,16 @@ Toda la API vive bajo `/api/v1/*`. Cambios breaking bumpean a `/api/v2/`.
 
 Las contribuciones son bienvenidas. Lee la [guía de contribución](CONTRIBUTING.md) antes de empezar.
 
-**Flujo rápido:**
+**Flujo rápido (trunk-based, desde 2026-05-30):**
 
 1. Abre o busca un [issue](https://github.com/VforVitorio/LexFlow/issues).
-2. Crea una rama desde `dev` (`feat/xxx`, `fix/xxx` o `docs/xxx`).
+2. Crea una rama desde `main` (`feat/xxx`, `fix/xxx` o `docs/xxx`).
 3. Desarrolla y añade tests.
-4. Abre PR hacia `dev`.
-5. CI corre tres jobs requeridos: `test`, `lint`, `typecheck` (más `frontend-build` cuando exista).
-6. Review y merge (sin squash). La rama se borra automáticamente al hacer merge.
+4. Abre PR hacia `main`.
+5. CI corre los checks requeridos: `test`, `lint`, `typecheck`, `frontend-build`.
+6. Review y merge (sin squash — preservamos el histórico para release-please). La rama se borra automáticamente al mergear.
 
-`main` está protegido: solo recibe PRs desde `dev` y exige los tres checks anteriores en verde.
+`main` está protegido (strict; `restrictions: null`; `required_conversation_resolution: true`). La antigua rama `dev` fue retirada — toda PR de feature/fix apunta directamente a `main`. Si un check falla en `main`, se arregla con un PR — nunca con `enforce_admins`.
 
 ---
 
