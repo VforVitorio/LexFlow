@@ -11,11 +11,16 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { SearchResultsPage } from '@/pages/SearchResultsPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { usePageViewTelemetry } from '@/lib/telemetry';
 
 // The marketing landing lives in a completely separate Vite project under
 // ../landing — it has its own build, deps and GitHub Pages deploy. The SPA
 // owns only the application surface; `/` redirects to the home dashboard.
 export function App() {
+  // Page-view telemetry — no-op unless both gates (operator env +
+  // user Zustand consent) are on. Lives inside ``BrowserRouter`` so
+  // ``useLocation`` resolves.
+  usePageViewTelemetry();
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
