@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, X, GitCompareArrows, ExternalLink } from 'lucide-react';
@@ -12,7 +12,6 @@ import { Badge, Button, Callout, Tabs } from '@/components/ui';
 import { RightRail } from '@/components/shell/RightRail';
 import { useLaw, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
-import { api } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 import type { Article, ArticleRef, ChatSource } from '@/lib/types';
 
@@ -24,18 +23,17 @@ export function LawDetailPage() {
   const { t } = useTranslation();
   const readingSize = useUi((s) => s.readingSize);
   const [tab, setTab] = useState<Tab>('texto');
-  const [articles, setArticles] = useState<Article[]>([]);
   const [selectedRef, setSelectedRef] = useState<ArticleRef | null>(null);
 
   const { data: law, isLoading, error, refetch } = useLaw(lawId);
   const { data: versions = [] } = useVersions(lawId);
 
-  // Load a couple of articles when the law arrives — in production each
-  // article block would be lazy-loaded as the user scrolls.
-  useEffect(() => {
-    if (!lawId) return;
-    api.laws.references(lawId).then(setArticles).catch(() => setArticles([]));
-  }, [lawId]);
+  // Articles already arrive embedded in the law-detail response — no
+  // need to fetch them a second time (the old `api.laws.references()`
+  // shim re-fetched `/laws/{id}` for this, which transferred the body
+  // twice). Empty array fallback keeps the rendering loop happy until
+  // `useLaw` resolves.
+  const articles = law?.articles ?? [];
 
   if (error) return <div className="p-10"><ErrorState description={String(error)} onRetry={() => refetch()} /></div>;
   if (!law || isLoading) return <LoadingSkeleton />;

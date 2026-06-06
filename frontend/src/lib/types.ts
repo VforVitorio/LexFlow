@@ -52,6 +52,13 @@ export interface Law {
 export interface LawDetail extends Law {
   /** Top-level hierarchy. Each node may recurse. */
   hierarchy: HierarchyNode[];
+  /**
+   * Full article payload returned by `GET /api/v1/laws/{id}`. The backend
+   * already ships this; the SPA used to discard it and re-fetch the law
+   * detail again from a now-removed shim. Consumers that just need a few
+   * articles can read this directly instead of issuing an extra request.
+   */
+  articles: Article[];
 }
 
 export interface HierarchyNode {
@@ -373,7 +380,13 @@ export interface ApiClient {
     get(id: string): Promise<LawDetail>;
     versions(id: string): Promise<LawVersion[]>;
     diff(id: string, fromTag: string, toTag: string): Promise<DiffResult>;
-    references(id: string): Promise<Article[]>;
+    /**
+     * Outgoing cross-references for the law. Calls the dedicated
+     * `GET /api/v1/laws/{id}/references` endpoint (#96) — used to derive
+     * from the law detail, which transferred the full law body just to
+     * read a few KB of refs.
+     */
+    references(id: string): Promise<ArticleRef[]>;
   };
   articles: {
     get(lawId: string, num: string): Promise<Article>;
