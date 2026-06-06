@@ -36,6 +36,7 @@ export type BackendSection      = S<'Section'>;
 export type BackendSearchResponse = S<'SearchResponse'>;
 export type BackendSearchResult = S<'SearchResult'>;
 export type BackendGraphSubgraph = S<'GraphSubgraphResponse'>;
+export type BackendGraphGlobal  = S<'GraphGlobalResponse'>;
 export type BackendGraphNode    = S<'GraphNodeData'>;
 export type BackendGraphEdge    = S<'GraphEdgeData'>;
 export type BackendGraphStats   = S<'GraphStatsResponse'>;

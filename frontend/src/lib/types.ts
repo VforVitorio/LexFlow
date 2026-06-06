@@ -189,6 +189,37 @@ export interface GraphStats {
   density: number;
   weaklyConnectedComponents: number;
 }
+
+/**
+ * Filter set for the global graph endpoint (`GET /api/v1/graph`).
+ *
+ * Mirrors the backend query params (`status`, `rank`, `scope`,
+ * `jurisdiction`, `limit`). Wire strings match the backend enum
+ * values (e.g. `'in_force'`, `'real_decreto'`) — the SPA's domain
+ * enums (`vigente`, `Real Decreto`) get translated at the call
+ * site via the existing maps in `transformers.ts`.
+ */
+export interface GraphGlobalFilters {
+  /** Backend `LawStatus` enum value (e.g. `'in_force'`). */
+  status?: string;
+  /** Backend `LawRank` enum value (e.g. `'real_decreto'`). */
+  rank?: string;
+  /** Backend `Scope` enum value (e.g. `'Estatal'`). */
+  scope?: string;
+  /** Jurisdiction code, e.g. `'es'`, `'es-md'`. */
+  jurisdiction?: string;
+  /** Top-N by PageRank. Omit for "everything matching"; backend caps at 50k. */
+  limit?: number;
+}
+
+/**
+ * Global-graph payload — same shape as the subgraph response plus
+ * `totalAvailable`, the number of nodes that matched the filters
+ * BEFORE the limit truncated. Useful for "showing N of M laws".
+ */
+export interface GraphGlobalResult extends GraphData {
+  totalAvailable: number;
+}
 export type GraphTopMetric = 'pagerank';
 
 // ─── Chat ────────────────────────────────────────────────────────────────
@@ -397,6 +428,14 @@ export interface ApiClient {
   };
   graph: {
     forLaw(id: string, depth?: number): Promise<GraphData>;
+    /**
+     * Global graph (no seed) — Obsidian-style corpus view (#146).
+     *
+     * Filters narrow the node set BEFORE the limit kicks in. With no
+     * filters and no limit the backend returns the full induced graph
+     * (capped at 50 k nodes to avoid serialising the universe).
+     */
+    global(filters?: GraphGlobalFilters): Promise<GraphGlobalResult>;
     /** Direct successors (outgoing references) of a law node. */
     neighbors(id: string): Promise<string[]>;
     /** Shortest directed path between two law nodes (404 if disconnected). */

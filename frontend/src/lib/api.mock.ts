@@ -124,6 +124,17 @@ export const mockApi: ApiClient = {
       await delay(200);
       return GRAPH;
     },
+    async global(filters = {}) {
+      await delay(180);
+      // Mock has no real metadata to filter on; we honour `limit`
+      // and report the canned graph's node count as `totalAvailable`
+      // so the SPA can exercise the "showing N of M" rendering path.
+      const limit = filters.limit;
+      const nodes = limit != null ? GRAPH.nodes.slice(0, limit) : GRAPH.nodes;
+      const keep = new Set(nodes.map((n) => n.id));
+      const edges = GRAPH.edges.filter((e) => keep.has(e.source) && keep.has(e.target));
+      return { nodes, edges, totalAvailable: GRAPH.nodes.length };
+    },
     async neighbors(id) {
       await delay(120);
       // Direct successors from the in-memory graph. We treat the canned
