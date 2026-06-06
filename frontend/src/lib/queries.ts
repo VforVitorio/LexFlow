@@ -14,6 +14,7 @@ import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
   SearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot,
+  GraphGlobalFilters, GraphGlobalResult,
 } from './types';
 
 export const qk = {
@@ -115,6 +116,21 @@ export function useGraphTop(opts: { limit?: number } = {}) {
     queryKey: ['graph', 'top', limit] as const,
     queryFn: () => api.graph.top({ limit }),
     staleTime: 10 * 60_000,
+  });
+}
+
+/**
+ * Global graph view — `GET /api/v1/graph` with optional metadata filters.
+ *
+ * Cache key includes the filter bag so two different filter sets coexist
+ * in the query cache (typical UX: user toggles filters, expects the
+ * unfiltered view to still be there if they reset).
+ */
+export function useGlobalGraph(filters: GraphGlobalFilters = {}) {
+  return useQuery<GraphGlobalResult>({
+    queryKey: ['graph', 'global', filters] as const,
+    queryFn: () => api.graph.global(filters),
+    staleTime: 5 * 60_000,
   });
 }
 
