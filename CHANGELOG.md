@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.39.0](https://github.com/VforVitorio/LexFlow/compare/v0.38.3...v0.39.0) (2026-06-06)
+
+
+### Features
+
+* **api:** expose liveApi.graph.global() consuming GET /api/v1/graph ([3e41f8f](https://github.com/VforVitorio/LexFlow/commit/3e41f8fd2ec614b15b86ad13beed59e667dca75d))
+* **api:** expose liveApi.graph.global() consuming GET /api/v1/graph ([c87b3d4](https://github.com/VforVitorio/LexFlow/commit/c87b3d4a9de40ad3580889aa9225179f3abeb0c7))
+
 ## [0.38.3](https://github.com/VforVitorio/LexFlow/compare/v0.38.2...v0.38.3) (2026-06-06)
 
 
