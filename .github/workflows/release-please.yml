@@ -14,6 +14,8 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      prs_created: ${{ steps.release.outputs.prs_created }}
+      prs: ${{ steps.release.outputs.prs }}
     steps:
       - id: release
         uses: googleapis/release-please-action@v5
@@ -21,6 +23,64 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  # release-please bumps `pyproject.toml` but does NOT regenerate
+  # `uv.lock`. Without this catch-up step the release PR drifts:
+  # `uv.lock` still pins the old version, so the next branch off main
+  # after the release-please PR merges fails `--frozen` sync. This job
+  # runs on every release-please push that opened or updated a release
+  # PR and commits the refreshed lock back to its head branch.
+  sync-uv-lock:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.prs_created == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve release PR branch
+        id: pr
+        env:
+          PRS_JSON: ${{ needs.release-please.outputs.prs }}
+        # The action's `prs` output is a JSON array of the release-
+        # please PRs it opened/updated this run. For a single-package
+        # repo there is exactly one. `jq` extracts the head branch
+        # so the next steps check out by name instead of hard-coding.
+        run: |
+          branch="$(printf '%s' "$PRS_JSON" | jq -r '.[0].headBranchName')"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          # Same token release-please used so the push back is
+          # attributed to the same actor and bypasses the protected-
+          # branch rules on the release PR.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          submodules: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+          python-version: "3.12"
+
+      # `uv lock` without `--upgrade` rewrites the lock so it pins the
+      # new version from `pyproject.toml` but does NOT bump anything
+      # else. The diff is the `lexflow` version line only — no noise.
+      - name: Refresh uv.lock for the new version
+        run: uv lock
+
+      - name: Commit + push lock refresh
+        run: |
+          if git diff --quiet uv.lock; then
+            echo "uv.lock already in sync; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git commit -m "chore: sync uv.lock with release-please version bump"
+          git push
 
   publish-wheel:
     needs: release-please
