@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { Article, ArticleRef } from '@/lib/types';
 
@@ -12,8 +13,14 @@ export interface ArticleBlockProps {
 /**
  * Single article rendered with number in the gutter, body in the reading
  * column, and references as monospace chips below.
+ *
+ * Audit #409 perf: wrapped with ``React.memo`` so the LawDetailPage's
+ * "texto" tab — which can list dozens of articles — does not re-render
+ * every block when the reading-size slider moves the parent. Pass a
+ * stable ``onCitationClick`` (e.g. ``useCallback``) to preserve the
+ * memoisation across renders.
  */
-export function ArticleBlock({ article, size = 16, onCitationClick }: ArticleBlockProps) {
+function ArticleBlockImpl({ article, size = 16, onCitationClick }: ArticleBlockProps) {
   return (
     <article id={`art-${article.num}`} className="relative mb-9">
       <div className="absolute left-[-72px] top-1 hidden w-14 text-right md:block">
@@ -54,13 +61,23 @@ export function ArticleBlock({ article, size = 16, onCitationClick }: ArticleBlo
   );
 }
 
+export const ArticleBlock = memo(ArticleBlockImpl);
+
 function CitationSup({ index, ref_, onClick }: { index: number; ref_: ArticleRef; onClick?: () => void }) {
   return (
     <sup
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter') onClick?.(); }}
+      onKeyDown={(e) => {
+        // Audit #409 — WAI-ARIA `button` role must respond to both
+        // Enter and Space; ``preventDefault`` stops Space from
+        // scrolling the page.
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
       title={ref_.label}
       className={cn(
         'cursor-pointer rounded bg-primary-soft px-1 py-0.5 font-mono text-[0.65em] font-semibold text-indigo-600 dark:text-indigo-300',

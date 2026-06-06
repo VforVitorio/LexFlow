@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
@@ -10,7 +10,7 @@ import { SkeletonCanvas } from '@/components/domain/Skeleton';
 import { RightRail } from '@/components/shell/RightRail';
 import { useGraph, useGraphTop, useWarmup } from '@/lib/queries';
 import { EDGE_KIND_LABELS, GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, NODE_KIND_LABELS, type GraphEdgeKind } from '@/lib/graph-colors';
-import type { GraphNodeKind } from '@/lib/types';
+import type { GraphData, GraphNodeKind } from '@/lib/types';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 const ALL_EDGE_KINDS: GraphEdgeKind[] = ['cites', 'develops', 'modifies', 'repeals'];
@@ -57,6 +57,29 @@ export function GraphPage() {
   }, []);
 
   const { data: warmup } = useWarmup();
+
+  // Audit #409 perf: the right-rail used to do O(N) `.find()` per
+  // neighbour to resolve each label, and the warmup poll re-ran the
+  // chain every 2 s. Build a stable id → node Map once per graph and
+  // memoise the neighbour slice on the (edges, selected) tuple.
+  // Declared BEFORE the early returns below so the hooks are called
+  // unconditionally (rules-of-hooks). ``graph`` may be undefined while
+  // loading; the optional chain keeps the memo deps stable.
+  const nodeById = useMemo(() => {
+    const map = new Map<string, GraphData['nodes'][number]>();
+    for (const n of graph?.nodes ?? []) map.set(n.id, n);
+    return map;
+  }, [graph?.nodes]);
+  const neighbours = useMemo(
+    () => (
+      selected && graph
+        ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12)
+        : []
+    ),
+    [graph, selected],
+  );
+  const node = selected ? nodeById.get(selected) ?? null : null;
+
   if (error) {
     // Most common cause when this fires post-warmup: the chosen seed
     // isn't in the graph (the URL pointed at a derogated law, the
@@ -110,9 +133,6 @@ export function GraphPage() {
       </div>
     );
   }
-
-  const node = selected ? graph.nodes.find((n) => n.id === selected) : null;
-  const neighbours = selected ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12) : [];
 
   return (
     <div className="flex h-full min-h-0">
