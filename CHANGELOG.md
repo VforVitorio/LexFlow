@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.38.2](https://github.com/VforVitorio/LexFlow/compare/v0.38.1...v0.38.2) (2026-06-06)
+
+
+### Bug Fixes
+
+* **ci:** checkout before dorny/paths-filter on push events ([c7e89ed](https://github.com/VforVitorio/LexFlow/commit/c7e89ed406d5c7ce31275dc49594b5f3a866ebea))
+* **ci:** checkout before dorny/paths-filter on push events ([e11548f](https://github.com/VforVitorio/LexFlow/commit/e11548f2cef83886147dc708b35063e439853a99))
+
+
+### Documentation
+
+* **claude-md:** record dorny/paths-filter+checkout lesson ([34d5387](https://github.com/VforVitorio/LexFlow/commit/34d538748314ac962d90148bb988613dc168e301))
+
 ## [0.38.1](https://github.com/VforVitorio/LexFlow/compare/v0.38.0...v0.38.1) (2026-06-06)
 
 
