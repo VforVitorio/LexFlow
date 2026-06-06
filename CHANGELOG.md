@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.40.0](https://github.com/VforVitorio/LexFlow/compare/v0.39.0...v0.40.0) (2026-06-06)
+
+
+### Features
+
+* **telemetry:** retention pruning on lifespan startup ([46a4cd7](https://github.com/VforVitorio/LexFlow/commit/46a4cd7bc0f96cae131afacce395907708825645))
+* **telemetry:** retention pruning on lifespan startup ([641d43f](https://github.com/VforVitorio/LexFlow/commit/641d43fd58b52f2796c4fb82b440a3faf7c8f278))
+
 ## [0.39.0](https://github.com/VforVitorio/LexFlow/compare/v0.38.3...v0.39.0) (2026-06-06)
 
 
