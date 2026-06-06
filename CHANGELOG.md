@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.40.2](https://github.com/VforVitorio/LexFlow/compare/v0.40.1...v0.40.2) (2026-06-06)
+
+
+### Bug Fixes
+
+* **audit:** backend correctness + critical security (Batch A) ([f0ea42a](https://github.com/VforVitorio/LexFlow/commit/f0ea42adccd12d62beaf25bf1fcb0f04dd1c432d))
+
 ## [0.40.1](https://github.com/VforVitorio/LexFlow/compare/v0.40.0...v0.40.1) (2026-06-06)
 
 
