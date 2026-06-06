@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ChevronRight, Search, Moon, Sun, SidebarOpen, SidebarClose } from 'lucide-react';
 import { Avatar, Button, Kbd } from '@/components/ui';
 import { useUi } from '@/lib/store';
-import { useLawsList } from '@/lib/queries';
+import { useLaw } from '@/lib/queries';
 import { modKey } from '@/lib/utils';
 
 export function TopBar() {
@@ -44,8 +44,11 @@ export function TopBar() {
 
 function Breadcrumb({ path, lawId, navigate }: { path: string; lawId?: string; navigate: (to: string) => void }) {
   const { t } = useTranslation();
-  const { data } = useLawsList({}, { staleTime: 60_000, enabled: !!lawId });
-  const law = lawId ? data?.items.find((l) => l.id === lawId) : null;
+  // Audit #409 perf: previously fetched the full paginated /laws list
+  // (one row per law) just to extract one row's ``short`` name. Now we
+  // hit ``/laws/{id}`` directly via ``useLaw`` — single-row payload,
+  // dedupes with LawDetailPage's query.
+  const { data: law } = useLaw(lawId);
 
   const items: { label: string; onClick?: () => void; sub?: string }[] = [];
   if (path === '/') items.push({ label: t('nav.home') });
@@ -58,8 +61,12 @@ function Breadcrumb({ path, lawId, navigate }: { path: string; lawId?: string; n
     items.push({ label: t('nav.explorer'), onClick: () => navigate('/explorer') });
     if (law) items.push({ label: law.short });
   } else if (path === '/graph') items.push({ label: t('nav.graph') });
-  else if (path === '/chat') items.push({ label: t('nav.chat'), sub: 'Sesión: EIPD LOPDGDD' });
-  else if (path === '/dashboards') items.push({ label: t('nav.dashboards'), sub: 'Compliance' });
+  // Audit #409 — the hardcoded 'Sesión: EIPD LOPDGDD' / 'Compliance'
+  // sub-labels are gone. Real per-thread / per-preset labels need a
+  // dedicated lookup that we don't have wired here yet; we drop the
+  // sub-label rather than lying.
+  else if (path === '/chat') items.push({ label: t('nav.chat') });
+  else if (path === '/dashboards') items.push({ label: t('nav.dashboards') });
   else if (path === '/settings') items.push({ label: t('nav.settings') });
   else items.push({ label: path.slice(1) });
 

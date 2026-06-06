@@ -8,7 +8,7 @@ import { CitationCard } from '@/components/domain/CitationCard';
 import { VersionTimeline } from '@/components/domain/VersionTimeline';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { Skeleton, SkeletonLines } from '@/components/domain/Skeleton';
-import { Badge, Button, Callout, Tabs } from '@/components/ui';
+import { Badge, Button, Tabs } from '@/components/ui';
 import { RightRail } from '@/components/shell/RightRail';
 import { useLaw, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
@@ -114,19 +114,16 @@ export function LawDetailPage() {
 }
 
 function TextoTab({ articles, readingSize, onRefClick }: { articles: Article[]; readingSize: number; onRefClick: (r: ArticleRef) => void }) {
+  // Audit #409: the page used to render a hardcoded "Modificada por LO
+  // 3/2018" callout AND a hardcoded "Título I · Capítulo II" heading
+  // for every law. Both were copy from the CE-1978 mock and lied for
+  // any other law. The real "modificada por" callout needs the diff
+  // metadata wired through (issue #427 follow-up); the hierarchy
+  // heading needs the section tree drilled in from ``law.sections``.
+  // Until those land, dropping the lies is the right call.
   return (
     <div className="flex-1 overflow-auto scrollbar-thin">
       <div className="reading-col px-5 md:px-8 py-9">
-        <Callout tone="warning" title="Modificada por norma posterior">
-          El art. 18.4 está parcialmente desarrollado por la <strong>LO 3/2018</strong>.{' '}
-          <a className="underline" href="#">Ver diff →</a>
-        </Callout>
-        <div className="mt-7 mb-3.5">
-          <span className="label-caps">Título I · Capítulo II · Sección 1.ª</span>
-          <h2 className="mt-1 font-display text-2xl font-semibold -tracking-[0.01em]">
-            De los derechos fundamentales y de las libertades públicas
-          </h2>
-        </div>
         {articles.map((a) => (
           <ArticleBlock key={a.id} article={a} size={readingSize} onCitationClick={onRefClick} />
         ))}

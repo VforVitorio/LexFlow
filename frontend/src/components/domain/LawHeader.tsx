@@ -41,7 +41,13 @@ export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick }: La
         <Stat label={t('lawHeader.stats.lastModified')} value={law.ultimaModificacion ? formatDate(law.ultimaModificacion) : '—'} />
         <span className="ml-auto inline-flex items-center gap-2">
           <span className="label-caps">{t('lawHeader.version')}</span>
-          <Button size="sm" variant="secondary" iconRight={<ChevronDown className="size-3.5" />}>v1.3 (vigente)</Button>
+          {/* Audit #409 — the button used to read "v1.3 (vigente)" for
+              every law. We don't have a version-picker dropdown wired
+              yet (would need ``useVersions(lawId)`` + a real popover),
+              so we show the actual law status instead — at least it
+              doesn't lie. The chevron stays to telegraph the picker
+              that #428's follow-up will deliver. */}
+          <Button size="sm" variant="secondary" iconRight={<ChevronDown className="size-3.5" />}>{law.status}</Button>
         </span>
       </div>
 
