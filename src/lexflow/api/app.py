@@ -34,6 +34,8 @@ from lexflow.api.warmup import schedule_background_warmup
 from lexflow.chat.db import init_db
 from lexflow.core.exceptions import LexFlowError
 from lexflow.core.registry import get_registry
+from lexflow.core.telemetry import prune_old_files as prune_old_telemetry_files
+from lexflow.utils.config import get_settings
 from lexflow.utils.logging_config import configure_logging
 
 # Configure logging FIRST, before any module-level logger captures a
@@ -67,6 +69,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # SQLite tables. Tests that need a custom DB path use
     # ``init_db_for_path`` from a fixture instead.
     init_db()
+
+    # Eager #1.5 — drop telemetry files older than the retention window
+    # so a long-running install doesn't grow ``<config_dir>/telemetry/``
+    # unbounded. Idempotent and bounded (one directory scan + a handful
+    # of ``unlink`` calls), so it's cheap enough to run on every boot.
+    try:
+        pruned = prune_old_telemetry_files(get_settings().telemetry_retention_days)
+        if pruned:
+            logger.info("Telemetry retention: pruned %d old daily files", pruned)
+    except OSError:
+        # Same posture as the registry failure below — log and continue;
+        # never let cleanup poison startup.
+        logger.exception("Telemetry retention prune failed; continuing startup")
 
     # Eager #2 + background warm-up. Skipped under
     # ``LEXFLOW_SKIP_EAGER_INDEX=1`` so unit tests that override DI don't

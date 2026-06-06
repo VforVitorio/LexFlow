@@ -21,6 +21,9 @@ class Settings:
         LEXFLOW_PAGE_SIZE_MAX — maximum allowed page size
         LEXFLOW_LOG_LEVEL — logging level
         LEXFLOW_CONFIG_DIR — per-user config dir (audit log lives here)
+        LEXFLOW_TELEMETRY_RETENTION_DAYS — number of past days of
+            telemetry JSONL files to keep. ``0`` disables pruning.
+            Default 30.
     """
 
     data_path: Path
@@ -28,6 +31,7 @@ class Settings:
     page_size_max: int
     log_level: str
     config_dir: Path
+    telemetry_retention_days: int
 
 
 def _build_settings() -> Settings:
@@ -44,6 +48,7 @@ def _build_settings() -> Settings:
         page_size_max=int(os.environ.get("LEXFLOW_PAGE_SIZE_MAX", "100")),
         log_level=os.environ.get("LEXFLOW_LOG_LEVEL", "INFO"),
         config_dir=config_dir,
+        telemetry_retention_days=int(os.environ.get("LEXFLOW_TELEMETRY_RETENTION_DAYS", "30")),
     )
 
 

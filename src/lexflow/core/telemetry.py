@@ -20,13 +20,19 @@ Storage: one file per UTC day under
 ``jq``. No remote sink — that's intentional for the desktop-app
 distribution target.
 
+Retention: :func:`prune_old_files` deletes daily files older than
+``Settings.telemetry_retention_days``. Called once from the FastAPI
+lifespan startup so a long-running install doesn't grow the directory
+without bound. Setting the env to ``0`` disables pruning entirely.
+
 --- WHERE TO CHANGE IF X CHANGES ---
 * Switch to a remote sink → replace :func:`record_events` body and
                              keep the public API.
 * Add a new event type    → no code change here; events are
                              schema-light (just ``name`` + props).
-* Change retention        → :func:`prune_old_files` (not yet wired —
-                             see follow-up tracker).
+* Change retention        → :func:`prune_old_files`. Default + env
+                             override live in
+                             :mod:`lexflow.utils.config`.
 """
 
 from __future__ import annotations
@@ -34,8 +40,9 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import threading
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -49,6 +56,12 @@ logger = logging.getLogger(__name__)
 _TELEMETRY_ENABLED_ENV = "LEXFLOW_TELEMETRY_ENABLED"
 _TELEMETRY_DIR_NAME = "telemetry"
 _FILE_WRITE_LOCK = threading.Lock()
+
+# Daily files are named ``YYYY-MM-DD.jsonl``. Strict regex so a hand-
+# placed unrelated ``.jsonl`` file (debug dump, manual export) is left
+# alone by the pruner rather than parsed as an out-of-range date and
+# silently deleted.
+_DAILY_FILE_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})\.jsonl$")
 
 
 class TelemetryEvent(BaseModel):
@@ -101,6 +114,65 @@ def _serialize_event(event: TelemetryEvent, now: datetime) -> str:
         "props": event.props,
     }
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def _parse_daily_filename(name: str) -> date | None:
+    """Return the UTC date encoded in a ``YYYY-MM-DD.jsonl`` filename.
+
+    Returns ``None`` for anything that doesn't match the strict
+    pattern — that includes manual exports, debug dumps and the
+    ``YYYY-MM-DD-something`` shapes a future feature might introduce.
+    Keeps :func:`prune_old_files` from deleting files it doesn't own.
+    """
+    match = _DAILY_FILE_RE.match(name)
+    if match is None:
+        return None
+    try:
+        year, month, day = (int(group) for group in match.groups())
+        return date(year, month, day)
+    except ValueError:
+        # Caught the shape but not a real date (e.g. 2026-02-31).
+        return None
+
+
+def prune_old_files(retention_days: int, *, today: date | None = None) -> int:
+    """Delete daily telemetry files older than ``retention_days``.
+
+    Returns the number of files actually deleted. A ``retention_days``
+    of ``0`` (or negative) is interpreted as "pruning disabled" — we
+    return ``0`` without touching the directory so an operator can
+    turn off the policy without removing the call site.
+
+    Symmetric semantics with the writer: files whose encoded date is
+    strictly older than ``today - retention_days`` are removed; the
+    cutoff day itself is kept so the retention window is N full days
+    inclusive.
+
+    ``today`` is injectable for deterministic testing — production
+    calls leave it ``None`` and the function reads ``datetime.now(UTC)``.
+    """
+    if retention_days <= 0:
+        return 0
+    cutoff = (today or datetime.now(UTC).date()) - timedelta(days=retention_days)
+    directory = _telemetry_dir()
+    if not directory.is_dir():
+        return 0
+    deleted = 0
+    for entry in directory.iterdir():
+        if not entry.is_file():
+            continue
+        encoded = _parse_daily_filename(entry.name)
+        if encoded is None or encoded >= cutoff:
+            continue
+        try:
+            entry.unlink()
+        except OSError:
+            # Same defence-in-depth posture as ``record_events``: keep
+            # going on per-file failures instead of poisoning startup.
+            logger.warning("Telemetry prune failed for %s", repr(str(entry)), exc_info=True)
+            continue
+        deleted += 1
+    return deleted
 
 
 def record_events(events: list[TelemetryEvent]) -> int:
