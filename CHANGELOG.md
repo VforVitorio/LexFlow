@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.40.4](https://github.com/VforVitorio/LexFlow/compare/v0.40.3...v0.40.4) (2026-06-06)
+
+
+### Bug Fixes
+
+* **audit:** rate limits + SSRF guard + sync surfaces (Batch C+F) ([512a5e1](https://github.com/VforVitorio/LexFlow/commit/512a5e1fe1386037d3bcd6c888fc56cd5a45d826))
+* **audit:** rate limits + SSRF guard + sync surfaces + keyring (Batch C+F) ([b80bc5b](https://github.com/VforVitorio/LexFlow/commit/b80bc5b494363a9201b7ce09d51a160545865f83)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+
 ## [0.40.3](https://github.com/VforVitorio/LexFlow/compare/v0.40.2...v0.40.3) (2026-06-06)
 
 
