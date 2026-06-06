@@ -57,6 +57,29 @@ export function GraphPage() {
   }, []);
 
   const { data: warmup } = useWarmup();
+
+  // Audit #409 perf: the right-rail used to do O(N) `.find()` per
+  // neighbour to resolve each label, and the warmup poll re-ran the
+  // chain every 2 s. Build a stable id → node Map once per graph and
+  // memoise the neighbour slice on the (edges, selected) tuple.
+  // Declared BEFORE the early returns below so the hooks are called
+  // unconditionally (rules-of-hooks). ``graph`` may be undefined while
+  // loading; the optional chain keeps the memo deps stable.
+  const nodeById = useMemo(() => {
+    const map = new Map<string, GraphData['nodes'][number]>();
+    for (const n of graph?.nodes ?? []) map.set(n.id, n);
+    return map;
+  }, [graph?.nodes]);
+  const neighbours = useMemo(
+    () => (
+      selected && graph
+        ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12)
+        : []
+    ),
+    [graph, selected],
+  );
+  const node = selected ? nodeById.get(selected) ?? null : null;
+
   if (error) {
     // Most common cause when this fires post-warmup: the chosen seed
     // isn't in the graph (the URL pointed at a derogated law, the
@@ -110,21 +133,6 @@ export function GraphPage() {
       </div>
     );
   }
-
-  // Audit #409 perf: the right-rail used to do O(N) `.find()` per
-  // neighbour to resolve each label, and the warmup poll re-ran the
-  // chain every 2 s. Build a stable id → node Map once per graph and
-  // memoise the neighbour slice on the (edges, selected) tuple.
-  const nodeById = useMemo(() => {
-    const map = new Map<string, GraphData['nodes'][number]>();
-    for (const n of graph.nodes) map.set(n.id, n);
-    return map;
-  }, [graph.nodes]);
-  const node = selected ? nodeById.get(selected) : null;
-  const neighbours = useMemo(
-    () => (selected ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12) : []),
-    [graph.edges, selected],
-  );
 
   return (
     <div className="flex h-full min-h-0">
