@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 import { Settings as ToolIcon, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui';
 import { BrandMark } from '@/components/BrandMark';
@@ -10,7 +10,14 @@ export interface ChatMessageProps {
   onSourceClick?: (s: ChatSource) => void;
 }
 
-export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
+/**
+ * Audit #409 perf: wrapped with ``memo`` so a stream chunk that only
+ * mutates the last assistant message doesn't re-render every prior
+ * message in the thread. The default shallow comparison covers our
+ * use today; pass a stable ``onSourceClick`` (``useCallback``) to keep
+ * the memoisation intact.
+ */
+function ChatMessageImpl({ message, onSourceClick }: ChatMessageProps) {
   if (message.role === 'user') {
     return (
       <div className="self-end max-w-[85%]">
@@ -77,6 +84,8 @@ export function ChatMessage({ message, onSourceClick }: ChatMessageProps) {
  * content cannot inject HTML even if a tool result or model output ever
  * carries `<script>` or similar payloads.
  */
+export const ChatMessage = memo(ChatMessageImpl);
+
 function Paragraph({ text }: { text: string }) {
   const isList = /^\d+\.\s/.test(text);
   if (isList) {

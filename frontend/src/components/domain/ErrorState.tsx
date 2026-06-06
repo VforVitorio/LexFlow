@@ -24,7 +24,7 @@ export function ErrorState({ title, description, onRetry, reportHref, className 
       <div className="mt-3.5 inline-flex gap-2">
         {onRetry && <Button size="sm" onClick={onRetry}>{t('errors.retry')}</Button>}
         {reportHref && (
-          <a href={reportHref} target="_blank" rel="noreferrer">
+          <a href={reportHref} target="_blank" rel="noopener noreferrer">
             <Button size="sm" variant="ghost">{t('errors.reportBug')}</Button>
           </a>
         )}
