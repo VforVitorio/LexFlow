@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.38.3](https://github.com/VforVitorio/LexFlow/compare/v0.38.2...v0.38.3) (2026-06-06)
+
+
+### Bug Fixes
+
+* **api:** wire liveApi.laws.references to the real endpoint ([4f558fc](https://github.com/VforVitorio/LexFlow/commit/4f558fce6c17135320f0a04abf673ff38cdb8c6c))
+* **api:** wire liveApi.laws.references to the real endpoint ([be880e1](https://github.com/VforVitorio/LexFlow/commit/be880e19787bc6093be1913e11d0114318c816c2))
+
 ## [0.38.2](https://github.com/VforVitorio/LexFlow/compare/v0.38.1...v0.38.2) (2026-06-06)
 
 
