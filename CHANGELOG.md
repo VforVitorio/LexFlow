@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.40.3](https://github.com/VforVitorio/LexFlow/compare/v0.40.2...v0.40.3) (2026-06-06)
+
+
+### Bug Fixes
+
+* **graph:** move useMemo above early returns (rules-of-hooks) ([f35a370](https://github.com/VforVitorio/LexFlow/commit/f35a370e858140ad8f6c72ec5c428a6fb49ece68))
+
+
+### Performance
+
+* **audit:** backend perf — N+1 + cache + regex hoist (Batch B) ([1e11c5b](https://github.com/VforVitorio/LexFlow/commit/1e11c5b8082f60beb780ad30b8d56bed8bd27d57))
+* **audit:** backend perf wins — N+1 + cache + regex hoist (Batch B) ([f092f37](https://github.com/VforVitorio/LexFlow/commit/f092f3710690a33afe993a149bbc16aae11d42ca)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+* **audit:** frontend perf — lazy routes + Intl singletons + memo (Batch E) ([8d27f93](https://github.com/VforVitorio/LexFlow/commit/8d27f9374cf6c7131bc42d1683c515a053097cbe))
+
 ## [0.40.2](https://github.com/VforVitorio/LexFlow/compare/v0.40.1...v0.40.2) (2026-06-06)
 
 
