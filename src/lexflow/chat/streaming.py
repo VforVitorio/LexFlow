@@ -151,6 +151,82 @@ def _extract_citations(result: dict[str, Any]) -> list[dict[str, Any]]:
     return citations
 
 
+def _persist_user_turn(session: Session, thread: ChatThread, content: str) -> None:
+    """Save the user turn before any streaming starts.
+
+    Persisting first means a stream crash never swallows the user's
+    question. We commit but deliberately do NOT bump ``thread.updated_at``
+    yet — the assistant turn will, so the thread surfaces in the chat
+    rail under the latest activity.
+    """
+    user_message = ChatMessage(
+        thread_id=thread.id,
+        role="user",
+        content=content,
+    )
+    session.add(user_message)
+    session.commit()
+
+
+def _persist_assistant_turn(session: Session, thread: ChatThread, content: str) -> None:
+    """Save the assistant turn and bump the thread's activity timestamp.
+
+    Empty replies still get a row so the UI doesn't render a "ghost
+    turn"; the empty content tells the rail "nothing to show here".
+    """
+    assistant_message = ChatMessage(
+        thread_id=thread.id,
+        role="assistant",
+        content=content,
+    )
+    session.add(assistant_message)
+    thread.updated_at = datetime.now(UTC)
+    session.add(thread)
+    session.commit()
+
+
+def _run_tool_call(call: ToolCallChunk) -> dict[str, Any]:
+    """Dispatch one MCP tool call and wrap failures into a result payload.
+
+    The agentic loop must keep flowing even when a tool blows up — the
+    model can apologise / retry. ``KeyError`` from a missing tool maps
+    to ``{"error": "unknown_tool", ...}``; any other exception to
+    ``{"error": "tool_error", "detail": ...}``. The full stack trace is
+    logged on the server, never surfaced to the client.
+    """
+    try:
+        return dispatch_tool(call.name, call.arguments)
+    except KeyError:
+        return {"error": "unknown_tool", "name": call.name}
+    except Exception as exc:
+        # The agentic loop must absorb tool failures — a single buggy tool
+        # shouldn't kill the user-facing stream. Log the full trace
+        # server-side, surface a generic error result the model can
+        # apologise / retry on.
+        logger.exception("Tool %s failed during agentic loop", repr(call.name))
+        return {"error": "tool_error", "detail": str(exc)}
+
+
+def _record_tool_outcome(
+    history: list[ProviderMessage],
+    call: ToolCallChunk,
+    result: dict[str, Any],
+) -> None:
+    """Append a ``tool`` message describing *call*'s outcome to *history*.
+
+    The provider re-reads this on the next iteration of the agentic
+    loop to decide whether it needs more tool calls or can answer.
+    """
+    history.append(
+        ProviderMessage(
+            role="tool",
+            content=json.dumps(result, ensure_ascii=False, default=str),
+            tool_call_id=call.call_id,
+            name=call.name,
+        )
+    )
+
+
 def _thread_history(thread: ChatThread) -> list[ProviderMessage]:
     """Convert a thread's persisted messages to provider input.
 
@@ -191,15 +267,7 @@ async def stream_chat_reply(
     """
     # 1. Persist the user turn first so a crash during streaming doesn't
     #    swallow the user's question.
-    user_message = ChatMessage(
-        thread_id=thread.id,
-        role="user",
-        content=user_message_content,
-    )
-    session.add(user_message)
-    # Don't bump updated_at yet — the assistant turn will, and we want
-    # the thread to surface in the rail under the latest activity.
-    session.commit()
+    _persist_user_turn(session, thread, user_message_content)
 
     # 2. Resolve provider + assemble context.
     try:
@@ -210,7 +278,7 @@ async def stream_chat_reply(
         yield format_sse(SseEvent.DONE, {})
         return
 
-    # Refresh so the in-session ``user_message`` shows up in history.
+    # Refresh so the freshly persisted user turn shows up in history.
     session.refresh(thread)
     history = _thread_history(thread)
 
@@ -247,23 +315,10 @@ async def stream_chat_reply(
             if not pending_calls or finish_reason == "stop":
                 break
             for call in pending_calls:
-                try:
-                    result = dispatch_tool(call.name, call.arguments)
-                except KeyError:
-                    result = {"error": "unknown_tool", "name": call.name}
-                except Exception as exc:
-                    logger.exception("Tool %s failed during agentic loop", repr(call.name))
-                    result = {"error": "tool_error", "detail": str(exc)}
+                result = _run_tool_call(call)
                 for citation in _extract_citations(result):
                     yield format_sse(SseEvent.SOURCE, citation)
-                history.append(
-                    ProviderMessage(
-                        role="tool",
-                        content=json.dumps(result, ensure_ascii=False, default=str),
-                        tool_call_id=call.call_id,
-                        name=call.name,
-                    )
-                )
+                _record_tool_outcome(history, call, result)
     except ChatProviderError as exc:
         # Both `provider_key` (from `split_model_id(body.model)`) and
         # `exc` (built by the provider wrapping the original SDK error)
@@ -298,18 +353,8 @@ async def stream_chat_reply(
         logger.exception("Unexpected error during chat stream")
         yield format_sse(SseEvent.ERROR, {"detail": "Internal error during chat stream"})
 
-    # 4. Persist whatever we got. Empty replies still get a row so the
-    #    UI doesn't render a "ghost turn"; the assistant row's empty
-    #    content tells the rail "nothing to show here".
-    assistant_content = "".join(assistant_chunks)
-    assistant_message = ChatMessage(
-        thread_id=thread.id,
-        role="assistant",
-        content=assistant_content,
-    )
-    session.add(assistant_message)
-    thread.updated_at = datetime.now(UTC)
-    session.add(thread)
-    session.commit()
+    # 4. Persist whatever we got. Even an empty reply gets a row so the
+    #    UI doesn't render a "ghost turn".
+    _persist_assistant_turn(session, thread, "".join(assistant_chunks))
 
     yield format_sse(SseEvent.DONE, {})
