@@ -119,9 +119,16 @@ jobs:
         if: steps.changes.outputs.backend == 'true'
         run: uv sync --all-extras --frozen
 
+      # Parallel pytest with xdist. ``-n auto`` spawns one worker per
+      # logical core (2 on GitHub-hosted ubuntu-latest). ``--dist=loadfile``
+      # keeps every test in a given file on the same worker so module-
+      # level fixtures (singleton settings cache, audit-log singleton,
+      # ``LEXFLOW_CONFIG_DIR`` env overrides) stay isolated within files
+      # instead of racing across workers. ``-q`` because the per-worker
+      # interleaved output of ``-v`` is unreadable in CI logs.
       - name: Run tests
         if: steps.changes.outputs.backend == 'true'
-        run: uv run pytest -v
+        run: uv run pytest -q -n auto --dist=loadfile
 
   lint:
     name: lint

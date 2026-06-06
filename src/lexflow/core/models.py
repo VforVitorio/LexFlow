@@ -48,6 +48,14 @@ class Reference(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+# Audit #409 perf: pre-lower the prefixes once at module scope so
+# ``Article.normalize_number`` doesn't call ``.lower()`` per article.
+_ARTICLE_PREFIXES_LOWER: tuple[tuple[str, str], ...] = (
+    ("Artículo", "artículo"),
+    ("Articulo", "articulo"),
+)
+
+
 class Article(BaseModel):
     """A single article within a law."""
 
@@ -73,11 +81,20 @@ class Article(BaseModel):
     @field_validator("number")
     @classmethod
     def normalize_number(cls, v: str) -> str:
-        """Strip whitespace and any leading 'Articulo' prefix."""
+        """Strip whitespace and any leading 'Articulo' prefix.
+
+        Audit #409 perf: pre-lower the prefixes once at module scope and
+        compute ``cleaned_lower`` a single time per call; the validator
+        runs once per article during the cold parse of every law so the
+        recomputation across 12 k laws was wasteful. ``break`` after the
+        match so we don't re-test the second prefix unnecessarily.
+        """
         cleaned = v.strip()
-        for prefix in ("Artículo", "Articulo"):
-            if cleaned.lower().startswith(prefix.lower()):
+        cleaned_lower = cleaned.lower()
+        for prefix, prefix_lower in _ARTICLE_PREFIXES_LOWER:
+            if cleaned_lower.startswith(prefix_lower):
                 cleaned = cleaned[len(prefix) :].strip()
+                break
         return cleaned.rstrip(".")
 
 

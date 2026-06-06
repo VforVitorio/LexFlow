@@ -42,7 +42,19 @@ class LawRegistry:
         self._metadata_cache: dict[str, LawMetadata] = {}
         self._search_index = SearchIndex()
         self._lock = Lock()
+        # Audit #409 perf: cache the sorted id list and the summary list
+        # so hot endpoints (``/laws`` pagination, ``/tags``, dashboards)
+        # don't re-sort + re-materialise 12 k Pydantic models per
+        # request. Invalidated by every mutation site (``_build_index``,
+        # ``_forget_law``, ``_reindex_law``).
+        self._sorted_ids: list[str] | None = None
+        self._summaries: list[LawSummary] | None = None
         self._build_index()
+
+    def _invalidate_index_caches(self) -> None:
+        """Drop derived caches keyed on the current ``self._index`` shape."""
+        self._sorted_ids = None
+        self._summaries = None
 
     # ------------------------------------------------------------------
     # Index construction
@@ -105,8 +117,16 @@ class LawRegistry:
 
     @property
     def law_ids(self) -> list[str]:
-        """All known law identifiers, sorted."""
-        return sorted(self._index)
+        """All known law identifiers, sorted.
+
+        Cached so hot consumers don't re-sort 12 k keys on every call.
+        Returned list is fresh per access to keep callers from mutating
+        the cached state.
+        """
+        with self._lock:
+            if self._sorted_ids is None:
+                self._sorted_ids = sorted(self._index)
+            return list(self._sorted_ids)
 
     @property
     def total_count(self) -> int:
@@ -264,6 +284,7 @@ class LawRegistry:
         for path in list_law_files(self._data_path):
             new_index[law_id_from_path(path)] = path
         self._index = new_index
+        self._invalidate_index_caches()
         logger.info("Law index refreshed: %d files in %s", len(new_index), self._data_path)
 
     def _forget_law(self, law_id: str) -> None:
@@ -271,6 +292,7 @@ class LawRegistry:
         self._index.pop(law_id, None)
         self._cache.pop(law_id, None)
         self._metadata_cache.pop(law_id, None)
+        self._invalidate_index_caches()
         if self._search_index.is_built:
             self._search_index.remove_entries_for_law(law_id)
 
@@ -278,6 +300,7 @@ class LawRegistry:
         """Re-parse a new/modified law and refresh its caches + search entries."""
         self._cache.pop(law_id, None)
         self._metadata_cache.pop(law_id, None)
+        self._invalidate_index_caches()
         self._ensure_metadata(law_id)
         if self._search_index.is_built:
             self._search_index.remove_entries_for_law(law_id)
@@ -301,7 +324,18 @@ class LawRegistry:
             return sorted(self._index)
 
     def _build_summaries(self) -> list[LawSummary]:
-        """Build LawSummary objects for all indexed laws."""
+        """Build LawSummary objects for all indexed laws.
+
+        Audit #409 perf: previously materialised 12 k Pydantic models
+        on every ``GET /laws`` request (and again on every dashboard
+        scan). Cache the list and invalidate on every index mutation
+        (``_refresh_index`` / ``_forget_law`` / ``_reindex_law``). The
+        cached list is returned by reference — callers must not mutate
+        it (``list_laws`` flows it through ``apply_law_filters`` which
+        already returns a fresh list).
+        """
+        if self._summaries is not None:
+            return self._summaries
         summaries: list[LawSummary] = []
         for law_id in self._snapshot_law_ids():
             meta = self._ensure_metadata(law_id)
@@ -318,6 +352,7 @@ class LawRegistry:
                     jurisdiction=meta.jurisdiction.value if meta.jurisdiction else None,
                 )
             )
+        self._summaries = summaries
         return summaries
 
     def _build_search_index(self) -> None:

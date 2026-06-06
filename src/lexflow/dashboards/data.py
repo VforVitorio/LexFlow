@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -75,23 +76,33 @@ class DashboardPayload(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _publication_years(registry: LawRegistry) -> list[int]:
-    """Return the publication year of every law that has one."""
+@dataclass(frozen=True)
+class _CorpusAggregate:
+    """Single-pass aggregate of the corpus metadata used by the dashboards.
+
+    Audit #409 perf: each call to ``/dashboards/<preset>`` used to walk
+    the 12 k-law metadata cache 3-4 times (publication years twice,
+    status counts, rank counts). One pass + a small dataclass keeps the
+    helpers below cheap to call independently.
+    """
+
+    publication_years: list[int]
+    status_counts: Counter[LawStatus]
+    rank_counts: Counter[str]
+
+
+def _aggregate_corpus(registry: LawRegistry) -> _CorpusAggregate:
+    """Walk the metadata cache exactly once and accumulate everything."""
     years: list[int] = []
+    statuses: Counter[LawStatus] = Counter()
+    ranks: Counter[str] = Counter()
     for law_id in registry.law_ids:
         meta = registry.get_metadata(law_id)
         if meta.publication_date:
             years.append(meta.publication_date.year)
-    return years
-
-
-def _status_counts(registry: LawRegistry) -> Counter[LawStatus]:
-    """Tally laws by status — drives the compliance KPI cards."""
-    counts: Counter[LawStatus] = Counter()
-    for law_id in registry.law_ids:
-        meta = registry.get_metadata(law_id)
-        counts[meta.status] += 1
-    return counts
+        statuses[meta.status] += 1
+        ranks[meta.rank.value] += 1
+    return _CorpusAggregate(publication_years=years, status_counts=statuses, rank_counts=ranks)
 
 
 def _series_window(years: Iterable[int]) -> DashboardSeries:
@@ -135,9 +146,9 @@ def _spark_tail(values: list[float]) -> list[float]:
 # ---------------------------------------------------------------------------
 
 
-def _compliance_cards(registry: LawRegistry, spark: list[float]) -> list[MetricCardPayload]:
+def _compliance_cards(aggregate: _CorpusAggregate, spark: list[float]) -> list[MetricCardPayload]:
     """Compliance preset: 3 cards anchored on the status distribution."""
-    counts = _status_counts(registry)
+    counts = aggregate.status_counts
     # LawStatus values, per ``src/lexflow/core/enums.py``: in_force,
     # repealed, partially_repealed, pending. We map "modificada" to the
     # partially-repealed bucket since the SPA uses three logical statuses
@@ -175,15 +186,12 @@ def _compliance_cards(registry: LawRegistry, spark: list[float]) -> list[MetricC
     ]
 
 
-def _analytics_cards(registry: LawRegistry, spark: list[float]) -> list[MetricCardPayload]:
+def _analytics_cards(registry: LawRegistry, aggregate: _CorpusAggregate, spark: list[float]) -> list[MetricCardPayload]:
     """Analytics preset: 3 cards on volume + reform pace."""
-    total = registry.total_count or len(list(registry.law_ids))
-    years = _publication_years(registry)
+    total = registry.total_count or len(aggregate.publication_years)
+    years = aggregate.publication_years
     avg_per_year = round(sum(spark) / len(spark), 1) if spark else 0.0
-    rank_count = Counter[str]()
-    for law_id in registry.law_ids:
-        meta = registry.get_metadata(law_id)
-        rank_count[meta.rank.value] += 1
+    rank_count = aggregate.rank_counts
     top_rank, top_n = rank_count.most_common(1)[0] if rank_count else ("—", 0)
     return [
         MetricCardPayload(
@@ -223,13 +231,13 @@ def build_dashboard_payload(registry: LawRegistry, preset: str) -> DashboardPayl
     Raises :class:`ValueError` for unknown preset names; the router maps
     that to a 404.
     """
-    years = _publication_years(registry)
-    series = _series_window(years)
+    aggregate = _aggregate_corpus(registry)
+    series = _series_window(aggregate.publication_years)
     spark = _spark_tail(series.values)
     if preset == "compliance":
-        cards = _compliance_cards(registry, spark)
+        cards = _compliance_cards(aggregate, spark)
     elif preset == "analytics":
-        cards = _analytics_cards(registry, spark)
+        cards = _analytics_cards(registry, aggregate, spark)
     else:
         raise ValueError(f"Unknown dashboard preset: {preset!r}")
     return DashboardPayload(preset=preset, cards=cards, series=series)

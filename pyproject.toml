@@ -126,3 +126,8 @@ ignore_missing_imports = true
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "-v --tb=short"
+
+[dependency-groups]
+dev = [
+    "pytest-xdist>=3.8.0",
+]
