@@ -11,6 +11,7 @@ fire-and-forget telemetry call. Persistence is gated by the env var.
 from __future__ import annotations
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -121,3 +122,61 @@ class TestIngest:
         oversized = {"events": [{"name": "page_view", "props": {}} for _ in range(51)]}
         response = client.post("/api/v1/telemetry/events", json=oversized)
         assert response.status_code == 422
+
+
+class TestRetentionPruning:
+    """Retention cleanup for daily JSONL files (Track 1.3)."""
+
+    def _seed(self, root: Path, days_ago: list[int], today: date) -> list[Path]:
+        from datetime import timedelta
+
+        directory = root / "telemetry"
+        directory.mkdir(parents=True, exist_ok=True)
+        files: list[Path] = []
+        for delta in days_ago:
+            day = today - timedelta(days=delta)
+            target = directory / f"{day.isoformat()}.jsonl"
+            target.write_text('{"ts":"x","name":"y","props":{}}\n', encoding="utf-8")
+            files.append(target)
+        return files
+
+    def test_prunes_only_files_older_than_window(self, _isolated_config_dir: Path) -> None:
+        from lexflow.core.telemetry import prune_old_files
+
+        today = date(2026, 6, 6)
+        # 35 days ago should be pruned; 29 days ago and 0 days ago kept.
+        old, edge, fresh = self._seed(_isolated_config_dir, [35, 29, 0], today)
+        deleted = prune_old_files(30, today=today)
+        assert deleted == 1
+        assert not old.exists()
+        assert edge.exists()
+        assert fresh.exists()
+
+    def test_zero_retention_disables_pruning(self, _isolated_config_dir: Path) -> None:
+        from lexflow.core.telemetry import prune_old_files
+
+        today = date(2026, 6, 6)
+        (very_old,) = self._seed(_isolated_config_dir, [365], today)
+        assert prune_old_files(0, today=today) == 0
+        assert very_old.exists()
+
+    def test_ignores_unrelated_files(self, _isolated_config_dir: Path) -> None:
+        from lexflow.core.telemetry import prune_old_files
+
+        today = date(2026, 6, 6)
+        directory = _isolated_config_dir / "telemetry"
+        directory.mkdir(parents=True, exist_ok=True)
+        # Files that don't match the YYYY-MM-DD.jsonl shape stay intact.
+        manual = directory / "manual-export.jsonl"
+        debug = directory / "2026-13-99.jsonl"  # syntactically date-like but invalid
+        manual.write_text("noise\n", encoding="utf-8")
+        debug.write_text("noise\n", encoding="utf-8")
+        assert prune_old_files(30, today=today) == 0
+        assert manual.exists()
+        assert debug.exists()
+
+    def test_missing_directory_returns_zero(self, _isolated_config_dir: Path) -> None:
+        from lexflow.core.telemetry import prune_old_files
+
+        # Fresh config dir → no telemetry directory at all yet.
+        assert prune_old_files(30, today=date(2026, 6, 6)) == 0
