@@ -34,7 +34,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
+import shutil
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -80,20 +83,15 @@ class BundleManifest(BaseModel):
     command: McpServerCommand
 
 
-def install_bundle(bundle_path: Path, config_dir: Path) -> UserMcpServerEntry:
-    """Install ``bundle_path`` under ``config_dir`` and return the entry.
+def read_bundle_manifest(bundle_path: Path) -> BundleManifest:
+    """Open ``bundle_path``, validate it as a zip, and return its manifest.
 
-    The caller is expected to:
-    1. Have already written the upload to ``bundle_path``.
-    2. Persist the returned :class:`UserMcpServerEntry` via the
-       existing ``mcp.json`` storage (see
-       :mod:`lexflow.mcp_servers.config`).
-
-    Raises :class:`BundleError` on any validation / extraction
-    failure. The destination directory is left in a consistent state:
-    we extract to a temporary dir alongside the target and rename
-    only after the manifest validates, so a half-failed install
-    doesn't leave a corrupt bundle behind.
+    Splitting this out of :func:`install_bundle` lets the caller make a
+    name-conflict decision BEFORE we touch the persistent
+    ``mcp-bundles/`` tree. Reading just the manifest is cheap (one
+    ``ZipFile.read`` on a small JSON entry); we keep the size-cap
+    validation here so a crafted multi-gigabyte zip can't tank the
+    health check.
     """
     if not bundle_path.is_file():
         raise BundleError(f"Bundle file not found: {bundle_path}")
@@ -104,9 +102,48 @@ def install_bundle(bundle_path: Path, config_dir: Path) -> UserMcpServerEntry:
     with archive:
         manifest = _read_manifest(archive)
         _validate_total_size(archive)
-        bundles_root = config_dir / BUNDLES_DIRNAME
-        destination = bundles_root / _sanitise_name(manifest.name)
-        _safe_extract(archive, destination)
+    return manifest
+
+
+def install_bundle(bundle_path: Path, config_dir: Path) -> UserMcpServerEntry:
+    """Install ``bundle_path`` under ``config_dir`` and return the entry.
+
+    Audit #409 — earlier behaviour extracted the zip in-place and
+    silently overwrote an existing bundle's files when the manifest
+    name collided, only to then return 409 to the caller. We now:
+
+    1. Read + validate the manifest (no disk writes yet).
+    2. Sanitise the name and check the final install dir does NOT
+       already exist; raise ``BundleError`` (mapped to 409 at the
+       router boundary) so the caller can short-circuit cleanly.
+    3. Extract to a temp directory alongside the target.
+    4. ``os.replace`` the temp directory into place atomically only
+       after extraction succeeds.
+
+    A half-failed install never leaves a corrupt bundle behind, and a
+    name collision is impossible to mask — the install never starts.
+    """
+    manifest = read_bundle_manifest(bundle_path)
+    bundles_root = config_dir / BUNDLES_DIRNAME
+    destination = bundles_root / _sanitise_name(manifest.name)
+    if destination.exists():
+        raise BundleError(f"Bundle directory {destination.name!r} already exists; remove it first")
+
+    bundles_root.mkdir(parents=True, exist_ok=True)
+    # Stage extraction under a sibling temp directory so a failure mid-
+    # extraction leaves nothing behind at the canonical install path.
+    # ``tempfile.mkdtemp`` returns an absolute path; ``destination``'s
+    # parent stays the same prefix so ``os.replace`` is a same-filesystem
+    # atomic rename on every supported platform.
+    staging = Path(tempfile.mkdtemp(prefix=".incoming-", dir=str(bundles_root)))
+    try:
+        with zipfile.ZipFile(bundle_path) as archive:
+            _safe_extract(archive, staging)
+        os.replace(staging, destination)
+    except BaseException:
+        # Best-effort rollback — never raise from the cleanup branch.
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
     return _manifest_to_entry(manifest, destination)
 
 

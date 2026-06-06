@@ -41,8 +41,15 @@ class PaginatedResponse(BaseModel, Generic[T]):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def has_previous(self) -> bool:
-        """Whether there is a previous page."""
-        return self.page > 1
+        """Whether there is a previous page.
+
+        Audit #409: the old definition (``self.page > 1``) returned
+        ``True`` for any out-of-range page (e.g. ``page=500`` with
+        ``total_pages=5``), so the SPA pager rendered "previous-only"
+        controls for non-existent pages. We now require the page to
+        be in range, matching ``has_next``'s symmetric definition.
+        """
+        return 1 < self.page <= self.total_pages
 
 
 # ---------------------------------------------------------------------------

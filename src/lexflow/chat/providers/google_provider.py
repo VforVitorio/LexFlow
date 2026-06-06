@@ -55,4 +55,8 @@ class GoogleProvider(ChatProvider):
                 if chunk.text:
                     yield chunk.text
         except Exception as exc:
-            raise ChatProviderError(f"Google Gemini error: {exc}") from exc
+            # Audit #409: Gemini SDK errors can include the API key in
+            # the URL portion of the message. Static client-facing
+            # message; original ``exc`` preserved as ``__cause__`` for
+            # server-side logging.
+            raise ChatProviderError("Google Gemini error") from exc
