@@ -53,7 +53,11 @@ class _MemoryProbe(BaseModel):
 
 
 class _DiskProbe(BaseModel):
-    path: str
+    # Audit #409: `path` used to be `str(data_path)` which leaked the
+    # OS username + arbitrary local layout. We now expose only the
+    # mount root, enough for the operator to reason about disk fill
+    # without doubling as recon for a directory-traversal attacker.
+    mount: str
     total_gb: float
     used_gb: float
     free_gb: float
@@ -103,8 +107,13 @@ def _probe_disk(data_path: Path) -> _DiskProbe:
     total = usage.total
     used = usage.used
     free = usage.free
+    # Compute the mount root for `mount` reporting. ``Path.anchor`` is
+    # the drive on Windows (``C:\``) and ``/`` on Unix — enough for the
+    # operator while keeping the rest of the local filesystem layout
+    # private. See `_DiskProbe.mount` docstring.
+    mount = target.anchor or "/"
     return _DiskProbe(
-        path=str(target),
+        mount=mount,
         total_gb=round(total / _BYTES_PER_GB, 2),
         used_gb=round(used / _BYTES_PER_GB, 2),
         free_gb=round(free / _BYTES_PER_GB, 2),
@@ -113,8 +122,17 @@ def _probe_disk(data_path: Path) -> _DiskProbe:
 
 
 def _probe_corpus(data_path: Path) -> _CorpusProbe:
-    """Submodule presence + how many laws are currently in the registry."""
-    submodule_present = data_path.exists() and any(data_path.iterdir()) if data_path.exists() else False
+    """Submodule presence + how many laws are currently in the registry.
+
+    Audit #409: a misconfigured ``LEXFLOW_DATA_PATH`` pointing at a
+    regular file used to crash ``iterdir()`` with
+    ``NotADirectoryError`` and propagate a 500 — the exact opposite of
+    a health endpoint's "always answer" invariant. Using ``is_dir()``
+    as the guard short-circuits cleanly for both files and dangling
+    symlinks; the operator sees ``submodule_present: false`` and can
+    triage from there.
+    """
+    submodule_present = data_path.is_dir() and any(data_path.iterdir())
     laws_indexed = 0
     try:
         from lexflow.core.registry import get_registry

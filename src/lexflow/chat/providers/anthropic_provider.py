@@ -61,6 +61,9 @@ class AnthropicProvider(ChatProvider):
                 async for text in stream.text_stream:
                     yield text
         except anthropic.RateLimitError as exc:
-            raise ChatProviderError(f"Anthropic rate limit exceeded: {exc}") from exc
+            # Audit #409: SDK exception body may carry a partial key or
+            # workspace id. Use a static message; the original ``exc``
+            # remains the ``__cause__`` for server-side logs.
+            raise ChatProviderError("Anthropic rate limit exceeded") from exc
         except anthropic.AuthenticationError as exc:
-            raise ChatProviderError(f"Anthropic authentication failed: {exc}") from exc
+            raise ChatProviderError("Anthropic authentication failed") from exc

@@ -35,9 +35,14 @@ class OpenAIProvider(ChatProvider):
             response = await self._client.models.list()
             return sorted(m.id for m in response.data if m.id.startswith("gpt"))
         except openai.AuthenticationError as exc:
-            raise ChatProviderError(f"OpenAI authentication failed: {exc}") from exc
+            # Audit #409: SDK exception string can include the partially
+            # echoed API key and organisation id. Keep the client-
+            # facing message static; the original ``exc`` is still the
+            # ``__cause__`` so the streaming layer logs the full body
+            # server-side via ``logger.exception``.
+            raise ChatProviderError("OpenAI authentication failed") from exc
         except openai.RateLimitError as exc:
-            raise ChatProviderError(f"OpenAI rate limit exceeded: {exc}") from exc
+            raise ChatProviderError("OpenAI rate limit exceeded") from exc
 
     async def stream_chat(
         self,
@@ -60,6 +65,11 @@ class OpenAIProvider(ChatProvider):
                 if delta and delta.content:
                     yield delta.content
         except openai.AuthenticationError as exc:
-            raise ChatProviderError(f"OpenAI authentication failed: {exc}") from exc
+            # Audit #409: SDK exception string can include the partially
+            # echoed API key and organisation id. Keep the client-
+            # facing message static; the original ``exc`` is still the
+            # ``__cause__`` so the streaming layer logs the full body
+            # server-side via ``logger.exception``.
+            raise ChatProviderError("OpenAI authentication failed") from exc
         except openai.RateLimitError as exc:
-            raise ChatProviderError(f"OpenAI rate limit exceeded: {exc}") from exc
+            raise ChatProviderError("OpenAI rate limit exceeded") from exc
