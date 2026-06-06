@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.38.0](https://github.com/VforVitorio/LexFlow/compare/v0.37.0...v0.38.0) (2026-06-06)
+
+
+### Features
+
+* **telemetry:** fire page_view through the two-gate model ([1c4d20b](https://github.com/VforVitorio/LexFlow/commit/1c4d20b0cc32481f71a9578d39dfdadd77ae1d2b))
+
 ## [0.37.0](https://github.com/VforVitorio/LexFlow/compare/v0.36.3...v0.37.0) (2026-06-06)
 
 
