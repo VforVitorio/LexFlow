@@ -24,6 +24,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/laws/search/semantic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Semantic search over the corpus's articles (#43).
+         * @description Rank articles by cosine similarity to the query embedding.
+         *
+         *     The index is built lazily on the first call (one embed pass over
+         *     every article in the corpus). Subsequent queries reuse the
+         *     cached vectors. After a ``POST /sync`` triggers a corpus refresh,
+         *     the sync router calls ``reset_semantic_index`` so the next query
+         *     rebuilds against the new data.
+         *
+         *     Out of scope of this endpoint (separate follow-ups):
+         *       * Hybrid ranking that combines this with ``/laws/search``.
+         *       * Cross-encoder re-ranking on the top-K.
+         *       * The real embedder (today's ``HashEmbedder`` is a placeholder;
+         *         see ``search/embeddings.py``).
+         */
+        get: operations["search_semantic_api_v1_laws_search_semantic_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -81,6 +113,31 @@ export interface paths {
          * @description Return the complete parsed representation of a law.
          */
         get: operations["get_law_api_v1_laws__law_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/laws/{law_id}/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get just the cross-references for a law (#96)
+         * @description Return just the cross-references for ``law_id``.
+         *
+         *     The legacy path was for the frontend to call ``/laws/{id}`` and
+         *     filter ``articles[].references`` client-side — that transferred
+         *     the entire law body (often MB) just to read a few KB of refs.
+         *     This endpoint returns only what's needed.
+         */
+        get: operations["get_law_references_api_v1_laws__law_id__references_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -168,6 +225,30 @@ export interface paths {
          * @description Return the unified diff between two versions of a law.
          */
         get: operations["get_diff_api_v1_laws__law_id__diff_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Global Graph
+         * @description Return the whole graph (no seed) — Obsidian-style corpus view (#146).
+         *
+         *     Walk every node, apply the metadata filters, optionally truncate to
+         *     the top-``limit`` by PageRank, and return the induced subgraph (only
+         *     edges where both endpoints survived the filter+truncate pass).
+         */
+        get: operations["get_global_graph_api_v1_graph_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -588,6 +669,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Extended health snapshot — memory, disk, corpus, chat DB (#74).
+         * @description Return a structured health snapshot.
+         *
+         *     Unlike the unprefixed ``/health`` (which stays a one-liner for cheap
+         *     liveness probes), this endpoint runs the full set of probes. Aimed
+         *     at the Settings → Diagnostics panel and external ops dashboards.
+         */
+        get: operations["get_system_health_api_v1_system_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tags": {
         parameters: {
             query?: never;
@@ -668,6 +773,167 @@ export interface paths {
         patch: operations["patch_server_api_v1_mcp_servers__name__patch"];
         trace?: never;
     };
+    "/api/v1/mcp/tools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List every tool exposed by attached external MCP servers (#121).
+         * @description Merged catalogue across every enabled MCP server.
+         *
+         *     Built-in LexFlow tools (``search_law`` etc.) are NOT included
+         *     here — they live in-process and the agentic loop dispatches them
+         *     directly. This endpoint is the discovery surface for external
+         *     servers (``fetch``, ``filesystem``, ``mcp-pandoc``, ``boe-mcp``,
+         *     plus anything the user added in Settings).
+         *
+         *     A server that fails to connect or list tools is silently skipped
+         *     — the catalogue degrades to whatever did respond. The originating
+         *     server is preserved on each item so the SPA can render badges
+         *     and the agentic loop can route dispatches.
+         */
+        get: operations["list_mcp_tools_api_v1_mcp_tools_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mcp/bundles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Install a .mcpb bundle (Anthropic Desktop Extensions, #123).
+         * @description Accept a ``.mcpb`` upload, extract + validate, then persist.
+         *
+         *     Wire contract:
+         *       * multipart upload, single ``file`` field.
+         *       * 201 + the new ``McpServerView`` on success.
+         *       * 409 if the manifest's ``name`` clashes with a built-in or an
+         *         existing user entry.
+         *       * 400 with ``{"code": ..., "message": ...}`` for any bundle
+         *         validation failure (bad zip, missing manifest, oversize, …).
+         *
+         *     The bundle is staged to a temp file first so a too-big upload
+         *     can be rejected without touching the persistent ``mcp-bundles/``
+         *     tree. Only after validation do we move the contents into place
+         *     and append the entry to ``mcp.json``.
+         */
+        post: operations["install_mcp_bundle_api_v1_mcp_bundles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/secrets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List which cloud providers have a key configured (#120).
+         * @description Report which providers are configured without exposing the keys.
+         */
+        get: operations["list_secrets_api_v1_secrets_get"];
+        put?: never;
+        /**
+         * Store an API key for a cloud provider in the OS keyring (#120).
+         * @description Save ``body.api_key`` for ``body.provider`` in the keyring.
+         */
+        post: operations["create_secret_api_v1_secrets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/secrets/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a stored API key (#120). Idempotent.
+         * @description Remove ``provider``'s key from the keyring.
+         *
+         *     Idempotent — deleting a key that wasn't there still returns 204
+         *     (matches the Sprint 5 api-3 audit fix on chat threads). The env
+         *     var is NOT cleared; it lives outside our control.
+         */
+        delete: operations["delete_secret_api_v1_secrets__provider__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/telemetry/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Does the backend currently persist telemetry events?
+         * @description Return the live backend opt-in state.
+         *
+         *     The SPA reads this on boot to decide whether to show the privacy
+         *     toggle as available — if the env knob is unset the operator hasn't
+         *     enabled it server-side, so even an opt-in user wouldn't generate
+         *     any events.
+         */
+        get: operations["get_status_api_v1_telemetry_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/telemetry/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a batch of telemetry events (silently dropped when disabled).
+         * @description Accept a batch; persist only when the backend gate is on.
+         *
+         *     Returns 202 either way — the frontend doesn't need to branch on the
+         *     server's gate, and we don't want telemetry firing to surface as an
+         *     error in the UI's request log.
+         */
+        post: operations["ingest_events_api_v1_telemetry_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -728,6 +994,11 @@ export interface components {
             /** Law Title */
             law_title: string;
             article: components["schemas"]["Article"];
+        };
+        /** Body_install_mcp_bundle_api_v1_mcp_bundles_post */
+        Body_install_mcp_bundle_api_v1_mcp_bundles_post: {
+            /** File */
+            file: string;
         };
         /**
          * ChatMessageCreate
@@ -928,6 +1199,10 @@ export interface components {
         /**
          * GraphEdgeData
          * @description Edge representation for subgraph responses.
+         *
+         *     ``kind`` carries the relationship type (cites / modifies / repeals /
+         *     develops, #144). Older cached graphs that pre-date the typing
+         *     surface ``None`` here — the frontend treats it as ``cites``.
          */
         GraphEdgeData: {
             /** Source */
@@ -936,6 +1211,24 @@ export interface components {
             target: string;
             /** Source Article */
             source_article?: string | null;
+            /** Kind */
+            kind?: string | null;
+        };
+        /**
+         * GraphGlobalResponse
+         * @description Response for the global graph endpoint (#146).
+         *
+         *     Same shape as ``GraphSubgraphResponse`` plus ``total_available``,
+         *     which carries the number of nodes that matched the filters BEFORE
+         *     ``limit`` truncated. Lets the SPA show "showing N of M laws".
+         */
+        GraphGlobalResponse: {
+            /** Nodes */
+            nodes: components["schemas"]["GraphNodeData"][];
+            /** Edges */
+            edges: components["schemas"]["GraphEdgeData"][];
+            /** Total Available */
+            total_available: number;
         };
         /**
          * GraphNeighborsResponse
@@ -1032,6 +1325,22 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * HealthSnapshot
+         * @description Wire format for ``GET /api/v1/system/health``.
+         */
+        HealthSnapshot: {
+            /** Status */
+            status: string;
+            /** Version */
+            version: string;
+            /** Uptime Seconds */
+            uptime_seconds: number;
+            memory: components["schemas"]["_MemoryProbe"];
+            disk: components["schemas"]["_DiskProbe"];
+            corpus: components["schemas"]["_CorpusProbe"];
+            chat_db: components["schemas"]["_ChatDbProbe"];
         };
         /**
          * Jurisdiction
@@ -1147,6 +1456,22 @@ export interface components {
          * @enum {string}
          */
         LawRank: "ley" | "ley_organica" | "real_decreto" | "real_decreto_ley" | "real_decreto_legislativo" | "decreto_legislativo" | "orden" | "otro";
+        /**
+         * LawReferencesResponse
+         * @description References for a single law (#96).
+         *
+         *     Returned by ``GET /api/v1/laws/{law_id}/references``. Wrapped in an
+         *     object (rather than a bare ``list[Reference]``) per the Sprint 6
+         *     api-6 convention — leaves room for future metadata fields (e.g.
+         *     pagination once a law's reference set grows) without breaking the
+         *     client.
+         */
+        LawReferencesResponse: {
+            /** References */
+            references: components["schemas"]["Reference"][];
+            /** Total */
+            total: number;
+        };
         /**
          * LawStatus
          * @description Current enforcement status of a legal norm.
@@ -1297,6 +1622,28 @@ export interface components {
             enabled: boolean;
             /** Docs Url */
             docs_url?: string | null;
+        };
+        /**
+         * McpToolListResponse
+         * @description Wrapper around the merged catalogue (per Sprint 6 api-6).
+         */
+        McpToolListResponse: {
+            /** Items */
+            items: components["schemas"]["McpToolView"][];
+        };
+        /**
+         * McpToolView
+         * @description One tool surfaced by an attached external MCP server.
+         */
+        McpToolView: {
+            /** Server Name */
+            server_name: string;
+            /** Name */
+            name: string;
+            /** Qualified Name */
+            qualified_name: string;
+            /** Description */
+            description: string;
         };
         /**
          * MetricCardPayload
@@ -1450,7 +1797,22 @@ export interface components {
              * @description Article number where this reference appears.
              */
             source_article?: string | null;
+            /**
+             * @description Relationship type inferred from the citation context (#144).
+             * @default cites
+             */
+            kind: components["schemas"]["ReferenceKind"];
         };
+        /**
+         * ReferenceKind
+         * @description How one law relates to another via a cross-reference (#144).
+         *
+         *     Heuristically inferred from the textual context immediately preceding
+         *     the citation. ``CITES`` is the fallback when no stronger marker shows
+         *     up — the vast majority of references in the corpus are plain cites.
+         * @enum {string}
+         */
+        ReferenceKind: "cites" | "modifies" | "repeals" | "develops";
         /**
          * Scope
          * @description Territorial scope of a legal norm.
@@ -1509,6 +1871,48 @@ export interface components {
             score: number;
         };
         /**
+         * SecretCreateRequest
+         * @description Inbound body for ``POST /secrets``.
+         *
+         *     ``api_key`` is on the wire only for the lifetime of this request —
+         *     never echoed back, never logged, persisted via keyring and dropped.
+         */
+        SecretCreateRequest: {
+            /**
+             * Provider
+             * @description One of: openai, anthropic, google.
+             */
+            provider: string;
+            /**
+             * Api Key
+             * @description The API key bytes to store.
+             */
+            api_key: string;
+        };
+        /**
+         * SecretStatusItem
+         * @description One provider's "is a key configured?" row.
+         *
+         *     ``provider`` is the canonical key name (``openai`` / ``anthropic``
+         *     / ``google``). ``configured`` collapses both env vars and keyring
+         *     presence into a single boolean — the UI shows the same green dot
+         *     regardless of source.
+         */
+        SecretStatusItem: {
+            /** Provider */
+            provider: string;
+            /** Configured */
+            configured: boolean;
+        };
+        /**
+         * SecretStatusResponse
+         * @description Object wrapper around the status list (per Sprint 6 api-6).
+         */
+        SecretStatusResponse: {
+            /** Items */
+            items: components["schemas"]["SecretStatusItem"][];
+        };
+        /**
          * Section
          * @description A structural section (Titulo, Capitulo, Seccion) within a law.
          *
@@ -1529,6 +1933,35 @@ export interface components {
             articles?: components["schemas"]["Article"][];
             /** Subsections */
             subsections?: components["schemas"]["Section"][];
+        };
+        /**
+         * SemanticSearchHit
+         * @description One row of a semantic-search response (#43).
+         *
+         *     Distinct from :class:`SearchResult` because the wire fields differ:
+         *     semantic hits expose a normalised cosine ``score`` in
+         *     ``[-1, 1]`` (rank-relative, not absolute), and they don't carry
+         *     text-match offsets — there's no literal substring to highlight.
+         */
+        SemanticSearchHit: {
+            /** Law Id */
+            law_id: string;
+            /** Article Number */
+            article_number: string;
+            /** Snippet */
+            snippet: string;
+            /** Score */
+            score: number;
+        };
+        /**
+         * SemanticSearchResponse
+         * @description Wrapper around the semantic-search hit list (Sprint 6 api-6).
+         */
+        SemanticSearchResponse: {
+            /** Query */
+            query: string;
+            /** Items */
+            items: components["schemas"]["SemanticSearchHit"][];
         };
         /**
          * SystemProfileResponse
@@ -1619,6 +2052,49 @@ export interface components {
             /** Items */
             items: components["schemas"]["TagCount"][];
         };
+        /**
+         * TelemetryBatch
+         * @description Inbound batch shape.
+         */
+        TelemetryBatch: {
+            /** Events */
+            events?: components["schemas"]["TelemetryEvent"][];
+        };
+        /**
+         * TelemetryEvent
+         * @description One inbound telemetry record.
+         *
+         *     ``name`` is a short event tag (``page_view``, ``palette_command``).
+         *     ``props`` carries the minimum context needed to make the event
+         *     useful. The model is intentionally permissive to keep the wire
+         *     contract stable as we add categories.
+         */
+        TelemetryEvent: {
+            /** Name */
+            name: string;
+            /** Props */
+            props?: {
+                [key: string]: unknown;
+            };
+        };
+        /**
+         * TelemetryIngestResponse
+         * @description Per-request ack — how many of the batch were actually persisted.
+         */
+        TelemetryIngestResponse: {
+            /** Accepted */
+            accepted: number;
+            /** Enabled */
+            enabled: boolean;
+        };
+        /**
+         * TelemetryStatus
+         * @description Status response for ``GET /api/v1/telemetry/status``.
+         */
+        TelemetryStatus: {
+            /** Enabled */
+            enabled: boolean;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1707,6 +2183,38 @@ export interface components {
         WhatsNewResponse: {
             corpus: components["schemas"]["WhatsNewCorpus"];
         };
+        /** _ChatDbProbe */
+        _ChatDbProbe: {
+            /** Reachable */
+            reachable: boolean;
+        };
+        /** _CorpusProbe */
+        _CorpusProbe: {
+            /** Submodule Present */
+            submodule_present: boolean;
+            /** Laws Indexed */
+            laws_indexed: number;
+        };
+        /** _DiskProbe */
+        _DiskProbe: {
+            /** Path */
+            path: string;
+            /** Total Gb */
+            total_gb: number;
+            /** Used Gb */
+            used_gb: number;
+            /** Free Gb */
+            free_gb: number;
+            /** Used Percent */
+            used_percent: number;
+        };
+        /** _MemoryProbe */
+        _MemoryProbe: {
+            /** Rss Mb */
+            rss_mb: number;
+            /** System Used Percent */
+            system_used_percent: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -1737,6 +2245,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_semantic_api_v1_laws_search_semantic_get: {
+        parameters: {
+            query: {
+                /** @description Natural-language query */
+                q: string;
+                /** @description Top-N hits by cosine similarity */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SemanticSearchResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1844,6 +2386,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LawDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_law_references_api_v1_laws__law_id__references_get: {
+        parameters: {
+            query?: {
+                /** @description If False (default), only references whose target_id resolves to a known law. If True, also includes raw textual mentions whose target is not in the corpus. */
+                include_unresolved?: boolean;
+            };
+            header?: never;
+            path: {
+                law_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LawReferencesResponse"];
                 };
             };
             /** @description Validation Error */
@@ -1982,6 +2558,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LawDiff"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_global_graph_api_v1_graph_get: {
+        parameters: {
+            query?: {
+                /** @description Filter by enforcement status */
+                status?: components["schemas"]["LawStatus"] | null;
+                /** @description Filter by hierarchical rank */
+                rank?: components["schemas"]["LawRank"] | null;
+                /** @description Filter by territorial scope */
+                scope?: components["schemas"]["Scope"] | null;
+                /** @description Filter by jurisdiction code (e.g. es-md) */
+                jurisdiction?: string | null;
+                /** @description Return only the top-N matching nodes by PageRank. Omit to return everything. */
+                limit?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GraphGlobalResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2557,6 +3173,26 @@ export interface operations {
             };
         };
     };
+    get_system_health_api_v1_system_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthSnapshot"];
+                };
+            };
+        };
+    };
     list_tags_api_v1_tags_get: {
         parameters: {
             query?: never;
@@ -2681,6 +3317,206 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["McpServerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_mcp_tools_api_v1_mcp_tools_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpToolListResponse"];
+                };
+            };
+        };
+    };
+    install_mcp_bundle_api_v1_mcp_bundles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_install_mcp_bundle_api_v1_mcp_bundles_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpServerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_secrets_api_v1_secrets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecretStatusResponse"];
+                };
+            };
+        };
+    };
+    create_secret_api_v1_secrets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SecretCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Stored. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown provider or empty key. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_secret_api_v1_secrets__provider__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed (or no key was set). */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown provider. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_status_api_v1_telemetry_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelemetryStatus"];
+                };
+            };
+        };
+    };
+    ingest_events_api_v1_telemetry_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TelemetryBatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelemetryIngestResponse"];
                 };
             };
             /** @description Validation Error */

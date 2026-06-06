@@ -133,6 +133,7 @@ export function transformLaw(raw: BackendLawSummary): Law {
 export function transformLawDetail(raw: BackendLawDetail): LawDetail {
   const m = raw.metadata;
   const hierarchy = (raw.sections ?? []).map((s, i) => sectionToHierarchy(s, `root-${i}`));
+  const articles = (raw.articles ?? []).map((a) => transformArticle(m.identifier, a));
   return {
     id: m.identifier,
     boe: m.identifier,
@@ -146,6 +147,7 @@ export function transformLawDetail(raw: BackendLawDetail): LawDetail {
     referencias: (raw.references ?? []).length,
     versiones: 0,
     hierarchy,
+    articles,
   };
 }
 

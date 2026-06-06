@@ -129,6 +129,7 @@ export const LAW_DETAIL: Record<string, LawDetail> = {
       },
       { id: 't2', kind: 'titulo', label: 'Título II', heading: 'De la Corona' },
     ],
+    articles: [],
   },
   'LO-3-2018': {
     ...LAWS[2],
@@ -147,6 +148,7 @@ export const LAW_DETAIL: Record<string, LawDetail> = {
         ],
       },
     ],
+    articles: [],
   },
 };
 
