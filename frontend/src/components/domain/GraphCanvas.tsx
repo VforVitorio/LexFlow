@@ -15,7 +15,7 @@ import {
 import '@xyflow/react/dist/style.css';
 
 import { cn } from '@/lib/utils';
-import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_GLOW, GRAPH_PRIMARY_SOFT, NODE_KIND_LABELS } from '@/lib/graph-colors';
+import { GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_GLOW, GRAPH_PRIMARY_SOFT, NODE_KIND_LABELS } from '@/lib/graph-colors';
 import type { GraphData, GraphNode, GraphNodeKind } from '@/lib/types';
 
 /** Node size (px) per kind. Law nodes anchor the canvas; articles ring them. */
@@ -59,6 +59,8 @@ export interface GraphCanvasProps {
  * --- WHERE TO CHANGE IF X CHANGES ---
  * * Color tokens             → ``lib/graph-colors.ts`` (shared with
  *                               ``GraphPage`` and ``DashboardPage``).
+ *                               Edge stroke per kind lives in
+ *                               ``GRAPH_EDGE_STROKE`` there.
  * * Node size                 → ``KIND_SIZE`` above.
  * * Layout policy             → ``_layout`` below
  * * Node visual               → ``LfNode`` component
@@ -249,6 +251,10 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
       data.edges.map((e) => {
         const isSelected = e.source === selected || e.target === selected;
         const bothVisible = visibleSet.has(e.source) && visibleSet.has(e.target);
+        // Selected edges keep the brand-indigo highlight; unselected edges
+        // pick up the per-kind hue (#144 wire field). Legacy edges with
+        // no kind fall back to the previous neutral border stroke.
+        const kindStroke = e.kind ? GRAPH_EDGE_STROKE[e.kind] : 'hsl(var(--border-strong))';
         return {
           id: e.id,
           source: e.source,
@@ -258,9 +264,9 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
           type: 'smoothstep',
           animated: false,
           style: {
-            stroke: isSelected ? GRAPH_PRIMARY : 'hsl(var(--border-strong))',
+            stroke: isSelected ? GRAPH_PRIMARY : kindStroke,
             strokeWidth: isSelected ? 2 : 1,
-            opacity: bothVisible ? (isSelected ? 1 : 0.45) : 0.08,
+            opacity: bothVisible ? (isSelected ? 1 : 0.55) : 0.08,
           },
         };
       }),

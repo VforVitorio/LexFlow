@@ -21,7 +21,14 @@
  *                           `hsl(var(--graph-law))` and friends.
  */
 
-import type { GraphNodeKind } from './types';
+import type { GraphEdge, GraphNodeKind } from './types';
+
+/**
+ * Edge kinds that the backend ships on `GraphEdge.kind` (#144). Mirrors
+ * the union in `lib/types.ts` so this module remains the single
+ * source of truth for the graph palette.
+ */
+export type GraphEdgeKind = NonNullable<GraphEdge['kind']>;
 
 /**
  * Display label per node kind. Spanish on purpose — these are
@@ -69,3 +76,32 @@ export const GRAPH_PRIMARY_GLOW = 'hsl(232 72% 52% / 0.55)';
  * the same product.
  */
 export const GRAPH_PRIMARY_FILL_SOFT = 'hsl(232 72% 52% / 0.10)';
+
+/**
+ * Stroke colour per edge kind. Hue grouped so an edge reads the same
+ * "family" as the destination node when possible:
+ * - ``cites``     → neutral indigo (links between norms, the bread-and-butter case)
+ * - ``develops``  → cyan (downstream regulation/RD that develops a law)
+ * - ``modifies``  → amber (mutates the target; same hue as ``article`` to flag change)
+ * - ``repeals``   → red (destructive; only colour outside the existing palette)
+ *
+ * Falls back to ``border-strong`` (existing default) when the backend
+ * omits ``kind`` (legacy edges from before #144).
+ */
+export const GRAPH_EDGE_STROKE: Record<GraphEdgeKind, string> = {
+  cites:    'hsl(232 60% 60%)', // indigo (light)
+  develops: 'hsl(195 65% 55%)', // cyan (matches `amendment` node)
+  modifies: 'hsl(36 90% 55%)',  // amber (matches `article` node)
+  repeals:  'hsl(0 70% 55%)',   // red
+};
+
+/**
+ * Spanish-first display label per edge kind. Used by the canvas legend
+ * and any tooltip / filter chip that lists edge kinds.
+ */
+export const EDGE_KIND_LABELS: Record<GraphEdgeKind, string> = {
+  cites:    'Cita',
+  develops: 'Desarrolla',
+  modifies: 'Modifica',
+  repeals:  'Deroga',
+};

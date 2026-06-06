@@ -460,6 +460,7 @@
     "searchPlaceholder": "Buscar en el grafo…",
     "advancedFilters": "Filtros avanzados",
     "legend": "Leyenda",
+    "edges": "Aristas",
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
     "pin": "Fijar",
