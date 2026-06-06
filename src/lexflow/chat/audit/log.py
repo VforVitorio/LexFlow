@@ -42,6 +42,14 @@ class AuditLog:
     def __init__(self, path: Path) -> None:
         self._path = path
         self._lock = threading.Lock()
+        # Audit #409 perf: the chain tail used to be re-read from disk on
+        # every tool call (and ~4x per allowed call), making the audit
+        # path O(K^2) over K records. We now cache the last hash and
+        # keep it warm by updating it inside ``append`` under the same
+        # lock that protects the writer. ``None`` means "not yet
+        # primed"; the first read tails the file once and stores the
+        # result.
+        self._last_hash: str | None = None
 
     @property
     def path(self) -> Path:
@@ -51,9 +59,21 @@ class AuditLog:
     def read_last_hash(self) -> str:
         """Return the ``entry_hash`` of the last record, or the genesis value.
 
-        Cheap on small logs; reads the file end-to-end. We'll add a
-        tail-only optimisation if `mcp.log` grows past tens of MB —
-        right now correctness beats micro-optimisation.
+        First call tails the file and caches the result; subsequent
+        calls return the cached value without touching disk. ``append``
+        updates the cache under the same lock so concurrent appenders
+        always see a fresh tail.
+        """
+        with self._lock:
+            if self._last_hash is None:
+                self._last_hash = self._scan_file_for_last_hash()
+            return self._last_hash
+
+    def _scan_file_for_last_hash(self) -> str:
+        """Read the file end-to-end and return the last good ``entry_hash``.
+
+        Called once at startup (warming the cache); subsequent reads
+        use the in-memory ``self._last_hash`` updated by ``append``.
         """
         if not self._path.exists():
             return GENESIS_PREVIOUS_HASH
@@ -87,7 +107,11 @@ class AuditLog:
         from :meth:`read_last_hash` inside the same lock window.
         """
         with self._lock:
-            expected_prev = self.read_last_hash()
+            # Inline read_last_hash() to avoid the re-entrant lock cost;
+            # we already hold ``self._lock``.
+            if self._last_hash is None:
+                self._last_hash = self._scan_file_for_last_hash()
+            expected_prev = self._last_hash
             if record.previous_hash != expected_prev:
                 raise ValueError(
                     f"chain break: record carries previous_hash={record.previous_hash!r} "
@@ -105,6 +129,10 @@ class AuditLog:
             line = json.dumps(line_record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
             with self._path.open("a", encoding="utf-8") as fh:
                 fh.write(line + "\n")
+            # Update the cache so the next read returns the new tail
+            # without touching disk again. Critical for the audit
+            # hot path (see audit #409).
+            self._last_hash = entry_hash
 
     def verify(self) -> VerificationResult:
         """Re-read the log and validate the hash chain end-to-end."""
