@@ -35,7 +35,7 @@ from lexflow.mcp_servers import (
     load_user_servers,
     save_user_servers,
 )
-from lexflow.mcp_servers.bundle import BundleError, install_bundle
+from lexflow.mcp_servers.bundle import BundleError, install_bundle, read_bundle_manifest
 from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -269,6 +269,34 @@ async def install_mcp_bundle(file: UploadFile = File(...)) -> McpServerView:
         staged.write(payload)
         staged_path = Path(staged.name)
     try:
+        # Audit #409 — read the manifest BEFORE we touch the
+        # ``mcp-bundles/`` tree so a name collision returns 409 cleanly
+        # without overwriting the existing bundle's files. The actual
+        # extraction is committed via ``install_bundle`` only after we
+        # know the name is free.
+        try:
+            manifest = read_bundle_manifest(staged_path)
+        except BundleError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"code": "invalid_bundle", "message": str(exc)},
+            ) from exc
+        if manifest.name in _BUILTIN_NAMES:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "name_reserved",
+                    "message": f"{manifest.name!r} is a built-in server name and cannot be overridden.",
+                },
+            )
+        if any(existing.name == manifest.name for existing in load_user_servers()):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "name_taken",
+                    "message": f"A user server named {manifest.name!r} already exists. Delete it first.",
+                },
+            )
         try:
             entry = install_bundle(staged_path, settings.config_dir)
         except BundleError as exc:
@@ -280,23 +308,7 @@ async def install_mcp_bundle(file: UploadFile = File(...)) -> McpServerView:
         # Best-effort cleanup; the install copied the bytes already.
         staged_path.unlink(missing_ok=True)
 
-    if entry.name in _BUILTIN_NAMES:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={
-                "code": "name_reserved",
-                "message": f"{entry.name!r} is a built-in server name and cannot be overridden.",
-            },
-        )
     entries = load_user_servers()
-    if any(existing.name == entry.name for existing in entries):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={
-                "code": "name_taken",
-                "message": f"A user server named {entry.name!r} already exists. Delete it first.",
-            },
-        )
     entries.append(entry)
     save_user_servers(entries)
     return _as_view_user(entry)

@@ -9,7 +9,10 @@ Invariants:
   this module's ``mount_spa`` is called, so the catch-all never shadows them.
 * ``/assets/*`` is a StaticFiles mount (efficient ETags, correct
   Content-Type, no Python overhead per request).
-* Every other path returns ``index.html`` so React Router handles it.
+* The catch-all containment check (``relative_to(SPA_DIR_RESOLVED)``)
+  is the single line that prevents an arbitrary file read via
+  ``..``/encoded path traversal. Audit #409 finding: an unresolved
+  candidate path lets a desktop binary leak arbitrary host files.
 """
 
 from __future__ import annotations
@@ -19,7 +22,6 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +39,35 @@ def mount_spa(app: FastAPI) -> None:
         logger.debug("frontend/dist not found — SPA mount skipped (dev mode)")
         return
 
-    assets_dir = SPA_DIR / "assets"
+    spa_root = SPA_DIR.resolve()
+    index_html = spa_root / "index.html"
+
+    assets_dir = spa_root / "assets"
     if assets_dir.is_dir():
+        # StaticFiles already prevents traversal — we only mount it for
+        # the per-file ETag / Content-Type / range handling.
+        from fastapi.staticfiles import StaticFiles
+
         app.mount("/assets", StaticFiles(directory=assets_dir), name="spa-assets")
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def _serve_spa(full_path: str = "") -> FileResponse:
-        """Return the exact file if it exists, otherwise serve index.html."""
-        candidate = SPA_DIR / full_path
+        """Return the exact file if it exists inside SPA_DIR, otherwise index.html.
+
+        Path containment guard (audit #409 critical): without it,
+        ``GET /..%2F..%2Fetc%2Fpasswd`` resolves to a host file and the
+        desktop binary leaks it. ``resolve()`` collapses ``..`` segments;
+        ``relative_to(spa_root)`` raises ``ValueError`` for anything
+        outside the build tree, which we map to the SPA index page so
+        an attacker can't even distinguish "escaped" from "not found".
+        """
+        try:
+            candidate = (spa_root / full_path).resolve()
+            candidate.relative_to(spa_root)
+        except (OSError, ValueError):
+            return FileResponse(index_html)
         if candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(SPA_DIR / "index.html")
+        return FileResponse(index_html)
 
-    logger.info("SPA mounted from %s", SPA_DIR)
+    logger.info("SPA mounted from %s", spa_root)

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Clock, SlidersHorizontal, Download, ExternalLink } from 'lucide-react';
 import { Button, Card, Tabs } from '@/components/ui';
@@ -14,16 +15,38 @@ const CHART_PRIMARY = GRAPH_PRIMARY;
 const CHART_PRIMARY_SOFT = GRAPH_PRIMARY_FILL_SOFT;
 const CHART_RECENT = GRAPH_KIND_FILL.article;
 
+type DashboardPreset = 'compliance' | 'analytics';
+const VALID_PRESETS: DashboardPreset[] = ['compliance', 'analytics'];
+
+function asPreset(raw: string | undefined): DashboardPreset {
+  return VALID_PRESETS.includes(raw as DashboardPreset) ? (raw as DashboardPreset) : 'compliance';
+}
+
 export function DashboardPage() {
   const { t } = useTranslation();
-  const [preset, setPreset] = useState<'compliance' | 'analytics'>('compliance');
+  const navigate = useNavigate();
+  // Audit #409 — read the `:preset` URL param so deep links like
+  // `/dashboards/analytics` actually land on Analytics. The page used
+  // to hardcode 'compliance' state and ignore the route param. Tab
+  // changes also navigate so URL ↔ state stay in sync both ways.
+  const { preset: presetParam } = useParams<{ preset?: string }>();
+  const [preset, setPreset] = useState<DashboardPreset>(asPreset(presetParam));
+  useEffect(() => {
+    const next = asPreset(presetParam);
+    if (next !== preset) setPreset(next);
+  }, [presetParam, preset]);
+  const handleTabChange = (v: string) => {
+    const next = asPreset(v);
+    setPreset(next);
+    navigate(`/dashboards/${next}`);
+  };
   const { data, isLoading } = useDashboard(preset);
 
   return (
     <div className="h-full overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
       <div className="mb-5 flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-2xl font-semibold">{t('dashboards.title')}</h1>
-        <Tabs variant="segmented" value={preset} onChange={(v) => setPreset(v as 'compliance' | 'analytics')} tabs={[
+        <Tabs variant="segmented" value={preset} onChange={handleTabChange} tabs={[
           { id: 'compliance', label: 'Compliance' },
           { id: 'analytics', label: 'Analytics' },
         ]} />

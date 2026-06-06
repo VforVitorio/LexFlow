@@ -230,11 +230,16 @@ def _build_section_list(
         content_end = subset[j][2] if j < len(subset) else len(body)
         section_body = body[content_start:content_end]
 
-        # Recurse for subsections
+        # Recurse for subsections. Audit #409: passing ``target_level + 1``
+        # silently dropped sections when a parent's first subheading
+        # skipped a depth (e.g. level 2 → level 4 with no level 3 in
+        # between). Passing ``0`` makes the recursion pick the actual
+        # minimum level present in the slice, so deeper headings stay
+        # in the tree.
         subsections = _build_section_list(
             body,
             subset,
-            target_level=target_level + 1,
+            target_level=0,
             start_idx=i + 1,
             end_idx=i + (j - i),
         )
@@ -463,9 +468,19 @@ def parse_law_file(file_path: Path) -> Law:
 
 
 def parse_law_content(content: str, file_path: str) -> Law:
-    """Parse a law from a string — useful for testing without disk I/O."""
+    """Parse a law from a string — useful for testing without disk I/O.
+
+    Audit #409: ``parse_frontmatter`` raises ``ParserError`` with
+    ``file_path='<unknown>'`` (it has no way to know which file the
+    YAML came from). We re-raise here with the caller-provided
+    ``file_path`` so the 500 error envelope tells an operator which
+    law file failed to parse instead of the opaque placeholder.
+    """
     yaml_text, body = split_frontmatter(content)
-    raw_fm = parse_frontmatter(yaml_text)
+    try:
+        raw_fm = parse_frontmatter(yaml_text)
+    except ParserError as exc:
+        raise ParserError(file_path, exc.reason) from exc
     metadata = frontmatter_to_metadata(raw_fm)
     sections = extract_heading_tree(body)
     articles = extract_articles(body)

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
@@ -31,9 +32,28 @@ const SECTIONS = [
 ] as const;
 type SectionId = typeof SECTIONS[number]['id'];
 
+function isSectionId(value: string | undefined): value is SectionId {
+  return !!value && SECTIONS.some((entry) => entry.id === value);
+}
+
 export function SettingsPage() {
   const { t } = useTranslation();
-  const [section, setSection] = useState<SectionId>('personalization');
+  const navigate = useNavigate();
+  // Audit #409: the page used to hardcode 'personalization' and ignore
+  // the `:section` URL param, so deep links from the model wizard or
+  // docs never landed on the right pane. We seed the state from the
+  // param (validated against `SECTIONS`) and push history entries on
+  // sidebar clicks so URL ↔ pane stay in sync both directions.
+  const { section: sectionParam } = useParams<{ section?: string }>();
+  const initialSection: SectionId = isSectionId(sectionParam) ? sectionParam : 'personalization';
+  const [section, setSection] = useState<SectionId>(initialSection);
+  useEffect(() => {
+    if (isSectionId(sectionParam) && sectionParam !== section) setSection(sectionParam);
+  }, [sectionParam, section]);
+  const selectSection = (id: SectionId) => {
+    setSection(id);
+    navigate(`/settings/${id}`);
+  };
   return (
     // #36 — on mobile (<md) the page stacks: horizontal scroll of
     // section chips on top, content below. On md+ keeps the
@@ -46,7 +66,7 @@ export function SettingsPage() {
         {SECTIONS.map((s) => (
           <button
             key={`mobile-${s.id}`}
-            onClick={() => setSection(s.id)}
+            onClick={() => selectSection(s.id)}
             className={cn(
               'shrink-0 rounded-full border px-3 py-1 text-[12.5px] font-medium transition-colors',
               section === s.id
@@ -65,7 +85,7 @@ export function SettingsPage() {
         {SECTIONS.map((s) => (
           <button
             key={s.id}
-            onClick={() => setSection(s.id)}
+            onClick={() => selectSection(s.id)}
             className={cn(
               'mb-0.5 block w-full rounded px-2.5 py-1.5 text-left text-[13.5px] transition-colors',
               section === s.id ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',

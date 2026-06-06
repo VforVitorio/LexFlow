@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 _RECORD_SEP = "---LEXFLOW-SEP---"
 _LOG_FORMAT = f"%H%n%aI%n%s%n%b{_RECORD_SEP}"
 
+# Hot path: per-line scan of every diff. Hoisting to module scope
+# avoids re-compiling the pattern on every method invocation (audit
+# #409 perf finding).
+_ARTICLE_HEADING_RE = re.compile(r"Art[ií]culo\s+(\S+?)\.?\s*$", re.IGNORECASE)
+
 
 class GitHistoryReader:
     """Reads git history for individual law files from the legalize-es repository."""
@@ -171,16 +176,33 @@ class GitHistoryReader:
         )
 
     def _extract_changed_articles(self, diff_text: str) -> list[str]:
-        """Scan diff hunks for 'Articulo N' patterns."""
-        pattern = re.compile(r"Art[ií]culo\s+(\S+?)\.?\s*$", re.IGNORECASE | re.MULTILINE)
-        matches = pattern.findall(diff_text)
-        # Deduplicate while preserving order
+        """Scan only the added/removed lines for 'Articulo N' headings.
+
+        Audit #409: the old implementation ran the pattern over the
+        entire ``diff_text``, so any article header sitting in the 3
+        lines of unchanged context around a hunk was reported as
+        "changed". Now we restrict the scan to lines that start with
+        ``+`` or ``-`` (excluding ``+++``/`---`` file headers), which
+        matches the sibling ``_parse_diff_stats`` accounting.
+        """
         seen: set[str] = set()
         result: list[str] = []
-        for m in matches:
-            if m not in seen:
-                seen.add(m)
-                result.append(m)
+        for line in diff_text.split("\n"):
+            if not line:
+                continue
+            prefix = line[0]
+            if prefix not in {"+", "-"}:
+                continue
+            if line.startswith(("+++", "---")):
+                continue
+            match = _ARTICLE_HEADING_RE.search(line[1:])
+            if not match:
+                continue
+            article = match.group(1)
+            if article in seen:
+                continue
+            seen.add(article)
+            result.append(article)
         return result
 
 

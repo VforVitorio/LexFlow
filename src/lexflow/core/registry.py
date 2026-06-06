@@ -172,7 +172,7 @@ class LawRegistry:
         already normalises each law's ``tags`` to kebab-case slugs).
         """
         counts: Counter[str] = Counter()
-        for law_id in self._index:
+        for law_id in self._snapshot_law_ids():
             meta = self._ensure_metadata(law_id)
             counts.update(meta.tags)
         return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
@@ -184,7 +184,7 @@ class LawRegistry:
         operations fast.
         """
         loaded = 0
-        for law_id in self._index:
+        for law_id in self._snapshot_law_ids():
             if law_id not in self._metadata_cache:
                 try:
                     self._ensure_metadata(law_id)
@@ -249,9 +249,22 @@ class LawRegistry:
                 self._reindex_law(law_id)
 
     def _refresh_index(self) -> None:
-        """Rebuild the id -> path map from disk (filenames only, ~1 s)."""
-        self._index = {}
-        self._build_index()
+        """Rebuild the id -> path map from disk (filenames only, ~1 s).
+
+        Audit #409 race fix: build a fresh local dict first, then swap
+        it onto ``self._index`` as a single attribute assignment. The
+        CPython GIL makes the assignment atomic, so a lock-free reader
+        that resolved ``self._index`` before the swap finishes its
+        iteration against the OLD dict (no ``dictionary changed size
+        during iteration``) while subsequent reads see the NEW dict.
+        """
+        if not self._data_path.is_dir():
+            raise DataPathError(str(self._data_path))
+        new_index: dict[str, Path] = {}
+        for path in list_law_files(self._data_path):
+            new_index[law_id_from_path(path)] = path
+        self._index = new_index
+        logger.info("Law index refreshed: %d files in %s", len(new_index), self._data_path)
 
     def _forget_law(self, law_id: str) -> None:
         """Drop a removed law from every in-memory cache."""
@@ -274,10 +287,23 @@ class LawRegistry:
     # Internal helpers
     # ------------------------------------------------------------------
 
+    def _snapshot_law_ids(self) -> list[str]:
+        """Return a sorted snapshot of the law-id set under the write lock.
+
+        Audit #409: the read paths used to iterate ``self._index``
+        directly while ``/sync`` could be mutating it on another thread,
+        which intermittently raised ``dictionary changed size during
+        iteration``. Taking the snapshot under the same lock the
+        writers use is the simplest safe pattern; the copy itself is
+        microseconds even at 12 k entries.
+        """
+        with self._lock:
+            return sorted(self._index)
+
     def _build_summaries(self) -> list[LawSummary]:
         """Build LawSummary objects for all indexed laws."""
         summaries: list[LawSummary] = []
-        for law_id in sorted(self._index):
+        for law_id in self._snapshot_law_ids():
             meta = self._ensure_metadata(law_id)
             article_count = self._cache[law_id].article_count if law_id in self._cache else 0
             summaries.append(
@@ -296,7 +322,7 @@ class LawRegistry:
 
     def _build_search_index(self) -> None:
         """Build the search index from all metadata and cached law content."""
-        for law_id in sorted(self._index):
+        for law_id in self._snapshot_law_ids():
             self._index_law_for_search(law_id)
         self._search_index.mark_built()
         logger.info("Search index built: %d entries", self._search_index.entry_count)

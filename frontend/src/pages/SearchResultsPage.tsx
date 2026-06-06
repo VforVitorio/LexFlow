@@ -25,7 +25,12 @@ export function SearchResultsPage() {
         icon={<Search className="size-3.5" />}
         defaultValue={q}
         placeholder={t('search.placeholder')}
-        onChange={(e) => setParams({ q: e.target.value })}
+        // Audit #409: ``setSearchParams`` defaults to a push
+        // navigation in react-router-dom v6, so each keystroke
+        // pushed a new history entry — pressing Back walked through
+        // the typing animation instead of leaving /search. ``replace:
+        // true`` keeps the URL synced without polluting history.
+        onChange={(e) => setParams({ q: e.target.value }, { replace: true })}
         className="w-full"
       />
       <p className="mt-3 text-[12.5px] text-muted">
