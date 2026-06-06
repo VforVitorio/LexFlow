@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.37.0](https://github.com/VforVitorio/LexFlow/compare/v0.36.3...v0.37.0) (2026-06-06)
+
+
+### Features
+
+* **graph:** color edges by kind + legend row ([57531e1](https://github.com/VforVitorio/LexFlow/commit/57531e10f8d3c5bff158225b67edfb1a99d9a4eb))
+* **graph:** color edges by kind + legend row ([c9d6acf](https://github.com/VforVitorio/LexFlow/commit/c9d6acfed41ab34fefb3a5494b399eeccea76a84))
+
 ## [0.36.3](https://github.com/VforVitorio/LexFlow/compare/v0.36.2...v0.36.3) (2026-06-05)
 
 
