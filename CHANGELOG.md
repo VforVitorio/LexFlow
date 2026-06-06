@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.40.1](https://github.com/VforVitorio/LexFlow/compare/v0.40.0...v0.40.1) (2026-06-06)
+
+
+### Bug Fixes
+
+* **audit:** frontend URL params + chat UX (Batch D) ([4c9cf90](https://github.com/VforVitorio/LexFlow/commit/4c9cf90dbcdfa7ee469ae9d3da895e93cc06c64d))
+* **audit:** frontend URL params + chat UX (Batch D) ([c8ba3f2](https://github.com/VforVitorio/LexFlow/commit/c8ba3f2b8e2972dd474ab22380209d5249e1edeb)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+
 ## [0.40.0](https://github.com/VforVitorio/LexFlow/compare/v0.39.0...v0.40.0) (2026-06-06)
 
 
