@@ -21,6 +21,11 @@ class SearchEntry:
     article_number: str | None
     text: str
     text_lower: str  # Pre-lowered for fast matching
+    # Audit #409 perf: title boost used to call ``law_title.lower()``
+    # per scored entry per query — ~24k extra string allocations per
+    # search. Pre-lowering follows the existing ``text_lower`` pattern;
+    # ``from_dict`` reconstructs both via ``add_entry``.
+    law_title_lower: str
 
 
 @dataclass
@@ -55,6 +60,7 @@ class SearchIndex:
                 article_number=article_number,
                 text=text,
                 text_lower=text.lower(),
+                law_title_lower=law_title.lower(),
             )
         )
 
@@ -160,8 +166,8 @@ def _score_entry(entry: SearchEntry, query_lower: str) -> float:
 
     score = float(count)
 
-    # Title boost
-    if query_lower in entry.law_title.lower():
+    # Title boost — use the precomputed lowered title.
+    if query_lower in entry.law_title_lower:
         score *= _TITLE_BOOST
 
     return score

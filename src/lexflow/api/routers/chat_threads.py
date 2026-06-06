@@ -31,7 +31,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import desc
-from sqlmodel import Session, func, select
+from sqlmodel import Session, col, func, select
 
 from lexflow.chat.db import get_session
 from lexflow.chat.rate_limit import RateLimitedError
@@ -54,6 +54,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 _PREVIEW_MAX_CHARS = 140
+
+
+class _PreviewSentinel:
+    """Marker for ``_thread_read``'s ``preview`` default.
+
+    Letting callers pass ``None`` to mean "no preview available" while
+    keeping ``_PREVIEW_LOOKUP`` to mean "fetch it yourself" lets the
+    listing endpoint pass through batched lookups without ambiguity.
+    """
+
+
+_PREVIEW_LOOKUP = _PreviewSentinel()
 
 
 # ---------------------------------------------------------------------------
@@ -111,8 +123,10 @@ def _message_read(message: ChatMessage) -> ChatMessageRead:
 def _latest_preview(session: Session, thread_id: str) -> str | None:
     """Pick the most recent message's content as a thread preview.
 
-    Trimmed to ``_PREVIEW_MAX_CHARS`` chars so the conversation rail
-    doesn't have to do its own ellipsising.
+    Single-thread helper used by ``create_thread`` / ``get_thread`` /
+    ``update_thread`` (where N+1 doesn't apply). List endpoints batch
+    via :func:`_latest_previews_for` to avoid the per-thread roundtrip
+    (audit #409).
     """
     statement = (
         select(ChatMessage)
@@ -124,6 +138,11 @@ def _latest_preview(session: Session, thread_id: str) -> str | None:
         .limit(1)
     )
     msg = session.exec(statement).first()
+    return _format_preview(msg)
+
+
+def _format_preview(msg: ChatMessage | None) -> str | None:
+    """Project a ``ChatMessage`` (or ``None``) into a trimmed rail preview."""
     if msg is None or not msg.content:
         return None
     text = msg.content.strip()
@@ -132,15 +151,54 @@ def _latest_preview(session: Session, thread_id: str) -> str | None:
     return text[: _PREVIEW_MAX_CHARS - 1].rstrip() + "…"
 
 
-def _thread_read(session: Session, thread: ChatThread) -> ChatThreadRead:
-    """Map a storage row to the API listing shape, including preview."""
+def _latest_previews_for(session: Session, thread_ids: list[str]) -> dict[str, str | None]:
+    """Return one preview per thread id with ONE batched query.
+
+    Audit #409 perf: ``list_threads`` previously called
+    ``_latest_preview`` per row, so a page_size=100 listing made 101
+    SQLite round-trips. We now fetch all candidate messages with a
+    single ``WHERE thread_id IN (...)`` ordered by created_at desc,
+    then keep the first row seen per thread (which is the newest).
+    """
+    if not thread_ids:
+        return {}
+    rows = session.exec(
+        select(ChatMessage)
+        .where(col(ChatMessage.thread_id).in_(thread_ids))
+        .order_by(_newest_first(ChatMessage.created_at))
+    ).all()
+    previews: dict[str, str | None] = {tid: None for tid in thread_ids}
+    seen: set[str] = set()
+    for msg in rows:
+        if msg.thread_id in seen:
+            continue
+        previews[msg.thread_id] = _format_preview(msg)
+        seen.add(msg.thread_id)
+        if len(seen) == len(thread_ids):
+            break
+    return previews
+
+
+def _thread_read(
+    session: Session,
+    thread: ChatThread,
+    *,
+    preview: str | None | _PreviewSentinel = _PREVIEW_LOOKUP,
+) -> ChatThreadRead:
+    """Map a storage row to the API listing shape, including preview.
+
+    When ``preview`` is ``_PREVIEW_LOOKUP`` (the default), we query the
+    DB for the latest message. List endpoints pass in the pre-batched
+    value so the projection doesn't re-issue the query.
+    """
+    resolved_preview = _latest_preview(session, thread.id) if preview is _PREVIEW_LOOKUP else preview
     return ChatThreadRead(
         id=thread.id,
         title=thread.title,
         model=thread.model,
         created_at=thread.created_at,
         updated_at=thread.updated_at,
-        preview=_latest_preview(session, thread.id),
+        preview=resolved_preview,
     )
 
 
@@ -185,8 +243,13 @@ def list_threads(
         .limit(page_size)
     )
     rows = session.exec(statement).all()
+    # Audit #409: previously this list comprehension called
+    # ``_thread_read`` → ``_latest_preview`` per row, so a page of N
+    # threads cost N+1 SQLite round-trips. Batch the previews now and
+    # pass the resolved value through ``_thread_read``.
+    previews = _latest_previews_for(session, [thread.id for thread in rows])
     return ChatThreadList(
-        items=[_thread_read(session, t) for t in rows],
+        items=[_thread_read(session, t, preview=previews.get(t.id)) for t in rows],
         total=total,
         page=page,
         page_size=page_size,

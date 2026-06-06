@@ -292,6 +292,14 @@ def extract_articles(body: str) -> list[Article]:
     return articles
 
 
+# Audit #409 perf: ``_extract_article_text`` runs per article body and
+# compares each line against two patterns. Hoisting the regexes to
+# module scope avoids 2-5 million ``re.compile`` calls during a cold
+# parse of the 12 k-law corpus.
+_SECTION_BREAK_RE = re.compile(r"^#{1,4}\s+")
+_INLINE_ARTICLE_HEADING_RE = re.compile(r"^#{1,5}\s+Art[ií]culo", re.IGNORECASE)
+
+
 def _extract_article_text(raw: str) -> str:
     """Clean raw text between two article headings.
 
@@ -301,7 +309,7 @@ def _extract_article_text(raw: str) -> str:
     lines: list[str] = []
     for line in raw.split("\n"):
         # Stop at the next section heading (but not an article heading)
-        if re.match(r"^#{1,4}\s+", line) and not re.match(r"^#{1,5}\s+Art[ií]culo", line, re.IGNORECASE):
+        if _SECTION_BREAK_RE.match(line) and not _INLINE_ARTICLE_HEADING_RE.match(line):
             break
         lines.append(line)
     return "\n".join(lines).strip()

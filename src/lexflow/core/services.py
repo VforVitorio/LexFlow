@@ -65,16 +65,23 @@ def apply_law_filters(
     of ``LawRegistry`` (Sprint 6 rf-8) so the storage layer doesn't own
     selection logic.
     """
-    result = summaries
-    if rank is not None:
-        result = [s for s in result if s.rank == rank]
-    if status is not None:
-        result = [s for s in result if s.status == status]
-    if scope is not None:
-        result = [s for s in result if s.scope == scope]
-    if jurisdiction is not None:
-        result = [s for s in result if s.jurisdiction == jurisdiction]
-    return result
+    # Audit #409 perf: previously this function ran one full list
+    # comprehension per active filter, allocating throw-away lists for
+    # each pass. We now build a single predicate that ANDs every
+    # active filter and walk ``summaries`` once.
+    if rank is None and status is None and scope is None and jurisdiction is None:
+        return summaries
+
+    def keep(summary: LawSummary) -> bool:
+        if rank is not None and summary.rank != rank:
+            return False
+        if status is not None and summary.status != status:
+            return False
+        if scope is not None and summary.scope != scope:
+            return False
+        return not (jurisdiction is not None and summary.jurisdiction != jurisdiction)
+
+    return [s for s in summaries if keep(s)]
 
 
 def paginate_summaries(
