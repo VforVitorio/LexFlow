@@ -9,10 +9,11 @@ import { ErrorState } from '@/components/domain/ErrorState';
 import { SkeletonCanvas } from '@/components/domain/Skeleton';
 import { RightRail } from '@/components/shell/RightRail';
 import { useGraph, useGraphTop, useWarmup } from '@/lib/queries';
-import { GRAPH_KIND_FILL, NODE_KIND_LABELS } from '@/lib/graph-colors';
+import { EDGE_KIND_LABELS, GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, NODE_KIND_LABELS, type GraphEdgeKind } from '@/lib/graph-colors';
 import type { GraphNodeKind } from '@/lib/types';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
+const ALL_EDGE_KINDS: GraphEdgeKind[] = ['cites', 'develops', 'modifies', 'repeals'];
 
 // Fallback seed when the live `/graph/top` call isn't available (mock
 // mode without a seeded mock, transient network failure, empty corpus).
@@ -138,14 +139,31 @@ export function GraphPage() {
         <div className="relative flex-1 overflow-hidden bg-bg">
           <GraphCanvas data={graph} visibleKinds={filters} selected={selected} onSelect={setSelected} />
 
-          {/* Legend — frosted glass overlay (Opera Air language) */}
+          {/* Legend — frosted glass overlay (Opera Air language).
+              Two columns: nodes on top, edges below, separated by a thin
+              hairline so the user can distinguish "shape" (node) from
+              "relationship" (edge) at a glance. */}
           <div className="air-glass absolute bottom-4 left-4 px-3.5 py-2.5">
             <div className="label-caps mb-2">{t('graph.legend')}</div>
             <div className="flex flex-col gap-1.5 text-[12px]">
-              {ALL_KINDS.map((t) => (
-                <div key={t} className="flex items-center gap-2">
-                  <span className="size-2.5 rounded-full" style={{ background: GRAPH_KIND_FILL[t] }} />
-                  {NODE_KIND_LABELS[t]}
+              {ALL_KINDS.map((kind) => (
+                <div key={kind} className="flex items-center gap-2">
+                  <span className="size-2.5 rounded-full" style={{ background: GRAPH_KIND_FILL[kind] }} />
+                  {NODE_KIND_LABELS[kind]}
+                </div>
+              ))}
+            </div>
+            <div className="my-2 h-px bg-border" aria-hidden />
+            <div className="label-caps mb-2">{t('graph.edges')}</div>
+            <div className="flex flex-col gap-1.5 text-[12px]">
+              {ALL_EDGE_KINDS.map((kind) => (
+                <div key={kind} className="flex items-center gap-2">
+                  <span
+                    className="block h-px w-5"
+                    style={{ background: GRAPH_EDGE_STROKE[kind] }}
+                    aria-hidden
+                  />
+                  {EDGE_KIND_LABELS[kind]}
                 </div>
               ))}
             </div>
