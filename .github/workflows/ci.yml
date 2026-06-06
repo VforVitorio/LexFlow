@@ -31,20 +31,42 @@ concurrency:
 #   - `test` keeps `uv sync --all-extras` because the suite may touch chat
 #     and dashboards code paths that need every extra installed.
 #
-# Path-filter gating (#TBD): the four expensive jobs short-circuit when
-# the diff doesn't touch their domain. `lint` and `pip-audit` always
-# run — `lint` is ~10 s anywhere, and `pip-audit` is the per-PR CVE gate
-# that must still catch a vulnerability surfaced by an upstream advisory
-# even on a docs-only PR. The jobs themselves stay in the workflow so
-# the required-status-check name still posts a result (a skipped job via
-# workflow `paths:` would never report, which leaves branch protection
-# stuck "expected").
+# Path-filter gating: the four expensive jobs short-circuit when the diff
+# doesn't touch their domain. Each gated job:
+#   1. Checks out the repo with `fetch-depth: 0` — dorny/paths-filter needs
+#      git history on `push` events to diff against the previous commit
+#      (for `pull_request` it uses the GH API and the checkout isn't needed,
+#      but we keep one checkout step that satisfies both event types). The
+#      first attempt (PR #395) skipped this and broke `push` builds on main
+#      with `git exit 128`.
+#   2. Runs dorny/paths-filter to compute whether the diff touched any
+#      relevant path. Workflow-level `paths:` cannot replace this because a
+#      required status check that never runs leaves branch protection stuck
+#      in "expected" forever.
+#   3. Echoes a skip note + guards every following step on the filter
+#      output. `lint` and `pip-audit` stay always-on — `lint` is ~10 s
+#      anywhere and `pip-audit` is the per-PR CVE gate that must still
+#      catch a fresh upstream advisory even on a docs-only PR.
 
 jobs:
   test:
     name: test
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          # `dorny/paths-filter` needs git history to diff against the
+          # previous commit on `push`. `fetch-depth: 0` makes that work
+          # without dragging the submodule (handled separately below).
+          fetch-depth: 0
+          # actions/checkout does not honour `shallow = true` in .gitmodules
+          # natively, so we skip it here and clone the submodule manually
+          # below. legalize-es is ~1.7 GB upstream; `--depth 1` only trims
+          # history (the tip still pulls hundreds of MB), so we combine it
+          # with `--filter=blob:none` and `actions/cache` keyed to the
+          # gitlink SHA to make cache hits near-instant.
+          submodules: false
+
       - uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -63,17 +85,6 @@ jobs:
       - name: Skip — no backend changes
         if: steps.changes.outputs.backend != 'true'
         run: echo "No backend source changes; skipping pytest."
-
-      - uses: actions/checkout@v6
-        if: steps.changes.outputs.backend == 'true'
-        with:
-          # actions/checkout does not honour `shallow = true` in .gitmodules
-          # natively, so we skip it here and clone the submodule manually
-          # below. legalize-es is ~1.7 GB upstream; `--depth 1` only trims
-          # history (the tip still pulls hundreds of MB), so we combine it
-          # with `--filter=blob:none` and `actions/cache` keyed to the
-          # gitlink SHA to make cache hits near-instant.
-          submodules: false
 
       - name: Resolve legalize-es gitlink SHA
         if: steps.changes.outputs.backend == 'true'
@@ -134,6 +145,10 @@ jobs:
     name: typecheck
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -148,9 +163,6 @@ jobs:
       - name: Skip — no backend changes
         if: steps.changes.outputs.backend != 'true'
         run: echo "No backend source changes; skipping mypy."
-
-      - uses: actions/checkout@v6
-        if: steps.changes.outputs.backend == 'true'
 
       - name: Install uv
         if: steps.changes.outputs.backend == 'true'
@@ -194,6 +206,10 @@ jobs:
       run:
         working-directory: frontend
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -204,12 +220,7 @@ jobs:
 
       - name: Skip — no frontend changes
         if: steps.changes.outputs.frontend != 'true'
-        # working-directory is `frontend/`; the dir always exists because
-        # it's part of the checkout root. ``echo`` here just for clarity.
         run: echo "No frontend changes; skipping SPA lint+test+build."
-
-      - uses: actions/checkout@v6
-        if: steps.changes.outputs.frontend == 'true'
 
       - uses: actions/setup-node@v6
         if: steps.changes.outputs.frontend == 'true'
@@ -248,6 +259,10 @@ jobs:
       run:
         working-directory: landing
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -259,9 +274,6 @@ jobs:
       - name: Skip — no landing changes
         if: steps.changes.outputs.landing != 'true'
         run: echo "No landing changes; skipping landing build."
-
-      - uses: actions/checkout@v6
-        if: steps.changes.outputs.landing == 'true'
 
       - uses: actions/setup-node@v6
         if: steps.changes.outputs.landing == 'true'
