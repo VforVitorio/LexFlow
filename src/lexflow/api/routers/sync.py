@@ -19,8 +19,11 @@ from __future__ import annotations
 
 import logging
 import subprocess
+import threading
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, status
+from pydantic import BaseModel
 
 from lexflow.api.dependencies import get_graph, reset_graph_cache
 from lexflow.core.corpus_revision import submodule_hash
@@ -41,22 +44,27 @@ router = APIRouter(prefix="/sync", tags=["Sync"])
 
 GRAPH_CACHE_FILENAME = "graph_cache.json"
 
+# Audit #409 — concurrency guard. ``POST /sync`` can run up to 120 s of
+# subprocess + a potential full graph rebuild; without a gate the SPA
+# (or an attacker) can stack overlapping calls that block every other
+# sync-class request and burn CPU+I/O. The lock is acquired in
+# non-blocking mode; a second request gets 429 immediately. Same
+# pattern reused for ``/mcp/bundles`` size-limited upload guard at the
+# router level.
+_SYNC_IN_FLIGHT = threading.Lock()
+_LAST_SYNC: dict[str, str | int | None] = {"finished_at": None, "mode": None}
 
-@router.post("")
-def sync_corpus(response: Response) -> dict[str, str | int]:
-    """Pull the latest legalize-es revision and refresh state.
 
-    Sprint 5 api-1: returns ``200 OK`` only for the ``noop`` mode (the
-    corpus was already at HEAD). Modes that actually mutate state
-    (``incremental``, ``rebuild``) return ``201 Created`` with a
-    ``Location`` header pointing at the resulting revision. This lets
-    cache-friendly clients tell "nothing happened" from "you changed the
-    world" without parsing the body.
+class SyncStatusResponse(BaseModel):
+    """Wire shape for ``GET /sync/status``."""
 
-    Returns a payload describing what happened: ``mode`` is ``noop``
-    (nothing changed), ``incremental`` (a bounded delta was applied),
-    or ``rebuild`` (caches dropped for a full rebuild on next use).
-    """
+    in_flight: bool
+    last_finished_at: str | None
+    last_mode: str | None
+
+
+def _run_sync(response: Response) -> dict[str, str | int]:
+    """Inner sync routine. Caller must hold ``_SYNC_IN_FLIGHT``."""
     settings = get_settings()
     data_path = settings.data_path
     registry = get_registry()
@@ -86,6 +94,69 @@ def sync_corpus(response: Response) -> dict[str, str | int]:
         "modified": len(diff.modified),
         "removed": len(diff.removed),
     }
+
+
+def _gated_sync(response: Response) -> dict[str, str | int]:
+    """Acquire the in-flight lock or 429, then run the sync routine."""
+    if not _SYNC_IN_FLIGHT.acquire(blocking=False):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "sync_in_flight",
+                "message": "Another sync is already running. Wait for it to finish before triggering a new one.",
+            },
+        )
+    result: dict[str, str | int] | None = None
+    try:
+        result = _run_sync(response)
+        return result
+    finally:
+        _LAST_SYNC["finished_at"] = datetime.now(UTC).isoformat()
+        mode_value = result.get("mode") if isinstance(result, dict) else None
+        _LAST_SYNC["mode"] = mode_value if isinstance(mode_value, str) else None
+        _SYNC_IN_FLIGHT.release()
+
+
+@router.post("")
+def sync_corpus(response: Response) -> dict[str, str | int]:
+    """Pull the latest legalize-es revision and refresh state.
+
+    Sprint 5 api-1: returns ``200 OK`` only for the ``noop`` mode (the
+    corpus was already at HEAD). Modes that actually mutate state
+    (``incremental``, ``rebuild``) return ``201 Created`` with a
+    ``Location`` header pointing at the resulting revision. This lets
+    cache-friendly clients tell "nothing happened" from "you changed the
+    world" without parsing the body.
+
+    Audit #409: serialised behind ``_SYNC_IN_FLIGHT``; overlapping
+    requests are rejected with 429.
+    """
+    return _gated_sync(response)
+
+
+@router.post("/run", summary="SPA alias for `POST /sync` (#465).")
+def sync_run_alias(response: Response) -> dict[str, str | int]:
+    """SPA-facing alias for ``POST /sync``.
+
+    The SPA's Datos tab and the HomePage banner used to call
+    ``POST /sync/run`` and ``GET /sync/status``, but the backend only
+    exposed bare ``POST /sync``. Adding the alias keeps the SPA path
+    contract stable without breaking external callers of the canonical
+    ``POST /sync``.
+    """
+    return _gated_sync(response)
+
+
+@router.get("/status", response_model=SyncStatusResponse, summary="In-flight + last-run state (#465).")
+def sync_status() -> SyncStatusResponse:
+    """Return whether a sync is running and metadata about the last one."""
+    last_finished = _LAST_SYNC["finished_at"]
+    last_mode = _LAST_SYNC["mode"]
+    return SyncStatusResponse(
+        in_flight=_SYNC_IN_FLIGHT.locked(),
+        last_finished_at=last_finished if isinstance(last_finished, str) else None,
+        last_mode=last_mode if isinstance(last_mode, str) else None,
+    )
 
 
 def _git_pull(data_path: str) -> str:

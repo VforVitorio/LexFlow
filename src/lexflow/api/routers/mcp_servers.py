@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import tempfile
+import threading
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
@@ -232,6 +233,11 @@ async def list_mcp_tools() -> McpToolListResponse:
 # we even open the zip.
 _MAX_BUNDLE_UPLOAD_BYTES = 50 * 1024 * 1024
 
+# Audit #409: one concurrent bundle install at a time. Without this an
+# attacker can fire parallel 50 MB uploads at the unauthenticated
+# endpoint and pin disk I/O. Same threading-lock idiom as ``/sync``.
+_BUNDLE_INSTALL_LOCK = threading.Lock()
+
 
 @router.post(
     "/bundles",
@@ -247,6 +253,7 @@ async def install_mcp_bundle(file: UploadFile = File(...)) -> McpServerView:
       * 201 + the new ``McpServerView`` on success.
       * 409 if the manifest's ``name`` clashes with a built-in or an
         existing user entry.
+      * 429 if another bundle install is already running (audit #409).
       * 400 with ``{"code": ..., "message": ...}`` for any bundle
         validation failure (bad zip, missing manifest, oversize, …).
 
@@ -255,6 +262,22 @@ async def install_mcp_bundle(file: UploadFile = File(...)) -> McpServerView:
     tree. Only after validation do we move the contents into place
     and append the entry to ``mcp.json``.
     """
+    if not _BUNDLE_INSTALL_LOCK.acquire(blocking=False):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "bundle_install_busy",
+                "message": "Another MCP bundle install is already running. Wait for it to finish.",
+            },
+        )
+    try:
+        return await _install_mcp_bundle_inner(file)
+    finally:
+        _BUNDLE_INSTALL_LOCK.release()
+
+
+async def _install_mcp_bundle_inner(file: UploadFile) -> McpServerView:
+    """Caller holds ``_BUNDLE_INSTALL_LOCK``."""
     payload = await file.read()
     if len(payload) > _MAX_BUNDLE_UPLOAD_BYTES:
         raise HTTPException(
