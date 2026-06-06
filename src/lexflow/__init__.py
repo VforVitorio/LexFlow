@@ -1,3 +1,3 @@
 """LexFlow - Open source platform for Spanish legislation exploration and analysis."""
 
-__version__ = "0.38.3"
+__version__ = "0.39.0"
