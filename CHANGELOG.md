@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.38.1](https://github.com/VforVitorio/LexFlow/compare/v0.38.0...v0.38.1) (2026-06-06)
+
+
+### Refactoring
+
+* **chat:** split stream_chat_reply orchestrator into helpers ([a4d0124](https://github.com/VforVitorio/LexFlow/commit/a4d0124415764476d14463146928095064c3a70e))
+
 ## [0.38.0](https://github.com/VforVitorio/LexFlow/compare/v0.37.0...v0.38.0) (2026-06-06)
 
 
