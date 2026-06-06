@@ -23,7 +23,7 @@ from collections.abc import AsyncIterator, Awaitable
 from typing import Any
 
 import ollama
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -35,6 +35,15 @@ from lexflow.chat.schemas import ModelInfo
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Models"])
+
+# Audit #409: ``/models/pull`` had no concurrency guard, so a single
+# unauthenticated request could spawn parallel ``ollama pull`` jobs
+# downloading hundreds of GB of model weights. ``_PULL_IN_FLIGHT`` is
+# a single-permit semaphore — only one pull may run at a time per
+# process. The lifecycle is `acquire on request → release on stream
+# completion / cancel`. A request that hits the closed door gets a
+# 429 immediately.
+_PULL_IN_FLIGHT = asyncio.Semaphore(1)
 
 # Probe budget per provider. Ollama / LM Studio block on TCP if not running,
 # so we cap each probe so the overall request can never exceed
@@ -253,9 +262,30 @@ async def pull_model(body: ModelPullRequest) -> StreamingResponse:
     Consumed by the model wizard's confirm step (#118). The wizard kicks the
     request, renders the byte counters as a progress bar, and treats the
     ``done`` event as "model is installed; re-detect to verify".
+
+    Audit #409: only one pull may run at a time per process. A second
+    request while one is in flight gets ``429 Too Many Requests`` so an
+    attacker (or a confused user clicking twice) can't fill the disk
+    with parallel multi-GB downloads.
     """
+    if _PULL_IN_FLIGHT.locked():
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "model_pull_busy",
+                "message": "Another model pull is already running. Wait for it to finish before starting a new one.",
+            },
+        )
+
+    async def gated_stream() -> AsyncIterator[bytes]:
+        # Hold the semaphore for the lifetime of the stream so the gate
+        # releases exactly when the SPA sees the ``done``/``error`` event.
+        async with _PULL_IN_FLIGHT:
+            async for chunk in _pull_progress(body.model):
+                yield chunk
+
     return StreamingResponse(
-        _pull_progress(body.model),
+        gated_stream(),
         media_type="text/event-stream",
         headers={
             # Disable response buffering on reverse proxies (nginx etc.)

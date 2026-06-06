@@ -17,7 +17,6 @@ drift. Now both sides import :data:`PROVIDER_SPECS`.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -49,10 +48,21 @@ class ProviderSpec:
     env_key: str | None = None
 
     def has_credentials(self) -> bool:
-        """``True`` when the provider can be probed in the current env."""
+        """``True`` when the provider can be probed in the current env.
+
+        Audit #409: previously only checked the env var, so a user who
+        pasted their key into Settings → Models (which lands in the OS
+        keyring) saw "Falta clave" on ``/models`` even though the chat
+        worked. ``get_api_key`` is the same resolver the providers use
+        (env first, keyring fallback) so the listing now matches reality.
+        """
         if self.env_key is None:
             return True
-        return bool(os.environ.get(self.env_key))
+        # Local import to avoid a circular dependency at module load
+        # time (``secrets`` reuses provider-registry constants).
+        from lexflow.chat.secrets import get_api_key
+
+        return get_api_key(self.key) is not None
 
 
 PROVIDER_SPECS: list[ProviderSpec] = [
