@@ -16,11 +16,17 @@ export function OnboardingPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [step, setStep] = useState(1);
-  const { theme, setTheme, defaultModel, setDefaultModel } = useUi();
-  const [telemetry, setTelemetry] = useState(false);
+  // Audit #409 — read setTelemetryConsent so the opt-in toggle the
+  // user flicks during onboarding actually lands in the persisted
+  // store. Previously the local `telemetry` state was discarded on
+  // `finish()` and Settings → Privacidad still reported "off" after
+  // the user enabled it during onboarding.
+  const { theme, setTheme, defaultModel, setDefaultModel, telemetryConsent, setTelemetryConsent } = useUi();
+  const [telemetry, setTelemetry] = useState(telemetryConsent);
   const { data: models = [] } = useModels();
 
   const finish = () => {
+    setTelemetryConsent(telemetry);
     try { localStorage.setItem('lexflow.onboarded', '1'); } catch { /* private mode */ }
     navigate('/home');
   };

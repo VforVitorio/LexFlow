@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send } from 'lucide-react';
 import { Button, Chip, Kbd } from '@/components/ui';
@@ -12,15 +12,31 @@ import { api } from '@/lib/api';
 import { applyChunk } from '@/lib/api.mock';
 import { useUi } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { toast } from '@/lib/toast';
 import type { ChatMessage as ChatMessageT, ChatSource } from '@/lib/types';
+
+const FALLBACK_THREAD_ID = 'eipd';
 
 export function ChatPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const defaultModel = useUi((s) => s.defaultModel);
-  const [activeId, setActiveId] = useState<string>('eipd');
+  // Audit #409 — read the URL param so deep links like `/chat/legal-x`
+  // honour the thread id. The page used to hardcode 'eipd' and silently
+  // ignore the param registered on the route. Internal navigation pushes
+  // through `selectThread` so the URL stays in sync.
+  const { threadId } = useParams<{ threadId?: string }>();
+  const [activeId, setActiveId] = useState<string>(threadId ?? FALLBACK_THREAD_ID);
+  useEffect(() => {
+    if (threadId && threadId !== activeId) setActiveId(threadId);
+  }, [threadId, activeId]);
+  const selectThread = (id: string) => {
+    setActiveId(id);
+    navigate(`/chat/${encodeURIComponent(id)}`);
+  };
   const [draft, setDraft] = useState('');
   const [stream, setStream] = useState<ChatMessageT | null>(null);
+  const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { data: threads = [] } = useChatThreads();
@@ -32,18 +48,31 @@ export function ChatPage() {
   }, [visible.length, stream]);
 
   const send = async () => {
-    if (!draft.trim()) return;
+    // Audit #409: previous code had no in-flight guard, so double-Enter
+    // raced two streams and overwrote `setStream`. The early-return on
+    // `sending` is the simple fix; the `finally` block guarantees the
+    // typing indicator clears even when the generator throws.
+    if (sending || !draft.trim()) return;
     const content = draft;
     setDraft('');
+    setSending(true);
     let current: ChatMessageT | null = null;
-    for await (const chunk of api.chat.send(activeId, content, { model: defaultModel })) {
-      current = applyChunk(current, chunk);
-      setStream(current);
+    try {
+      for await (const chunk of api.chat.send(activeId, content, { model: defaultModel })) {
+        current = applyChunk(current, chunk);
+        setStream(current);
+      }
+    } catch (exc) {
+      // Surface the failure with a toast and restore the draft so the
+      // user can retry without retyping. Without this the indicator
+      // hung forever and the draft was silently discarded.
+      const message = exc instanceof Error ? exc.message : 'Error desconocido';
+      toast({ tone: 'danger', title: 'No se pudo enviar el mensaje', message });
+      setDraft(content);
+    } finally {
+      setStream(null);
+      setSending(false);
     }
-    setStream(null);
-    // In a real app: invalidate the thread query so the persisted backend
-    // copy replaces the streamed one. With mocks we'd push the message into
-    // the seed array — left for the FastAPI backend to handle.
   };
 
   return (
@@ -66,7 +95,7 @@ export function ChatPage() {
               {ts.map((thread) => (
                 <button
                   key={thread.id}
-                  onClick={() => setActiveId(thread.id)}
+                  onClick={() => selectThread(thread.id)}
                   className={cn(
                     'mb-0.5 w-full truncate rounded px-2.5 py-1.5 text-left text-[13px] transition-colors',
                     activeId === thread.id ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',
@@ -118,10 +147,16 @@ export function ChatPage() {
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); } }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  if (!sending) send();
+                }
+              }}
               placeholder={t('chat.placeholder')}
-              className="min-h-[44px] w-full resize-none bg-transparent px-1 text-[14.5px] outline-none placeholder:text-muted"
+              className="min-h-[44px] w-full resize-none bg-transparent px-1 text-[14.5px] outline-none placeholder:text-muted disabled:opacity-60"
               rows={2}
+              disabled={sending}
             />
             <div className="mt-1.5 flex items-center gap-1.5">
               <Button size="icon-sm" variant="ghost" aria-label={t('chat.attach')} icon={<Paperclip className="size-3.5" />} />
@@ -129,7 +164,7 @@ export function ChatPage() {
               <Chip icon={<SlidersHorizontal className="size-3" />}>{t('chat.onlyInForce')}</Chip>
               <span className="ml-auto flex items-center gap-2">
                 <Kbd>⌘↵</Kbd>
-                <Button size="sm" icon={<Send className="size-3.5" />} onClick={send}>{t('chat.send')}</Button>
+                <Button size="sm" icon={<Send className="size-3.5" />} onClick={send} disabled={sending}>{t('chat.send')}</Button>
               </span>
             </div>
           </div>

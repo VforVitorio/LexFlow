@@ -202,10 +202,17 @@ export function GraphPage() {
               })}
             </div>
 
+            {/* Audit #409: only law-kind nodes have a meaningful
+                ``/laws/<id>`` target; article / reference / amendment
+                ids would 404. Disable the button (and encode the id)
+                until we can resolve a parent law from those kinds.
+                The IDs from xyflow are URL-safe today but
+                ``encodeURIComponent`` is the right defensive pattern
+                if the corpus ever ships ids with reserved characters. */}
             <Button
               className="mt-5 w-full"
-              onClick={() => selected && navigate(`/laws/${selected}`)}
-              disabled={!selected}
+              onClick={() => selected && node?.kind === 'law' && navigate(`/laws/${encodeURIComponent(selected)}`)}
+              disabled={!selected || node?.kind !== 'law'}
             >
               {t('graph.openLaw')}
             </Button>

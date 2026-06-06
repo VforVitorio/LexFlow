@@ -34,6 +34,15 @@ export function CommandPalette() {
     }
   }, [paletteOpen]);
 
+  // Audit #409: ``active`` used to be set to ``0`` only on
+  // ``paletteOpen``; typing past the result count left ``active``
+  // pointing into the void, so ``Enter`` became a no-op. Resetting
+  // whenever the query changes guarantees Enter always runs the
+  // top item even after the list shortens.
+  useEffect(() => {
+    setActive(0);
+  }, [q]);
+
   const { data: searchData } = useSearch(q);
   const { data: vocab = [] } = useTags();
 
