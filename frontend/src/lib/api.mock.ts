@@ -75,7 +75,7 @@ export const mockApi: ApiClient = {
       if (detail) return detail;
       const base = LAWS.find((l) => l.id === id);
       if (!base) throw new Error(`law not found: ${id}`);
-      return { ...base, hierarchy: [] };
+      return { ...base, hierarchy: [], articles: ARTICLES.filter((a) => a.lawId === id) };
     },
     async versions(id) {
       await delay(120);
@@ -95,7 +95,10 @@ export const mockApi: ApiClient = {
     },
     async references(id) {
       await delay(140);
-      return ARTICLES.filter((a) => a.lawId === id);
+      // Flatten the per-article refs in the law's article fixtures —
+      // mirrors what the live `/laws/{id}/references` endpoint returns
+      // (one entry per outgoing reference, not per article).
+      return ARTICLES.filter((a) => a.lawId === id).flatMap((a) => a.refs);
     },
   },
   articles: {

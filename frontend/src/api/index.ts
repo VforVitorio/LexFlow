@@ -31,6 +31,7 @@ export type BackendDiffStats    = S<'DiffStats'>;
 export type BackendArticle      = S<'Article'>;
 export type BackendArticleResponse = S<'ArticleResponse'>;
 export type BackendReference    = S<'Reference'>;
+export type BackendLawReferencesResponse = S<'LawReferencesResponse'>;
 export type BackendSection      = S<'Section'>;
 export type BackendSearchResponse = S<'SearchResponse'>;
 export type BackendSearchResult = S<'SearchResult'>;

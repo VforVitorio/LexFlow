@@ -1,15 +1,16 @@
 /**
  * `liveApi.laws` — list / get / versions / diff / references.
  *
- * The backend has no dedicated `/references` endpoint yet, so we
- * derive references from the law-detail payload (#96 will add a
- * proper endpoint; once that lands, swap the implementation here
- * and the rest of the SPA keeps working unchanged).
+ * `references` hits the dedicated `/laws/{id}/references` endpoint
+ * (#96) so a refs-only consumer doesn't have to download the full
+ * law body. The detail fetch (`get`) already includes the parsed
+ * articles, so the SPA doesn't double-fetch when both are needed.
  */
 
 import type {
   BackendLawDetail,
   BackendLawDiff,
+  BackendLawReferencesResponse,
   BackendLawSummary,
   BackendLawVersion,
   BackendPaginated,
@@ -18,10 +19,10 @@ import type { ApiClient, Law, Paginated } from '../types';
 import { http, qs } from './http';
 import {
   listLawsQuery,
-  transformArticle,
   transformDiff,
   transformLaw,
   transformLawDetail,
+  transformReference,
   transformVersion,
 } from './transformers';
 
@@ -50,9 +51,9 @@ export const liveLawsApi: ApiClient['laws'] = {
     return transformDiff(raw);
   },
   references: async (id) => {
-    // No dedicated /references endpoint yet (#96). Derive from the
-    // law detail until the backend exposes one.
-    const raw = await http<BackendLawDetail>(`/laws/${encodeURIComponent(id)}`);
-    return (raw.articles ?? []).filter((a) => (a.references ?? []).length > 0).map((a) => transformArticle(id, a));
+    const raw = await http<BackendLawReferencesResponse>(
+      `/laws/${encodeURIComponent(id)}/references`,
+    );
+    return raw.references.map(transformReference);
   },
 };
