@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.40.5](https://github.com/VforVitorio/LexFlow/compare/v0.40.4...v0.40.5) (2026-06-07)
+
+
+### Bug Fixes
+
+* **explorer:** make search, sort and tag filters work client-side ([1c25f97](https://github.com/VforVitorio/LexFlow/commit/1c25f97cfd69f69f21c2f228b2327f22c1358cf1))
+* **explorer:** remove false sort affordance from table headers ([07ade64](https://github.com/VforVitorio/LexFlow/commit/07ade6499ba488b4e1e57a0eb659b96dc026d8db))
+
+
+### Performance
+
+* **audit:** small wins + pytest-xdist CI speedup (Batch G) ([b5a971d](https://github.com/VforVitorio/LexFlow/commit/b5a971dd6bffe0eebde705ef772f201ed2abda2f))
+* **audit:** small wins + pytest-xdist CI speedup (Batch G) ([fc07959](https://github.com/VforVitorio/LexFlow/commit/fc0795969b8c6894076bd641d5f56a91860d7a6a)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+* **frontend:** lazy-load the en locale to shrink the main bundle ([739f342](https://github.com/VforVitorio/LexFlow/commit/739f34262a92205c6e3c4c6851c4f76bb188a0b9))
+
 ## [0.40.4](https://github.com/VforVitorio/LexFlow/compare/v0.40.3...v0.40.4) (2026-06-06)
 
 
