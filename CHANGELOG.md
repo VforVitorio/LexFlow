@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.44.0](https://github.com/VforVitorio/LexFlow/compare/v0.43.0...v0.44.0) (2026-06-07)
+
+
+### Features
+
+* **chat:** native tool-use streaming for OpenAI, Anthropic, Google (Batch N) ([8f5b6a0](https://github.com/VforVitorio/LexFlow/commit/8f5b6a021e3b817c4cdfbb92efc9d5c9d50d8dda)), closes [#464](https://github.com/VforVitorio/LexFlow/issues/464)
+* **chat:** native tool-use streaming for OpenAI/Anthropic/Google (Batch N) ([0e773ed](https://github.com/VforVitorio/LexFlow/commit/0e773ed7e915035f766c44bab3aeeb4ec1b5ff3a))
+
 ## [0.43.0](https://github.com/VforVitorio/LexFlow/compare/v0.42.0...v0.43.0) (2026-06-07)
 
 
