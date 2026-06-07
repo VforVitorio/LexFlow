@@ -6,7 +6,8 @@ import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
-import { useHealth, useModels, useSyncStatus, useRunSync, useTelemetryStatus } from '@/lib/queries';
+import { useHealth, useModels, useSyncStatus, useRunSync, useTelemetryStatus, useWhatsNew } from '@/lib/queries';
+import { Skeleton } from '@/components/domain/Skeleton';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
 import { USER_NAME_STORAGE_KEY } from '@/lib/greeting';
@@ -107,12 +108,8 @@ export function SettingsPage() {
         {section === 'diagnostics' && <DiagnosticsSection />}
         {section === 'privacy' && <PrivacySection />}
         {section === 'help' && <HelpSection />}
-        {(section === 'updates' || section === 'about') && (
-          <div className="py-10 text-center text-muted">
-            <h1 className="font-display text-2xl font-semibold">{t(`settings.sections.${section}`)}</h1>
-            <p className="mt-2 text-sm">{t('settings.underConstruction')}</p>
-          </div>
-        )}
+        {section === 'updates' && <UpdatesSection />}
+        {section === 'about' && <AboutSection />}
       </div>
     </div>
   );
@@ -342,6 +339,96 @@ function AppearanceSection() {
         <input type="range" min={14} max={22} step={1} value={readingSize} onChange={(e) => setReadingSize(Number(e.target.value))} className="w-64" />
         <span className="font-mono text-[13px]">{readingSize}px</span>
       </div>
+    </>
+  );
+}
+
+/**
+ * Audit #473 — Settings → Updates. Surfaces what changed in the
+ * corpus since the user last opened the app, using the existing
+ * `useWhatsNew` query (also consumed by SplashGate's WhatsNewPanel).
+ *
+ * The section is read-only — actual sync triggering lives in the
+ * Datos tab (sync run/status) so we don't have two buttons that do
+ * almost the same thing.
+ */
+function UpdatesSection() {
+  const { t } = useTranslation();
+  const { data, isLoading } = useWhatsNew(null);
+  return (
+    <>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.updates.title')}</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">{t('settings.updates.subtitle')}</p>
+      {isLoading ? (
+        <Card>
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="mt-2 h-3 w-64" />
+        </Card>
+      ) : data && (data.added.length > 0 || data.modified.length > 0 || data.removed.length > 0) ? (
+        <Card>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <SummaryStat label={t('whatsNew.added')} value={data.added.length} tone="success" />
+            <SummaryStat label={t('whatsNew.modified')} value={data.modified.length} tone="info" />
+            <SummaryStat label={t('settings.updates.removedShort')} value={data.removed.length} tone="danger" />
+          </div>
+          {data.toCommit && (
+            <p className="mt-4 font-mono text-[12px] text-muted">{t('settings.updates.atCommit', { sha: data.toCommit.slice(0, 7) })}</p>
+          )}
+        </Card>
+      ) : (
+        <Card>
+          <p className="text-[13.5px] text-muted">{t('settings.updates.upToDate')}</p>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function SummaryStat({ label, value, tone }: { label: string; value: number; tone: 'success' | 'info' | 'danger' }) {
+  const color = tone === 'success' ? 'text-emerald-600 dark:text-emerald-400'
+    : tone === 'info' ? 'text-indigo-600 dark:text-indigo-300'
+    : 'text-rose-600 dark:text-rose-400';
+  return (
+    <div>
+      <div className={cn('font-display text-2xl font-semibold', color)}>{value}</div>
+      <div className="mt-0.5 text-[12.5px] text-muted">{label}</div>
+    </div>
+  );
+}
+
+/**
+ * Audit #473 — Settings → About. App version, repo link, license,
+ * audit footprint. Static + cheap to render; no backend calls.
+ */
+function AboutSection() {
+  const { t } = useTranslation();
+  // The Vite build inlines `__APP_VERSION__` from `package.json`'s
+  // version field (see `vite-env.d.ts`). Fall back to "—" so a
+  // missing define never crashes the page.
+  const version = (import.meta.env.VITE_APP_VERSION as string | undefined) ?? '—';
+  return (
+    <>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.about.title')}</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">{t('settings.about.subtitle')}</p>
+      <Card>
+        <dl className="grid grid-cols-[120px_1fr] gap-y-2 text-[13.5px]">
+          <dt className="text-muted">{t('settings.about.version')}</dt>
+          <dd className="font-mono">{version}</dd>
+          <dt className="text-muted">{t('settings.about.license')}</dt>
+          <dd>Apache 2.0</dd>
+          <dt className="text-muted">{t('settings.about.repo')}</dt>
+          <dd>
+            <a
+              className="text-indigo-600 hover:underline dark:text-indigo-300"
+              href="https://github.com/VforVitorio/LexFlow"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              github.com/VforVitorio/LexFlow
+            </a>
+          </dd>
+        </dl>
+      </Card>
     </>
   );
 }
