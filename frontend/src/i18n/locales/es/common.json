@@ -86,7 +86,19 @@
     "addedToast_one": "{{count}} server añadido",
     "addedToast_other": "{{count}} servers añadidos",
     "addedToastBody": "Cargados en mcp.json",
-    "noneAdded": "Ningún server pudo añadirse. Revisa el detalle en los avisos."
+    "noneAdded": "Ningún server pudo añadirse. Revisa el detalle en los avisos.",
+    "tabServers": "Servidores",
+    "tabTools": "Herramientas",
+    "tabBundle": "Instalar .mcpb",
+    "toolsLoading": "Cargando catálogo de herramientas…",
+    "toolsEmpty": "Ninguno de los servidores conectados expuso herramientas.",
+    "bundleTitle": "Instalar un bundle .mcpb",
+    "bundleSubtitle": "Arrastra un archivo .mcpb (Anthropic Desktop Extension) o pulsa Elegir archivo. Se valida el manifest, se extrae bajo ~/.lexflow/mcp-bundles/ y se añade a tu lista.",
+    "bundleChooseFile": "Elegir archivo .mcpb",
+    "bundleInstalling": "Instalando…",
+    "bundleInstalled": "Bundle instalado",
+    "bundleFailed": "No se pudo instalar el bundle",
+    "bundleWrongExt": "El archivo debe terminar en .mcpb"
   },
   "wizard": {
     "dialogAria": "Configurar modelo de IA",
