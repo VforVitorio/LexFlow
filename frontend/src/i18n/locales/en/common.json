@@ -222,7 +222,14 @@
     "citeArticle": "Cite article…",
     "onlyInForce": "In-force only",
     "send": "Send",
-    "sources": "Sources"
+    "sources": "Sources",
+    "renameAria": "Rename {{title}}",
+    "deleteAria": "Delete {{title}}",
+    "renamePrompt": "New conversation name",
+    "deleteConfirm": "Delete the conversation \"{{title}}\"?",
+    "createFailed": "Couldn't create the conversation",
+    "renameFailed": "Couldn't rename",
+    "deleteFailed": "Couldn't delete"
   },
   "lawDetail": {
     "tabs": {

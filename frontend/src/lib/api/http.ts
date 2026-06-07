@@ -36,14 +36,25 @@ export class ApiError extends Error {
   }
 }
 
-/** Typed fetch helper that throws `ApiError` on non-2xx + parses JSON. */
+/** Typed fetch helper that throws `ApiError` on non-2xx + parses JSON.
+ *
+ * Content-Type rule: the JSON default is dropped automatically when the
+ * caller passes a ``FormData`` body so the browser can set the correct
+ * multipart boundary. Without this guard the multipart upload reaches
+ * the backend with ``Content-Type: application/json`` and FastAPI
+ * fails to parse the boundary. Same logic applies to ``URLSearchParams``
+ * and ``Blob`` bodies.
+ */
 export async function http<T>(path: string, init: RequestInit = {}): Promise<T> {
   const full = path.startsWith('http') ? path : `${API_BASE}${API_PREFIX}${path}`;
+  const body = init.body;
+  const isStructured = body instanceof FormData || body instanceof URLSearchParams || body instanceof Blob;
+  const baseHeaders: Record<string, string> = { Accept: 'application/json' };
+  if (!isStructured) baseHeaders['Content-Type'] = 'application/json';
   const res = await fetch(full, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+      ...baseHeaders,
       ...(init.headers || {}),
     },
   });

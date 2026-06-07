@@ -479,6 +479,17 @@ export interface ApiClient {
   chat: {
     threads(): Promise<ChatThread[]>;
     thread(id: string): Promise<ChatMessage[]>;
+    /**
+     * Create a new thread (#463). The backend default title is
+     * "Nueva conversación"; pass ``title`` to override. ``model`` is
+     * optional metadata for the conversation rail.
+     */
+    create(opts?: { title?: string; model?: string }): Promise<ChatThread>;
+    /** Rename a thread; the backend rejects empty/whitespace titles. */
+    rename(threadId: string, title: string): Promise<ChatThread>;
+    /** Delete a thread + cascade messages. Idempotent: deleting an
+     * unknown id still resolves cleanly (the backend returns 204). */
+    remove(threadId: string): Promise<void>;
     /** Streams chunks until `{type:'done'}`. Implementations may emit text deltas, tool calls, tool results, and sources. */
     send(
       threadId: string,

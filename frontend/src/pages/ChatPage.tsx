@@ -1,13 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send } from 'lucide-react';
+import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send, Pencil, Trash2 } from 'lucide-react';
 import { Button, Chip, Kbd } from '@/components/ui';
 import { ChatMessage } from '@/components/domain/ChatMessage';
 import { ModelChip } from '@/components/domain/ModelChip';
 import { CitationCard } from '@/components/domain/CitationCard';
 import { RightRail } from '@/components/shell/RightRail';
-import { useChatThreads, useChatThread } from '@/lib/queries';
+import {
+  useChatThreads,
+  useChatThread,
+  useCreateChatThread,
+  useDeleteChatThread,
+  useRenameChatThread,
+} from '@/lib/queries';
 import { api } from '@/lib/api';
 import { applyChunk } from '@/lib/api.mock';
 import { useUi } from '@/lib/store';
@@ -41,6 +47,12 @@ export function ChatPage() {
 
   const { data: threads = [] } = useChatThreads();
   const { data: msgs = [] } = useChatThread(activeId);
+  // Audit #463 — live thread CRUD. The "Nueva conversación" button
+  // calls ``create`` and navigates to the new id; rename/delete are
+  // exposed via tiny inline buttons next to each row in the rail.
+  const createThread = useCreateChatThread();
+  const renameThread = useRenameChatThread();
+  const deleteThread = useDeleteChatThread();
   // Audit #453 — during SSE streaming the component re-renders on every
   // token. These derived values used to recompute per render (a linear
   // `threads` scan for the title, a full-history walk for the sources
@@ -59,18 +71,71 @@ export function ChatPage() {
     bottomRef.current?.scrollIntoView?.({ block: 'end' });
   }, [visible.length, stream]);
 
+  const startNewThread = async () => {
+    // Audit #463 — replace the legacy "navigate to empty rail" stub
+    // with a real create call. The mutation invalidates the threads
+    // list so the new row appears in the rail on the next tick.
+    try {
+      const created = await createThread.mutateAsync({ model: defaultModel });
+      setDraft('');
+      selectThread(created.id);
+    } catch (exc) {
+      const message = exc instanceof Error ? exc.message : 'Error desconocido';
+      toast({ tone: 'danger', title: t('chat.createFailed'), message });
+    }
+  };
+
+  const handleRename = async (threadId: string, currentTitle: string) => {
+    const next = window.prompt(t('chat.renamePrompt'), currentTitle);
+    if (next == null) return;
+    const trimmed = next.trim();
+    if (!trimmed || trimmed === currentTitle) return;
+    try {
+      await renameThread.mutateAsync({ threadId, title: trimmed });
+    } catch (exc) {
+      const message = exc instanceof Error ? exc.message : 'Error desconocido';
+      toast({ tone: 'danger', title: t('chat.renameFailed'), message });
+    }
+  };
+
+  const handleDelete = async (threadId: string, title: string) => {
+    if (!window.confirm(t('chat.deleteConfirm', { title }))) return;
+    try {
+      await deleteThread.mutateAsync(threadId);
+      if (activeId === threadId) navigate('/chat');
+    } catch (exc) {
+      const message = exc instanceof Error ? exc.message : 'Error desconocido';
+      toast({ tone: 'danger', title: t('chat.deleteFailed'), message });
+    }
+  };
+
   const send = async () => {
     // Audit #409: previous code had no in-flight guard, so double-Enter
     // raced two streams and overwrote `setStream`. The early-return on
     // `sending` is the simple fix; the `finally` block guarantees the
     // typing indicator clears even when the generator throws.
     if (sending || !draft.trim()) return;
+    // Audit #463 — if the user lands on a stale fallback id with no
+    // matching thread in the live backend, transparently create a new
+    // one before sending so the first message doesn't 404.
+    let target = activeId;
+    if (!threadsById.has(target)) {
+      try {
+        const created = await createThread.mutateAsync({ model: defaultModel });
+        target = created.id;
+        selectThread(created.id);
+      } catch (exc) {
+        const message = exc instanceof Error ? exc.message : 'Error desconocido';
+        toast({ tone: 'danger', title: t('chat.createFailed'), message });
+        return;
+      }
+    }
     const content = draft;
     setDraft('');
     setSending(true);
     let current: ChatMessageT | null = null;
     try {
-      for await (const chunk of api.chat.send(activeId, content, { model: defaultModel })) {
+      for await (const chunk of api.chat.send(target, content, { model: defaultModel })) {
         current = applyChunk(current, chunk);
         setStream(current);
       }
@@ -91,17 +156,12 @@ export function ChatPage() {
     <div className="flex h-full min-h-0">
       {/* Conversation rail */}
       <aside className="w-60 shrink-0 overflow-auto border-r border-border bg-bg p-3.5 scrollbar-thin">
-        {/* Audit #468 — the button used to render with no onClick at
-            all. Until the chat surface is wired to the live backend
-            (#463 — adds `api.chat.create()`), clicking sends the user
-            to the empty-rail state by clearing the URL thread id so
-            the user can at least start drafting without staring at
-            the wrong (mock) thread. */}
         <Button
           size="sm"
           icon={<Plus className="size-3.5" />}
           className="mb-3 w-full"
-          onClick={() => { setDraft(''); navigate('/chat'); }}
+          onClick={startNewThread}
+          disabled={createThread.isPending}
         >
           {t('chat.newThread')}
         </Button>
@@ -118,16 +178,37 @@ export function ChatPage() {
             <div key={bucket}>
               <div className="label-caps mb-1.5 mt-3 first:mt-0">{t(`chat.groups.${bucket}`)}</div>
               {ts.map((thread) => (
-                <button
+                <div
                   key={thread.id}
-                  onClick={() => selectThread(thread.id)}
                   className={cn(
-                    'mb-0.5 w-full truncate rounded px-2.5 py-1.5 text-left text-[13px] transition-colors',
-                    activeId === thread.id ? 'bg-primary-soft font-semibold text-indigo-700 dark:text-indigo-200' : 'hover:bg-surface-2',
+                    'group mb-0.5 flex items-center gap-1 rounded px-2.5 py-1.5 transition-colors',
+                    activeId === thread.id ? 'bg-primary-soft' : 'hover:bg-surface-2',
                   )}
                 >
-                  {thread.title}
-                </button>
+                  <button
+                    onClick={() => selectThread(thread.id)}
+                    className={cn(
+                      'min-w-0 flex-1 truncate text-left text-[13px]',
+                      activeId === thread.id && 'font-semibold text-indigo-700 dark:text-indigo-200',
+                    )}
+                  >
+                    {thread.title}
+                  </button>
+                  <button
+                    aria-label={t('chat.renameAria', { title: thread.title })}
+                    className="rounded p-1 text-muted opacity-0 hover:text-fg group-hover:opacity-100"
+                    onClick={() => handleRename(thread.id, thread.title)}
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                  <button
+                    aria-label={t('chat.deleteAria', { title: thread.title })}
+                    className="rounded p-1 text-muted opacity-0 hover:text-rose-600 group-hover:opacity-100 dark:hover:text-rose-400"
+                    onClick={() => handleDelete(thread.id, thread.title)}
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                </div>
               ))}
             </div>
           ))

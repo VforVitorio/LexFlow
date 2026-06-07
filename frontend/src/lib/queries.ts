@@ -179,6 +179,41 @@ export function useChatThread(id: string | undefined) {
   });
 }
 
+/**
+ * Audit #463 — chat thread mutations.
+ *
+ * Each mutation invalidates the threads list so the conversation rail
+ * refreshes immediately. ``remove`` also drops the per-thread cache
+ * for the deleted id so a re-mount doesn't show stale messages.
+ */
+export function useCreateChatThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (opts: { title?: string; model?: string } = {}) => api.chat.create(opts),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.chatThreads() }),
+  });
+}
+
+export function useRenameChatThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ threadId, title }: { threadId: string; title: string }) =>
+      api.chat.rename(threadId, title),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.chatThreads() }),
+  });
+}
+
+export function useDeleteChatThread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (threadId: string) => api.chat.remove(threadId),
+    onSuccess: (_data, threadId) => {
+      qc.removeQueries({ queryKey: qk.chatThread(threadId) });
+      void qc.invalidateQueries({ queryKey: qk.chatThreads() });
+    },
+  });
+}
+
 // ─── Models / sync / dashboards ─────────────────────────────────────────
 
 export function useModels() {
