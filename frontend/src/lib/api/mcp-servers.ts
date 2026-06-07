@@ -37,6 +37,17 @@ export interface McpServerCreateBody {
   command: McpServerCommand;
 }
 
+export interface McpToolView {
+  server_name: string;
+  name: string;
+  qualified_name: string;
+  description: string;
+}
+
+export interface McpToolListResponse {
+  items: McpToolView[];
+}
+
 export const liveMcpServersApi = {
   list: async (): Promise<McpServerView[]> => {
     const raw = await http<McpServerListResponse>('/mcp/servers');
@@ -56,5 +67,27 @@ export const liveMcpServersApi = {
   },
   remove: async (name: string): Promise<void> => {
     await http<void>(`/mcp/servers/${encodeURIComponent(name)}`, { method: 'DELETE' });
+  },
+  /**
+   * Audit #478 — merged catalogue across every enabled external MCP
+   * server. Backend listed on `/mcp/tools` (#121); a failing server
+   * is silently skipped so the list degrades to whatever did respond.
+   */
+  listTools: async (): Promise<McpToolView[]> => {
+    const raw = await http<McpToolListResponse>('/mcp/tools');
+    return raw.items;
+  },
+  /**
+   * Audit #478 — install a ``.mcpb`` bundle (#123). The endpoint
+   * returns the new server entry on success or a 4xx with
+   * `{ code, message }` on validation failure / collision.
+   */
+  installBundle: async (file: File): Promise<McpServerView> => {
+    const form = new FormData();
+    form.append('file', file);
+    return await http<McpServerView>('/mcp/bundles', {
+      method: 'POST',
+      body: form,
+    });
   },
 };

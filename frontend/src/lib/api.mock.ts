@@ -256,6 +256,32 @@ export const mockApi: ApiClient = {
       const hits = [...lawHits, ...articleHits];
       return { hits, total: hits.length };
     },
+    async semantic(q, opts = {}) {
+      await delay(180);
+      // The mock has no real embeddings; we score by keyword overlap
+      // between the query and the article title so the UI can be
+      // exercised without a backend. The first ``limit`` candidates
+      // get descending scores in [0.45, 0.95] so the bar renders.
+      const limit = opts.limit ?? 10;
+      const ql = q.toLowerCase().trim();
+      const tokens = ql.split(/\s+/).filter(Boolean);
+      const candidates = ARTICLES
+        .map((a) => {
+          const hay = `${a.titulo} ${a.body.map((c) => c.text).join(' ')}`.toLowerCase();
+          const overlap = tokens.reduce((acc, t) => acc + (hay.includes(t) ? 1 : 0), 0);
+          return { article: a, overlap };
+        })
+        .filter((c) => c.overlap > 0)
+        .sort((a, b) => b.overlap - a.overlap)
+        .slice(0, limit);
+      const hits = candidates.map((c, i) => ({
+        lawId: c.article.lawId,
+        articleNumber: c.article.num,
+        snippet: c.article.body[0]?.text.slice(0, 220) ?? c.article.titulo,
+        score: Math.max(0.45, 0.95 - i * 0.05),
+      }));
+      return { hits, query: q };
+    },
   },
   chat: {
     async threads() {

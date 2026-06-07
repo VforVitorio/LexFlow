@@ -86,7 +86,19 @@
     "addedToast_one": "{{count}} server added",
     "addedToast_other": "{{count}} servers added",
     "addedToastBody": "Loaded into mcp.json",
-    "noneAdded": "No server could be added. Check the details in the alerts."
+    "noneAdded": "No server could be added. Check the details in the alerts.",
+    "tabServers": "Servers",
+    "tabTools": "Tools",
+    "tabBundle": "Install .mcpb",
+    "toolsLoading": "Loading tool catalogue…",
+    "toolsEmpty": "None of the attached servers exposed any tools.",
+    "bundleTitle": "Install a .mcpb bundle",
+    "bundleSubtitle": "Drop a .mcpb file (Anthropic Desktop Extension) or click Choose file. We validate the manifest, extract it to ~/.lexflow/mcp-bundles/ and add it to your list.",
+    "bundleChooseFile": "Choose .mcpb file",
+    "bundleInstalling": "Installing…",
+    "bundleInstalled": "Bundle installed",
+    "bundleFailed": "Couldn't install the bundle",
+    "bundleWrongExt": "File must end in .mcpb"
   },
   "wizard": {
     "dialogAria": "Configure AI model",
@@ -259,7 +271,15 @@
       "law": "Laws",
       "article": "Articles"
     },
-    "seeAll": "See all →"
+    "seeAll": "See all →",
+    "modeFullText": "Text",
+    "modeSemantic": "Semantic",
+    "semanticEmptyQuery": "Type a natural-language question to find articles related by meaning.",
+    "semanticHeading": "{{n}} articles related by meaning",
+    "semanticEmpty": {
+      "title": "No similar articles found",
+      "description": "Try a more specific question or switch to text search."
+    }
   },
   "onboarding": {
     "welcome": "Welcome to LexFlow",

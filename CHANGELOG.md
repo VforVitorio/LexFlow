@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.41.0](https://github.com/VforVitorio/LexFlow/compare/v0.40.6...v0.41.0) (2026-06-07)
+
+
+### Features
+
+* **audit:** MCP tools catalogue + .mcpb installer (Batch K) ([623a491](https://github.com/VforVitorio/LexFlow/commit/623a49182574bda82b1021a038804dba1aa3d3c0))
+* **audit:** MCP tools UI + bundle install (Batch K) ([0d1fdaf](https://github.com/VforVitorio/LexFlow/commit/0d1fdaf8636b9591f7a34f509cca6f3df1e4a64c)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+* **audit:** semantic search SPA consumer (Batch J) ([c28cbb3](https://github.com/VforVitorio/LexFlow/commit/c28cbb3fcef23d47f8870e88bf8fdf47bcdaa560))
+* **audit:** semantic search SPA consumer (Batch J) ([b3e58d4](https://github.com/VforVitorio/LexFlow/commit/b3e58d49283211122b204f8ce380e44aa9f5e532)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+
+
+### Bug Fixes
+
+* **audit:** wire broken surface stubs — refs/grafo tabs + Settings Updates/About + Articles deprecation (Batch I) ([9aedc37](https://github.com/VforVitorio/LexFlow/commit/9aedc3787d82c2991bfe6b379f4a1fec9005400b))
+
 ## [0.40.6](https://github.com/VforVitorio/LexFlow/compare/v0.40.5...v0.40.6) (2026-06-07)
 
 
