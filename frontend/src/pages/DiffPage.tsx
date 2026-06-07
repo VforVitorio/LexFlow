@@ -6,7 +6,7 @@ import { Button, Kbd, Tabs } from '@/components/ui';
 import { DiffViewer } from '@/components/domain/DiffViewer';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { RightRail } from '@/components/shell/RightRail';
-import { useDiff, useLaw } from '@/lib/queries';
+import { useDiff, useLaw, useVersions } from '@/lib/queries';
 import { formatDate } from '@/lib/utils';
 
 export function DiffPage() {
@@ -17,12 +17,24 @@ export function DiffPage() {
   const [view, setView] = useState<'side' | 'inline'>('side');
   const [active, setActive] = useState(0);
 
-  const fromTag = searchParams.get('from') || 'v1.0';
-  const toTag = searchParams.get('to') || 'v1.3';
-
   const { data: law } = useLaw(lawId);
+  // Audit #470 — the backend `LawDiff` regex enforces `^[0-9a-f]{7,40}$`
+  // (real commit SHAs). The page used to default to mock semver tags
+  // ('v1.0' / 'v1.3'), which 422'd the request before the user could
+  // see anything. We now derive defaults from the law's versions: the
+  // newest two SHAs in the timeline. The `from`/`to` URL params still
+  // win when present so deep links from LawDetail work.
+  const { data: versions = [] } = useVersions(lawId);
+  const fallbackTo = versions[0]?.tag;
+  const fallbackFrom = versions[1]?.tag;
+  const fromTag = searchParams.get('from') ?? fallbackFrom ?? '';
+  const toTag = searchParams.get('to') ?? fallbackTo ?? '';
+
   const { data: diff, isLoading, error, refetch } = useDiff(lawId, fromTag, toTag);
 
+  if (!fromTag || !toTag) {
+    return <div className="p-10 text-muted">{t('diff.loading')}</div>;
+  }
   if (error) return <div className="p-10"><ErrorState description={String(error)} onRetry={() => refetch()} /></div>;
   if (!diff || isLoading) return <div className="p-10 text-muted">{t('diff.loading')}</div>;
 

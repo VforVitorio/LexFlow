@@ -91,7 +91,20 @@ export function ChatPage() {
     <div className="flex h-full min-h-0">
       {/* Conversation rail */}
       <aside className="w-60 shrink-0 overflow-auto border-r border-border bg-bg p-3.5 scrollbar-thin">
-        <Button size="sm" icon={<Plus className="size-3.5" />} className="mb-3 w-full">{t('chat.newThread')}</Button>
+        {/* Audit #468 — the button used to render with no onClick at
+            all. Until the chat surface is wired to the live backend
+            (#463 — adds `api.chat.create()`), clicking sends the user
+            to the empty-rail state by clearing the URL thread id so
+            the user can at least start drafting without staring at
+            the wrong (mock) thread. */}
+        <Button
+          size="sm"
+          icon={<Plus className="size-3.5" />}
+          className="mb-3 w-full"
+          onClick={() => { setDraft(''); navigate('/chat'); }}
+        >
+          {t('chat.newThread')}
+        </Button>
         {threads.length === 0 ? (
           // Empty rail — first time using chat, or the live backend
           // hasn't returned any thread yet. Surfaces the explicit CTA
