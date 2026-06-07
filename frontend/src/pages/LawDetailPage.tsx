@@ -68,7 +68,7 @@ export function LawDetailPage() {
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="font-display text-base font-semibold">{t('lawDetail.changesByVersion')}</h3>
                 <Button size="sm" variant="secondary" icon={<GitCompareArrows className="size-3.5" />}
-                  onClick={() => navigate(`/laws/${lawId}/diff`)}>
+                  onClick={() => navigate(`/laws/${encodeURIComponent(lawId ?? '')}/diff`)}>
                   {t('lawDetail.compareVersions')}
                 </Button>
               </div>
@@ -85,7 +85,7 @@ export function LawDetailPage() {
                     </div>
                     <div className="mt-0.5 text-[12px] text-muted">{formatDate(v.date)}</div>
                   </div>
-                  <Button size="sm" variant="ghost" onClick={() => navigate(`/laws/${lawId}/diff`)}>{t('lawDetail.viewChanges')}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => navigate(`/laws/${encodeURIComponent(lawId ?? '')}/diff`)}>{t('lawDetail.viewChanges')}</Button>
                 </div>
               ))}
             </div>

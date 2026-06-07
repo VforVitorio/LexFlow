@@ -60,7 +60,7 @@ export function SearchResultsPage() {
                 key={h.id}
                 onClick={() => {
                   const p = h.payload as { lawId?: string } | undefined;
-                  if (p?.lawId) navigate(`/laws/${p.lawId}`);
+                  if (p?.lawId) navigate(`/laws/${encodeURIComponent(p.lawId)}`);
                 }}
                 className="flex items-center gap-3 rounded-lg border border-border bg-surface px-3.5 py-2.5 text-left hover:bg-surface-2"
               >

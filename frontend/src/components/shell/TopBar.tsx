@@ -55,7 +55,7 @@ function Breadcrumb({ path, lawId, navigate }: { path: string; lawId?: string; n
   else if (path === '/explorer') items.push({ label: t('nav.explorer') });
   else if (path.startsWith('/laws/') && path.endsWith('/diff')) {
     items.push({ label: t('nav.explorer'), onClick: () => navigate('/explorer') });
-    if (law) items.push({ label: law.short, onClick: () => navigate(`/laws/${law.id}`) });
+    if (law) items.push({ label: law.short, onClick: () => navigate(`/laws/${encodeURIComponent(law.id)}`) });
     items.push({ label: t('shell.diff') });
   } else if (path.startsWith('/laws/')) {
     items.push({ label: t('nav.explorer'), onClick: () => navigate('/explorer') });

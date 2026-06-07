@@ -230,7 +230,7 @@ export function ExplorerPage() {
                 {items.map((l) => (
                   <tr
                     key={l.id}
-                    onClick={() => navigate(`/laws/${l.id}`)}
+                    onClick={() => navigate(`/laws/${encodeURIComponent(l.id)}`)}
                     className="cursor-pointer border-b border-border transition-colors hover:bg-surface-2/50"
                     style={{ height: rowH }}
                   >
