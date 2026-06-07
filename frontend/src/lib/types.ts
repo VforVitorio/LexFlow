@@ -347,6 +347,26 @@ export interface SearchResults {
   total: number;
 }
 
+/**
+ * One hit from the semantic search endpoint (#477).
+ *
+ * Returned by `liveApi.search.semantic(q)`. Always article-scoped: the
+ * backend ranks by cosine similarity between the query embedding and
+ * each article's embedding, so a "law-only" hit doesn't make sense
+ * here. Score is a float in [0, 1]; the SPA renders it as a percent.
+ */
+export interface SemanticSearchHit {
+  lawId: string;
+  articleNumber: string;
+  snippet: string;
+  score: number;
+}
+
+export interface SemanticSearchResults {
+  hits: SemanticSearchHit[];
+  query: string;
+}
+
 // ─── Dashboards ──────────────────────────────────────────────────────────
 
 export interface MetricCard {
@@ -447,6 +467,14 @@ export interface ApiClient {
   };
   search: {
     universal(q: string): Promise<SearchResults>;
+    /**
+     * Semantic search over the article corpus (#477).
+     *
+     * Hits the dedicated `/laws/search/semantic` endpoint. Returns
+     * article-scoped results ranked by cosine similarity. `limit`
+     * caps the number of hits (backend max: 50).
+     */
+    semantic(q: string, opts?: { limit?: number }): Promise<SemanticSearchResults>;
   };
   chat: {
     threads(): Promise<ChatThread[]>;
