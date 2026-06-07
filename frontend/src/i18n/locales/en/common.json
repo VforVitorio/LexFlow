@@ -112,7 +112,7 @@
     "redetect": "Re-detect",
     "recommended": "Recommended",
     "cloudChosen": "You chose",
-    "cloudKeyInstructions": "To use it you need to paste your Anthropic API key in <strong>Settings → Models</strong>. The key is stored only on your machine; LexFlow never sends it to any server.",
+    "cloudKeyInstructions": "To use it, set the environment variable with your Anthropic API key (<strong>ANTHROPIC_API_KEY</strong>) before launching LexFlow. The key stays on your machine.",
     "cloudCreateKey": "If you don't have one yet, you can create it at console.anthropic.com.",
     "openSettings": "Open Settings",
     "installedReady": "installed and ready",
@@ -372,6 +372,51 @@
         "nameFailedTitle": "Couldn't save",
         "nameFailedBody": "localStorage is unavailable (private mode?)."
       }
+    },
+    "models": {
+      "title": "Models",
+      "subtitle": "Configure the models available for chat. Local ones run on your machine; cloud ones make outbound requests.",
+      "relaunchWizard": "Relaunch wizard",
+      "defaultModel": "Default model",
+      "configured": "configured",
+      "missingCredential": "missing credential",
+      "providers": "Providers",
+      "connected": "Connected",
+      "noKey": "No key configured",
+      "active": "Active",
+      "missingKey": "Missing key"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "subtitle": "Theme, density and typography.",
+      "themeLabel": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "densityLabel": "Density",
+      "densityCompact": "Compact",
+      "densityComfortable": "Comfortable",
+      "densityCozy": "Cozy",
+      "readingSizeLabel": "Reading size (law page)"
+    },
+    "data": {
+      "title": "Data",
+      "subtitlePre": "The corpus syncs from the repository",
+      "subtitlePost": ". It keeps the original Markdown files.",
+      "lastSync": "Last sync {{ago}} · {{behind}} commits pending",
+      "syncNow": "Sync now"
+    },
+    "help": {
+      "title": "Help",
+      "subtitle": "Getting-started resources. The guided tutorial walks you through the five product sections in under a minute.",
+      "interactiveTutorial": "Interactive tutorial",
+      "welcomeTour": "Welcome tour",
+      "welcomeTourSteps": "6 steps: layout, shortcuts, command palette, search, graph and chat.",
+      "replayTutorial": "Replay tutorial",
+      "keyShortcuts": "Key shortcuts",
+      "shortcutPalette": "universal search and navigation palette",
+      "shortcutGoTo": "jump to Home / Explorer / Graph / Chat / Dashboards / Settings",
+      "shortcutCollapse": "collapse the left panel",
+      "shortcutTheme": "toggle light / dark theme"
     }
   },
   "explorer": {

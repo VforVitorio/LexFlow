@@ -112,7 +112,7 @@
     "redetect": "Re-detectar",
     "recommended": "Recomendado",
     "cloudChosen": "Has elegido",
-    "cloudKeyInstructions": "Para usarlo tienes que pegar tu API key de Anthropic en <strong>Ajustes → Modelos</strong>. La key se guarda solo en tu equipo; LexFlow no la envía a ningún servidor.",
+    "cloudKeyInstructions": "Para usarlo, define la variable de entorno con tu API key de Anthropic (<strong>ANTHROPIC_API_KEY</strong>) antes de iniciar LexFlow. La clave se queda en tu equipo.",
     "cloudCreateKey": "Si todavía no tienes una, puedes crearla en console.anthropic.com.",
     "openSettings": "Abrir Ajustes",
     "installedReady": "instalado y listo",
@@ -372,6 +372,51 @@
         "nameFailedTitle": "No se pudo guardar",
         "nameFailedBody": "localStorage no está disponible (modo privado?)."
       }
+    },
+    "models": {
+      "title": "Modelos",
+      "subtitle": "Configura los modelos disponibles para el chat. Los locales se ejecutan en tu máquina; los de nube hacen peticiones salientes.",
+      "relaunchWizard": "Volver a lanzar wizard",
+      "defaultModel": "Modelo por defecto",
+      "configured": "configurado",
+      "missingCredential": "falta credencial",
+      "providers": "Proveedores",
+      "connected": "Conectado",
+      "noKey": "Sin clave configurada",
+      "active": "Activo",
+      "missingKey": "Falta clave"
+    },
+    "appearance": {
+      "title": "Apariencia",
+      "subtitle": "Tema, densidad y tipografía.",
+      "themeLabel": "Tema",
+      "themeLight": "Claro",
+      "themeDark": "Oscuro",
+      "densityLabel": "Densidad",
+      "densityCompact": "Compacto",
+      "densityComfortable": "Cómodo",
+      "densityCozy": "Amplio",
+      "readingSizeLabel": "Tamaño de lectura (página de norma)"
+    },
+    "data": {
+      "title": "Datos",
+      "subtitlePre": "El corpus se sincroniza desde el repositorio",
+      "subtitlePost": ". Conserva los archivos Markdown originales.",
+      "lastSync": "Última sincronización {{ago}} · {{behind}} commits pendientes",
+      "syncNow": "Sincronizar ahora"
+    },
+    "help": {
+      "title": "Ayuda",
+      "subtitle": "Recursos de iniciación. El tutorial sombreado te lleva por las cinco secciones del producto en menos de un minuto.",
+      "interactiveTutorial": "Tutorial interactivo",
+      "welcomeTour": "Tour de bienvenida",
+      "welcomeTourSteps": "6 pasos: layout, atajos, paleta de comandos, búsqueda, grafo y chat.",
+      "replayTutorial": "Repetir tutorial",
+      "keyShortcuts": "Atajos clave",
+      "shortcutPalette": "paleta universal de búsqueda y navegación",
+      "shortcutGoTo": "saltar a Inicio / Explorador / Grafo / Chat / Cuadros / Ajustes",
+      "shortcutCollapse": "plegar el panel izquierdo",
+      "shortcutTheme": "cambiar tema claro / oscuro"
     }
   },
   "explorer": {
