@@ -11,8 +11,8 @@
  * can wrap the substring in `<mark>` without re-scanning the snippet.
  */
 
-import type { BackendSearchResponse } from '../../api';
-import type { ApiClient, SearchResults } from '../types';
+import type { BackendSearchResponse, BackendSemanticSearchResponse } from '../../api';
+import type { ApiClient, SearchResults, SemanticSearchResults } from '../types';
 import { http, qs } from './http';
 
 export const liveSearchApi: ApiClient['search'] = {
@@ -31,5 +31,24 @@ export const liveSearchApi: ApiClient['search'] = {
       payload: { lawId: h.law_id, articleNum: h.article_number ?? undefined },
     }));
     return { hits, total: raw.total };
+  },
+  /**
+   * Audit #477 — semantic search wire-up. Routes to the dedicated
+   * ``GET /api/v1/laws/search/semantic`` endpoint that's been live
+   * since Sprint 13. Today's backend embedder is a placeholder
+   * (HashEmbedder); when the real one lands, this client doesn't
+   * change.
+   */
+  semantic: async (q, opts = {}) => {
+    const raw = await http<BackendSemanticSearchResponse>(
+      `/laws/search/semantic${qs({ q, limit: opts.limit ?? 10 })}`,
+    );
+    const hits: SemanticSearchResults['hits'] = raw.items.map((h) => ({
+      lawId: h.law_id,
+      articleNumber: h.article_number,
+      snippet: h.snippet,
+      score: h.score,
+    }));
+    return { hits, query: raw.query };
   },
 };

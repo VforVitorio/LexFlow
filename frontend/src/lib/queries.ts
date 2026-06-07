@@ -13,7 +13,7 @@ import { liveTelemetryApi, type TelemetryStatus } from './api/telemetry';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot,
+  SearchResults, SemanticSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot,
   GraphGlobalFilters, GraphGlobalResult,
 } from './types';
 
@@ -144,6 +144,22 @@ export function useSearch(q: string) {
   return useQuery<SearchResults>({
     queryKey: qk.search(trimmed),
     queryFn: () => api.search.universal(trimmed),
+    enabled: trimmed.length >= 2,
+    staleTime: 10_000,
+  });
+}
+
+/**
+ * Audit #477 — semantic search hook. Same min-length gate as the
+ * full-text variant so the SPA never fires a 422 on single-char
+ * queries. The query key includes `limit` so two different limits
+ * coexist in the cache.
+ */
+export function useSemanticSearch(q: string, limit = 10) {
+  const trimmed = q.trim();
+  return useQuery<SemanticSearchResults>({
+    queryKey: ['search', 'semantic', trimmed, limit] as const,
+    queryFn: () => api.search.semantic(trimmed, { limit }),
     enabled: trimmed.length >= 2,
     staleTime: 10_000,
   });
