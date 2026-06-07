@@ -216,9 +216,16 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
   );
   const layout = useMemo(() => _layout(data.nodes), [data]);
 
-  // Avoid re-allocating react-flow node/edge arrays just because `selected`
-  // changed — we read `selected` inside `LfNode` through the data prop.
-  const flowNodes = useMemo<RFNode<LfNodeData>[]>(
+  // #452 — selection must be O(delta), not O(N). The heavy `data.nodes.map`
+  // / `data.edges.map` passes build the full react-flow arrays (one fresh
+  // object + inline `data`/`style` per node and edge) and must NOT depend
+  // on `selected`; otherwise every click re-allocates ALL N nodes and M
+  // edges, handing `<ReactFlow>` brand-new identities and defeating the
+  // `memo`'d `LfNode`. We compute the selection-independent base once, then
+  // a thin overlay re-derives only the 1–2 objects whose highlight state
+  // actually flipped — reusing every untouched object by identity so the
+  // memoised node/edge components don't re-render.
+  const baseNodes = useMemo<RFNode<LfNodeData>[]>(
     () =>
       data.nodes.map((n) => {
         const pos = layout.get(n.id) ?? { x: 0, y: 0 };
@@ -230,7 +237,9 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
             label: n.label,
             kind: n.kind,
             dim: !visibleSet.has(n.id) || Boolean(n.dim),
-            selected: n.id === selected,
+            // Baseline: unselected. The overlay below flips this for the
+            // single selected node without touching the rest.
+            selected: false,
             // #143 — PageRank lives in `meta.pagerank` (number) from the
             // API transformer. Default 0 so mock data (no pagerank) keeps
             // the base kind size.
@@ -243,17 +252,31 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
           draggable: false,
         };
       }),
-    [data.nodes, layout, visibleSet, selected, onSelect],
+    [data.nodes, layout, visibleSet, onSelect],
   );
 
-  const flowEdges = useMemo<Edge[]>(
+  // Selection overlay (cheap): reuse each base node by identity unless its
+  // `selected` flag actually changes, so only the node(s) gaining/losing
+  // selection get a new object — keeping the memoised `LfNode` stable for
+  // the other N-1 nodes.
+  const flowNodes = useMemo<RFNode<LfNodeData>[]>(
+    () =>
+      baseNodes.map((n) => {
+        const sel = n.id === selected;
+        if (n.data.selected === sel) return n;
+        return { ...n, data: { ...n.data, selected: sel } };
+      }),
+    [baseNodes, selected],
+  );
+
+  const baseEdges = useMemo<Edge[]>(
     () =>
       data.edges.map((e) => {
-        const isSelected = e.source === selected || e.target === selected;
         const bothVisible = visibleSet.has(e.source) && visibleSet.has(e.target);
-        // Selected edges keep the brand-indigo highlight; unselected edges
-        // pick up the per-kind hue (#144 wire field). Legacy edges with
-        // no kind fall back to the previous neutral border stroke.
+        // Unselected edges pick up the per-kind hue (#144 wire field).
+        // Legacy edges with no kind fall back to the previous neutral
+        // border stroke. The overlay below swaps in the brand-indigo
+        // highlight for edges incident to the selected node.
         const kindStroke = e.kind ? GRAPH_EDGE_STROKE[e.kind] : 'hsl(var(--border-strong))';
         return {
           id: e.id,
@@ -264,13 +287,35 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
           type: 'smoothstep',
           animated: false,
           style: {
-            stroke: isSelected ? GRAPH_PRIMARY : kindStroke,
-            strokeWidth: isSelected ? 2 : 1,
-            opacity: bothVisible ? (isSelected ? 1 : 0.55) : 0.08,
+            stroke: kindStroke,
+            strokeWidth: 1,
+            opacity: bothVisible ? 0.55 : 0.08,
           },
         };
       }),
-    [data.edges, visibleSet, selected],
+    [data.edges, visibleSet],
+  );
+
+  // Selection overlay for edges: only edges touching the selected node need
+  // the indigo highlight. We reuse every other base edge by identity so the
+  // bulk of the array stays referentially stable across clicks.
+  const flowEdges = useMemo<Edge[]>(
+    () =>
+      baseEdges.map((e) => {
+        const isSelected = e.source === selected || e.target === selected;
+        if (!isSelected) return e;
+        const bothVisible = visibleSet.has(e.source) && visibleSet.has(e.target);
+        return {
+          ...e,
+          style: {
+            ...e.style,
+            stroke: GRAPH_PRIMARY,
+            strokeWidth: 2,
+            opacity: bothVisible ? 1 : 0.08,
+          },
+        };
+      }),
+    [baseEdges, visibleSet, selected],
   );
 
   // Keep the viewport centered on first mount + whenever the dataset
