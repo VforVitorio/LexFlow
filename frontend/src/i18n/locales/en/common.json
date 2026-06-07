@@ -229,7 +229,9 @@
     "lawInfo": "Law information",
     "citedFrom": "Law cited from {{law}}.",
     "selectCitation": "Select a citation in the text (superscripts) to see the cited law and its context.",
-    "relatedRefs": "Related references"
+    "relatedRefs": "Related references",
+    "refsHeading": "{{n}} outgoing references",
+    "refsEmpty": "This law has no outgoing references recorded."
   },
   "diff": {
     "loading": "Loading diff…",
@@ -307,6 +309,20 @@
     },
     "title": "Settings",
     "underConstruction": "Section pending — will connect to the matching endpoint.",
+    "updates": {
+      "title": "Corpus updates",
+      "subtitle": "Summary of what changed in legalize-es since the last sync. To run a sync, go to Settings → Data.",
+      "upToDate": "The corpus is up to date with the latest synced revision.",
+      "atCommit": "Current revision: {{sha}}",
+      "removedShort": "Repealed"
+    },
+    "about": {
+      "title": "About LexFlow",
+      "subtitle": "Open source platform for exploring and analysing Spanish legislation.",
+      "version": "Version",
+      "license": "License",
+      "repo": "Repository"
+    },
     "diagnostics": {
       "subtitle": "Live process state: memory, disk, corpus, chat DB. Auto-refreshes every 30 s.",
       "error": "Couldn't load process state.",

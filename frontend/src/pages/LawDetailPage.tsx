@@ -4,15 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X, GitCompareArrows, ExternalLink } from 'lucide-react';
 import { LawHeader } from '@/components/domain/LawHeader';
 import { ArticleBlock } from '@/components/domain/ArticleBlock';
+import { GraphCanvas } from '@/components/domain/GraphCanvas';
 import { VersionTimeline } from '@/components/domain/VersionTimeline';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { Skeleton, SkeletonLines } from '@/components/domain/Skeleton';
-import { Badge, Button, Tabs } from '@/components/ui';
+import { Badge, Button, Chip, Tabs } from '@/components/ui';
 import { RightRail } from '@/components/shell/RightRail';
-import { useLaw, useVersions } from '@/lib/queries';
+import { useGraph, useLaw, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
-import type { Article, ArticleRef, LawDetail } from '@/lib/types';
+import type { Article, ArticleRef, GraphNodeKind, LawDetail } from '@/lib/types';
+
+const ALL_GRAPH_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 
 type Tab = 'texto' | 'versiones' | 'grafo' | 'refs' | 'disc';
 
@@ -31,8 +34,28 @@ export function LawDetailPage() {
   // need to fetch them a second time (the old `api.laws.references()`
   // shim re-fetched `/laws/{id}` for this, which transferred the body
   // twice). Empty array fallback keeps the rendering loop happy until
-  // `useLaw` resolves.
-  const articles = law?.articles ?? [];
+  // `useLaw` resolves. Memoised so the dependent `lawRefs` memo only
+  // recomputes when the underlying array actually changes.
+  const articles = useMemo<Article[]>(() => law?.articles ?? [], [law]);
+  // Audit #469 — refs/grafo tabs used to show "tab pending" stubs even
+  // though the backend has exposed both surfaces for sprints. Flatten
+  // every outgoing reference from the embedded articles for the refs
+  // tab; the grafo tab seeds `useGraph` with this law id and renders
+  // the inline canvas. We compute both unconditionally so the page can
+  // switch tabs without refetching.
+  const lawRefs = useMemo<ArticleRef[]>(() => {
+    const seen = new Set<string>();
+    const out: ArticleRef[] = [];
+    for (const article of articles) {
+      for (const ref of article.refs ?? []) {
+        const key = `${ref.label}|${ref.target?.lawId ?? ''}|${ref.target?.articleNum ?? ''}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(ref);
+      }
+    }
+    return out;
+  }, [articles]);
 
   if (error) return <div className="p-10"><ErrorState description={String(error)} onRetry={() => refetch()} /></div>;
   if (!law || isLoading) return <LoadingSkeleton />;
@@ -90,12 +113,15 @@ export function LawDetailPage() {
             </div>
           </div>
         )}
-        {(tab === 'grafo' || tab === 'refs' || tab === 'disc') && (
+        {tab === 'grafo' && lawId && (
+          <LawDetailGraphTab lawId={lawId} onOpenGlobalGraph={() => navigate('/graph')} />
+        )}
+        {tab === 'refs' && (
+          <LawDetailRefsTab refs={lawRefs} onRefClick={setSelectedRef} />
+        )}
+        {tab === 'disc' && (
           <div className="flex-1 overflow-auto p-12 text-center text-muted">
-            <p>{t('lawDetail.tabPending', { tab: t(`lawDetail.tabs.${tab}`) })}</p>
-            {tab === 'grafo' && (
-              <Button className="mt-4" onClick={() => navigate('/graph')}>{t('lawDetail.openGlobalGraph')}</Button>
-            )}
+            <p>{t('lawDetail.tabPending', { tab: t('lawDetail.tabs.disc') })}</p>
           </div>
         )}
       </div>
@@ -108,6 +134,68 @@ export function LawDetailPage() {
           onNavigate={navigate}
         />
       </RightRail>
+    </div>
+  );
+}
+
+/**
+ * Audit #469 — refs tab. Render every outgoing reference the law has,
+ * grouped by source article when possible. Clicking a ref opens the
+ * detail right-rail card via the parent's ``setSelectedRef``.
+ */
+function LawDetailRefsTab({ refs, onRefClick }: { refs: ArticleRef[]; onRefClick: (r: ArticleRef) => void }) {
+  const { t } = useTranslation();
+  if (refs.length === 0) {
+    return (
+      <div className="flex-1 overflow-auto p-12 text-center text-muted">
+        <p>{t('lawDetail.refsEmpty')}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="flex-1 overflow-auto p-6 md:p-8 scrollbar-thin">
+      <div className="mb-3 label-caps">{t('lawDetail.refsHeading', { n: refs.length })}</div>
+      <div className="flex flex-wrap gap-1.5">
+        {refs.map((ref, i) => (
+          <Chip key={`${ref.label}-${i}`} onClick={() => onRefClick(ref)}>{ref.label}</Chip>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Audit #469 — grafo tab. Embed the existing GraphCanvas seeded on the
+ * current law so the user can explore the local neighbourhood without
+ * leaving the page. ``Open global view`` still navigates to the full
+ * ``/graph`` page for corpus-wide exploration.
+ */
+function LawDetailGraphTab({ lawId, onOpenGlobalGraph }: { lawId: string; onOpenGlobalGraph: () => void }) {
+  const { t } = useTranslation();
+  const visibleKinds = useMemo(() => new Set(ALL_GRAPH_KINDS), []);
+  const [selected, setSelected] = useState<string | null>(lawId);
+  const { data: graph, isLoading, error } = useGraph(lawId);
+  if (error) {
+    return (
+      <div className="flex-1 overflow-auto p-12 text-center text-muted">
+        <ErrorState description={String(error)} />
+      </div>
+    );
+  }
+  if (!graph || isLoading) {
+    return <div className="flex-1 overflow-auto p-12 text-center text-muted">{t('graph.loading')}</div>;
+  }
+  return (
+    <div className="relative flex-1 overflow-hidden bg-bg">
+      <GraphCanvas data={graph} visibleKinds={visibleKinds} selected={selected} onSelect={setSelected} />
+      <Button
+        className="absolute top-3 right-3"
+        size="sm"
+        variant="secondary"
+        onClick={onOpenGlobalGraph}
+      >
+        {t('lawDetail.openGlobalGraph')}
+      </Button>
     </div>
   );
 }
