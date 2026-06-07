@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils';
 
 export function ModelChip() {
   const { t } = useTranslation();
-  const { defaultModel, setDefaultModel } = useUi();
+  const defaultModel = useUi((s) => s.defaultModel);
+  const setDefaultModel = useUi((s) => s.setDefaultModel);
   const { data: models = [] } = useModels();
   const [open, setOpen] = useState(false);
 

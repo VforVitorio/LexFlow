@@ -9,7 +9,11 @@ import { useUi } from '@/lib/store';
 import { useHotkey, useGoToHotkey } from '@/lib/hotkeys';
 
 export function AppShell() {
-  const { togglePalette, toggleRight, toggleLeft, toggleTheme, setPaletteOpen } = useUi();
+  const togglePalette = useUi((s) => s.togglePalette);
+  const toggleRight = useUi((s) => s.toggleRight);
+  const toggleLeft = useUi((s) => s.toggleLeft);
+  const toggleTheme = useUi((s) => s.toggleTheme);
+  const setPaletteOpen = useUi((s) => s.setPaletteOpen);
   const navigate = useNavigate();
 
   useHotkey('mod+k', (e) => { e.preventDefault(); togglePalette(); });
