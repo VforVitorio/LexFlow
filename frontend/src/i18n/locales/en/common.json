@@ -257,7 +257,15 @@
       "law": "Laws",
       "article": "Articles"
     },
-    "seeAll": "See all →"
+    "seeAll": "See all →",
+    "modeFullText": "Text",
+    "modeSemantic": "Semantic",
+    "semanticEmptyQuery": "Type a natural-language question to find articles related by meaning.",
+    "semanticHeading": "{{n}} articles related by meaning",
+    "semanticEmpty": {
+      "title": "No similar articles found",
+      "description": "Try a more specific question or switch to text search."
+    }
   },
   "onboarding": {
     "welcome": "Welcome to LexFlow",
