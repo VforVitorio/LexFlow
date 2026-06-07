@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
@@ -209,17 +209,14 @@ function PersonalizacionSection() {
         <p className="mt-1.5 text-[11.5px] text-muted">{t('settings.personalization.languageHint')}</p>
       </div>
 
-      {/* Accessibility pointer — body has inline <strong> so we render
-          the translated HTML safely; the only markup is a known tag. */}
+      {/* Accessibility pointer — body has inline <strong>. We render it
+          via <Trans> so the only markup is a code-owned <strong> node;
+          i18next escaping stays on for everything else. */}
       <div className="rounded-lg border border-border bg-surface/60 p-4">
         <div className="font-display text-[14.5px] font-semibold">{t('settings.personalization.a11yTitle')}</div>
-        <p
-          className="mt-1 text-[12.5px] text-muted"
-          // Body contains a single <strong>…</strong> — no user input
-          // ever flows through here, so the dangerouslySetInnerHTML is
-          // bounded to a static, code-owned dictionary value.
-          dangerouslySetInnerHTML={{ __html: t('settings.personalization.a11yBody') }}
-        />
+        <p className="mt-1 text-[12.5px] text-muted">
+          <Trans i18nKey="settings.personalization.a11yBody" components={{ strong: <strong /> }} />
+        </p>
       </div>
     </>
   );
