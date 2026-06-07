@@ -146,7 +146,7 @@ export function ChatPage() {
                 <ChatMessage
                   key={m.id}
                   message={m}
-                  onSourceClick={(s: ChatSource) => s.target && navigate(`/laws/${s.target.lawId}`)}
+                  onSourceClick={(s: ChatSource) => s.target && navigate(`/laws/${encodeURIComponent(s.target.lawId)}`)}
                 />
               ))
             )}
@@ -190,7 +190,7 @@ export function ChatPage() {
             .filter((m): m is Extract<ChatMessageT, { role: 'assistant' }> => m.role === 'assistant')
             .flatMap((m) => m.sources)
             .map((s, i) => (
-              <CitationCard key={i} source={s} onClick={() => s.target && navigate(`/laws/${s.target.lawId}`)} />
+              <CitationCard key={i} source={s} onClick={() => s.target && navigate(`/laws/${encodeURIComponent(s.target.lawId)}`)} />
             ))}
         </div>
       </RightRail>

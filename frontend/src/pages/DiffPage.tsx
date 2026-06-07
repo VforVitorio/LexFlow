@@ -39,7 +39,7 @@ export function DiffPage() {
         <div className="border-b border-border bg-bg px-5 md:px-8 pt-5 pb-4">
           <div className="mb-2 flex items-center gap-2">
             <button
-              onClick={() => navigate(`/laws/${lawId}`)}
+              onClick={() => navigate(`/laws/${encodeURIComponent(lawId ?? '')}`)}
               className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg"
             >
               <ChevronLeft className="size-3.5" /> {t('diff.backTo', { law: law?.short ?? t('diff.theLaw') })}
