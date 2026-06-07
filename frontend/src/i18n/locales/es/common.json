@@ -112,7 +112,7 @@
     "redetect": "Re-detectar",
     "recommended": "Recomendado",
     "cloudChosen": "Has elegido",
-    "cloudKeyInstructions": "Para usarlo tienes que pegar tu API key de Anthropic en <strong>Ajustes → Modelos</strong>. La key se guarda solo en tu equipo; LexFlow no la envía a ningún servidor.",
+    "cloudKeyInstructions": "Para usarlo, define la variable de entorno con tu API key de Anthropic (<strong>ANTHROPIC_API_KEY</strong>) antes de iniciar LexFlow. La clave se queda en tu equipo.",
     "cloudCreateKey": "Si todavía no tienes una, puedes crearla en console.anthropic.com.",
     "openSettings": "Abrir Ajustes",
     "installedReady": "instalado y listo",
