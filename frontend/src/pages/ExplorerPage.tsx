@@ -55,7 +55,61 @@ export function ExplorerPage() {
 
   const { data, isLoading } = useLawsList(params);
   const { data: vocab = [] } = useTags();
-  const items = data?.items ?? [];
+  // Memoise so the `displayed` derivation below has a stable input reference
+  // (a fresh `?? []` array every render would defeat its memoisation).
+  const items = useMemo(() => data?.items ?? [], [data]);
+
+  /**
+   * Client-side sort + narrow over the LOADED PAGE only.
+   *
+   * `listLawsQuery` (lib/api/transformers.ts) drops `q`, `sort` and
+   * `tags` because the backend list endpoint does not accept them yet,
+   * which left the search box, the sort selector and the tag chips
+   * decorative (#475). Until corpus-wide search lands on the backend we
+   * apply them here as a PAGE-SCOPED fallback: this operates on `items`
+   * (the current page returned by the server), NOT on the whole corpus —
+   * so it sorts/narrows what is already on screen, it does not fetch or
+   * search across pages.
+   *
+   * WHERE TO CHANGE IF X CHANGES: when the backend accepts q/sort/tags,
+   * move these back into `listLawsQuery` and delete this block.
+   */
+  const displayed = useMemo(() => {
+    let rows = items;
+
+    // FILTER — narrow the current page honestly (page-scoped, not corpus-wide).
+    if (plainQ) {
+      const needle = plainQ.toLowerCase();
+      rows = rows.filter((l) =>
+        l.title.toLowerCase().includes(needle) ||
+        l.short.toLowerCase().includes(needle) ||
+        l.boe.toLowerCase().includes(needle),
+      );
+    }
+    if (allTags.size) {
+      // AND over the law's tags: every active tag must be present.
+      rows = rows.filter((l) => {
+        const lawTags = new Set((l.tags ?? []).map((tag) => tag.toLowerCase()));
+        return [...allTags].every((tag) => lawTags.has(tag.toLowerCase()));
+      });
+    }
+
+    // SORT — `relevance` keeps the server order; the rest sort a copy.
+    if (sort === 'relevance') return rows;
+    const sorted = [...rows];
+    switch (sort) {
+      case 'date':
+        sorted.sort((a, b) => b.publicada.localeCompare(a.publicada));
+        break;
+      case 'title':
+        sorted.sort((a, b) => (a.short || a.title).localeCompare(b.short || b.title));
+        break;
+      case 'refs':
+        sorted.sort((a, b) => b.referencias - a.referencias);
+        break;
+    }
+    return sorted;
+  }, [items, plainQ, allTags, sort]);
 
   const rowH = density === 'compact' ? 40 : density === 'cozy' ? 64 : 52;
   const toggle = <T,>(set: Set<T>, v: T) => {
@@ -151,7 +205,7 @@ export function ExplorerPage() {
             <Button variant="secondary" icon={<Download className="size-3.5" />} className="hidden sm:inline-flex">{t('explorer.export')}</Button>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
-            <span className="font-mono text-fg">{items.length}</span> {t('explorer.countOf')} <span className="font-mono">{data?.total ?? 0}</span> {t('explorer.countUnit')} ·
+            <span className="font-mono text-fg">{displayed.length}</span> {t('explorer.countOf')} <span className="font-mono">{data?.total ?? 0}</span> {t('explorer.countUnit')} ·
             {[...status].map((s) => (
               <Chip key={s} dismissable onDismiss={() => setStatus(toggle(status, s))}>{statusLabel(s)}</Chip>
             ))}
@@ -177,7 +231,7 @@ export function ExplorerPage() {
 
         {/* Table */}
         <div className="flex-1 overflow-auto scrollbar-thin">
-          {!isLoading && items.length === 0 ? (
+          {!isLoading && displayed.length === 0 ? (
             <div className="p-8">
               <EmptyState
                 title={t('explorer.empty.title')}
@@ -227,7 +281,7 @@ export function ExplorerPage() {
                 </tbody>
               )}
               <tbody>
-                {items.map((l) => (
+                {displayed.map((l) => (
                   <tr
                     key={l.id}
                     onClick={() => navigate(`/laws/${l.id}`)}
