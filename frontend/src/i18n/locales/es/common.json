@@ -429,6 +429,12 @@
     "countUnit": "normas",
     "clearFilters": "Limpiar filtros",
     "howToSearch": "Cómo buscar",
+    "searchHelp": {
+      "title": "Cómo buscar en el Explorador",
+      "freetext": "Escribe palabras del título o el identificador BOE para filtrar por texto.",
+      "tags": "Usa #etiqueta dentro de la búsqueda (p. ej. «#laboral despido») para filtrar por temas, al estilo Obsidian.",
+      "filters": "Los filtros del panel izquierdo (rango, estado, jurisdicción, etiquetas) se combinan con Y lógico."
+    },
     "empty": {
       "title": "Sin resultados para esa búsqueda",
       "description": "Prueba con menos filtros o explora el grafo de referencias para encontrar normas relacionadas."

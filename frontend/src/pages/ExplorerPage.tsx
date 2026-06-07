@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Download, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
-import { Badge, Button, Chip, Input, Tabs } from '@/components/ui';
+import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
+import { Badge, Button, Callout, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { FilterRail } from '@/pages/explorer/FilterRail';
@@ -22,6 +22,9 @@ export function ExplorerPage() {
   const [ambito, setAmbito] = useState<Set<Ambito>>(new Set(['Estatal']));
   const [tags, setTags] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<'relevance' | 'date' | 'refs' | 'title'>('relevance');
+  // Toggled by the empty-state "How to search" button (#476). Surfaces an
+  // inline help panel explaining the search syntax instead of a no-op.
+  const [showSearchHelp, setShowSearchHelp] = useState(false);
 
   const [searchParams] = useSearchParams();
   useEffect(() => {
@@ -238,8 +241,17 @@ export function ExplorerPage() {
                 title={t('explorer.empty.title')}
                 description={t('explorer.empty.description')}
                 primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); } }}
-                secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => {} }}
+                secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
               />
+              {showSearchHelp && (
+                <Callout tone="info" title={t('explorer.searchHelp.title')} className="mx-auto mt-4 max-w-md text-left">
+                  <ul className="ml-4 list-disc space-y-1">
+                    <li>{t('explorer.searchHelp.freetext')}</li>
+                    <li>{t('explorer.searchHelp.tags')}</li>
+                    <li>{t('explorer.searchHelp.filters')}</li>
+                  </ul>
+                </Callout>
+              )}
             </div>
           ) : (
             <table className="w-full border-collapse text-[13.5px]">

@@ -429,6 +429,12 @@
     "countUnit": "laws",
     "clearFilters": "Clear filters",
     "howToSearch": "How to search",
+    "searchHelp": {
+      "title": "How to search the Explorer",
+      "freetext": "Type words from the title or the BOE identifier to filter by text.",
+      "tags": "Use #tag inside the search (e.g. \"#labor dismissal\") to filter by topic, Obsidian-style.",
+      "filters": "The left-rail filters (type, status, jurisdiction, tags) combine with logical AND."
+    },
     "empty": {
       "title": "No results for that search",
       "description": "Try fewer filters or explore the reference graph to find related laws."
