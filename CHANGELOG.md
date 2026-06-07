@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.43.0](https://github.com/VforVitorio/LexFlow/compare/v0.42.0...v0.43.0) (2026-06-07)
+
+
+### Features
+
+* **chat:** live wiring for chat threads + SSE send (Batch M) ([34be8f2](https://github.com/VforVitorio/LexFlow/commit/34be8f2912892127861a415d90b521a05cdab543))
+* **chat:** live wiring for chat threads + SSE send (Batch M) ([d10cfb0](https://github.com/VforVitorio/LexFlow/commit/d10cfb0772415896e056fa23dd6c272bfcd3bfde)), closes [#463](https://github.com/VforVitorio/LexFlow/issues/463)
+
 ## [0.42.0](https://github.com/VforVitorio/LexFlow/compare/v0.41.0...v0.42.0) (2026-06-07)
 
 

@@ -292,6 +292,33 @@ export const mockApi: ApiClient = {
       await delay(140);
       return CHAT_MESSAGES[id] ?? [];
     },
+    async create(opts = {}) {
+      await delay(90);
+      const id = `t-${Math.floor(Math.random() * 1e9).toString(36)}`;
+      const thread = {
+        id,
+        title: opts.title || 'Nueva conversación',
+        updatedAt: new Date().toISOString(),
+        preview: undefined,
+      };
+      CHAT_THREADS.unshift(thread);
+      CHAT_MESSAGES[id] = [];
+      return thread;
+    },
+    async rename(threadId, title) {
+      await delay(60);
+      const t = CHAT_THREADS.find((x) => x.id === threadId);
+      if (!t) throw new Error(`Thread ${threadId} not found`);
+      t.title = title;
+      t.updatedAt = new Date().toISOString();
+      return t;
+    },
+    async remove(threadId) {
+      await delay(60);
+      const i = CHAT_THREADS.findIndex((x) => x.id === threadId);
+      if (i !== -1) CHAT_THREADS.splice(i, 1);
+      delete CHAT_MESSAGES[threadId];
+    },
     async *send(_threadId, _content, _opts): AsyncGenerator<ChatChunk> {
       // Simulate a streamed reply with a couple of tool calls in front.
       await delay(220);
