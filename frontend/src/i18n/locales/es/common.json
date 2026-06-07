@@ -222,7 +222,14 @@
     "citeArticle": "Citar artículo…",
     "onlyInForce": "Solo vigentes",
     "send": "Enviar",
-    "sources": "Fuentes"
+    "sources": "Fuentes",
+    "renameAria": "Renombrar {{title}}",
+    "deleteAria": "Eliminar {{title}}",
+    "renamePrompt": "Nuevo nombre de la conversación",
+    "deleteConfirm": "¿Eliminar la conversación \"{{title}}\"?",
+    "createFailed": "No se pudo crear la conversación",
+    "renameFailed": "No se pudo renombrar",
+    "deleteFailed": "No se pudo eliminar"
   },
   "lawDetail": {
     "tabs": {
