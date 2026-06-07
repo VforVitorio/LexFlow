@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X, GitCompareArrows, ExternalLink } from 'lucide-react';
 import { LawHeader } from '@/components/domain/LawHeader';
 import { ArticleBlock } from '@/components/domain/ArticleBlock';
-import { CitationCard } from '@/components/domain/CitationCard';
 import { VersionTimeline } from '@/components/domain/VersionTimeline';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { Skeleton, SkeletonLines } from '@/components/domain/Skeleton';
@@ -13,7 +12,7 @@ import { RightRail } from '@/components/shell/RightRail';
 import { useLaw, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
-import type { Article, ArticleRef, ChatSource } from '@/lib/types';
+import type { Article, ArticleRef, LawDetail } from '@/lib/types';
 
 type Tab = 'texto' | 'versiones' | 'grafo' | 'refs' | 'disc';
 
@@ -132,22 +131,39 @@ function TextoTab({ articles, readingSize, onRefClick }: { articles: Article[]; 
   );
 }
 
+/**
+ * Flattens every article's outgoing references into a deduped, capped
+ * list for the "Referencias relacionadas" panel. Refs are deduped by
+ * their display label (the same target can be cited from several
+ * articles) and the first occurrence wins so the earliest article's
+ * resolved target is preserved.
+ *
+ * WHERE TO CHANGE IF X CHANGES: references live on
+ * ``law.articles[].refs`` (``ArticleRef[]``) — see `src/lib/types.ts`.
+ */
+function relatedRefsFor(articles: Article[]): ArticleRef[] {
+  const seen = new Set<string>();
+  const unique: ArticleRef[] = [];
+  for (const article of articles) {
+    for (const ref of article.refs) {
+      if (seen.has(ref.label)) continue;
+      seen.add(ref.label);
+      unique.push(ref);
+    }
+  }
+  return unique.slice(0, 4);
+}
+
 function DetailRightRail({
   law, selectedRef, onDismiss, onNavigate,
 }: {
-  law: { short: string };
+  law: LawDetail;
   selectedRef: ArticleRef | null;
   onDismiss: () => void;
   onNavigate: (to: string) => void;
 }) {
   const { t } = useTranslation();
-  const mockSource: ChatSource = useMemo(() => ({
-    law: 'Ley Orgánica 3/2018, de Protección de Datos',
-    article: 'Art. 1',
-    date: '6 dic 2018',
-    snippet: 'La presente Ley Orgánica tiene por objeto adaptar el ordenamiento jurídico español al Reglamento (UE) 2016/679…',
-    target: { lawId: 'LO-3-2018', articleNum: '1' },
-  }), []);
+  const relatedRefs = useMemo(() => relatedRefsFor(law.articles), [law.articles]);
 
   return (
     <>
@@ -161,13 +177,25 @@ function DetailRightRail({
       </div>
 
       {selectedRef ? (
-        <>
-          <div className="mb-4">
+        // ``ArticleRef`` carries only a label + optional resolved target —
+        // it has no snippet/date/article body to build a faithful
+        // ``ChatSource`` for the CitationCard, so we surface the real ref
+        // label and let the user jump to the target law instead of
+        // fabricating a citation card (issue #480).
+        <div className="space-y-3">
+          <div>
             <h3 className="font-display text-base font-semibold">{selectedRef.label}</h3>
             <p className="mt-1 text-[12.5px] text-muted">{t('lawDetail.citedFrom', { law: law.short })}</p>
           </div>
-          <CitationCard source={mockSource} onClick={() => selectedRef.target && onNavigate(`/laws/${selectedRef.target.lawId}`)} />
-        </>
+          {selectedRef.target && (
+            <button
+              onClick={() => selectedRef.target && onNavigate(`/laws/${encodeURIComponent(selectedRef.target.lawId)}`)}
+              className="flex items-center gap-2 rounded px-1.5 py-1.5 text-[13px] hover:bg-surface-2"
+            >
+              <ExternalLink className="size-3 text-muted" /> {selectedRef.label}
+            </button>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           <p className="text-[13px] text-muted">
@@ -176,14 +204,26 @@ function DetailRightRail({
         </div>
       )}
 
-      <div className="label-caps mb-2 mt-5">{t('lawDetail.relatedRefs')}</div>
-      <div className="flex flex-col gap-0.5">
-        {['LO 1/1982 · Honor', 'LECrim · art. 588', 'RGPD (UE) 2016/679', 'STC 292/2000'].map((r) => (
-          <button key={r} className="flex items-center gap-2 rounded px-1.5 py-1.5 text-[13px] hover:bg-surface-2">
-            <ExternalLink className="size-3 text-muted" /> {r}
-          </button>
-        ))}
-      </div>
+      {relatedRefs.length > 0 && (
+        <>
+          <div className="label-caps mb-2 mt-5">{t('lawDetail.relatedRefs')}</div>
+          <div className="flex flex-col gap-0.5">
+            {relatedRefs.map((ref) => {
+              const targetLawId = ref.target?.lawId;
+              return (
+                <button
+                  key={ref.label}
+                  disabled={!targetLawId}
+                  onClick={() => targetLawId && onNavigate(`/laws/${encodeURIComponent(targetLawId)}`)}
+                  className="flex items-center gap-2 rounded px-1.5 py-1.5 text-[13px] hover:bg-surface-2 disabled:cursor-default disabled:hover:bg-transparent"
+                >
+                  <ExternalLink className="size-3 text-muted" /> {ref.label}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </>
   );
 }
