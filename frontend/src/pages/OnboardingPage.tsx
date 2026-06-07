@@ -21,7 +21,12 @@ export function OnboardingPage() {
   // store. Previously the local `telemetry` state was discarded on
   // `finish()` and Settings → Privacidad still reported "off" after
   // the user enabled it during onboarding.
-  const { theme, setTheme, defaultModel, setDefaultModel, telemetryConsent, setTelemetryConsent } = useUi();
+  const theme = useUi((s) => s.theme);
+  const setTheme = useUi((s) => s.setTheme);
+  const defaultModel = useUi((s) => s.defaultModel);
+  const setDefaultModel = useUi((s) => s.setDefaultModel);
+  const telemetryConsent = useUi((s) => s.telemetryConsent);
+  const setTelemetryConsent = useUi((s) => s.setTelemetryConsent);
   const [telemetry, setTelemetry] = useState(telemetryConsent);
   const { data: models = [] } = useModels();
 

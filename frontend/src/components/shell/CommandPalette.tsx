@@ -19,7 +19,9 @@ interface PaletteItem {
 }
 
 export function CommandPalette() {
-  const { paletteOpen, setPaletteOpen, toggleTheme } = useUi();
+  const paletteOpen = useUi((s) => s.paletteOpen);
+  const setPaletteOpen = useUi((s) => s.setPaletteOpen);
+  const toggleTheme = useUi((s) => s.toggleTheme);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState('');

@@ -8,7 +8,11 @@ import { modKey } from '@/lib/utils';
 
 export function TopBar() {
   const { t } = useTranslation();
-  const { theme, toggleTheme, rightOpen, toggleRight, setPaletteOpen } = useUi();
+  const theme = useUi((s) => s.theme);
+  const toggleTheme = useUi((s) => s.toggleTheme);
+  const rightOpen = useUi((s) => s.rightOpen);
+  const toggleRight = useUi((s) => s.toggleRight);
+  const setPaletteOpen = useUi((s) => s.setPaletteOpen);
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams<{ lawId?: string }>();

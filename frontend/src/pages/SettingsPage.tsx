@@ -238,7 +238,8 @@ function readStoredUserName(): string | null {
 
 function ModelsSection() {
   const { data: models = [] } = useModels();
-  const { defaultModel, setDefaultModel } = useUi();
+  const defaultModel = useUi((s) => s.defaultModel);
+  const setDefaultModel = useUi((s) => s.setDefaultModel);
   const [wizardOpen, setWizardOpen] = useState(false);
   const m = models.find((x) => x.id === defaultModel) ?? models[0];
 
@@ -300,7 +301,12 @@ function ModelsSection() {
 }
 
 function AppearanceSection() {
-  const { theme, setTheme, density, setDensity, readingSize, setReadingSize } = useUi();
+  const theme = useUi((s) => s.theme);
+  const setTheme = useUi((s) => s.setTheme);
+  const density = useUi((s) => s.density);
+  const setDensity = useUi((s) => s.setDensity);
+  const readingSize = useUi((s) => s.readingSize);
+  const setReadingSize = useUi((s) => s.setReadingSize);
   return (
     <>
       <h1 className="font-display text-[22px] font-semibold">Apariencia</h1>
