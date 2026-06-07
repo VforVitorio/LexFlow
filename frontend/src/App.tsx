@@ -1,5 +1,5 @@
-import { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/shell/AppShell';
 import { HomePage } from '@/pages/HomePage';
 import { ExplorerPage } from '@/pages/ExplorerPage';
@@ -8,6 +8,34 @@ import { SearchResultsPage } from '@/pages/SearchResultsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { usePageViewTelemetry } from '@/lib/telemetry';
+
+const ONBOARDED_STORAGE_KEY = 'lexflow.onboarded';
+
+/**
+ * Audit #471 — first-launch gate. The OnboardingPage was registered on
+ * the router but unreachable: nothing redirected to it on a fresh
+ * install. We now check ``localStorage[ONBOARDED_STORAGE_KEY]`` on
+ * every navigation and push the user to ``/onboarding`` until they
+ * complete it (which writes the flag in ``OnboardingPage.finish()``).
+ * Subsequent loads short-circuit because the flag is set.
+ */
+function useFirstLaunchGate(): void {
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (location.pathname === '/onboarding') return;
+    let done = false;
+    try {
+      done = localStorage.getItem(ONBOARDED_STORAGE_KEY) === '1';
+    } catch {
+      // Private-mode browsers may throw on localStorage access. Treat
+      // that as "already onboarded" so we don't trap the user in a
+      // redirect loop they can't escape.
+      done = true;
+    }
+    if (!done) navigate('/onboarding', { replace: true });
+  }, [location.pathname, navigate]);
+}
 
 // Audit #409 perf: the SPA used to eagerly import every page, so the
 // initial bundle dragged the chat stack, react-flow, the model wizard,
@@ -39,6 +67,9 @@ export function App() {
   // user Zustand consent) are on. Lives inside ``BrowserRouter`` so
   // ``useLocation`` resolves.
   usePageViewTelemetry();
+  // Audit #471 — redirect first-launch users to ``/onboarding`` until
+  // they complete it.
+  useFirstLaunchGate();
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
