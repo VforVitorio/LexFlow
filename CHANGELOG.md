@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.40.6](https://github.com/VforVitorio/LexFlow/compare/v0.40.5...v0.40.6) (2026-06-07)
+
+
+### Bug Fixes
+
+* **audit:** first-launch gate + Diff real SHAs + ChatPage New Thread (Batch H) ([ede488c](https://github.com/VforVitorio/LexFlow/commit/ede488cb69432a823dde64f1470681ce00e9645f)), closes [#409](https://github.com/VforVitorio/LexFlow/issues/409)
+* **audit:** first-launch gate + Diff SHAs + ChatPage New Thread (Batch H) ([25cb3b1](https://github.com/VforVitorio/LexFlow/commit/25cb3b17bab54acb26a27bdf2f7a3eafaf7eb922))
+* **explorer:** use per-field Zustand selectors instead of full-store subscription ([503d71a](https://github.com/VforVitorio/LexFlow/commit/503d71a11d361d2eba9502a74b7d6f0890029c0b))
+* **frontend:** encode backend-supplied law ids in navigate() paths ([#440](https://github.com/VforVitorio/LexFlow/issues/440)) ([228c866](https://github.com/VforVitorio/LexFlow/commit/228c866137acd269446c28ee3e1edd7e04aa239d))
+* **frontend:** localize Settings Models/Appearance/Data/Help sections ([54644e6](https://github.com/VforVitorio/LexFlow/commit/54644e67d6f109081b5b1466696e0cf6262e2b97))
+* **frontend:** point cloud-key wizard copy at ANTHROPIC_API_KEY env var ([0eeda6a](https://github.com/VforVitorio/LexFlow/commit/0eeda6ac722344ff5be2037c0ba119e830a9f6b1))
+* **frontend:** render real related references in LawDetail right rail ([0682a02](https://github.com/VforVitorio/LexFlow/commit/0682a02d066e6a1b92347cb8e5a38ef35abffc04))
+* **frontend:** render translated markup via &lt;Trans&gt; and restore i18n escaping ([bec3de6](https://github.com/VforVitorio/LexFlow/commit/bec3de6826088e641e923ac382f4d50a2c415d17))
+* **frontend:** wire Explorer 'How to search' button to inline help ([#476](https://github.com/VforVitorio/LexFlow/issues/476)) ([b656506](https://github.com/VforVitorio/LexFlow/commit/b6565069618a0a4d045631c7bf0aac56f8882ad6))
+
+
+### Performance
+
+* **chat:** memoize ChatPage header derivations to cut per-token work ([9900e32](https://github.com/VforVitorio/LexFlow/commit/9900e320f556e725659e7646d2f0480d6d2637f7))
+* **frontend:** use per-field Zustand selectors to cut re-renders ([25c6ae2](https://github.com/VforVitorio/LexFlow/commit/25c6ae2462265507a3a7f47b11d2a9e282b5f8c4))
+* **graph:** make GraphCanvas selection O(delta) not O(N) ([13083af](https://github.com/VforVitorio/LexFlow/commit/13083af3e1331c8ca525e0c9ac37c6d48dfdd994))
+
 ## [0.40.5](https://github.com/VforVitorio/LexFlow/compare/v0.40.4...v0.40.5) (2026-06-07)
 
 
