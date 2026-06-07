@@ -29,7 +29,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import {
   CheckCircle2,
   Cpu,
@@ -409,8 +409,9 @@ function StepConfirm({
       <div className="flex flex-col gap-3 text-[13.5px]">
         <p>
           {t('wizard.cloudChosen')} <strong>{tier.title}</strong>.{' '}
-          {/* Static translator copy with one <strong> — safe to render as HTML. */}
-          <span dangerouslySetInnerHTML={{ __html: t('wizard.cloudKeyInstructions') }} />
+          {/* Static translator copy with one <strong> — rendered via
+              <Trans> so the markup is code-owned, not raw HTML. */}
+          <Trans i18nKey="wizard.cloudKeyInstructions" components={{ strong: <strong /> }} />
         </p>
         <p className="text-muted">
           {t('wizard.cloudCreateKey')}

@@ -23,7 +23,6 @@ void i18n
     supportedLngs: SUPPORTED_LANGS,
     ns: ['common'],
     defaultNS: 'common',
-    interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'lexflow.lang',
