@@ -234,6 +234,7 @@ function readStoredUserName(): string | null {
 }
 
 function ModelsSection() {
+  const { t } = useTranslation();
   const { data: models = [] } = useModels();
   const { defaultModel, setDefaultModel } = useUi();
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -243,13 +244,13 @@ function ModelsSection() {
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-[22px] font-semibold">Modelos</h1>
+          <h1 className="font-display text-[22px] font-semibold">{t('settings.models.title')}</h1>
           <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
-            Configura los modelos disponibles para el chat. Los locales se ejecutan en tu máquina; los de nube hacen peticiones salientes.
+            {t('settings.models.subtitle')}
           </p>
         </div>
         <Button size="sm" variant="secondary" icon={<Wand2 className="size-3.5" />} onClick={() => setWizardOpen(true)}>
-          Volver a lanzar wizard
+          {t('settings.models.relaunchWizard')}
         </Button>
       </div>
 
@@ -260,19 +261,19 @@ function ModelsSection() {
         />
       )}
 
-      <div className="label-caps mb-2">Modelo por defecto</div>
+      <div className="label-caps mb-2">{t('settings.models.defaultModel')}</div>
       {m && (
         <Card className="mb-5 flex items-center gap-3 p-3.5">
           <Avatar initials={m.label[0]} />
           <div className="flex-1">
             <div className="font-semibold">{m.label}</div>
-            <div className="text-[12px] text-muted">{m.vendor} · {m.available ? 'configurado' : 'falta credencial'}</div>
+            <div className="text-[12px] text-muted">{m.vendor} · {m.available ? t('settings.models.configured') : t('settings.models.missingCredential')}</div>
           </div>
-          <Badge tone={m.kind === 'local' ? 'success' : 'info'}>{m.kind === 'local' ? 'local' : 'nube'}</Badge>
+          <Badge tone={m.kind === 'local' ? 'success' : 'info'}>{m.kind === 'local' ? t('model.local') : t('model.cloud')}</Badge>
         </Card>
       )}
 
-      <div className="label-caps mb-2">Proveedores</div>
+      <div className="label-caps mb-2">{t('settings.models.providers')}</div>
       {models.map((p) => (
         <div key={p.id} className="mb-2 flex items-center gap-3.5 rounded-lg border border-border bg-surface p-3.5">
           <div className={cn(
@@ -284,10 +285,10 @@ function ModelsSection() {
               <span className="font-semibold">{p.vendor}</span>
               <span className="font-mono text-[11px] text-muted">{p.id}</span>
             </div>
-            <div className="text-[12px] text-muted">{p.available ? 'Conectado' : 'Sin clave configurada'}</div>
+            <div className="text-[12px] text-muted">{p.available ? t('settings.models.connected') : t('settings.models.noKey')}</div>
           </div>
           <Badge tone={p.available ? 'success' : 'danger'} icon={p.available ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}>
-            {p.available ? 'Activo' : 'Falta clave'}
+            {p.available ? t('settings.models.active') : t('settings.models.missingKey')}
           </Badge>
           <Button size="sm" variant="ghost" onClick={() => setDefaultModel(p.id)} icon={<Cog className="size-3.5" />} />
         </div>
@@ -297,39 +298,40 @@ function ModelsSection() {
 }
 
 function AppearanceSection() {
+  const { t } = useTranslation();
   const { theme, setTheme, density, setDensity, readingSize, setReadingSize } = useUi();
   return (
     <>
-      <h1 className="font-display text-[22px] font-semibold">Apariencia</h1>
-      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">Tema, densidad y tipografía.</p>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.appearance.title')}</h1>
+      <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">{t('settings.appearance.subtitle')}</p>
 
-      <div className="label-caps mb-2">Tema</div>
+      <div className="label-caps mb-2">{t('settings.appearance.themeLabel')}</div>
       <div className="mb-6 flex gap-3">
-        {(['light', 'dark'] as const).map((t) => (
+        {(['light', 'dark'] as const).map((opt) => (
           <button
-            key={t}
-            onClick={() => setTheme(t)}
+            key={opt}
+            onClick={() => setTheme(opt)}
             className={cn(
               'flex-1 rounded-lg border-2 bg-surface p-3.5 text-left',
-              theme === t ? 'border-indigo-500' : 'border-border',
+              theme === opt ? 'border-indigo-500' : 'border-border',
             )}
           >
-            <div className="flex h-16 rounded-md border border-border" style={{ background: t === 'light' ? '#f6f6fa' : '#101220' }}>
-              <div className="w-1/4" style={{ background: t === 'light' ? '#e9e9f0' : '#1a1c2c' }} />
+            <div className="flex h-16 rounded-md border border-border" style={{ background: opt === 'light' ? '#f6f6fa' : '#101220' }}>
+              <div className="w-1/4" style={{ background: opt === 'light' ? '#e9e9f0' : '#1a1c2c' }} />
             </div>
-            <div className="mt-2 text-[13px] font-semibold">{t === 'light' ? 'Claro' : 'Oscuro'}</div>
+            <div className="mt-2 text-[13px] font-semibold">{opt === 'light' ? t('settings.appearance.themeLight') : t('settings.appearance.themeDark')}</div>
           </button>
         ))}
       </div>
 
-      <div className="label-caps mb-2">Densidad</div>
+      <div className="label-caps mb-2">{t('settings.appearance.densityLabel')}</div>
       <Tabs variant="segmented" value={density} onChange={(v) => setDensity(v as 'compact' | 'comfortable' | 'cozy')} tabs={[
-        { id: 'compact', label: 'Compacto' },
-        { id: 'comfortable', label: 'Cómodo' },
-        { id: 'cozy', label: 'Amplio' },
+        { id: 'compact', label: t('settings.appearance.densityCompact') },
+        { id: 'comfortable', label: t('settings.appearance.densityComfortable') },
+        { id: 'cozy', label: t('settings.appearance.densityCozy') },
       ]} />
 
-      <div className="label-caps mb-2 mt-6">Tamaño de lectura (página de norma)</div>
+      <div className="label-caps mb-2 mt-6">{t('settings.appearance.readingSizeLabel')}</div>
       <div className="flex items-center gap-3">
         <input type="range" min={14} max={22} step={1} value={readingSize} onChange={(e) => setReadingSize(Number(e.target.value))} className="w-64" />
         <span className="font-mono text-[13px]">{readingSize}px</span>
@@ -339,35 +341,35 @@ function AppearanceSection() {
 }
 
 function HelpSection() {
+  const { t } = useTranslation();
   const relaunch = useTutorialRelaunch();
   return (
     <>
-      <h1 className="font-display text-[22px] font-semibold">Ayuda</h1>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.help.title')}</h1>
       <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
-        Recursos de iniciación. El tutorial sombreado te lleva por las cinco secciones del
-        producto en menos de un minuto.
+        {t('settings.help.subtitle')}
       </p>
 
-      <div className="label-caps mb-2">Tutorial interactivo</div>
+      <div className="label-caps mb-2">{t('settings.help.interactiveTutorial')}</div>
       <Card className="mb-5 flex items-center gap-3 p-3.5">
         <div className="flex-1">
-          <div className="font-semibold">Tour de bienvenida</div>
+          <div className="font-semibold">{t('settings.help.welcomeTour')}</div>
           <div className="text-[12px] text-muted">
-            6 pasos: layout, atajos, paleta de comandos, búsqueda, grafo y chat.
+            {t('settings.help.welcomeTourSteps')}
           </div>
         </div>
         <Button size="sm" onClick={relaunch}>
-          Repetir tutorial
+          {t('settings.help.replayTutorial')}
         </Button>
       </Card>
 
-      <div className="label-caps mb-2">Atajos clave</div>
+      <div className="label-caps mb-2">{t('settings.help.keyShortcuts')}</div>
       <Card className="p-4 text-[13px]">
         <ul className="space-y-1.5">
-          <li><strong>Ctrl K</strong> · paleta universal de búsqueda y navegación</li>
-          <li><strong>g h / g e / g g / g c / g d / g s</strong> · saltar a Inicio / Explorador / Grafo / Chat / Cuadros / Ajustes</li>
-          <li><strong>Ctrl \</strong> · plegar el panel izquierdo</li>
-          <li><strong>Ctrl .</strong> · cambiar tema claro / oscuro</li>
+          <li><strong>Ctrl K</strong> · {t('settings.help.shortcutPalette')}</li>
+          <li><strong>g h / g e / g g / g c / g d / g s</strong> · {t('settings.help.shortcutGoTo')}</li>
+          <li><strong>Ctrl \</strong> · {t('settings.help.shortcutCollapse')}</li>
+          <li><strong>Ctrl .</strong> · {t('settings.help.shortcutTheme')}</li>
         </ul>
       </Card>
     </>
@@ -478,21 +480,22 @@ function DiagnosticsSection() {
 
 
 function DataSection() {
+  const { t } = useTranslation();
   const { data: sync } = useSyncStatus();
   const run = useRunSync();
   return (
     <>
-      <h1 className="font-display text-[22px] font-semibold">Datos</h1>
+      <h1 className="font-display text-[22px] font-semibold">{t('settings.data.title')}</h1>
       <p className="mt-1 mb-5 max-w-xl text-[13.5px] text-muted">
-        El corpus se sincroniza desde el repositorio <code className="font-mono">legalize-es</code>. Conserva los archivos Markdown originales.
+        {t('settings.data.subtitlePre')} <code className="font-mono">legalize-es</code>{t('settings.data.subtitlePost')}
       </p>
       <Card className="mb-3 p-4">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <div className="font-mono text-[13px]">{sync?.upstream ?? 'legalize-es@main'}</div>
-            <div className="text-[12px] text-muted">Última sincronización {timeAgo(sync?.lastSyncAt)} · {sync?.behind ?? 0} commits pendientes</div>
+            <div className="text-[12px] text-muted">{t('settings.data.lastSync', { ago: timeAgo(sync?.lastSyncAt), behind: sync?.behind ?? 0 })}</div>
           </div>
-          <Button size="sm" loading={run.isPending} onClick={() => run.mutate()}>Sincronizar ahora</Button>
+          <Button size="sm" loading={run.isPending} onClick={() => run.mutate()}>{t('settings.data.syncNow')}</Button>
         </div>
       </Card>
     </>
