@@ -14,7 +14,8 @@ import type { LawStatus, RangoNormativo, Ambito } from '@/lib/types';
 export function ExplorerPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { density, setDensity } = useUi();
+  const density = useUi((s) => s.density);
+  const setDensity = useUi((s) => s.setDensity);
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<Set<LawStatus>>(new Set(['vigente']));
   const [rango, setRango] = useState<Set<RangoNormativo>>(new Set());
