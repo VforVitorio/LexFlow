@@ -138,7 +138,7 @@ export function HomePage() {
                   {group.items.map((law) => (
                     <button
                       key={law.id}
-                      onClick={() => navigate(`/laws/${law.id}`)}
+                      onClick={() => navigate(`/laws/${encodeURIComponent(law.id)}`)}
                       className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-2/60"
                     >
                       <ChangedRowIcon law={law} />
@@ -175,7 +175,7 @@ export function HomePage() {
           </div>
           <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
             {recent.map((l) => (
-              <Card key={l.id} hoverable onClick={() => navigate(`/laws/${l.id}`)}>
+              <Card key={l.id} hoverable onClick={() => navigate(`/laws/${encodeURIComponent(l.id)}`)}>
                 <div className="mb-2 flex items-center gap-2">
                   <Badge tone={l.status === 'vigente' ? 'success' : l.status === 'derogada' ? 'danger' : 'amber'}>{statusLabel(l.status)}</Badge>
                   <span className="font-mono text-[11px] text-muted">{l.boe}</span>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { BrandMark } from '@/components/BrandMark';
 import { Button, Callout, Radio, Switch } from '@/components/ui';
@@ -81,9 +81,11 @@ export function OnboardingPage() {
         {step === 2 && (
           <>
             <h2 className="mb-1 font-display text-2xl font-semibold">{t('onboarding.step2.title')}</h2>
-            {/* Static translator copy only (two <strong> spans) — safe to
-                render as HTML; same pattern as settings.personalization.a11yBody. */}
-            <p className="mb-4 text-[13.5px] text-muted" dangerouslySetInnerHTML={{ __html: t('onboarding.step2.body') }} />
+            {/* Static translator copy with <strong> spans — rendered via
+                <Trans> so the markup is code-owned, not raw HTML. */}
+            <p className="mb-4 text-[13.5px] text-muted">
+              <Trans i18nKey="onboarding.step2.body" components={{ strong: <strong /> }} />
+            </p>
             {models.slice(0, 4).map((m) => (
               <label
                 key={m.id}

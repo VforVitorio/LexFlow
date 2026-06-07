@@ -94,7 +94,7 @@ export function CommandPalette() {
         ),
         run: () => {
           const p = h.payload as { lawId?: string };
-          if (p?.lawId) navigate(`/laws/${p.lawId}`);
+          if (p?.lawId) navigate(`/laws/${encodeURIComponent(p.lawId)}`);
           setPaletteOpen(false);
         },
       })),

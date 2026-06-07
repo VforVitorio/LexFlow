@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send } from 'lucide-react';
@@ -41,7 +41,19 @@ export function ChatPage() {
 
   const { data: threads = [] } = useChatThreads();
   const { data: msgs = [] } = useChatThread(activeId);
-  const visible: ChatMessageT[] = stream ? [...msgs, stream] : msgs;
+  // Audit #453 — during SSE streaming the component re-renders on every
+  // token. These derived values used to recompute per render (a linear
+  // `threads` scan for the title, a full-history walk for the sources
+  // counter, and a fresh `visible` array). Memoizing keeps them stable
+  // across stream chunks without changing behaviour.
+  const visible: ChatMessageT[] = useMemo(() => (stream ? [...msgs, stream] : msgs), [msgs, stream]);
+  const threadsById = useMemo(() => new Map(threads.map((th) => [th.id, th])), [threads]);
+  // Committed messages only: sources are fixed once a message lands, so
+  // the in-flight `stream` never changes this count.
+  const sourcesCited = useMemo(
+    () => msgs.reduce((acc, m) => acc + (m.role === 'assistant' && 'sources' in m ? m.sources.length : 0), 0),
+    [msgs],
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView?.({ block: 'end' });
@@ -113,8 +125,8 @@ export function ChatPage() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-3 border-b border-border px-6 py-3">
           <div className="min-w-0">
-            <div className="font-display text-[15px] font-semibold">{threads.find((th) => th.id === activeId)?.title ?? t('chat.threadFallback')}</div>
-            <div className="text-[12px] text-muted">{t('chat.turns', { n: visible.length })} · {t('chat.sourcesCited', { n: visible.filter((m) => m.role === 'assistant').reduce((acc, m) => acc + ('sources' in m ? m.sources.length : 0), 0) })}</div>
+            <div className="font-display text-[15px] font-semibold">{threadsById.get(activeId)?.title ?? t('chat.threadFallback')}</div>
+            <div className="text-[12px] text-muted">{t('chat.turns', { n: visible.length })} · {t('chat.sourcesCited', { n: sourcesCited })}</div>
           </div>
           <span className="ml-auto"><ModelChip /></span>
         </header>
@@ -134,7 +146,7 @@ export function ChatPage() {
                 <ChatMessage
                   key={m.id}
                   message={m}
-                  onSourceClick={(s: ChatSource) => s.target && navigate(`/laws/${s.target.lawId}`)}
+                  onSourceClick={(s: ChatSource) => s.target && navigate(`/laws/${encodeURIComponent(s.target.lawId)}`)}
                 />
               ))
             )}
@@ -178,7 +190,7 @@ export function ChatPage() {
             .filter((m): m is Extract<ChatMessageT, { role: 'assistant' }> => m.role === 'assistant')
             .flatMap((m) => m.sources)
             .map((s, i) => (
-              <CitationCard key={i} source={s} onClick={() => s.target && navigate(`/laws/${s.target.lawId}`)} />
+              <CitationCard key={i} source={s} onClick={() => s.target && navigate(`/laws/${encodeURIComponent(s.target.lawId)}`)} />
             ))}
         </div>
       </RightRail>
