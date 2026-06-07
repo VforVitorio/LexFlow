@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Download, ChevronDown, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
+import { Search, Download, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
 import { Badge, Button, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
@@ -245,11 +245,11 @@ export function ExplorerPage() {
               <thead className="sticky top-0 z-[1] bg-bg">
                 <tr className="border-b border-border">
                   <Th className="w-[40%] pl-8">{t('explorer.cols.law')}</Th>
-                  <Th sortable>{t('explorer.cols.status')}</Th>
-                  <Th sortable>{t('explorer.cols.rango')}</Th>
-                  <Th sortable>{t('explorer.cols.published')}</Th>
-                  <Th sortable className="text-right">{t('explorer.cols.articles')}</Th>
-                  <Th sortable className="text-right">{t('explorer.cols.refs')}</Th>
+                  <Th>{t('explorer.cols.status')}</Th>
+                  <Th>{t('explorer.cols.rango')}</Th>
+                  <Th>{t('explorer.cols.published')}</Th>
+                  <Th className="text-right">{t('explorer.cols.articles')}</Th>
+                  <Th className="text-right">{t('explorer.cols.refs')}</Th>
                   <Th className="w-10" />
                 </tr>
               </thead>
@@ -339,13 +339,10 @@ export function ExplorerPage() {
   );
 }
 
-function Th({ children, sortable, className }: { children?: React.ReactNode; sortable?: boolean; className?: string }) {
+function Th({ children, className }: { children?: React.ReactNode; className?: string }) {
   return (
     <th className={cn('label-caps whitespace-nowrap px-3 py-2.5 text-left', className)}>
-      <span className={cn('inline-flex items-center gap-1', sortable && 'cursor-pointer')}>
-        {children}
-        {sortable && <ChevronDown className="size-3 opacity-50" />}
-      </span>
+      <span className="inline-flex items-center gap-1">{children}</span>
     </th>
   );
 }
