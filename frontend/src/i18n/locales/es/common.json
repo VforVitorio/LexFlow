@@ -229,7 +229,9 @@
     "lawInfo": "Información de la norma",
     "citedFrom": "Norma citada desde {{law}}.",
     "selectCitation": "Selecciona una cita en el texto (superíndices) para ver la norma citada y su contexto.",
-    "relatedRefs": "Referencias relacionadas"
+    "relatedRefs": "Referencias relacionadas",
+    "refsHeading": "{{n}} referencias salientes",
+    "refsEmpty": "Esta norma no tiene referencias salientes registradas."
   },
   "diff": {
     "loading": "Cargando diff…",
@@ -315,6 +317,20 @@
     },
     "title": "Ajustes",
     "underConstruction": "Sección por completar — se conectará al endpoint correspondiente.",
+    "updates": {
+      "title": "Actualizaciones del corpus",
+      "subtitle": "Resumen de lo que cambió en legalize-es desde la última sincronización. Para ejecutar una sincronización, ve a Ajustes → Datos.",
+      "upToDate": "El corpus está al día con la última revisión sincronizada.",
+      "atCommit": "Revisión actual: {{sha}}",
+      "removedShort": "Derogadas"
+    },
+    "about": {
+      "title": "Acerca de LexFlow",
+      "subtitle": "Plataforma open source para explorar y analizar la legislación española.",
+      "version": "Versión",
+      "license": "Licencia",
+      "repo": "Repositorio"
+    },
     "diagnostics": {
       "subtitle": "Estado en vivo del proceso: memoria, disco, corpus y base de chats. Se refresca automáticamente cada 30 s.",
       "error": "No se pudo cargar el estado del proceso.",
