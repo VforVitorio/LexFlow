@@ -400,7 +400,22 @@
       "connected": "Conectado",
       "noKey": "Sin clave configurada",
       "active": "Activo",
-      "missingKey": "Falta clave"
+      "missingKey": "Falta clave",
+      "apiKeysTitle": "Claves API",
+      "apiKeysSubtitle": "Las claves se guardan en el llavero del sistema operativo. Solo se ve si están configuradas; nunca se devuelven al SPA tras guardarlas.",
+      "apiKeysLoading": "Cargando claves…",
+      "apiKeysLoadError": "No se pudieron cargar las claves",
+      "apiKeyConfigured": "configurada",
+      "apiKeyMissing": "sin configurar",
+      "apiKeyPlaceholder": "pega tu API key aquí",
+      "apiKeyPlaceholderConfigured": "pega una nueva clave para reemplazar",
+      "apiKeySave": "Guardar",
+      "apiKeySaving": "Guardando…",
+      "apiKeyRemove": "Eliminar",
+      "apiKeyConfirmDelete": "¿Eliminar la clave de {{provider}} del llavero?",
+      "apiKeySaved": "Clave de {{provider}} guardada",
+      "apiKeyRemoved": "Clave de {{provider}} eliminada",
+      "apiKeyFailed": "No se pudo procesar la clave de {{provider}}"
     },
     "appearance": {
       "title": "Apariencia",

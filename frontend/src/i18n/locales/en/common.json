@@ -400,7 +400,22 @@
       "connected": "Connected",
       "noKey": "No key configured",
       "active": "Active",
-      "missingKey": "Missing key"
+      "missingKey": "Missing key",
+      "apiKeysTitle": "API keys",
+      "apiKeysSubtitle": "Keys are stored in the OS keyring. We only know whether they're configured; the SPA never sees the bytes back after saving.",
+      "apiKeysLoading": "Loading keys…",
+      "apiKeysLoadError": "Couldn't load API keys",
+      "apiKeyConfigured": "configured",
+      "apiKeyMissing": "not set",
+      "apiKeyPlaceholder": "paste your API key here",
+      "apiKeyPlaceholderConfigured": "paste a new key to replace",
+      "apiKeySave": "Save",
+      "apiKeySaving": "Saving…",
+      "apiKeyRemove": "Remove",
+      "apiKeyConfirmDelete": "Remove the {{provider}} key from the keyring?",
+      "apiKeySaved": "Saved {{provider}} key",
+      "apiKeyRemoved": "Removed {{provider}} key",
+      "apiKeyFailed": "Failed to update the {{provider}} key"
     },
     "appearance": {
       "title": "Appearance",

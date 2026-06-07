@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { liveSecretsApi, type SecretStatusItem } from '@/lib/api/secrets';
 import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
@@ -291,7 +292,129 @@ function ModelsSection() {
           <Button size="sm" variant="ghost" onClick={() => setDefaultModel(p.id)} icon={<Cog className="size-3.5" />} />
         </div>
       ))}
+
+      <ApiKeysCard />
     </>
+  );
+}
+
+/**
+ * Audit #466 — per-provider API key form. The wizard tells the user
+ * to paste their key in Settings → Models, but until now there was no
+ * input to paste it into. The card uses the OS keyring via
+ * `liveSecretsApi`; the SPA never sees the raw bytes after a save.
+ */
+function ApiKeysCard() {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<SecretStatusItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      setStatus(await liveSecretsApi.list());
+    } catch (exc) {
+      toast({
+        tone: 'danger',
+        title: t('settings.models.apiKeysLoadError'),
+        message: exc instanceof Error ? exc.message : String(exc),
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return (
+    <>
+      <div className="label-caps mb-2 mt-6">{t('settings.models.apiKeysTitle')}</div>
+      <Card className="p-4">
+        <p className="mb-4 text-[13px] text-muted">{t('settings.models.apiKeysSubtitle')}</p>
+        {loading ? (
+          <p className="text-[13px] text-muted">{t('settings.models.apiKeysLoading')}</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {status.map((row) => (
+              <ApiKeyRow key={row.provider} row={row} onChange={refresh} />
+            ))}
+          </div>
+        )}
+      </Card>
+    </>
+  );
+}
+
+function ApiKeyRow({ row, onChange }: { row: SecretStatusItem; onChange: () => Promise<void> }) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draft.trim()) return;
+    setBusy(true);
+    try {
+      await liveSecretsApi.set(row.provider, draft.trim());
+      setDraft('');
+      await onChange();
+      toast({ tone: 'success', title: t('settings.models.apiKeySaved', { provider: row.provider }), message: '' });
+    } catch (exc) {
+      toast({
+        tone: 'danger',
+        title: t('settings.models.apiKeyFailed', { provider: row.provider }),
+        message: exc instanceof Error ? exc.message : String(exc),
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm(t('settings.models.apiKeyConfirmDelete', { provider: row.provider }))) return;
+    setBusy(true);
+    try {
+      await liveSecretsApi.remove(row.provider);
+      await onChange();
+      toast({ tone: 'info', title: t('settings.models.apiKeyRemoved', { provider: row.provider }), message: '' });
+    } catch (exc) {
+      toast({
+        tone: 'danger',
+        title: t('settings.models.apiKeyFailed', { provider: row.provider }),
+        message: exc instanceof Error ? exc.message : String(exc),
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={save} className="flex flex-wrap items-center gap-2">
+      <div className="min-w-[110px]">
+        <div className="font-semibold capitalize">{row.provider}</div>
+        <div className="text-[12px] text-muted">
+          {row.configured ? t('settings.models.apiKeyConfigured') : t('settings.models.apiKeyMissing')}
+        </div>
+      </div>
+      <input
+        type="password"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder={row.configured ? t('settings.models.apiKeyPlaceholderConfigured') : t('settings.models.apiKeyPlaceholder')}
+        className="min-w-[220px] flex-1 rounded-md border border-border bg-bg px-2.5 py-1.5 font-mono text-[12.5px] outline-none focus:border-indigo-500"
+        disabled={busy}
+      />
+      <Button size="sm" type="submit" disabled={busy || !draft.trim()}>
+        {busy ? t('settings.models.apiKeySaving') : t('settings.models.apiKeySave')}
+      </Button>
+      {row.configured && (
+        <Button size="sm" variant="ghost" onClick={remove} disabled={busy}>
+          {t('settings.models.apiKeyRemove')}
+        </Button>
+      )}
+    </form>
   );
 }
 
