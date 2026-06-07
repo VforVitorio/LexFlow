@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.42.0](https://github.com/VforVitorio/LexFlow/compare/v0.41.0...v0.42.0) (2026-06-07)
+
+
+### Features
+
+* **audit:** cloud provider API keys UI (Batch L) ([e0bcfcd](https://github.com/VforVitorio/LexFlow/commit/e0bcfcd7fa7c938062969dcd786afd22699f71cb))
+
 ## [0.41.0](https://github.com/VforVitorio/LexFlow/compare/v0.40.6...v0.41.0) (2026-06-07)
 
 
