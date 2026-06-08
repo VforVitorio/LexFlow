@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.46.0](https://github.com/VforVitorio/LexFlow/compare/v0.45.0...v0.46.0) (2026-06-08)
+
+
+### Features
+
+* **search:** real multilingual sentence-transformer embedder (opt-in) ([a5cc9ef](https://github.com/VforVitorio/LexFlow/commit/a5cc9efc2cb5a774e2f9326ec02ab9c7e36d680f))
+* **search:** real multilingual sentence-transformer embedder (opt-in) ([09cce7d](https://github.com/VforVitorio/LexFlow/commit/09cce7db727fe6794a958ef35ad8be8f1f3b5b27))
+
 ## [0.45.0](https://github.com/VforVitorio/LexFlow/compare/v0.44.0...v0.45.0) (2026-06-08)
 
 
