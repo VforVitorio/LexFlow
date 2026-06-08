@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.49.0](https://github.com/VforVitorio/LexFlow/compare/v0.48.0...v0.49.0) (2026-06-08)
+
+
+### Features
+
+* **chat:** search_semantic_top_k MCP tool ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([a0737c7](https://github.com/VforVitorio/LexFlow/commit/a0737c7a5b6a8f088a345dc30294f08322d201bb))
+* **chat:** search_semantic_top_k MCP tool ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([2504e9e](https://github.com/VforVitorio/LexFlow/commit/2504e9ea9835f53ceb61f9d9cbf5c2d438dbc879))
+
 ## [0.48.0](https://github.com/VforVitorio/LexFlow/compare/v0.47.0...v0.48.0) (2026-06-08)
 
 
