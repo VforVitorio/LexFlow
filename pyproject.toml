@@ -61,6 +61,14 @@ chat = [
 dashboards = [
     "plotly>=6.0",
 ]
+# Real semantic search (#43). Heavy: pulls torch + transformers (~2 GB),
+# so it is OPT-IN — core installs stay lean and CI does NOT install it
+# (see ci.yml: the test/typecheck/pip-audit jobs use an explicit extra
+# list, not --all-extras, to keep torch off the runners). Enable at
+# runtime with LEXFLOW_EMBEDDER=sentence-transformers.
+semantic = [
+    "sentence-transformers>=3.0",
+]
 packaging = [
     "pyinstaller>=6.0",
 ]

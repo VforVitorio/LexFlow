@@ -58,6 +58,52 @@ class TestSystemWarmupEndpoint:
         assert body["ready"] is False
 
 
+class TestSemanticStatusEndpoint:
+    """``GET /system/semantic-status`` — drives the Settings → Models card.
+
+    ``is_sentence_transformers_available`` is monkeypatched so the result is
+    deterministic regardless of whether the heavy dep happens to be present
+    in the test environment (it is not installed in CI).
+    """
+
+    def test_hash_backend_reports_inactive(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        from lexflow.api.routers import system as system_mod
+        from lexflow.utils.config import get_settings
+
+        monkeypatch.setattr(system_mod, "is_sentence_transformers_available", lambda: False)
+        get_settings.cache_clear()  # default backend = "hash"
+        body = client.get("/api/v1/system/semantic-status").json()
+        assert body["backend"] == "hash"
+        assert body["installed"] is False
+        assert body["active"] is False
+
+    def test_active_when_selected_and_installed(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        from lexflow.api.routers import system as system_mod
+        from lexflow.utils.config import get_settings
+
+        monkeypatch.setenv("LEXFLOW_EMBEDDER", "sentence-transformers")
+        monkeypatch.setenv("LEXFLOW_EMBEDDER_MODEL", "my-model")
+        get_settings.cache_clear()
+        monkeypatch.setattr(system_mod, "is_sentence_transformers_available", lambda: True)
+        body = client.get("/api/v1/system/semantic-status").json()
+        assert body["backend"] == "sentence-transformers"
+        assert body["installed"] is True
+        assert body["active"] is True
+        assert body["model"] == "my-model"
+
+    def test_selected_but_dep_missing_is_inactive(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        from lexflow.api.routers import system as system_mod
+        from lexflow.utils.config import get_settings
+
+        monkeypatch.setenv("LEXFLOW_EMBEDDER", "sentence-transformers")
+        get_settings.cache_clear()
+        monkeypatch.setattr(system_mod, "is_sentence_transformers_available", lambda: False)
+        body = client.get("/api/v1/system/semantic-status").json()
+        assert body["backend"] == "sentence-transformers"
+        assert body["installed"] is False
+        assert body["active"] is False
+
+
 class TestWarmupStateInvariants:
     def test_reset_clears_every_flag(self) -> None:
         state = get_warmup_state()
