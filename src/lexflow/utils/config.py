@@ -24,6 +24,11 @@ class Settings:
         LEXFLOW_TELEMETRY_RETENTION_DAYS — number of past days of
             telemetry JSONL files to keep. ``0`` disables pruning.
             Default 30.
+        LEXFLOW_EMBEDDER — semantic-search backend: ``hash`` (default,
+            dependency-free placeholder) or ``sentence-transformers``
+            (real multilingual model; needs the ``[semantic]`` extra).
+        LEXFLOW_EMBEDDER_MODEL — sentence-transformers model name used
+            when the backend is ``sentence-transformers``.
     """
 
     data_path: Path
@@ -32,6 +37,8 @@ class Settings:
     log_level: str
     config_dir: Path
     telemetry_retention_days: int
+    embedder_backend: str
+    embedder_model: str
 
 
 def _build_settings() -> Settings:
@@ -49,6 +56,9 @@ def _build_settings() -> Settings:
         log_level=os.environ.get("LEXFLOW_LOG_LEVEL", "INFO"),
         config_dir=config_dir,
         telemetry_retention_days=int(os.environ.get("LEXFLOW_TELEMETRY_RETENTION_DAYS", "30")),
+        embedder_backend=os.environ.get("LEXFLOW_EMBEDDER", "hash"),
+        # Keep in sync with ``sentence_transformer_embedder.DEFAULT_MODEL``.
+        embedder_model=os.environ.get("LEXFLOW_EMBEDDER_MODEL", "paraphrase-multilingual-MiniLM-L12-v2"),
     )
 
 

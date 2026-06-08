@@ -116,7 +116,10 @@ warn_unused_configs = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*", "pynvml.*"]
+# ``sentence_transformers`` is an optional ([semantic]) dep imported lazily
+# in ``search/sentence_transformer_embedder.py``; it isn't installed in CI
+# (torch is too heavy for the type/test jobs), so ignore its missing types.
+module = ["networkx.*", "ollama.*", "fastmcp.*", "plotly.*", "pynvml.*", "sentence_transformers.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
