@@ -38,6 +38,7 @@ from lexflow.chat.audit import (
 from lexflow.core.exceptions import LawNotFoundError
 from lexflow.core.registry import get_registry
 from lexflow.core.services import find_article
+from lexflow.search.service import ensure_semantic_index
 
 logger = logging.getLogger(__name__)
 
@@ -168,6 +169,40 @@ def search_law(query: str) -> dict:  # type: ignore[type-arg]
 
 
 @mcp.tool()
+@_audited("search_semantic_top_k")
+def search_semantic_top_k(query: str, limit: int = 10) -> dict:  # type: ignore[type-arg]
+    """Semantic (meaning-based) search over the corpus's articles.
+
+    Prefer this over ``search_law`` when the user's question is conceptual
+    or paraphrased rather than exact keywords — it ranks articles by
+    embedding similarity, so "derechos digitales" can surface a data-
+    protection article that never uses those exact words.
+
+    Args:
+        query: Natural-language query.
+        limit: Max number of hits to return (clamped to 1-50).
+
+    Returns:
+        ``{"query", "items": [{law_id, article_number, snippet, score}, ...]}``
+        — same ``items`` shape as ``search_law`` so source citations work.
+    """
+    clamped_limit = max(1, min(limit, 50))
+    registry = get_registry()
+    index = ensure_semantic_index(registry)
+    hits = index.query(query, limit=clamped_limit)
+    items = [
+        {
+            "law_id": hit.law_id,
+            "article_number": hit.article_number,
+            "snippet": hit.snippet,
+            "score": hit.score,
+        }
+        for hit in hits
+    ]
+    return {"query": query, "items": items}
+
+
+@mcp.tool()
 @_audited("get_law")
 def get_law(law_id: str) -> dict:  # type: ignore[type-arg]
     """Retrieve the full content of a law by its BOE identifier.
@@ -235,6 +270,7 @@ TOOLS: dict[str, Callable[..., dict[str, Any]]] = cast(
     dict[str, Callable[..., dict[str, Any]]],
     {
         "search_law": search_law,
+        "search_semantic_top_k": search_semantic_top_k,
         "get_law": get_law,
         "get_article": get_article,
         "get_stats": get_stats,
@@ -248,10 +284,26 @@ TOOLS: dict[str, Callable[..., dict[str, Any]]] = cast(
 TOOL_SPECS: list[dict[str, Any]] = [
     {
         "name": "search_law",
-        "description": "Search for laws by free-text query. Returns ids, titles, article numbers and snippets.",
+        "description": "Search for laws by free-text query (keyword match). Returns ids, titles, article numbers and snippets.",
         "parameters": {
             "type": "object",
             "properties": {"query": {"type": "string"}},
+            "required": ["query"],
+        },
+    },
+    {
+        "name": "search_semantic_top_k",
+        "description": (
+            "Semantic (meaning-based) top-K search over articles. Prefer this over "
+            "search_law when the query is conceptual or paraphrased rather than exact "
+            "keywords. Returns law ids, article numbers, snippets and similarity scores."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 50},
+            },
             "required": ["query"],
         },
     },

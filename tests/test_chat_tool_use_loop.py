@@ -135,6 +135,39 @@ class _ToolUsingProvider(ChatProvider):
         yield FinishChunk(reason="stop")
 
 
+class _SemanticToolProvider(ChatProvider):
+    """First iteration calls ``search_semantic_top_k``; second yields text."""
+
+    def __init__(self) -> None:
+        self.iterations = 0
+
+    async def list_models(self) -> list[str]:
+        return ["fake"]
+
+    async def stream_chat(self, messages: list[ChatMessage], model: str) -> AsyncIterator[str]:
+        if False:
+            yield ""
+
+    async def stream_chat_typed(
+        self,
+        messages: list[ChatMessage],
+        model: str,
+        tools: list[ToolSpec] | None = None,
+    ) -> AsyncIterator[StreamChunk]:
+        self.iterations += 1
+        if self.iterations == 1:
+            yield ToolCallChunk(
+                call_id="s1",
+                name="search_semantic_top_k",
+                arguments={"query": "protección de datos", "limit": 5},
+            )
+            yield FinishChunk(reason="tool_use")
+            return
+        yield TextChunk(delta="Según ")
+        yield TextChunk(delta="el corpus.")
+        yield FinishChunk(reason="stop")
+
+
 class _RunawayToolProvider(ChatProvider):
     """Asks for a tool every iteration — must stop at the cap."""
 
@@ -177,6 +210,20 @@ def patch_ollama_provider(monkeypatch: MonkeyPatch):
         monkeypatch.setitem(registry_mod.PROVIDERS_BY_KEY, "ollama", patched)
 
     return _install
+
+
+@pytest.fixture()
+def prebuilt_semantic_index(mock_registry):
+    """Pre-build the semantic singleton from the fixture corpus so the
+    ``search_semantic_top_k`` tool queries it without re-embedding the real
+    corpus (fast + hermetic). Reset after so it never leaks across tests.
+    """
+    from lexflow.search.semantic_index import get_semantic_index, reset_semantic_index
+
+    reset_semantic_index()
+    get_semantic_index().build(mock_registry)
+    yield
+    reset_semantic_index()
 
 
 def _create_thread(client: TestClient) -> str:
@@ -238,6 +285,38 @@ class TestToolUseLoopE2E:
         assert len(tool_messages) == 1
         assert tool_messages[0].tool_call_id == "c1"
         assert tool_messages[0].name == "get_stats"
+
+    def test_semantic_tool_emits_sources(
+        self,
+        client: TestClient,
+        patch_ollama_provider,
+        mock_registry,
+        prebuilt_semantic_index,
+    ) -> None:
+        del mock_registry, prebuilt_semantic_index
+        provider = _SemanticToolProvider()
+        patch_ollama_provider(lambda: provider)
+        thread_id = _create_thread(client)
+        response = client.post(
+            f"/api/v1/chat/threads/{thread_id}/send",
+            json={"message": "¿qué dice sobre protección de datos?", "model": "ollama:fake"},
+        )
+        assert response.status_code == 200
+        events = _parse_sse(response.text)
+        names = [e[0] for e in events]
+
+        # The model chose the semantic tool.
+        tool_calls = [data for name, data in events if name == "tool_call"]
+        assert len(tool_calls) == 1
+        assert tool_calls[0]["name"] == "search_semantic_top_k"
+
+        # Semantic hits surfaced as source citations (each carries a law id).
+        sources = [data for name, data in events if name == "source"]
+        assert sources
+        assert all("law_id" in s for s in sources)
+
+        assert names[-1] == "done"
+        assert provider.iterations == 2
 
     def test_runaway_loop_stops_at_iteration_cap(
         self,
