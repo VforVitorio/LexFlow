@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.48.0](https://github.com/VforVitorio/LexFlow/compare/v0.47.0...v0.48.0) (2026-06-08)
+
+
+### Features
+
+* **frontend:** Settings → Models semantic-search card ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([6396f15](https://github.com/VforVitorio/LexFlow/commit/6396f15c58c23bdd39b6fe49c6592e80b68d15ec))
+* **frontend:** Settings → Models semantic-search card ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([2085850](https://github.com/VforVitorio/LexFlow/commit/2085850fe367f867bd6650e732ac940b12be2739))
+* **search:** declare [semantic] extra + semantic-status endpoint ([5add220](https://github.com/VforVitorio/LexFlow/commit/5add220386bf5dcd6a4d9ba4be863b3e3b3dff2f))
+* **search:** declare [semantic] extra + semantic-status endpoint ([d0d1e60](https://github.com/VforVitorio/LexFlow/commit/d0d1e60bd1aeb3ebcb0f7df2b46945059052cea0))
+
 ## [0.47.0](https://github.com/VforVitorio/LexFlow/compare/v0.46.0...v0.47.0) (2026-06-08)
 
 
