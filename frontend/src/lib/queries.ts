@@ -13,7 +13,7 @@ import { liveTelemetryApi, type TelemetryStatus } from './api/telemetry';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults, SemanticSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot,
+  SearchResults, SemanticSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
   GraphGlobalFilters, GraphGlobalResult,
 } from './types';
 
@@ -285,6 +285,21 @@ export function useHealth() {
     queryFn: () => api.system.health(),
     refetchInterval: 30_000,
     staleTime: 10_000,
+  });
+}
+
+/**
+ * Semantic-search backend availability (#43). Powers the Settings →
+ * Models "semantic search" card.
+ *
+ * Rarely changes within a session (only when the operator installs the
+ * extra + restarts), so it's cached long and never polled.
+ */
+export function useSemanticStatus() {
+  return useQuery<SemanticStatus>({
+    queryKey: ['system', 'semantic-status'] as const,
+    queryFn: () => api.system.semanticStatus(),
+    staleTime: Infinity,
   });
 }
 

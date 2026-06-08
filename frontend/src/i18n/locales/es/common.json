@@ -442,7 +442,16 @@
       "apiKeyConfirmDelete": "¿Eliminar la clave de {{provider}} del llavero?",
       "apiKeySaved": "Clave de {{provider}} guardada",
       "apiKeyRemoved": "Clave de {{provider}} eliminada",
-      "apiKeyFailed": "No se pudo procesar la clave de {{provider}}"
+      "apiKeyFailed": "No se pudo procesar la clave de {{provider}}",
+      "semanticTitle": "Búsqueda semántica",
+      "semanticSubtitle": "Encuentra artículos por significado, no solo por coincidencia de palabras, usando embeddings multilingües.",
+      "semanticActive": "Activa",
+      "semanticInstalledInactive": "Instalada · sin activar",
+      "semanticNotInstalled": "No instalada",
+      "semanticLoading": "Comprobando…",
+      "semanticActiveBody": "Usando el modelo {{model}}.",
+      "semanticEnableHint": "Define LEXFLOW_EMBEDDER=sentence-transformers y reinicia el backend para activarla.",
+      "semanticInstallHint": "Instala el extra (uv sync --extra semantic o pip install \"lexflow[semantic]\") y define LEXFLOW_EMBEDDER=sentence-transformers."
     },
     "appearance": {
       "title": "Apariencia",

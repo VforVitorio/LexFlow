@@ -454,6 +454,17 @@ export const mockApi: ApiClient = {
         chatDb: { reachable: true },
       };
     },
+    async semanticStatus() {
+      // Mock mode: pretend the [semantic] extra is installed and active so
+      // the Settings → Models card renders the "active" path during dev.
+      await delay(20);
+      return {
+        backend: 'sentence-transformers',
+        installed: true,
+        active: true,
+        model: 'paraphrase-multilingual-MiniLM-L12-v2',
+      };
+    },
   },
 };
 

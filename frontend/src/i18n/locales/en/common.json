@@ -442,7 +442,16 @@
       "apiKeyConfirmDelete": "Remove the {{provider}} key from the keyring?",
       "apiKeySaved": "Saved {{provider}} key",
       "apiKeyRemoved": "Removed {{provider}} key",
-      "apiKeyFailed": "Failed to update the {{provider}} key"
+      "apiKeyFailed": "Failed to update the {{provider}} key",
+      "semanticTitle": "Semantic search",
+      "semanticSubtitle": "Find articles by meaning, not just keyword match, using multilingual embeddings.",
+      "semanticActive": "Active",
+      "semanticInstalledInactive": "Installed · not enabled",
+      "semanticNotInstalled": "Not installed",
+      "semanticLoading": "Checking…",
+      "semanticActiveBody": "Using model {{model}}.",
+      "semanticEnableHint": "Set LEXFLOW_EMBEDDER=sentence-transformers and restart the backend to enable it.",
+      "semanticInstallHint": "Install the extra (uv sync --extra semantic or pip install \"lexflow[semantic]\") and set LEXFLOW_EMBEDDER=sentence-transformers."
     },
     "appearance": {
       "title": "Appearance",
