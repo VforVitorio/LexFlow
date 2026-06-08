@@ -16,7 +16,7 @@ import type {
   BackendWarmupStatus,
   BackendWhatsNewResponse,
 } from '../../api';
-import type { ApiClient, HealthSnapshot } from '../types';
+import type { ApiClient, HealthSnapshot, SemanticStatus } from '../types';
 import { http } from './http';
 
 /**
@@ -105,5 +105,10 @@ export const liveSystemApi: ApiClient['system'] = {
         reachable: raw.chat_db.reachable,
       },
     };
+  },
+  // The wire shape is already flat single-word fields, so no
+  // snake_case→camelCase flip is needed here.
+  semanticStatus: async (): Promise<SemanticStatus> => {
+    return http<SemanticStatus>('/system/semantic-status');
   },
 };

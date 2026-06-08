@@ -527,7 +527,28 @@ export interface ApiClient {
     profile(): Promise<SystemProfile>;
     /** Extended health snapshot (#330). Polled by Settings → Diagnostics. */
     health(): Promise<HealthSnapshot>;
+    /** Semantic-search backend availability (#43). Settings → Models card. */
+    semanticStatus(): Promise<SemanticStatus>;
   };
+}
+
+/**
+ * Semantic-search backend availability (#43).
+ *
+ * From ``GET /api/v1/system/semantic-status``. Drives the Settings →
+ * Models card: whether the optional ``[semantic]`` extra is installed,
+ * which backend is configured, and whether real (model-based) ranking is
+ * actually in effect.
+ */
+export interface SemanticStatus {
+  /** Configured backend: `'hash'` (placeholder) or `'sentence-transformers'`. */
+  backend: string;
+  /** Whether the optional `sentence-transformers` dependency is importable. */
+  installed: boolean;
+  /** Real semantic ranking in effect (backend selected AND dependency installed). */
+  active: boolean;
+  /** Configured sentence-transformers model name (used when active). */
+  model: string;
 }
 
 /**

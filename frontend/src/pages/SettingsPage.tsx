@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { liveSecretsApi, type SecretStatusItem } from '@/lib/api/secrets';
-import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2 } from 'lucide-react';
+import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2, Sparkles } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
-import { useHealth, useModels, useSyncStatus, useRunSync, useTelemetryStatus, useWhatsNew } from '@/lib/queries';
+import { useHealth, useModels, useSemanticStatus, useSyncStatus, useRunSync, useTelemetryStatus, useWhatsNew } from '@/lib/queries';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
@@ -294,6 +294,65 @@ function ModelsSection() {
       ))}
 
       <ApiKeysCard />
+      <SemanticSearchCard />
+    </>
+  );
+}
+
+/**
+ * #43 — Settings → Models "semantic search" card.
+ *
+ * Surfaces whether the optional ``[semantic]`` extra is installed and
+ * whether real (model-based) ranking is in effect, reading
+ * ``GET /api/v1/system/semantic-status``. The "install" is instructional
+ * (no one-click runtime pip install) — we tell the user the exact
+ * command + env var rather than pretend to do it for them.
+ */
+function SemanticSearchCard() {
+  const { t } = useTranslation();
+  const { data, isLoading } = useSemanticStatus();
+
+  const statusBadge = () => {
+    if (!data) return null;
+    if (data.active) {
+      return (
+        <Badge tone="success" icon={<CheckCircle2 className="size-3" />}>
+          {t('settings.models.semanticActive')}
+        </Badge>
+      );
+    }
+    if (data.installed) return <Badge tone="amber">{t('settings.models.semanticInstalledInactive')}</Badge>;
+    return <Badge tone="neutral">{t('settings.models.semanticNotInstalled')}</Badge>;
+  };
+
+  const body = () => {
+    if (!data) return null;
+    if (data.active) return t('settings.models.semanticActiveBody', { model: data.model });
+    if (data.installed) return t('settings.models.semanticEnableHint');
+    return t('settings.models.semanticInstallHint');
+  };
+
+  return (
+    <>
+      <div className="label-caps mb-2 mt-6">{t('settings.models.semanticTitle')}</div>
+      <Card className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
+            <Sparkles className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              {isLoading ? (
+                <span className="text-[12px] text-muted">{t('settings.models.semanticLoading')}</span>
+              ) : (
+                statusBadge()
+              )}
+            </div>
+            <p className="mt-1.5 text-[12.5px] text-muted">{t('settings.models.semanticSubtitle')}</p>
+            {body() && <p className="mt-2 text-[12.5px] text-muted">{body()}</p>}
+          </div>
+        </div>
+      </Card>
     </>
   );
 }
