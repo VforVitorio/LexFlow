@@ -1,0 +1,32 @@
+# Extra ignores for repomix on top of .gitignore.
+#
+# `.gitignore` excludes build artefacts but NOT the legalize-es submodule
+# (it's a tracked path). Without these rules `repomix` would walk into
+# `data/legalize-es/` and include ~1.7GB of Spanish law Markdown in the
+# packed output — useless for code-focused LLM sessions and likely over
+# any model's context window.
+
+# Submodule: 1.7GB of legalize-es Markdown
+data/legalize-es/
+
+# Generated graph cache (regenerated locally, contains absolute paths)
+.code-review-graph/
+
+# Lockfiles — noisy and rarely useful in a code dump
+package-lock.json
+uv.lock
+**/pnpm-lock.yaml
+**/yarn.lock
+
+# Build outputs that .gitignore catches but pin here for safety
+frontend/dist/
+landing/dist/
+**/node_modules/
+
+# Test snapshots / coverage
+coverage/
+.coverage
+htmlcov/
+
+# Generated API types — derived from openapi.json, just noise in dump
+frontend/src/api/schema.ts
