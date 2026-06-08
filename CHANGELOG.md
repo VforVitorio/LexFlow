@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.45.0](https://github.com/VforVitorio/LexFlow/compare/v0.44.0...v0.45.0) (2026-06-08)
+
+
+### Features
+
+* **chat:** native tool-use streaming for Ollama + LM Studio ([7c5588b](https://github.com/VforVitorio/LexFlow/commit/7c5588bfc720d97399318cd4a7f522978a51d423))
+* **chat:** native tool-use streaming for Ollama + LM Studio ([6a41f3f](https://github.com/VforVitorio/LexFlow/commit/6a41f3f7bc93389d27e63be3f8ca1c2601ccaa38))
+
+
+### Documentation
+
+* **claude:** record Ollama SubscriptableBaseModel isinstance lesson ([#531](https://github.com/VforVitorio/LexFlow/issues/531)) ([8a77308](https://github.com/VforVitorio/LexFlow/commit/8a7730895cac48a2867131f0c8895843fd0786e0))
+
 ## [0.44.0](https://github.com/VforVitorio/LexFlow/compare/v0.43.0...v0.44.0) (2026-06-07)
 
 
