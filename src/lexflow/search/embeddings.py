@@ -51,6 +51,19 @@ class Embedder(ABC):
     def dimension(self) -> int:
         """Vector size every output carries."""
 
+    @property
+    def identity(self) -> str:
+        """Stable id of this embedder's vector space (cache key).
+
+        Two embedders with the same identity produce comparable vectors,
+        so a persisted index is reusable only while the identity holds.
+        Must be computable WITHOUT loading any heavy model — the index
+        cache compares it before deciding whether to touch the backend.
+        Default is the class name; backends whose vectors depend on a
+        dimension or model name override this to encode that.
+        """
+        return type(self).__name__
+
     @abstractmethod
     def embed_one(self, text: str) -> list[float]:
         """Encode a single string."""
@@ -89,6 +102,10 @@ class HashEmbedder(Embedder):
     @property
     def dimension(self) -> int:
         return self._dim
+
+    @property
+    def identity(self) -> str:
+        return f"hash:{self._dim}"
 
     def embed_one(self, text: str) -> list[float]:
         normalised = text.strip().lower()
