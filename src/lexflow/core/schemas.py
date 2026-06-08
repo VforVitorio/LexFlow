@@ -381,3 +381,20 @@ class SystemProfileResponse(BaseModel):
         description="Model tags currently installed in Ollama (empty when Ollama is not running).",
     )
     lmstudio_running: bool = Field(..., description="Whether LM Studio responded on http://127.0.0.1:1234.")
+
+
+class SemanticStatusResponse(BaseModel):
+    """Whether real semantic search is available + active (#43).
+
+    Drives the Settings → Models "semantic search" card: shows if the
+    optional ``[semantic]`` extra is installed, which backend is configured,
+    and whether real (model-based) ranking is actually in effect.
+    """
+
+    backend: str = Field(..., description="Configured embedder backend: 'hash' or 'sentence-transformers'.")
+    installed: bool = Field(..., description="Whether the optional sentence-transformers dependency is importable.")
+    active: bool = Field(
+        ...,
+        description="True when real semantic ranking is in effect (backend selected AND dependency installed).",
+    )
+    model: str = Field(..., description="Configured sentence-transformers model name (used when active).")

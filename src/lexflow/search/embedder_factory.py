@@ -28,6 +28,16 @@ logger = logging.getLogger(__name__)
 SENTENCE_TRANSFORMERS_BACKEND = "sentence-transformers"
 
 
+def is_sentence_transformers_available() -> bool:
+    """``True`` when the optional ``sentence-transformers`` dep is importable.
+
+    Probes via ``find_spec`` so it never triggers the heavy import — used by
+    both the backend selection below and the ``/system/semantic-status``
+    endpoint that drives the Settings → Models card.
+    """
+    return importlib.util.find_spec("sentence_transformers") is not None
+
+
 def build_embedder(settings: Settings | None = None) -> Embedder:
     """Return the configured embedder, falling back to ``HashEmbedder``."""
     settings = settings or get_settings()
@@ -45,7 +55,7 @@ def _build_sentence_transformer(settings: Settings) -> Embedder:
     on the first semantic query instead of a clean fallback at selection
     time.
     """
-    if importlib.util.find_spec("sentence_transformers") is None:
+    if not is_sentence_transformers_available():
         logger.warning(
             "LEXFLOW_EMBEDDER=%s but sentence-transformers is not installed; "
             "falling back to HashEmbedder. Install the [semantic] extra to enable real semantic search.",

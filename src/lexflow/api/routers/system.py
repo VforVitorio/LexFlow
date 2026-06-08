@@ -1,9 +1,10 @@
 """System endpoints — process introspection (warm-up, version, health, what's new).
 
 Endpoints:
-* ``GET /system/warmup``     (#222) — warm-up progress polled by the SPA.
-* ``GET /system/whats-new``  (#228) — corpus diff since last recorded commit.
-* ``GET /system/profile``    (#117) — hardware + local LLM providers for the wizard.
+* ``GET /system/warmup``          (#222) — warm-up progress polled by the SPA.
+* ``GET /system/whats-new``       (#228) — corpus diff since last recorded commit.
+* ``GET /system/profile``         (#117) — hardware + local LLM providers for the wizard.
+* ``GET /system/semantic-status`` (#43)  — semantic-search backend availability.
 
 The conventional ``/health`` lives at the app root for compatibility with
 infrastructure probes that don't know the ``/api/v1`` prefix.
@@ -22,6 +23,7 @@ from lexflow.core.exceptions import LawNotFoundError
 from lexflow.core.health import HealthSnapshot, build_health_snapshot
 from lexflow.core.registry import get_registry
 from lexflow.core.schemas import (
+    SemanticStatusResponse,
     SystemProfileResponse,
     WarmupStatusResponse,
     WhatsNewCorpus,
@@ -29,6 +31,7 @@ from lexflow.core.schemas import (
     WhatsNewResponse,
 )
 from lexflow.core.system_profile import build_system_profile
+from lexflow.search.embedder_factory import SENTENCE_TRANSFORMERS_BACKEND, is_sentence_transformers_available
 from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -140,6 +143,29 @@ async def get_system_profile() -> SystemProfileResponse:
         ollama_running=profile.ollama_running,
         ollama_models=profile.ollama_models,
         lmstudio_running=profile.lmstudio_running,
+    )
+
+
+@router.get(
+    "/semantic-status",
+    response_model=SemanticStatusResponse,
+    summary="Whether real semantic search is available + active (#43).",
+)
+def get_semantic_status() -> SemanticStatusResponse:
+    """Report the semantic-search backend state for Settings → Models.
+
+    Lets the SPA show whether the optional ``[semantic]`` extra is
+    installed and whether real (model-based) ranking is actually in
+    effect, plus how to enable it. Pure introspection — no model load.
+    """
+    settings = get_settings()
+    backend = settings.embedder_backend
+    installed = is_sentence_transformers_available()
+    return SemanticStatusResponse(
+        backend=backend,
+        installed=installed,
+        active=backend == SENTENCE_TRANSFORMERS_BACKEND and installed,
+        model=settings.embedder_model,
     )
 
 

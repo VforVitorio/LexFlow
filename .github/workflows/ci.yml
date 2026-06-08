@@ -25,11 +25,16 @@ concurrency:
 #   - setup-uv installs Python via the `python-version` input.
 #   - `lint` does NOT call `uv sync`. Ruff is the only tool it needs, so
 #     `uvx ruff` runs it as an ephemeral tool.
-#   - `typecheck` calls `uv sync --extra dev` (mypy lives in the dev extra).
-#     It also caches `.mypy_cache/` so incremental runs only re-check files
-#     whose hash actually changed.
-#   - `test` keeps `uv sync --all-extras` because the suite may touch chat
-#     and dashboards code paths that need every extra installed.
+#   - `typecheck` and `test` install an EXPLICIT extra list
+#     (`--extra chat --extra dashboards --extra dev`), NOT `--all-extras`.
+#     The `semantic` extra pulls torch + the CUDA stack (~2 GB) which would
+#     balloon every runner; it is opt-in and tested via mocks (the wrapper
+#     imports `sentence_transformers` lazily and mypy ignores its types),
+#     so CI never needs it installed. `packaging` (pyinstaller) is dropped
+#     too — it is only used to build release binaries. When a NEW
+#     non-semantic extra is added, remember to extend this list.
+#     `typecheck` also caches `.mypy_cache/` so incremental runs only
+#     re-check files whose hash actually changed.
 #
 # Path-filter gating: the four expensive jobs short-circuit when the diff
 # doesn't touch their domain. Each gated job:
@@ -117,7 +122,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.changes.outputs.backend == 'true'
-        run: uv sync --all-extras --frozen
+        run: uv sync --extra chat --extra dashboards --extra dev --frozen
 
       # Parallel pytest with xdist. ``-n auto`` spawns one worker per
       # logical core (2 on GitHub-hosted ubuntu-latest). ``--dist=loadfile``
@@ -180,12 +185,14 @@ jobs:
           python-version: "3.12"
 
       # Mypy needs every imported third-party package on the path to resolve
-      # types. The src/lexflow/chat module imports `openai`/`anthropic`/`google.genai`
-      # (chat extra) and src/lexflow/dashboards uses plotly (dashboards extra),
-      # so we install --all-extras even though it is heavier than --extra dev.
+      # types. src/lexflow/chat imports `openai`/`anthropic`/`google.genai`
+      # (chat extra) and src/lexflow/dashboards uses plotly (dashboards
+      # extra). The `semantic` extra is excluded on purpose — torch is too
+      # heavy and the wrapper's `sentence_transformers` import is covered by
+      # an `ignore_missing_imports` mypy override.
       - name: Install dependencies
         if: steps.changes.outputs.backend == 'true'
-        run: uv sync --all-extras --frozen
+        run: uv sync --extra chat --extra dashboards --extra dev --frozen
 
       # Mypy is incremental: re-runs only re-analyse files whose source
       # has changed since the last successful run. The key includes both
@@ -332,7 +339,7 @@ jobs:
           python-version: "3.12"
 
       - name: Sync locked dependencies
-        run: uv sync --all-extras --frozen
+        run: uv sync --extra chat --extra dashboards --extra dev --frozen
 
       - name: Audit installed dependency graph
         run: uv run --with pip-audit pip-audit
