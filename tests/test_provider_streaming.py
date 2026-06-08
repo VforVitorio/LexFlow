@@ -90,6 +90,26 @@ class TestOllamaStreamChat:
         assert chunks == ["Hola ", "mundo."]
 
     @pytest.mark.asyncio
+    async def test_yields_content_from_real_chatresponse_objects(self, monkeypatch: MonkeyPatch) -> None:
+        """Regression: the real SDK yields ``ChatResponse`` (a
+        ``SubscriptableBaseModel``), NOT ``dict``. An ``isinstance(chunk,
+        dict)`` guard would silently drop every token in production while
+        still passing the dict-fed tests above.
+        """
+        from ollama import ChatResponse, Message
+
+        from lexflow.chat.providers import ollama as ollama_mod
+
+        _OllamaStreamingClient.chunks = [
+            ChatResponse(model="m", message=Message(role="assistant", content="Hola ")),
+            ChatResponse(model="m", message=Message(role="assistant", content="mundo.")),
+        ]
+        monkeypatch.setattr(ollama_mod.ollama, "AsyncClient", _OllamaStreamingClient)
+        provider = ollama_mod.OllamaProvider()
+        chunks = [c async for c in provider.stream_chat([ChatMessage(role="user", content="?")], "fake-model")]
+        assert chunks == ["Hola ", "mundo."]
+
+    @pytest.mark.asyncio
     async def test_wraps_sdk_error_as_chat_provider_error(self, monkeypatch: MonkeyPatch) -> None:
         import httpx
 
