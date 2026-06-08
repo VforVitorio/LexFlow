@@ -54,6 +54,7 @@ logger = logging.getLogger(__name__)
 READ_ONLY_TOOLS: frozenset[str] = frozenset(
     {
         "search_law",
+        "search_semantic_top_k",
         "get_law",
         "get_article",
         "get_stats",

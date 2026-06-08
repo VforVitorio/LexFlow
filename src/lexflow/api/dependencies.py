@@ -9,9 +9,8 @@ from fastapi import Depends, Query
 from lexflow.core.registry import LawRegistry, get_registry
 from lexflow.graph.cache import load_or_build as _load_or_build_graph
 from lexflow.graph.model import LegalGraph
-from lexflow.search.index_cache import load_or_build as _load_or_build_index
 from lexflow.search.semantic_index import SemanticIndex
-from lexflow.search.semantic_index import get_semantic_index as _get_semantic_index
+from lexflow.search.service import ensure_semantic_index
 from lexflow.utils.config import get_settings
 
 
@@ -75,11 +74,7 @@ def get_search_index(registry: LawRegistry = Depends(get_law_registry)) -> Seman
     :func:`get_graph`: lazy, locked by the index itself, swappable via
     ``app.dependency_overrides`` in tests.
     """
-    index = _get_semantic_index()
-    if not index.is_built:
-        settings = get_settings()
-        _load_or_build_index(index, registry, settings.data_path, settings.config_dir / "index")
-    return index
+    return ensure_semantic_index(registry)
 
 
 class PaginationParams:

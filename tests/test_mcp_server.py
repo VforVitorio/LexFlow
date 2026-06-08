@@ -89,3 +89,40 @@ class TestGetStats:
     def test_returns_total_laws_count(self, patched_registry: LawRegistry) -> None:
         result = _unwrap(mcp_server.get_stats)()
         assert result == {"total_laws": patched_registry.total_count}
+
+
+@pytest.fixture()
+def prebuilt_semantic_index(patched_registry: LawRegistry):
+    """Pre-build the semantic singleton from the fixture corpus.
+
+    The tool calls ``ensure_semantic_index`` which reuses the singleton
+    when already built — so pre-building here keeps the test fast (no real
+    corpus, no disk) and the ``get_registry`` arg the tool passes is moot.
+    """
+    from lexflow.search.semantic_index import get_semantic_index, reset_semantic_index
+
+    reset_semantic_index()
+    get_semantic_index().build(patched_registry)
+    yield
+    reset_semantic_index()
+
+
+class TestSearchSemanticTopK:
+    def test_returns_items_with_citation_fields(
+        self, patched_registry: LawRegistry, prebuilt_semantic_index: None
+    ) -> None:
+        del patched_registry, prebuilt_semantic_index
+        result = _unwrap(mcp_server.search_semantic_top_k)(query="protección de datos", limit=3)
+        assert result["query"] == "protección de datos"
+        assert isinstance(result["items"], list)
+        assert len(result["items"]) >= 1
+        for item in result["items"]:
+            # Same shape as search_law items so source citations work.
+            assert set(item) >= {"law_id", "article_number", "snippet", "score"}
+            assert -1.0 <= item["score"] <= 1.0
+
+    def test_limit_is_clamped(self, patched_registry: LawRegistry, prebuilt_semantic_index: None) -> None:
+        del patched_registry, prebuilt_semantic_index
+        # limit far above the tiny fixture corpus must not blow up.
+        result = _unwrap(mcp_server.search_semantic_top_k)(query="x", limit=999)
+        assert len(result["items"]) <= 4
