@@ -17,15 +17,16 @@ Two parallel arrays:
   metadata the API needs to render a hit (law id, article number,
   snippet).
 
-The whole thing lives in RAM. At ~12 K articles x 384 floats x 4
-bytes = ~18 MB, it's not worth persisting to disk yet (the graph
-cache exists for a similar reason but PageRank is more expensive to
-recompute than 12 K hash-embeddings). Persistence is a follow-up.
+The whole thing lives in RAM. Re-embedding on every restart is cheap
+for ``HashEmbedder`` but costly for a real model (minutes for ~12 K
+articles), so ``search/index_cache.py`` persists the built matrix +
+records to disk, keyed by corpus revision and embedder identity.
 
 --- WHERE TO CHANGE IF X CHANGES ---
-* Swap embedder backend             → ``SemanticIndex(embedder=...)``.
-* Persistence to disk               → mirror ``graph/cache.py`` shape;
-                                       key the file by corpus revision.
+* Swap embedder backend             → ``SemanticIndex(embedder=...)`` /
+                                       ``search/embedder_factory.py``.
+* Persistence to disk               → ``search/index_cache.py`` (uses
+                                       ``snapshot``/``hydrate`` below).
 * Hybrid (text + semantic) ranking  → add a ``HybridIndex`` that
                                        combines ``LawRegistry.search_text``
                                        with ``SemanticIndex.query``.
@@ -102,11 +103,38 @@ class SemanticIndex:
     def row_count(self) -> int:
         return len(self._records)
 
+    @property
+    def embedder_identity(self) -> str:
+        """Cache key for this index's vector space (see ``Embedder.identity``)."""
+        return self._embedder.identity
+
     def reset(self) -> None:
         """Drop every cached vector + record. Next query will rebuild."""
         with self._build_lock:
             self._vectors = None
             self._records = []
+
+    def snapshot(self) -> tuple[np.ndarray, list[IndexRecord]]:
+        """Return ``(vectors, records)`` for persistence (#43 follow-up).
+
+        Raises if the index hasn't been built — there is nothing to
+        persist before the first embed pass. The records list is copied
+        so callers can't mutate the index's state through it.
+        """
+        if self._vectors is None:
+            raise RuntimeError("snapshot() called before build")
+        return self._vectors, list(self._records)
+
+    def hydrate(self, vectors: np.ndarray, records: list[IndexRecord]) -> None:
+        """Populate from a persisted snapshot, skipping the embed pass.
+
+        Used by ``index_cache`` to restore a disk-cached index. The
+        embedder is left untouched — its model only loads later, lazily,
+        to embed the query (the corpus pass is what the cache avoids).
+        """
+        with self._build_lock:
+            self._vectors = vectors
+            self._records = records
 
     def build(self, registry: LawRegistry) -> None:
         """Embed every article in ``registry`` and store the matrix.

@@ -82,6 +82,13 @@ class SentenceTransformerEmbedder(Embedder):
         # never sees ``None``.
         return int(dim) if dim is not None else 384
 
+    @property
+    def identity(self) -> str:
+        # Model name alone pins the vector space — computable without
+        # loading the model, so the index cache can validate a persisted
+        # index without paying the download/load cost.
+        return f"st:{self._model_name}"
+
     def embed_one(self, text: str) -> list[float]:
         return self.embed_many([text])[0]
 

@@ -9,6 +9,7 @@ from fastapi import Depends, Query
 from lexflow.core.registry import LawRegistry, get_registry
 from lexflow.graph.cache import load_or_build as _load_or_build_graph
 from lexflow.graph.model import LegalGraph
+from lexflow.search.index_cache import load_or_build as _load_or_build_index
 from lexflow.search.semantic_index import SemanticIndex
 from lexflow.search.semantic_index import get_semantic_index as _get_semantic_index
 from lexflow.utils.config import get_settings
@@ -67,12 +68,17 @@ def reset_graph_cache() -> None:
 def get_search_index(registry: LawRegistry = Depends(get_law_registry)) -> SemanticIndex:
     """Provide the process-wide :class:`SemanticIndex`, building on first use.
 
-    Mirrors :func:`get_graph`: lazy, locked by the index itself,
-    swappable via ``app.dependency_overrides`` in tests.
+    First call hydrates from the disk cache (via
+    :func:`lexflow.search.index_cache.load_or_build`) when a matching
+    corpus revision + embedder is cached, so a restart skips re-embedding
+    the whole corpus; otherwise it builds and saves. Mirrors
+    :func:`get_graph`: lazy, locked by the index itself, swappable via
+    ``app.dependency_overrides`` in tests.
     """
     index = _get_semantic_index()
     if not index.is_built:
-        index.build(registry)
+        settings = get_settings()
+        _load_or_build_index(index, registry, settings.data_path, settings.config_dir / "index")
     return index
 
 
