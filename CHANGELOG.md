@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.47.0](https://github.com/VforVitorio/LexFlow/compare/v0.46.0...v0.47.0) (2026-06-08)
+
+
+### Features
+
+* **search:** persist semantic index keyed by corpus revision + embedder ([4f22bd9](https://github.com/VforVitorio/LexFlow/commit/4f22bd9ac79d760c6740565363bfd8f450a1cea3))
+* **search:** persist semantic index keyed by corpus revision + embedder ([35cf1e0](https://github.com/VforVitorio/LexFlow/commit/35cf1e05ae193d79996f2b1fc8465303a45c0559))
+
+
+### Documentation
+
+* **claude:** fix PR ref in utf-8 encoding lesson ([#535](https://github.com/VforVitorio/LexFlow/issues/535)) ([17a58c3](https://github.com/VforVitorio/LexFlow/commit/17a58c351bd570b07e81db935e9eb6d3817f767c))
+
 ## [0.46.0](https://github.com/VforVitorio/LexFlow/compare/v0.45.0...v0.46.0) (2026-06-08)
 
 
