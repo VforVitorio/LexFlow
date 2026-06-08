@@ -508,3 +508,183 @@ class TestGoogleTypedStreaming:
         part = tool_msg["parts"][0]
         assert part["function_response"]["name"] == "search_law"
         assert part["function_response"]["response"] == {"items": []}
+
+
+# ─── Ollama ─────────────────────────────────────────────────────────────
+#
+# Unlike OpenAI/Anthropic, the native Ollama SDK delivers each tool call
+# fully formed in one chunk with ``arguments`` already parsed to a dict
+# and NO call id. We feed real ``ollama.ChatResponse`` objects (which are
+# ``SubscriptableBaseModel``, not ``dict``) so the test also guards the
+# ``.get``-based access path against a regression to ``isinstance(_, dict)``.
+
+
+class _FakeOllamaClient:
+    chunks: ClassVar[list[Any]] = []
+    captured: ClassVar[dict[str, Any]] = {}
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        del args, kwargs
+
+    async def chat(self, **kwargs: Any) -> AsyncIterator[Any]:
+        type(self).captured.clear()
+        type(self).captured.update(kwargs)
+
+        async def _gen() -> AsyncIterator[Any]:
+            for chunk in self.chunks:
+                yield chunk
+
+        return _gen()
+
+
+class TestOllamaTypedStreaming:
+    @pytest.mark.asyncio
+    async def test_emits_fully_formed_tool_call(self, monkeypatch: MonkeyPatch) -> None:
+        from ollama import ChatResponse, Message
+
+        from lexflow.chat.providers import ollama as ollama_mod
+
+        tool_call = Message.ToolCall(
+            function=Message.ToolCall.Function(name="search_law", arguments={"query": "protección de datos"})
+        )
+        _FakeOllamaClient.chunks = [
+            ChatResponse(model="m", message=Message(role="assistant", content="Voy a buscar ")),
+            ChatResponse(
+                model="m",
+                message=Message(role="assistant", tool_calls=[tool_call]),
+                done=True,
+                done_reason="stop",
+            ),
+        ]
+        monkeypatch.setattr(ollama_mod.ollama, "AsyncClient", _FakeOllamaClient)
+        provider = ollama_mod.OllamaProvider()
+
+        chunks = await _drain(
+            provider.stream_chat_typed(
+                [ChatMessage(role="user", content="?")],
+                "llama3.1",
+                tools=[_SEARCH_TOOL],
+            )
+        )
+
+        text_deltas = [c.delta for c in chunks if isinstance(c, TextChunk)]
+        tool_calls = [c for c in chunks if isinstance(c, ToolCallChunk)]
+        finishes = [c for c in chunks if isinstance(c, FinishChunk)]
+        assert text_deltas == ["Voy a buscar "]
+        assert len(tool_calls) == 1
+        assert tool_calls[0].name == "search_law"
+        # Ollama assigns no call id → the tool name is the handle.
+        assert tool_calls[0].call_id == "search_law"
+        assert tool_calls[0].arguments == {"query": "protección de datos"}
+        # A queued call flips the finish reason to ``tool_use`` even though
+        # the SDK reported ``done_reason="stop"``.
+        assert finishes == [FinishChunk(reason="tool_use")]
+        # Tools forwarded in the OpenAI-compatible shape Ollama expects.
+        assert _FakeOllamaClient.captured["tools"][0]["type"] == "function"
+        assert _FakeOllamaClient.captured["tools"][0]["function"]["name"] == "search_law"
+
+    @pytest.mark.asyncio
+    async def test_tool_history_carries_tool_name(self, monkeypatch: MonkeyPatch) -> None:
+        from ollama import ChatResponse, Message
+
+        from lexflow.chat.providers import ollama as ollama_mod
+
+        _FakeOllamaClient.chunks = [
+            ChatResponse(model="m", message=Message(role="assistant", content="done"), done=True, done_reason="stop")
+        ]
+        monkeypatch.setattr(ollama_mod.ollama, "AsyncClient", _FakeOllamaClient)
+        provider = ollama_mod.OllamaProvider()
+        chunks = await _drain(
+            provider.stream_chat_typed(
+                [
+                    ChatMessage(role="user", content="hi"),
+                    ChatMessage(
+                        role="tool",
+                        content='{"items":[]}',
+                        tool_call_id="search_law",
+                        name="search_law",
+                    ),
+                ],
+                "llama3.1",
+            )
+        )
+        tool_turn = next(m for m in _FakeOllamaClient.captured["messages"] if m["role"] == "tool")
+        assert tool_turn["tool_name"] == "search_law"
+        assert tool_turn["content"] == '{"items":[]}'
+        # No tool call this turn → plain ``stop`` finish.
+        assert [c for c in chunks if isinstance(c, FinishChunk)] == [FinishChunk(reason="stop")]
+
+
+# ─── LM Studio (OpenAI-compatible; shares the OpenAI wire adapter) ───────
+
+
+class TestLMStudioTypedStreaming:
+    @pytest.mark.asyncio
+    async def test_emits_tool_call_with_parsed_args(self, monkeypatch: MonkeyPatch) -> None:
+        from lexflow.chat.providers import lmstudio as lmstudio_mod
+
+        _FakeOpenAIStream.chunks = [
+            _OpenAIChunk(_OpenAIChoice(_OpenAIDelta(content="Consultando "))),
+            _OpenAIChunk(
+                _OpenAIChoice(
+                    _OpenAIDelta(
+                        tool_calls=[
+                            _ToolCallDelta(
+                                index=0,
+                                call_id="call_lm",
+                                name="search_law",
+                                arguments='{"query":"RGPD"}',
+                            )
+                        ]
+                    )
+                )
+            ),
+            _OpenAIChunk(_OpenAIChoice(_OpenAIDelta(), finish_reason="tool_calls")),
+        ]
+        monkeypatch.setattr(lmstudio_mod.openai, "AsyncOpenAI", _FakeOpenAIClient)
+        provider = lmstudio_mod.LMStudioProvider()
+
+        chunks = await _drain(
+            provider.stream_chat_typed(
+                [ChatMessage(role="user", content="?")],
+                "local-llama",
+                tools=[_SEARCH_TOOL],
+            )
+        )
+
+        text_deltas = [c.delta for c in chunks if isinstance(c, TextChunk)]
+        tool_calls = [c for c in chunks if isinstance(c, ToolCallChunk)]
+        finishes = [c for c in chunks if isinstance(c, FinishChunk)]
+        assert text_deltas == ["Consultando "]
+        assert len(tool_calls) == 1
+        assert tool_calls[0].name == "search_law"
+        assert tool_calls[0].call_id == "call_lm"
+        assert tool_calls[0].arguments == {"query": "RGPD"}
+        assert finishes == [FinishChunk(reason="tool_use")]
+        assert _FakeOpenAICompletions.captured["tools"][0]["type"] == "function"
+        assert _FakeOpenAICompletions.captured["tool_choice"] == "auto"
+
+    @pytest.mark.asyncio
+    async def test_tool_history_carries_tool_call_id(self, monkeypatch: MonkeyPatch) -> None:
+        from lexflow.chat.providers import lmstudio as lmstudio_mod
+
+        _FakeOpenAIStream.chunks = [_OpenAIChunk(_OpenAIChoice(_OpenAIDelta(content="ok"), finish_reason="stop"))]
+        monkeypatch.setattr(lmstudio_mod.openai, "AsyncOpenAI", _FakeOpenAIClient)
+        provider = lmstudio_mod.LMStudioProvider()
+        await _drain(
+            provider.stream_chat_typed(
+                [
+                    ChatMessage(role="user", content="hi"),
+                    ChatMessage(
+                        role="tool",
+                        content='{"items":[]}',
+                        tool_call_id="call_99",
+                        name="search_law",
+                    ),
+                ],
+                "local-llama",
+            )
+        )
+        tool_turn = next(m for m in _FakeOpenAICompletions.captured["messages"] if m["role"] == "tool")
+        assert tool_turn["tool_call_id"] == "call_99"
+        assert tool_turn["content"] == '{"items":[]}'

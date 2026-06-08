@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from typing import cast
 
 import openai
 from openai import AsyncStream
 from openai.types.chat import ChatCompletionChunk
 
-from lexflow.chat.base import ChatMessage, ChatProvider, ChatProviderError
+from lexflow.chat.base import (
+    ChatMessage,
+    ChatProvider,
+    ChatProviderError,
+    StreamChunk,
+    ToolSpec,
+)
+from lexflow.chat.providers._openai_compat import stream_tool_use
 
 
 class LMStudioProvider(ChatProvider):
@@ -46,5 +53,26 @@ class LMStudioProvider(ChatProvider):
                 delta = chunk.choices[0].delta if chunk.choices else None
                 if delta and delta.content:
                     yield delta.content
+        except openai.APIConnectionError as exc:
+            raise ChatProviderError(f"LM Studio connection failed: {exc}") from exc
+
+    async def stream_chat_typed(
+        self,
+        messages: list[ChatMessage],
+        model: str,
+        tools: list[ToolSpec] | None = None,
+    ) -> AsyncIterator[StreamChunk]:
+        """Native function-calling streaming for LM Studio.
+
+        LM Studio exposes the OpenAI Chat Completions API, so the wire
+        adaptation is the shared ``_openai_compat.stream_tool_use``; this
+        wrapper only adds LM Studio's error mapping. Tool-calling support
+        depends on the loaded model — models without it simply never emit
+        a tool-call delta, which the shared core handles as a plain text
+        turn.
+        """
+        try:
+            async for chunk in stream_tool_use(self._client, messages, model, tools):
+                yield chunk
         except openai.APIConnectionError as exc:
             raise ChatProviderError(f"LM Studio connection failed: {exc}") from exc
