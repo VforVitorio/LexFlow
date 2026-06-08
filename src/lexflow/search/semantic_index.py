@@ -42,6 +42,7 @@ import numpy as np
 
 from lexflow.core.exceptions import LawNotFoundError
 from lexflow.core.registry import LawRegistry
+from lexflow.search.embedder_factory import build_embedder
 from lexflow.search.embeddings import Embedder, HashEmbedder
 
 logger = logging.getLogger(__name__)
@@ -194,6 +195,12 @@ _index_lock = threading.Lock()
 def get_semantic_index() -> SemanticIndex:
     """Process-wide singleton, lazily constructed.
 
+    The embedder is chosen by :func:`build_embedder` from settings —
+    ``HashEmbedder`` by default, the real sentence-transformer backend
+    when ``LEXFLOW_EMBEDDER=sentence-transformers``. Direct
+    ``SemanticIndex()`` construction (used by unit tests) still defaults
+    to ``HashEmbedder`` so the swap is scoped to this singleton.
+
     Mirrors the same DI shape as ``get_graph`` / ``get_registry`` so
     tests can swap it via ``app.dependency_overrides`` (see the API
     router for the wiring).
@@ -202,7 +209,7 @@ def get_semantic_index() -> SemanticIndex:
     if _index is None:
         with _index_lock:
             if _index is None:
-                _index = SemanticIndex()
+                _index = SemanticIndex(embedder=build_embedder())
     return _index
 
 
