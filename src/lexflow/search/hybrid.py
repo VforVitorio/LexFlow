@@ -22,6 +22,7 @@ None``) simply forms its own fusion bucket.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 from lexflow.core.registry import LawRegistry
 from lexflow.search.semantic_index import SemanticIndex
@@ -57,22 +58,45 @@ class HybridHit:
     sources: list[str]
 
 
+class Reranker(Protocol):
+    """Reorders fused hits by a stronger relevance signal (#43).
+
+    Structural type so ``hybrid`` need not import the concrete cross-encoder
+    (which imports :class:`HybridHit` back) — avoids an import cycle.
+    """
+
+    def rerank(self, query: str, hits: list[HybridHit], *, top_k: int) -> list[HybridHit]: ...
+
+
+# How many of the fused candidates the reranker reorders. The cross-encoder
+# is the expensive step, so we cap it to the head of the fused list.
+_RERANK_TOP_K = 50
+
+
 def hybrid_search(
     registry: LawRegistry,
     semantic_index: SemanticIndex,
     query: str,
     *,
     limit: int = 10,
+    reranker: Reranker | None = None,
 ) -> list[HybridHit]:
     """Return the top-``limit`` articles by RRF over full-text + semantic.
 
     The semantic index must already be built (the caller warms it via
     ``ensure_semantic_index``); an empty semantic index just contributes
     nothing to the fusion and the result degrades to full-text order.
+
+    When ``reranker`` is given, the fused head (top ``_RERANK_TOP_K``) is
+    re-ordered by it before truncating to ``limit`` — a cross-encoder
+    scores (query, snippet) pairs directly, which is more accurate than
+    rank fusion but too costly to run over the whole corpus.
     """
     full_text_hits = registry.search_text(query, page=1, page_size=_CANDIDATE_POOL).items
     semantic_hits = semantic_index.query(query, limit=_CANDIDATE_POOL)
     fused = _fuse(full_text_hits, semantic_hits)
+    if reranker is not None:
+        fused = reranker.rerank(query, fused, top_k=_RERANK_TOP_K)
     return fused[:limit]
 
 
