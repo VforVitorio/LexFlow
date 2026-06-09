@@ -281,6 +281,10 @@
     "seeAll": "Ver todo →",
     "modeFullText": "Texto",
     "modeSemantic": "Semántico",
+    "modeHybrid": "Híbrido",
+    "hybridHeading": "{{n}} resultados combinando texto y significado",
+    "sourceFullText": "Texto",
+    "sourceSemantic": "Significado",
     "semanticEmptyQuery": "Escribe una pregunta en lenguaje natural para encontrar artículos relacionados por significado.",
     "semanticHeading": "{{n}} artículos relacionados por significado",
     "semanticEmpty": {

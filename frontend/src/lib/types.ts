@@ -367,6 +367,28 @@ export interface SemanticSearchResults {
   query: string;
 }
 
+/**
+ * One hit from the hybrid search endpoint (#43).
+ *
+ * Returned by `liveApi.search.hybrid(q)` — Reciprocal Rank Fusion of the
+ * keyword + semantic rankers. `score` is a fused RRF score (relative
+ * ranking only, NOT a 0–1 confidence), so the UI shows `sources` (which
+ * rankers found it) rather than a percentage bar. `articleNumber` is
+ * nullable: a full-text hit can match a law title, not a specific article.
+ */
+export interface HybridSearchHit {
+  lawId: string;
+  articleNumber: string | null;
+  snippet: string;
+  score: number;
+  sources: string[];
+}
+
+export interface HybridSearchResults {
+  hits: HybridSearchHit[];
+  query: string;
+}
+
 // ─── Dashboards ──────────────────────────────────────────────────────────
 
 export interface MetricCard {
@@ -475,6 +497,13 @@ export interface ApiClient {
      * caps the number of hits (backend max: 50).
      */
     semantic(q: string, opts?: { limit?: number }): Promise<SemanticSearchResults>;
+    /**
+     * Hybrid search — Reciprocal Rank Fusion of keyword + semantic (#43).
+     *
+     * Routes to ``GET /api/v1/laws/search/hybrid``. ``opts.limit`` caps
+     * the number of fused hits (backend max: 50).
+     */
+    hybrid(q: string, opts?: { limit?: number }): Promise<HybridSearchResults>;
   };
   chat: {
     threads(): Promise<ChatThread[]>;

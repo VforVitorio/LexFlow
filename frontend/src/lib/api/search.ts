@@ -12,8 +12,24 @@
  */
 
 import type { BackendSearchResponse, BackendSemanticSearchResponse } from '../../api';
-import type { ApiClient, SearchResults, SemanticSearchResults } from '../types';
+import type { ApiClient, HybridSearchResults, SearchResults, SemanticSearchResults } from '../types';
 import { http, qs } from './http';
+
+/**
+ * Wire shape of ``GET /api/v1/laws/search/hybrid`` (#43). Kept local —
+ * the endpoint post-dates the committed ``schema.ts``, and the shape is
+ * small + stable, so a local type avoids a regen round-trip.
+ */
+interface BackendHybridSearchResponse {
+  query: string;
+  items: {
+    law_id: string;
+    article_number: string | null;
+    snippet: string;
+    score: number;
+    sources: string[];
+  }[];
+}
 
 export const liveSearchApi: ApiClient['search'] = {
   universal: async (q) => {
@@ -48,6 +64,24 @@ export const liveSearchApi: ApiClient['search'] = {
       articleNumber: h.article_number,
       snippet: h.snippet,
       score: h.score,
+    }));
+    return { hits, query: raw.query };
+  },
+  /**
+   * Hybrid search (#43) — RRF fusion of keyword + semantic. The fused
+   * ``score`` is relative-only, so the SPA surfaces ``sources`` instead
+   * of a percentage. ``article_number`` may be null (a law-title match).
+   */
+  hybrid: async (q, opts = {}) => {
+    const raw = await http<BackendHybridSearchResponse>(
+      `/laws/search/hybrid${qs({ q, limit: opts.limit ?? 10 })}`,
+    );
+    const hits: HybridSearchResults['hits'] = raw.items.map((h) => ({
+      lawId: h.law_id,
+      articleNumber: h.article_number,
+      snippet: h.snippet,
+      score: h.score,
+      sources: h.sources,
     }));
     return { hits, query: raw.query };
   },

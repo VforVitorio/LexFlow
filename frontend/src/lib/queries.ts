@@ -13,7 +13,7 @@ import { liveTelemetryApi, type TelemetryStatus } from './api/telemetry';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
-  SearchResults, SemanticSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
+  SearchResults, SemanticSearchResults, HybridSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
   GraphGlobalFilters, GraphGlobalResult,
 } from './types';
 
@@ -160,6 +160,20 @@ export function useSemanticSearch(q: string, limit = 10) {
   return useQuery<SemanticSearchResults>({
     queryKey: ['search', 'semantic', trimmed, limit] as const,
     queryFn: () => api.search.semantic(trimmed, { limit }),
+    enabled: trimmed.length >= 2,
+    staleTime: 10_000,
+  });
+}
+
+/**
+ * Hybrid search (#43) — RRF fusion of keyword + semantic. Same gating as
+ * the other search hooks (min 2 chars); ``limit`` is part of the key.
+ */
+export function useHybridSearch(q: string, limit = 10) {
+  const trimmed = q.trim();
+  return useQuery<HybridSearchResults>({
+    queryKey: ['search', 'hybrid', trimmed, limit] as const,
+    queryFn: () => api.search.hybrid(trimmed, { limit }),
     enabled: trimmed.length >= 2,
     staleTime: 10_000,
   });
