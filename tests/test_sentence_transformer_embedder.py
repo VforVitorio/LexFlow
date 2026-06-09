@@ -83,6 +83,8 @@ def _settings(backend: str, *, model: str = "test-model", config_dir: Path = Pat
         telemetry_retention_days=30,
         embedder_backend=backend,
         embedder_model=model,
+        rerank_backend="none",
+        rerank_model="cross-encoder/ms-marco-MiniLM-L-6-v2",
     )
 
 
