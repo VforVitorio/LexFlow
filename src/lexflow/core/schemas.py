@@ -171,6 +171,31 @@ class SemanticSearchResponse(BaseModel):
     items: list[SemanticSearchHit]
 
 
+class HybridSearchHit(BaseModel):
+    """One row of a hybrid (full-text + semantic) search response (#43).
+
+    ``score`` is a fused Reciprocal Rank Fusion score — NOT comparable to
+    the full-text or cosine scales, only meaningful as a relative ranking.
+    ``sources`` lists which rankers surfaced this article (``full_text`` /
+    ``semantic``); a hit found by both is the strongest signal.
+    ``article_number`` is nullable because a full-text hit can match a law
+    title rather than a specific article.
+    """
+
+    law_id: str
+    article_number: str | None
+    snippet: str
+    score: float = Field(..., ge=0.0, description="Fused RRF score (relative ranking only).")
+    sources: list[str] = Field(..., description="Rankers that surfaced this hit: 'full_text' and/or 'semantic'.")
+
+
+class HybridSearchResponse(BaseModel):
+    """Wrapper around the hybrid-search hit list (#43)."""
+
+    query: str
+    items: list[HybridSearchHit]
+
+
 # ---------------------------------------------------------------------------
 # Tags (#145)
 # ---------------------------------------------------------------------------

@@ -6,10 +6,10 @@ nests under the ``laws`` resource like ``/laws/{id}/articles`` and
 alias (emits a ``Deprecation: true`` header) until v2.
 
 --- WHERE TO CHANGE IF X CHANGES ---
-* Search logic        → ``LawRegistry.search_text``.
+* Full-text logic     → ``LawRegistry.search_text``.
+* Semantic logic      → ``SemanticIndex.query`` (``/laws/search/semantic``).
+* Hybrid fusion       → ``search/hybrid.py`` (``/laws/search/hybrid``).
 * Drop the alias      → remove ``search_laws_deprecated`` + its route at v2.
-* Semantic search     → add a ``mode=`` query param on the canonical
-                        route (issue #43).
 """
 
 from __future__ import annotations
@@ -20,7 +20,14 @@ from fastapi import APIRouter, Depends, Query, Response
 
 from lexflow.api.dependencies import get_law_registry, get_search_index
 from lexflow.core.registry import LawRegistry
-from lexflow.core.schemas import SearchResponse, SemanticSearchHit, SemanticSearchResponse
+from lexflow.core.schemas import (
+    HybridSearchHit,
+    HybridSearchResponse,
+    SearchResponse,
+    SemanticSearchHit,
+    SemanticSearchResponse,
+)
+from lexflow.search.hybrid import hybrid_search
 from lexflow.search.semantic_index import SemanticIndex
 
 router = APIRouter(tags=["Search"])
@@ -84,6 +91,45 @@ def search_semantic(
                 article_number=hit.article_number,
                 snippet=hit.snippet,
                 score=hit.score,
+            )
+            for hit in hits
+        ],
+    )
+
+
+@router.get(
+    "/laws/search/hybrid",
+    response_model=HybridSearchResponse,
+    summary="Hybrid search — Reciprocal Rank Fusion of full-text + semantic (#43).",
+)
+def search_hybrid(
+    registry: Annotated[LawRegistry, Depends(get_law_registry)],
+    index: Annotated[SemanticIndex, Depends(get_search_index)],
+    q: str = Query(..., min_length=2, max_length=500, description="Search query"),
+    limit: int = Query(10, ge=1, le=50, description="Top-N fused hits"),
+) -> HybridSearchResponse:
+    """Fuse the keyword and semantic rankers with Reciprocal Rank Fusion.
+
+    Combines ``LawRegistry.search_text`` (keyword) and the
+    ``SemanticIndex`` (embedding) by rank — a document ranked highly by
+    either, and especially by both, rises to the top, with no need to
+    calibrate the two incomparable score scales. See ``search/hybrid.py``.
+
+    The quality of the semantic half depends on the active embedder:
+    with the placeholder ``HashEmbedder`` this degrades toward full-text
+    order; with the real ``[semantic]`` model it adds meaning-based
+    recall. Cross-encoder re-ranking of the fused top-K is a follow-up.
+    """
+    hits = hybrid_search(registry, index, q, limit=limit)
+    return HybridSearchResponse(
+        query=q,
+        items=[
+            HybridSearchHit(
+                law_id=hit.law_id,
+                article_number=hit.article_number,
+                snippet=hit.snippet,
+                score=hit.score,
+                sources=hit.sources,
             )
             for hit in hits
         ],
