@@ -28,6 +28,7 @@ from lexflow.core.schemas import (
     SemanticSearchResponse,
 )
 from lexflow.search.hybrid import hybrid_search
+from lexflow.search.reranker_factory import get_reranker
 from lexflow.search.semantic_index import SemanticIndex
 
 router = APIRouter(tags=["Search"])
@@ -118,9 +119,12 @@ def search_hybrid(
     The quality of the semantic half depends on the active embedder:
     with the placeholder ``HashEmbedder`` this degrades toward full-text
     order; with the real ``[semantic]`` model it adds meaning-based
-    recall. Cross-encoder re-ranking of the fused top-K is a follow-up.
+    recall. When ``LEXFLOW_RERANK=cross-encoder`` is set (and the
+    ``[semantic]`` extra installed), the fused top-K is re-ordered by a
+    cross-encoder; otherwise ``get_reranker`` returns ``None`` and this is
+    plain rank fusion.
     """
-    hits = hybrid_search(registry, index, q, limit=limit)
+    hits = hybrid_search(registry, index, q, limit=limit, reranker=get_reranker())
     return HybridSearchResponse(
         query=q,
         items=[

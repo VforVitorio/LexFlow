@@ -29,6 +29,11 @@ class Settings:
             (real multilingual model; needs the ``[semantic]`` extra).
         LEXFLOW_EMBEDDER_MODEL — sentence-transformers model name used
             when the backend is ``sentence-transformers``.
+        LEXFLOW_RERANK — hybrid-search re-ranker: ``none`` (default) or
+            ``cross-encoder`` (re-ranks the fused top-K; needs the
+            ``[semantic]`` extra).
+        LEXFLOW_RERANK_MODEL — cross-encoder model name used when the
+            re-ranker is ``cross-encoder``.
     """
 
     data_path: Path
@@ -39,6 +44,8 @@ class Settings:
     telemetry_retention_days: int
     embedder_backend: str
     embedder_model: str
+    rerank_backend: str
+    rerank_model: str
 
 
 def _build_settings() -> Settings:
@@ -59,6 +66,9 @@ def _build_settings() -> Settings:
         embedder_backend=os.environ.get("LEXFLOW_EMBEDDER", "hash"),
         # Keep in sync with ``sentence_transformer_embedder.DEFAULT_MODEL``.
         embedder_model=os.environ.get("LEXFLOW_EMBEDDER_MODEL", "paraphrase-multilingual-MiniLM-L12-v2"),
+        rerank_backend=os.environ.get("LEXFLOW_RERANK", "none"),
+        # Keep in sync with ``cross_encoder.DEFAULT_RERANK_MODEL``.
+        rerank_model=os.environ.get("LEXFLOW_RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
     )
 
 
