@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.51.0](https://github.com/VforVitorio/LexFlow/compare/v0.50.0...v0.51.0) (2026-06-09)
+
+
+### Features
+
+* **search:** opt-in cross-encoder re-rank for hybrid search ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([bee1278](https://github.com/VforVitorio/LexFlow/commit/bee1278386395465d984c6af3ec361b81359f002))
+* **search:** SPA hybrid mode + retrieval benchmark — closes [#43](https://github.com/VforVitorio/LexFlow/issues/43)/[#41](https://github.com/VforVitorio/LexFlow/issues/41) ([f83dbf8](https://github.com/VforVitorio/LexFlow/commit/f83dbf8e88dafb8f7136564ae8eddca9b7785392))
+* **search:** SPA hybrid mode + retrieval benchmark — closes epic ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([c45c9b3](https://github.com/VforVitorio/LexFlow/commit/c45c9b331701fa26deea8dfb75f6f5ae2b6117ae)), closes [#41](https://github.com/VforVitorio/LexFlow/issues/41)
+
 ## [0.50.0](https://github.com/VforVitorio/LexFlow/compare/v0.49.0...v0.50.0) (2026-06-09)
 
 
