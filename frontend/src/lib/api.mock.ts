@@ -282,6 +282,32 @@ export const mockApi: ApiClient = {
       }));
       return { hits, query: q };
     },
+    async hybrid(q, opts = {}) {
+      await delay(160);
+      // Mock fusion: reuse the keyword-overlap candidates and tag each with
+      // plausible `sources` so the UI's badges render. The fused `score` is
+      // small + relative (RRF-shaped), never a 0-1 percent.
+      const limit = opts.limit ?? 10;
+      const ql = q.toLowerCase().trim();
+      const tokens = ql.split(/\s+/).filter(Boolean);
+      const candidates = ARTICLES
+        .map((a) => {
+          const hay = `${a.titulo} ${a.body.map((c) => c.text).join(' ')}`.toLowerCase();
+          const overlap = tokens.reduce((acc, t) => acc + (hay.includes(t) ? 1 : 0), 0);
+          return { article: a, overlap };
+        })
+        .filter((c) => c.overlap > 0)
+        .sort((a, b) => b.overlap - a.overlap)
+        .slice(0, limit);
+      const hits = candidates.map((c, i) => ({
+        lawId: c.article.lawId,
+        articleNumber: c.article.num,
+        snippet: c.article.body[0]?.text.slice(0, 220) ?? c.article.titulo,
+        score: Math.max(0.01, 0.05 - i * 0.004),
+        sources: c.overlap >= 2 ? ['full_text', 'semantic'] : i % 2 === 0 ? ['full_text'] : ['semantic'],
+      }));
+      return { hits, query: q };
+    },
   },
   chat: {
     async threads() {

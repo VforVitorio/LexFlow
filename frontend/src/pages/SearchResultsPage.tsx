@@ -2,16 +2,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Badge, Input, Tabs } from '@/components/ui';
 import { Search } from 'lucide-react';
-import { useSearch, useSemanticSearch, useWarmup } from '@/lib/queries';
+import { useSearch, useSemanticSearch, useHybridSearch, useWarmup } from '@/lib/queries';
 import { groupBy } from '@/lib/utils';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
 import { SkeletonRows } from '@/components/domain/Skeleton';
 
-type SearchMode = 'fulltext' | 'semantic';
+type SearchMode = 'fulltext' | 'semantic' | 'hybrid';
 
 function isMode(value: string | null): value is SearchMode {
-  return value === 'fulltext' || value === 'semantic';
+  return value === 'fulltext' || value === 'semantic' || value === 'hybrid';
 }
 
 export function SearchResultsPage() {
@@ -61,15 +61,14 @@ export function SearchResultsPage() {
           tabs={[
             { id: 'fulltext', label: t('search.modeFullText') },
             { id: 'semantic', label: t('search.modeSemantic') },
+            { id: 'hybrid', label: t('search.modeHybrid') },
           ]}
         />
       </div>
 
-      {mode === 'fulltext' ? (
-        <FullTextResults q={q} navigate={navigate} />
-      ) : (
-        <SemanticResults q={q} navigate={navigate} />
-      )}
+      {mode === 'fulltext' && <FullTextResults q={q} navigate={navigate} />}
+      {mode === 'semantic' && <SemanticResults q={q} navigate={navigate} />}
+      {mode === 'hybrid' && <HybridResults q={q} navigate={navigate} />}
     </div>
   );
 }
@@ -187,6 +186,80 @@ function SemanticResults({ q, navigate }: { q: string; navigate: (to: string) =>
         ))}
       </div>
     </section>
+  );
+}
+
+/**
+ * Hybrid search results (#43) — Reciprocal Rank Fusion of the keyword +
+ * semantic rankers. The fused score is relative-only (not a 0–1
+ * confidence), so instead of a score bar each hit shows WHICH rankers
+ * found it ("Texto" / "Significado") — a hit found by both is the
+ * strongest signal.
+ */
+function HybridResults({ q, navigate }: { q: string; navigate: (to: string) => void }) {
+  const { t } = useTranslation();
+  const { data, isLoading } = useHybridSearch(q);
+  const hits = data?.hits ?? [];
+
+  if (!q.trim()) {
+    return <p className="mt-6 text-[13px] text-muted">{t('search.semanticEmptyQuery')}</p>;
+  }
+  if (isLoading) return <SkeletonRows className="mt-6" count={5} />;
+  if (hits.length === 0) {
+    return (
+      <EmptyState
+        className="mt-8"
+        title={t('search.semanticEmpty.title')}
+        description={t('search.semanticEmpty.description')}
+      />
+    );
+  }
+
+  return (
+    <section className="mt-6">
+      <div className="label-caps mb-2">{t('search.hybridHeading', { n: hits.length })}</div>
+      <div className="flex flex-col gap-1.5">
+        {hits.map((h) => (
+          <button
+            key={`${h.lawId}::${h.articleNumber ?? 'law'}`}
+            onClick={() =>
+              navigate(
+                h.articleNumber
+                  ? `/laws/${encodeURIComponent(h.lawId)}#art-${encodeURIComponent(h.articleNumber)}`
+                  : `/laws/${encodeURIComponent(h.lawId)}`,
+              )
+            }
+            className="flex items-start gap-3 rounded-lg border border-border bg-surface px-3.5 py-2.5 text-left hover:bg-surface-2"
+          >
+            <Badge tone={h.articleNumber ? 'amber' : 'primary'}>{h.articleNumber ? 'art' : 'ley'}</Badge>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="font-mono text-[12.5px] text-muted">
+                  {h.lawId}
+                  {h.articleNumber ? ` · Art. ${h.articleNumber}` : ''}
+                </div>
+                <SourceBadges sources={h.sources} />
+              </div>
+              <div className="mt-1 text-[12.5px] text-muted line-clamp-2">{h.snippet}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SourceBadges({ sources }: { sources: string[] }) {
+  const { t } = useTranslation();
+  return (
+    <span className="flex shrink-0 gap-1">
+      {sources.includes('full_text') && (
+        <Badge tone="neutral">{t('search.sourceFullText')}</Badge>
+      )}
+      {sources.includes('semantic') && (
+        <Badge tone="primary">{t('search.sourceSemantic')}</Badge>
+      )}
+    </span>
   );
 }
 
