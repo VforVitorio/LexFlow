@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.50.0](https://github.com/VforVitorio/LexFlow/compare/v0.49.0...v0.50.0) (2026-06-09)
+
+
+### Features
+
+* **search:** hybrid search via Reciprocal Rank Fusion ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([3fda028](https://github.com/VforVitorio/LexFlow/commit/3fda0286e9f784e41b35d54d6925898556b19893))
+* **search:** hybrid search via Reciprocal Rank Fusion ([#43](https://github.com/VforVitorio/LexFlow/issues/43)) ([ab81d13](https://github.com/VforVitorio/LexFlow/commit/ab81d13bde9abf5e7bfa4e37ea2f813ef008b4dc))
+
 ## [0.49.0](https://github.com/VforVitorio/LexFlow/compare/v0.48.0...v0.49.0) (2026-06-08)
 
 
