@@ -90,7 +90,14 @@ export function HomePage() {
           </button>
           <div className="mt-3 flex flex-wrap gap-2">
             {EXAMPLE_QUERIES.map((q) => (
-              <Chip key={q} icon={<Sparkles className="size-3" />} className="bg-bg">{q}</Chip>
+              <Chip
+                key={q}
+                icon={<Sparkles className="size-3" />}
+                className="bg-bg"
+                onClick={() => navigate(`/explorer?q=${encodeURIComponent(q)}`)}
+              >
+                {q}
+              </Chip>
             ))}
           </div>
 
