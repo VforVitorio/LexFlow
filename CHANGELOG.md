@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.51.1](https://github.com/VforVitorio/LexFlow/compare/v0.51.0...v0.51.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* **frontend:** welcome animation never traps the user ([#557](https://github.com/VforVitorio/LexFlow/issues/557)) ([d657d55](https://github.com/VforVitorio/LexFlow/commit/d657d55eed320324de51a808ea87ace726c38ef6))
+* **frontend:** welcome animation never traps the user ([#557](https://github.com/VforVitorio/LexFlow/issues/557)) ([f6021e0](https://github.com/VforVitorio/LexFlow/commit/f6021e0fa891649ebe8c220d8b7403e689f1f8e5))
+
 ## [0.51.0](https://github.com/VforVitorio/LexFlow/compare/v0.50.0...v0.51.0) (2026-06-09)
 
 
