@@ -32,6 +32,10 @@ export function ExplorerPage() {
     if (urlTags) {
       setTags(new Set(urlTags.split(',').map((t) => t.trim()).filter(Boolean)));
     }
+    // Seed the search box from `?q=` so Home's example chips (and any deep
+    // link) actually run a query instead of being decorative (#577).
+    const urlQ = searchParams.get('q');
+    if (urlQ) setQ(urlQ);
     // run once on mount; subsequent UI clicks own the state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
