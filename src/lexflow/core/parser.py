@@ -264,8 +264,12 @@ def _build_section_list(
 # Article extraction
 # ---------------------------------------------------------------------------
 
+# Article headings in legalize-es are markdown level 6 (``###### Artículo N``).
+# The pattern allows ``#{1,6}`` (NOT ``#{1,5}``): the real corpus uses six
+# hashes, so capping at five silently extracted ZERO articles from every law
+# (the test fixture used five hashes, which masked it). See #561.
 _ARTICLE_RE = re.compile(
-    r"^(?:#{1,5}\s+)?Art[ií]culo\s+(.+?)\.?\s*$",
+    r"^(?:#{1,6}\s+)?Art[ií]culo\s+(.+?)\.?\s*$",
     re.MULTILINE | re.IGNORECASE,
 )
 
@@ -297,7 +301,7 @@ def extract_articles(body: str) -> list[Article]:
 # module scope avoids 2-5 million ``re.compile`` calls during a cold
 # parse of the 12 k-law corpus.
 _SECTION_BREAK_RE = re.compile(r"^#{1,4}\s+")
-_INLINE_ARTICLE_HEADING_RE = re.compile(r"^#{1,5}\s+Art[ií]culo", re.IGNORECASE)
+_INLINE_ARTICLE_HEADING_RE = re.compile(r"^#{1,6}\s+Art[ií]culo", re.IGNORECASE)
 
 
 def _extract_article_text(raw: str) -> str:
