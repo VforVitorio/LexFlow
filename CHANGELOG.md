@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.52.0](https://github.com/VforVitorio/LexFlow/compare/v0.51.3...v0.52.0) (2026-06-10)
+
+
+### Features
+
+* **explorer:** #-triggered tag autocomplete in search box ([#566](https://github.com/VforVitorio/LexFlow/issues/566)) ([2afd99c](https://github.com/VforVitorio/LexFlow/commit/2afd99cd511ca38b2105021eb6afb7a77291d2da))
+
+
+### Bug Fixes
+
+* **explorer:** drop broken UE + empty Local scope filters ([#567](https://github.com/VforVitorio/LexFlow/issues/567), [#568](https://github.com/VforVitorio/LexFlow/issues/568)) ([a7e2117](https://github.com/VforVitorio/LexFlow/commit/a7e2117dc714fe9f7f54482c739329b8fb6af9fa))
+
 ## [0.51.3](https://github.com/VforVitorio/LexFlow/compare/v0.51.2...v0.51.3) (2026-06-10)
 
 
