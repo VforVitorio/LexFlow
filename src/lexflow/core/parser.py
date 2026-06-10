@@ -197,13 +197,21 @@ def _build_section_list(
     target_level: int,
     start_idx: int = 0,
     end_idx: int | None = None,
+    body_end: int | None = None,
 ) -> list[Section]:
     """Recursively build sections for headings at *target_level* depth.
 
     *target_level* of 0 means "find the minimum level and use that".
+
+    *body_end* is the byte offset where this slice's content ends — the
+    parent section's boundary. The LAST section at each level must stop
+    there, NOT at ``len(body)``; otherwise the deepest trailing section
+    swallowed every later article and inflated the nested count (#570).
     """
     if end_idx is None:
         end_idx = len(matches)
+    if body_end is None:
+        body_end = len(body)
 
     subset = matches[start_idx:end_idx]
     if not subset:
@@ -225,10 +233,11 @@ def _build_section_list(
         while j < len(subset) and subset[j][0] > target_level:
             j += 1
 
-        # Content between this heading and the next at same level
+        # Content between this heading and the next at same level. The
+        # last section stops at the parent's boundary (``body_end``), not
+        # the end of the whole document — see #570.
         content_start = subset[i][2]
-        content_end = subset[j][2] if j < len(subset) else len(body)
-        section_body = body[content_start:content_end]
+        content_end = subset[j][2] if j < len(subset) else body_end
 
         # Recurse for subsections. Audit #409: passing ``target_level + 1``
         # silently dropped sections when a parent's first subheading
@@ -242,10 +251,19 @@ def _build_section_list(
             target_level=0,
             start_idx=i + 1,
             end_idx=i + (j - i),
+            body_end=content_end,
         )
 
-        # Extract articles from this section's direct content
-        articles = extract_articles(section_body)
+        # Extract articles from this section's DIRECT content only — the
+        # span from this heading to its first subheading. Using the full
+        # ``section_body`` (which includes every subsection's content)
+        # made each ancestor re-extract its descendants' articles, so a
+        # law's nested article count ballooned far past its real total
+        # (958 vs 169 for the Constitution — #570). Subsections collect
+        # their own articles via the recursion above.
+        first_sub_start = subset[i + 1][2] if (i + 1) < j else content_end
+        direct_body = body[content_start:first_sub_start]
+        articles = extract_articles(direct_body)
 
         sections.append(
             Section(

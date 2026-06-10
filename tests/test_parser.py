@@ -194,6 +194,38 @@ class TestExtractArticles:
         assert articles[0].number == "1"
         assert "Texto del primero" in articles[0].text
 
+    def test_section_articles_not_duplicated_across_levels(self) -> None:
+        """Regression (#570): each article appears once in the section tree.
+
+        A parent section used to re-extract its subsections' articles from
+        its (wider) body slice, inflating the nested count far past the real
+        total (958 vs 169 for the Constitution). The sum of nested articles
+        must equal the flat ``extract_articles`` total.
+        """
+        body = dedent("""\
+            ## TITULO I
+
+            ###### Articulo 1
+
+            Directo del titulo.
+
+            ### CAPITULO I
+
+            ###### Articulo 2
+
+            Dentro del capitulo.
+
+            ###### Articulo 3
+
+            Tambien en el capitulo.
+        """)
+        tree = extract_heading_tree(body)
+
+        def count(sections: list) -> int:
+            return sum(len(s.articles) + count(s.subsections) for s in sections)
+
+        assert count(tree) == len(extract_articles(body)) == 3
+
 
 # ---------------------------------------------------------------------------
 # References
