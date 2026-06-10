@@ -34,12 +34,29 @@ class OllamaProvider(ChatProvider):
         self._host = host
 
     async def list_models(self) -> list[str]:
-        """Return model names available in the local Ollama instance."""
+        """Return model tags available in the local Ollama instance.
+
+        The ollama SDK (0.6.x) returns a ``ListResponse`` pydantic object
+        (NOT a dict), and each entry exposes the tag under ``.model``
+        (older builds used ``name``). The previous ``isinstance(response,
+        dict)`` + ``m["name"]`` parse returned ``[]`` for every real
+        install, so pulled models never appeared in ``/models`` and the
+        picker had nothing to select (#564 — same SDK-shape trap as #531).
+        """
         try:
             client = ollama.AsyncClient(host=self._host)
             response = await client.list()
-            models: list[dict[str, str]] = response.get("models", []) if isinstance(response, dict) else []
-            return [m["name"] for m in models if "name" in m]
+            raw_models = getattr(response, "models", None)
+            if raw_models is None and isinstance(response, dict):
+                raw_models = response.get("models", [])
+            tags: list[str] = []
+            for item in raw_models or []:
+                tag = getattr(item, "model", None) or getattr(item, "name", None)
+                if tag is None and isinstance(item, dict):
+                    tag = item.get("model") or item.get("name")
+                if tag:
+                    tags.append(tag)
+            return tags
         except _OLLAMA_ERRORS as exc:
             raise ChatProviderError(f"Ollama error: {exc}") from exc
 
