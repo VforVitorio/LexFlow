@@ -173,6 +173,27 @@ class TestExtractArticles:
         assert len(articles) == 1
         assert articles[0].number == "1"
 
+    def test_level6_headings_real_corpus_format(self) -> None:
+        """Regression (#561): the real legalize-es corpus puts articles at
+        markdown level 6 (``###### Artículo N``, accented, no trailing
+        period). The fixture above used level 5, which masked a parser cap
+        of ``#{1,5}`` that silently extracted ZERO articles from every real
+        law (verified: the live Constitution went 0 → 169 with this fix).
+        """
+        body = dedent("""\
+            ###### Artículo 1
+
+            Texto del primero.
+
+            ###### Artículo 2
+
+            Texto del segundo.
+        """)
+        articles = extract_articles(body)
+        assert len(articles) == 2
+        assert articles[0].number == "1"
+        assert "Texto del primero" in articles[0].text
+
 
 # ---------------------------------------------------------------------------
 # References
