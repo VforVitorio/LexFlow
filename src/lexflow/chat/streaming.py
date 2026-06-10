@@ -293,65 +293,87 @@ async def stream_chat_reply(
     #    identically to the pre-#195 path (one iteration, text only).
     assistant_chunks: list[str] = []
     tools = [ToolSpec(**spec) for spec in TOOL_SPECS]
-    try:
-        for _ in range(_MAX_TOOL_ITERATIONS):
-            finish_reason: str | None = None
-            pending_calls: list[ToolCallChunk] = []
-            async for typed in provider.stream_chat_typed(history, model_name, tools=tools):
-                if isinstance(typed, TextChunk):
-                    if not typed.delta:
-                        continue
-                    assistant_chunks.append(typed.delta)
-                    yield format_sse(SseEvent.TEXT, {"delta": typed.delta})
-                elif isinstance(typed, ToolCallChunk):
-                    pending_calls.append(typed)
-                    yield format_sse(
-                        SseEvent.TOOL_CALL,
-                        {"call_id": typed.call_id, "name": typed.name, "args": typed.arguments},
-                    )
-                elif isinstance(typed, FinishChunk):
-                    finish_reason = typed.reason
+
+    def _is_tools_unsupported(error: ChatProviderError) -> bool:
+        """True when the provider rejected the request *because* of tools.
+
+        Small local models (gemma, many <7B) don't implement function
+        calling, so Ollama answers 400 "does not support tools". We retry
+        once without tools so the user still gets a (RAG-less) reply
+        instead of an empty turn (#564).
+        """
+        msg = str(error).lower()
+        return "does not support tools" in msg or ("tool" in msg and "not support" in msg)
+
+    # Agentic loop with a one-shot degrade: the first attempt carries the
+    # RAG tools; if the model can't do tool-use we retry once with none so
+    # tool-incapable models still answer (without citations) instead of
+    # erroring out to an empty turn.
+    attempt_tools = tools
+    while True:
+        retry_without_tools = False
+        try:
+            for _ in range(_MAX_TOOL_ITERATIONS):
+                finish_reason: str | None = None
+                pending_calls: list[ToolCallChunk] = []
+                async for typed in provider.stream_chat_typed(history, model_name, tools=attempt_tools):
+                    if isinstance(typed, TextChunk):
+                        if not typed.delta:
+                            continue
+                        assistant_chunks.append(typed.delta)
+                        yield format_sse(SseEvent.TEXT, {"delta": typed.delta})
+                    elif isinstance(typed, ToolCallChunk):
+                        pending_calls.append(typed)
+                        yield format_sse(
+                            SseEvent.TOOL_CALL,
+                            {"call_id": typed.call_id, "name": typed.name, "args": typed.arguments},
+                        )
+                    elif isinstance(typed, FinishChunk):
+                        finish_reason = typed.reason
+                        break
+                if not pending_calls or finish_reason == "stop":
                     break
-            if not pending_calls or finish_reason == "stop":
-                break
-            for call in pending_calls:
-                result = _run_tool_call(call)
-                for citation in _extract_citations(result):
-                    yield format_sse(SseEvent.SOURCE, citation)
-                _record_tool_outcome(history, call, result)
-    except ChatProviderError as exc:
-        # Both `provider_key` (from `split_model_id(body.model)`) and
-        # `exc` (built by the provider wrapping the original SDK error)
-        # are user-influenced. CodeQL's py/log-injection query does NOT
-        # recognise the `%r` format spec as a sanitiser even though it
-        # invokes `repr()` at runtime (alerts #3, #4, #5 all surfaced on
-        # successive `%r` attempts). Explicit `repr()` calls match the
-        # query's sanitiser pattern, so we use those instead — same
-        # bytes on the wire, different static-analysis signal.
-        logger.info(
-            "Provider %s stream failed: %s",
-            repr(provider_key),
-            repr(exc),
-        )
-        # ``str(exc)`` of a ChatProviderError is the message we constructed
-        # ourselves (e.g. "OpenAI rate limit exceeded"); intentional to
-        # surface so the user knows whether to retry vs reauth.
-        yield format_sse(SseEvent.ERROR, {"detail": str(exc)})
-    except asyncio.CancelledError:
-        # Sprint 6 rf-5: a CancelledError means the client disconnected
-        # (Starlette propagates it through the generator). We must NOT
-        # swallow it — the generic `except Exception` below used to, which
-        # turned a normal disconnect into a synthetic SSE `error` event
-        # that no client could see anyway. Re-raise so the runtime can
-        # tear the stream down cleanly.
-        raise
-    except Exception:
-        # Generic exception path: the message can carry stack-frame
-        # context (file paths, internal SQL, model names). Log the full
-        # trace on the server side and emit a generic detail to the
-        # client (CodeQL alert #2 — py/stack-trace-exposure).
-        logger.exception("Unexpected error during chat stream")
-        yield format_sse(SseEvent.ERROR, {"detail": "Internal error during chat stream"})
+                for call in pending_calls:
+                    result = _run_tool_call(call)
+                    for citation in _extract_citations(result):
+                        yield format_sse(SseEvent.SOURCE, citation)
+                    _record_tool_outcome(history, call, result)
+        except ChatProviderError as exc:
+            if attempt_tools and _is_tools_unsupported(exc):
+                # Degrade to a tool-less chat for this turn and start over.
+                logger.info("Model %s rejected tools; retrying without tools", repr(model_name))
+                assistant_chunks.clear()
+                attempt_tools = []
+                retry_without_tools = True
+            else:
+                # Both `provider_key` and `exc` are user-influenced. CodeQL's
+                # py/log-injection query doesn't recognise `%r` as a sanitiser
+                # even though it calls repr() at runtime, so we use explicit
+                # repr() — same bytes, different static-analysis signal.
+                logger.info("Provider %s stream failed: %s", repr(provider_key), repr(exc))
+                # ``str(exc)`` is the message we constructed ourselves; safe
+                # to surface so the user knows whether to retry vs reauth.
+                yield format_sse(SseEvent.ERROR, {"detail": str(exc)})
+        except asyncio.CancelledError:
+            # Sprint 6 rf-5: a CancelledError means the client disconnected
+            # (Starlette propagates it through the generator). We must NOT
+            # swallow it — the generic `except Exception` below used to, which
+            # turned a normal disconnect into a synthetic SSE `error` event
+            # that no client could see anyway. Re-raise so the runtime can
+            # tear the stream down cleanly.
+            raise
+        except Exception:
+            # Generic exception path: the message can carry stack-frame
+            # context (file paths, internal SQL, model names). Log the full
+            # trace on the server side and emit a generic detail to the
+            # client (CodeQL alert #2 — py/stack-trace-exposure).
+            logger.exception("Unexpected error during chat stream")
+            yield format_sse(SseEvent.ERROR, {"detail": "Internal error during chat stream"})
+        # One-shot retry without tools (see _is_tools_unsupported); any other
+        # outcome (success, surfaced error, generic failure) ends the loop.
+        if retry_without_tools:
+            continue
+        break
 
     # 4. Persist whatever we got. Even an empty reply gets a row so the
     #    UI doesn't render a "ghost turn".

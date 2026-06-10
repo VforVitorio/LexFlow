@@ -374,7 +374,12 @@ function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }:
         <MiniMap
           pannable
           zoomable
+          // bgColor MUST be set: react-flow's MiniMap defaults to white, so
+          // in dark theme it rendered as a glaring white box (#569). Theme
+          // it to the surface token so it reads as a panel in both themes.
+          bgColor="hsl(var(--surface))"
           maskColor="hsl(var(--bg) / 0.6)"
+          nodeStrokeColor="hsl(var(--border-strong))"
           nodeColor={(node) => GRAPH_KIND_FILL[(node.data as LfNodeData).kind] ?? 'hsl(var(--muted-fg))'}
         />
       </ReactFlow>

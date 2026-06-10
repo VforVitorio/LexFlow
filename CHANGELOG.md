@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.51.3](https://github.com/VforVitorio/LexFlow/compare/v0.51.2...v0.51.3) (2026-06-10)
+
+
+### Bug Fixes
+
+* **chat:** list local Ollama models + tool-incapable fallback ([#564](https://github.com/VforVitorio/LexFlow/issues/564)) ([d71f227](https://github.com/VforVitorio/LexFlow/commit/d71f22757d962ac9cd7d3eaee8d012018a320223))
+* **graph:** theme MiniMap (no white box in dark mode) ([#569](https://github.com/VforVitorio/LexFlow/issues/569)) ([b94a689](https://github.com/VforVitorio/LexFlow/commit/b94a689d252d923eac9c91330191846a4423004c))
+* **graph:** theme the MiniMap so it isn't a white box in dark mode ([#569](https://github.com/VforVitorio/LexFlow/issues/569)) ([b399022](https://github.com/VforVitorio/LexFlow/commit/b3990226688dd82daba14512440b46000186259a))
+* **home:** wire example-query chips to run a search ([#577](https://github.com/VforVitorio/LexFlow/issues/577)) ([a8087c0](https://github.com/VforVitorio/LexFlow/commit/a8087c0e0baf3c2cab4b32c675eeb6839127864b))
+* **home:** wire example-query chips to run a search ([#577](https://github.com/VforVitorio/LexFlow/issues/577)) ([80d97cc](https://github.com/VforVitorio/LexFlow/commit/80d97cc29401c0506257ec06f7541318955ed6b4))
+* **parser:** dedupe articles in the section tree (958 -&gt; 169) ([#570](https://github.com/VforVitorio/LexFlow/issues/570)) ([8cdb6a7](https://github.com/VforVitorio/LexFlow/commit/8cdb6a78fdc8956281956e264a74c5bff6268549))
+* **parser:** dedupe articles in the section tree (958 -&gt; 169) ([#570](https://github.com/VforVitorio/LexFlow/issues/570)) ([2508b5c](https://github.com/VforVitorio/LexFlow/commit/2508b5cf07f61b8b814fb35f713d23412f9839cd))
+
+## [0.51.2](https://github.com/VforVitorio/LexFlow/compare/v0.51.1...v0.51.2) (2026-06-10)
+
+
+### Bug Fixes
+
+* **chat:** render replies + auto-select a real model + Enter-to-send ([#564](https://github.com/VforVitorio/LexFlow/issues/564), [#571](https://github.com/VforVitorio/LexFlow/issues/571)) ([ae929b8](https://github.com/VforVitorio/LexFlow/commit/ae929b864b22cc6a8e9081c8e25759c916b5cf5b))
+* **chat:** render replies + auto-select a real model + Enter-to-send ([#564](https://github.com/VforVitorio/LexFlow/issues/564), [#571](https://github.com/VforVitorio/LexFlow/issues/571)) ([f20606f](https://github.com/VforVitorio/LexFlow/commit/f20606fb7e88577bcae10a5db85b31b218f224e6))
+* **parser:** extract articles at heading level 6 — restores law text corpus-wide ([#561](https://github.com/VforVitorio/LexFlow/issues/561)) ([0f625dc](https://github.com/VforVitorio/LexFlow/commit/0f625dc7f395e59d6f52bff992b57096511198be))
+* **parser:** extract articles at heading level 6 — restores law text corpus-wide ([#561](https://github.com/VforVitorio/LexFlow/issues/561)) ([e864489](https://github.com/VforVitorio/LexFlow/commit/e8644891bf26a030f1840f455db3575d1d736c16))
+
 ## [0.51.1](https://github.com/VforVitorio/LexFlow/compare/v0.51.0...v0.51.1) (2026-06-10)
 
 
