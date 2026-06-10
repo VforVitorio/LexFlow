@@ -15,7 +15,13 @@ import type { Ambito, LawStatus, RangoNormativo } from '@/lib/types';
 
 const STATUSES: LawStatus[] = ['vigente', 'modificada', 'derogada'];
 const RANGOS: RangoNormativo[] = ['Norma constitucional', 'Ley Orgánica', 'Ley', 'Real Decreto', 'RD Legislativo'];
-const AMBITOS: Ambito[] = ['Estatal', 'UE', 'Autonómica', 'Local'];
+// Only scopes that exist in the corpus + map to a backend Scope.
+// 'UE' has no SCOPE_MAP entry, so its reverse-lookup returned undefined
+// and NO scope param was sent → the filter silently did nothing (#567).
+// 'Local' maps cleanly but the corpus has 0 local norms, so it was an
+// always-empty bucket (#568). Both removed until the data/feature exists
+// (local norms would need a municipality picker, not a flat list).
+const AMBITOS: Ambito[] = ['Estatal', 'Autonómica'];
 
 function toggle<T>(set: Set<T>, value: T): Set<T> {
   const next = new Set(set);
