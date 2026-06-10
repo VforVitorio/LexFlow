@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.51.2](https://github.com/VforVitorio/LexFlow/compare/v0.51.1...v0.51.2) (2026-06-10)
+
+
+### Bug Fixes
+
+* **chat:** render replies + auto-select a real model + Enter-to-send ([#564](https://github.com/VforVitorio/LexFlow/issues/564), [#571](https://github.com/VforVitorio/LexFlow/issues/571)) ([ae929b8](https://github.com/VforVitorio/LexFlow/commit/ae929b864b22cc6a8e9081c8e25759c916b5cf5b))
+* **chat:** render replies + auto-select a real model + Enter-to-send ([#564](https://github.com/VforVitorio/LexFlow/issues/564), [#571](https://github.com/VforVitorio/LexFlow/issues/571)) ([f20606f](https://github.com/VforVitorio/LexFlow/commit/f20606fb7e88577bcae10a5db85b31b218f224e6))
+* **parser:** extract articles at heading level 6 — restores law text corpus-wide ([#561](https://github.com/VforVitorio/LexFlow/issues/561)) ([0f625dc](https://github.com/VforVitorio/LexFlow/commit/0f625dc7f395e59d6f52bff992b57096511198be))
+* **parser:** extract articles at heading level 6 — restores law text corpus-wide ([#561](https://github.com/VforVitorio/LexFlow/issues/561)) ([e864489](https://github.com/VforVitorio/LexFlow/commit/e8644891bf26a030f1840f455db3575d1d736c16))
+
 ## [0.51.1](https://github.com/VforVitorio/LexFlow/compare/v0.51.0...v0.51.1) (2026-06-10)
 
 
