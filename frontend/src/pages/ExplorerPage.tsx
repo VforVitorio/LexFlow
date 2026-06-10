@@ -119,6 +119,26 @@ export function ExplorerPage() {
     return sorted;
   }, [items, plainQ, allTags, sort]);
 
+  // #566 — `#`-triggered tag autocomplete for the search box. When the
+  // token under the cursor starts with `#`, suggest matching tags from the
+  // live vocabulary so the documented "escribe #tag" hint is discoverable
+  // instead of showing nothing.
+  const [searchFocused, setSearchFocused] = useState(false);
+  const tagSuggestions = useMemo(() => {
+    const lastToken = q.split(/\s+/).pop() ?? '';
+    if (!lastToken.startsWith('#')) return null;
+    const frag = lastToken.slice(1).toLowerCase();
+    const matches = vocab
+      .filter((v) => v.tag.toLowerCase().includes(frag) && !allTags.has(v.tag))
+      .slice(0, 8);
+    return matches.length ? matches : null;
+  }, [q, vocab, allTags]);
+  const completeTag = (tag: string) => {
+    const words = q.split(/\s+/);
+    words[words.length - 1] = `#${tag}`;
+    setQ(words.join(' ') + ' ');
+  };
+
   const rowH = density === 'compact' ? 40 : density === 'cozy' ? 64 : 52;
   const toggle = <T,>(set: Set<T>, v: T) => {
     const next = new Set(set);
@@ -189,13 +209,39 @@ export function ExplorerPage() {
         <div className="border-b border-border px-5 pt-4 pb-3.5 md:px-8 md:pt-5">
           <h1 className="mb-3.5 font-display text-2xl font-semibold">{t('explorer.title')}</h1>
           <div className="flex flex-wrap items-center gap-2.5">
-            <Input
-              icon={<Search className="size-3.5" />}
-              placeholder={t('explorer.searchPlaceholder')}
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              className="flex-1 min-w-[200px] max-w-[480px]"
-            />
+            <div className="relative flex-1 min-w-[200px] max-w-[480px]">
+              <Input
+                icon={<Search className="size-3.5" />}
+                placeholder={t('explorer.searchPlaceholder')}
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className="w-full"
+              />
+              {searchFocused && tagSuggestions && (
+                <ul className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-auto rounded-lg border border-border-strong bg-surface p-1 shadow-lg">
+                  {tagSuggestions.map(({ tag, count }) => (
+                    <li key={tag}>
+                      <button
+                        type="button"
+                        // onMouseDown (not onClick) + preventDefault keeps the
+                        // input focused so the selection lands before blur.
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          completeTag(tag);
+                        }}
+                        className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-[13px] hover:bg-surface-2"
+                      >
+                        <Hash className="size-3 text-muted" />
+                        {tag}
+                        <span className="ml-auto font-mono text-[10px] text-muted">{count}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <Button
               variant="secondary"
               icon={<SlidersHorizontal className="size-3.5" />}
