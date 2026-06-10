@@ -75,7 +75,11 @@ export const useUi = create<UiState>()(
       setPaletteOpen: (open) => set({ paletteOpen: open }),
       togglePalette: () => set((s) => ({ paletteOpen: !s.paletteOpen })),
 
-      defaultModel: import.meta.env.VITE_DEFAULT_MODEL || 'claude-sonnet-4-5',
+      // Empty by default — ChatPage auto-selects the first *available*
+      // model from /models once it loads. The old hardcoded
+      // 'claude-sonnet-4-5' default made chat POST an unconfigured cloud
+      // model (no API key) so every reply silently failed (#564).
+      defaultModel: import.meta.env.VITE_DEFAULT_MODEL || '',
       setDefaultModel: (id) => set({ defaultModel: id }),
 
       telemetryConsent: false,

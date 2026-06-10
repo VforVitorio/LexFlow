@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send, Pencil, Trash2 } from 'lucide-react';
 import { Button, Chip, Kbd } from '@/components/ui';
 import { ChatMessage } from '@/components/domain/ChatMessage';
@@ -8,11 +9,13 @@ import { ModelChip } from '@/components/domain/ModelChip';
 import { CitationCard } from '@/components/domain/CitationCard';
 import { RightRail } from '@/components/shell/RightRail';
 import {
+  qk,
   useChatThreads,
   useChatThread,
   useCreateChatThread,
   useDeleteChatThread,
   useRenameChatThread,
+  useModels,
 } from '@/lib/queries';
 import { api } from '@/lib/api';
 import { applyChunk } from '@/lib/api.mock';
@@ -27,6 +30,9 @@ export function ChatPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const defaultModel = useUi((s) => s.defaultModel);
+  const setDefaultModel = useUi((s) => s.setDefaultModel);
+  const qc = useQueryClient();
+  const { data: models = [] } = useModels();
   // Audit #409 — read the URL param so deep links like `/chat/legal-x`
   // honour the thread id. The page used to hardcode 'eipd' and silently
   // ignore the param registered on the route. Internal navigation pushes
@@ -42,8 +48,25 @@ export function ChatPage() {
   };
   const [draft, setDraft] = useState('');
   const [stream, setStream] = useState<ChatMessageT | null>(null);
+  // Optimistic echo of the just-sent user turn. The backend persists it
+  // as part of /send, but the thread query only refetches *after* the
+  // stream finishes — without this the user's own message wouldn't appear
+  // until then (part of the "I send hola and see nothing" bug, #564).
+  const [pendingUser, setPendingUser] = useState<ChatMessageT | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Auto-select the first *available* model once /models loads. The store
+  // no longer hardcodes a cloud model; if the persisted defaultModel isn't
+  // a currently-available provider we replace it (or clear it) so chat
+  // never POSTs an unconfigured model. The wizard's pull lands here too.
+  const availableModel = useMemo(() => models.find((m) => m.available) ?? null, [models]);
+  useEffect(() => {
+    if (models.length === 0) return;
+    const current = models.find((m) => m.id === defaultModel);
+    const isUsable = current?.available ?? false;
+    if (!isUsable) setDefaultModel(availableModel?.id ?? '');
+  }, [models, defaultModel, availableModel, setDefaultModel]);
 
   const { data: threads = [] } = useChatThreads();
   const { data: msgs = [] } = useChatThread(activeId);
@@ -58,7 +81,12 @@ export function ChatPage() {
   // `threads` scan for the title, a full-history walk for the sources
   // counter, and a fresh `visible` array). Memoizing keeps them stable
   // across stream chunks without changing behaviour.
-  const visible: ChatMessageT[] = useMemo(() => (stream ? [...msgs, stream] : msgs), [msgs, stream]);
+  const visible: ChatMessageT[] = useMemo(() => {
+    const out = [...msgs];
+    if (pendingUser) out.push(pendingUser);
+    if (stream) out.push(stream);
+    return out;
+  }, [msgs, pendingUser, stream]);
   const threadsById = useMemo(() => new Map(threads.map((th) => [th.id, th])), [threads]);
   // Committed messages only: sources are fixed once a message lands, so
   // the in-flight `stream` never changes this count.
@@ -115,6 +143,12 @@ export function ChatPage() {
     // `sending` is the simple fix; the `finally` block guarantees the
     // typing indicator clears even when the generator throws.
     if (sending || !draft.trim()) return;
+    // No usable model → tell the user to configure one instead of POSTing
+    // an unconfigured model and silently getting an empty reply (#564).
+    if (!defaultModel || !availableModel) {
+      toast({ tone: 'danger', title: t('chat.noModelTitle'), message: t('chat.noModelBody') });
+      return;
+    }
     // Audit #463 — if the user lands on a stale fallback id with no
     // matching thread in the live backend, transparently create a new
     // one before sending so the first message doesn't 404.
@@ -133,6 +167,8 @@ export function ChatPage() {
     const content = draft;
     setDraft('');
     setSending(true);
+    // Optimistically echo the user turn so it shows immediately.
+    setPendingUser({ id: `pending-${Date.now()}`, role: 'user', createdAt: new Date().toISOString(), content });
     let current: ChatMessageT | null = null;
     try {
       for await (const chunk of api.chat.send(target, content, { model: defaultModel })) {
@@ -147,8 +183,15 @@ export function ChatPage() {
       toast({ tone: 'danger', title: 'No se pudo enviar el mensaje', message });
       setDraft(content);
     } finally {
-      setStream(null);
+      // Refetch the thread so the *persisted* user + assistant turns
+      // render. Without this the streamed reply vanished the instant
+      // `stream` cleared (the core #564 bug). Await the refetch before
+      // dropping the optimistic echoes so there's no blank flash.
       setSending(false);
+      await qc.invalidateQueries({ queryKey: qk.chatThread(target) });
+      void qc.invalidateQueries({ queryKey: qk.chatThreads() });
+      setStream(null);
+      setPendingUser(null);
     }
   };
 
@@ -254,10 +297,22 @@ export function ChatPage() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                // Enter sends; Shift+Enter (native) and Ctrl/Cmd+Enter
+                // insert a newline. `isComposing` guards IME input (#571).
+                if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+                if (e.shiftKey) return; // native newline
+                if (e.ctrlKey || e.metaKey) {
                   e.preventDefault();
-                  if (!sending) send();
+                  const ta = e.currentTarget;
+                  const { selectionStart, selectionEnd } = ta;
+                  setDraft((d) => d.slice(0, selectionStart) + '\n' + d.slice(selectionEnd));
+                  requestAnimationFrame(() => {
+                    ta.selectionStart = ta.selectionEnd = selectionStart + 1;
+                  });
+                  return;
                 }
+                e.preventDefault();
+                if (!sending) send();
               }}
               placeholder={t('chat.placeholder')}
               className="min-h-[44px] w-full resize-none bg-transparent px-1 text-[14.5px] outline-none placeholder:text-muted disabled:opacity-60"
@@ -265,11 +320,18 @@ export function ChatPage() {
               disabled={sending}
             />
             <div className="mt-1.5 flex items-center gap-1.5">
-              <Button size="icon-sm" variant="ghost" aria-label={t('chat.attach')} icon={<Paperclip className="size-3.5" />} />
-              <Chip icon={<BookOpenText className="size-3" />}>{t('chat.citeArticle')}</Chip>
-              <Chip icon={<SlidersHorizontal className="size-3" />}>{t('chat.onlyInForce')}</Chip>
+              {/* Composer feature stubs — not wired yet (tracked in #564);
+                  marked "próximamente" so they don't read as broken. */}
+              <Button size="icon-sm" variant="ghost" disabled title={t('chat.comingSoon')} aria-label={t('chat.attach')} icon={<Paperclip className="size-3.5" />} />
+              <span title={t('chat.comingSoon')} className="opacity-50">
+                <Chip icon={<BookOpenText className="size-3" />}>{t('chat.citeArticle')}</Chip>
+              </span>
+              <span title={t('chat.comingSoon')} className="opacity-50">
+                <Chip icon={<SlidersHorizontal className="size-3" />}>{t('chat.onlyInForce')}</Chip>
+              </span>
               <span className="ml-auto flex items-center gap-2">
-                <Kbd>⌘↵</Kbd>
+                <span className="text-[11px] text-muted">{t('chat.enterHint')}</span>
+                <Kbd>↵</Kbd>
                 <Button size="sm" icon={<Send className="size-3.5" />} onClick={send} disabled={sending}>{t('chat.send')}</Button>
               </span>
             </div>
