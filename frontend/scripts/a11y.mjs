@@ -68,9 +68,12 @@ function runAxe(url) {
       '--exit',
       '--no-reporter',
       '--save',
-      // axe-core/cli will overwrite for each route — we drain the
-      // result before the next call writes over it.
-      REPORT_PATH,
+      // axe-core/cli overwrites this per route; we drain the result before
+      // the next call. Pass a path RELATIVE to cwd: @axe-core/cli does
+      // path.join(process.cwd(), savePath) internally, so an ABSOLUTE path
+      // got doubled (".../frontend/home/runner/.../frontend/axe-report.json"
+      // → ENOENT) and failed the job even though the a11y check PASSED.
+      path.relative(process.cwd(), REPORT_PATH),
     ];
     const child = spawn('npx', ['axe', ...args], {
       shell: process.platform === 'win32',
