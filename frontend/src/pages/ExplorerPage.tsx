@@ -21,6 +21,10 @@ export function ExplorerPage() {
   const [rango, setRango] = useState<Set<RangoNormativo>>(new Set());
   const [ambito, setAmbito] = useState<Set<Ambito>>(new Set(['Estatal']));
   const [tags, setTags] = useState<Set<string>>(new Set());
+  // #563 — publication-year range. Kept as strings (the inputs are text);
+  // converted to numbers in `params`, dropped when empty/invalid.
+  const [yearFrom, setYearFrom] = useState('');
+  const [yearTo, setYearTo] = useState('');
   const [sort, setSort] = useState<'relevance' | 'date' | 'refs' | 'title'>('relevance');
   // Toggled by the empty-state "How to search" button (#476). Surfaces an
   // inline help panel explaining the search syntax instead of a no-op.
@@ -52,14 +56,20 @@ export function ExplorerPage() {
     return { plainQ: plain, allTags: new Set<string>([...tags, ...inline]) };
   }, [q, tags]);
 
-  const params = useMemo(() => ({
-    q: plainQ || undefined,
-    status: status.size ? [...status] : undefined,
-    rango: rango.size ? [...rango] : undefined,
-    ambito: ambito.size ? [...ambito] : undefined,
-    tags: allTags.size ? [...allTags] : undefined,
-    sort,
-  }), [plainQ, status, rango, ambito, allTags, sort]);
+  const params = useMemo(() => {
+    const from = Number.parseInt(yearFrom, 10);
+    const to = Number.parseInt(yearTo, 10);
+    return {
+      q: plainQ || undefined,
+      status: status.size ? [...status] : undefined,
+      rango: rango.size ? [...rango] : undefined,
+      ambito: ambito.size ? [...ambito] : undefined,
+      tags: allTags.size ? [...allTags] : undefined,
+      yearFrom: Number.isFinite(from) ? from : undefined,
+      yearTo: Number.isFinite(to) ? to : undefined,
+      sort,
+    };
+  }, [plainQ, status, rango, ambito, allTags, yearFrom, yearTo, sort]);
 
   const { data, isLoading } = useLawsList(params);
   const { data: vocab = [] } = useTags();
@@ -160,6 +170,10 @@ export function ExplorerPage() {
         allTags={allTags}
         setTags={setTags}
         vocab={vocab}
+        yearFrom={yearFrom}
+        setYearFrom={setYearFrom}
+        yearTo={yearTo}
+        setYearTo={setYearTo}
       />
 
       {/* Mobile filter sheet — same FilterRail wrapped in a slide-in panel
@@ -196,6 +210,10 @@ export function ExplorerPage() {
                 allTags={allTags}
                 setTags={setTags}
                 vocab={vocab}
+                yearFrom={yearFrom}
+                setYearFrom={setYearFrom}
+                yearTo={yearTo}
+                setYearTo={setYearTo}
                 inline
               />
             </div>
@@ -290,7 +308,7 @@ export function ExplorerPage() {
               <EmptyState
                 title={t('explorer.empty.title')}
                 description={t('explorer.empty.description')}
-                primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); } }}
+                primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); } }}
                 secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
               />
               {showSearchHelp && (

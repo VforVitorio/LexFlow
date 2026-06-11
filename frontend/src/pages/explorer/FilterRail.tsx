@@ -42,6 +42,11 @@ interface FilterRailProps {
   setTags: (next: Set<string>) => void;
   /** Live tag vocabulary from `/api/v1/tags` (top-N shown). */
   vocab: Array<{ tag: string; count: number }>;
+  /** Publication-year range (inclusive), as raw input strings (#563). */
+  yearFrom: string;
+  setYearFrom: (v: string) => void;
+  yearTo: string;
+  setYearTo: (v: string) => void;
   /**
    * When `true`, the rail renders as a plain `<section>` without the
    * fixed-width / hidden-on-mobile chrome — used inside the mobile
@@ -60,42 +65,39 @@ export function FilterRail({
   allTags,
   setTags,
   vocab,
+  yearFrom,
+  setYearFrom,
+  yearTo,
+  setYearTo,
   inline = false,
 }: FilterRailProps) {
   const { t } = useTranslation();
+  const body = (
+    <FilterRailBody
+      status={status}
+      setStatus={setStatus}
+      rango={rango}
+      setRango={setRango}
+      ambito={ambito}
+      setAmbito={setAmbito}
+      allTags={allTags}
+      setTags={setTags}
+      vocab={vocab}
+      yearFrom={yearFrom}
+      setYearFrom={setYearFrom}
+      yearTo={yearTo}
+      setYearTo={setYearTo}
+    />
+  );
   if (inline) {
-    return (
-      <section aria-label={t('explorer.filters')}>
-        <FilterRailBody
-          status={status}
-          setStatus={setStatus}
-          rango={rango}
-          setRango={setRango}
-          ambito={ambito}
-          setAmbito={setAmbito}
-          allTags={allTags}
-          setTags={setTags}
-          vocab={vocab}
-        />
-      </section>
-    );
+    return <section aria-label={t('explorer.filters')}>{body}</section>;
   }
   return (
     // #36 — hidden on mobile; the Explorer header's `Filtrar` button (in
     // ExplorerPage) opens it as a slide-in sheet on <md via `inline`.
     // From md+ upwards it stays as the persistent left rail.
     <aside aria-label={t('explorer.filters')} className="hidden w-64 shrink-0 overflow-auto border-r border-border bg-bg p-5 scrollbar-thin md:block">
-      <FilterRailBody
-        status={status}
-        setStatus={setStatus}
-        rango={rango}
-        setRango={setRango}
-        ambito={ambito}
-        setAmbito={setAmbito}
-        allTags={allTags}
-        setTags={setTags}
-        vocab={vocab}
-      />
+      {body}
     </aside>
   );
 }
@@ -110,6 +112,10 @@ function FilterRailBody({
   allTags,
   setTags,
   vocab,
+  yearFrom,
+  setYearFrom,
+  yearTo,
+  setYearTo,
 }: Omit<FilterRailProps, 'inline'>) {
   const { t } = useTranslation();
   return (
@@ -151,9 +157,23 @@ function FilterRailBody({
 
       <FilterGroup title={t('explorer.groups.year')}>
         <div className="flex items-center gap-2.5">
-          <Input placeholder="1978" defaultValue="1978" className="h-8 w-20" />
+          <Input
+            inputMode="numeric"
+            placeholder="1978"
+            value={yearFrom}
+            onChange={(e) => setYearFrom(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="h-8 w-20"
+            aria-label={t('explorer.groups.year') + ' — desde'}
+          />
           <span className="text-[12px] text-muted">—</span>
-          <Input placeholder="2024" defaultValue="2024" className="h-8 w-20" />
+          <Input
+            inputMode="numeric"
+            placeholder="2024"
+            value={yearTo}
+            onChange={(e) => setYearTo(e.target.value.replace(/\D/g, '').slice(0, 4))}
+            className="h-8 w-20"
+            aria-label={t('explorer.groups.year') + ' — hasta'}
+          />
         </div>
       </FilterGroup>
 

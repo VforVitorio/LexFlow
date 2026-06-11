@@ -58,18 +58,32 @@ def apply_law_filters(
     status: LawStatus | None,
     scope: Scope | None,
     jurisdiction: str | None,
+    year_from: int | None = None,
+    year_to: int | None = None,
 ) -> list[LawSummary]:
     """Apply optional filters to a list of law summaries.
 
     Pure function: same inputs always give the same output. Lifted out
     of ``LawRegistry`` (Sprint 6 rf-8) so the storage layer doesn't own
     selection logic.
+
+    ``year_from`` / ``year_to`` filter on the publication year (inclusive,
+    #563). A law with no ``publication_date`` is excluded whenever either
+    year bound is active — it can't satisfy a date range.
     """
     # Audit #409 perf: previously this function ran one full list
     # comprehension per active filter, allocating throw-away lists for
     # each pass. We now build a single predicate that ANDs every
     # active filter and walk ``summaries`` once.
-    if rank is None and status is None and scope is None and jurisdiction is None:
+    no_filters = (
+        rank is None
+        and status is None
+        and scope is None
+        and jurisdiction is None
+        and year_from is None
+        and year_to is None
+    )
+    if no_filters:
         return summaries
 
     def keep(summary: LawSummary) -> bool:
@@ -79,7 +93,17 @@ def apply_law_filters(
             return False
         if scope is not None and summary.scope != scope:
             return False
-        return not (jurisdiction is not None and summary.jurisdiction != jurisdiction)
+        if jurisdiction is not None and summary.jurisdiction != jurisdiction:
+            return False
+        if year_from is not None or year_to is not None:
+            published = summary.publication_date
+            if published is None:
+                return False
+            if year_from is not None and published.year < year_from:
+                return False
+            if year_to is not None and published.year > year_to:
+                return False
+        return True
 
     return [s for s in summaries if keep(s)]
 

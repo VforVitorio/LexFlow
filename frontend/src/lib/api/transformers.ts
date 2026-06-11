@@ -281,5 +281,9 @@ export function listLawsQuery(params: ListLawsParams): Record<string, unknown> {
     scope: params.ambito?.[0]
       ? Object.entries(SCOPE_MAP).find(([, v]) => v === params.ambito?.[0])?.[0]
       : undefined,
+    // #563 — publication-year range. Sent straight through; the backend
+    // filters on `publication_date.year` (inclusive).
+    year_from: params.yearFrom,
+    year_to: params.yearTo,
   };
 }

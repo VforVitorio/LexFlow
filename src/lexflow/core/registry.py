@@ -157,6 +157,8 @@ class LawRegistry:
         status: LawStatus | None = None,
         scope: Scope | None = None,
         jurisdiction: str | None = None,
+        year_from: int | None = None,
+        year_to: int | None = None,
     ) -> PaginatedResponse[LawSummary]:
         """Return a paginated, optionally filtered list of law summaries.
 
@@ -165,7 +167,15 @@ class LawRegistry:
         through it so storage and selection concerns stay separate.
         """
         summaries = self._build_summaries()
-        filtered = apply_law_filters(summaries, rank=rank, status=status, scope=scope, jurisdiction=jurisdiction)
+        filtered = apply_law_filters(
+            summaries,
+            rank=rank,
+            status=status,
+            scope=scope,
+            jurisdiction=jurisdiction,
+            year_from=year_from,
+            year_to=year_to,
+        )
         return paginate_summaries(filtered, page=page, page_size=page_size)
 
     def search_text(
