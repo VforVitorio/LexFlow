@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import re
 import subprocess
+from collections import OrderedDict
 from datetime import date
 from pathlib import Path
 
@@ -18,6 +19,16 @@ logger = logging.getLogger(__name__)
 
 _RECORD_SEP = "---LEXFLOW-SEP---"
 _LOG_FORMAT = f"%H%n%aI%n%s%n%b{_RECORD_SEP}"
+
+# #553 — `git log --follow` over the 1.7 GB legalize-es submodule costs
+# ~9 s per call, and the "Versiones" tab paid it on every visit. Cache
+# the parsed result keyed by (path, max_count, corpus HEAD sha). The HEAD
+# sha is a ~ms `git rev-parse`, and embedding it means a corpus sync (new
+# commit) transparently invalidates stale entries — old-head keys simply
+# age out of the LRU. Module-level because the reader is re-instantiated
+# per request (FastAPI dependency), so an instance cache wouldn't persist.
+_FILE_LOG_CACHE: OrderedDict[tuple[str, int, str], list[LawVersion]] = OrderedDict()
+_FILE_LOG_CACHE_MAXSIZE = 4096
 
 # Hot path: per-line scan of every diff. Hoisting to module scope
 # avoids re-compiling the pattern on every method invocation (audit
@@ -64,11 +75,32 @@ class GitHistoryReader:
     # File log
     # ------------------------------------------------------------------
 
+    def head_revision(self) -> str:
+        """Current HEAD sha of the data repo — the corpus version key.
+
+        Cheap (``git rev-parse HEAD``, ~ms) compared to the multi-second
+        ``git log --follow``. Used as the file-log cache key so a corpus
+        sync invalidates stale entries (#553). Returns ``""`` when git is
+        unavailable, which safely disables caching for that call.
+        """
+        return self._run_git("rev-parse", "HEAD").strip()
+
     def get_file_log(self, relative_path: str, *, max_count: int = 50) -> list[LawVersion]:
         """Get commit history for a specific file.
 
-        Returns a list of :class:`LawVersion` ordered newest-first.
+        Returns a list of :class:`LawVersion` ordered newest-first. Cached
+        per (path, max_count, corpus HEAD) so repeat visits to a law's
+        "Versiones" tab are instant instead of re-running the ~9 s
+        ``git log --follow`` (#553).
         """
+        head = self.head_revision()
+        if head:
+            cache_key = (relative_path, max_count, head)
+            cached = _FILE_LOG_CACHE.get(cache_key)
+            if cached is not None:
+                _FILE_LOG_CACHE.move_to_end(cache_key)
+                return cached
+
         output = self._run_git(
             "log",
             f"--max-count={max_count}",
@@ -89,6 +121,12 @@ class GitHistoryReader:
             version = self._parse_log_entry(record)
             if version is not None:
                 versions.append(version)
+
+        if head:
+            _FILE_LOG_CACHE[cache_key] = versions
+            _FILE_LOG_CACHE.move_to_end(cache_key)
+            while len(_FILE_LOG_CACHE) > _FILE_LOG_CACHE_MAXSIZE:
+                _FILE_LOG_CACHE.popitem(last=False)
         return versions
 
     def _parse_log_entry(self, raw: str) -> LawVersion | None:
