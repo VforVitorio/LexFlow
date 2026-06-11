@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.52.1](https://github.com/VforVitorio/LexFlow/compare/v0.52.0...v0.52.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* **explorer:** wire the year-range filter end to end ([#563](https://github.com/VforVitorio/LexFlow/issues/563)) ([2c94d88](https://github.com/VforVitorio/LexFlow/commit/2c94d881a79ad38d14cdf01f79252a3669e7c248))
+* **explorer:** wire the year-range filter end to end ([#563](https://github.com/VforVitorio/LexFlow/issues/563)) ([393723c](https://github.com/VforVitorio/LexFlow/commit/393723ca69bd7c829a3d9d35655b8a9fb5235531))
+
 ## [0.52.0](https://github.com/VforVitorio/LexFlow/compare/v0.51.3...v0.52.0) (2026-06-10)
 
 
