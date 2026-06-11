@@ -1,33 +1,37 @@
 /**
- * Handwritten "Hola, soy LexFlow" rendered with tegaki — step 1 of the
- * first-run welcome (#229).
+ * First-run welcome calligraphy (#595 — replaces the flaky tegaki canvas
+ * behind #557).
  *
- * Split into its own module so the tegaki bundle + Caveat font (~90 kB
- * gzipped) ship as a separate chunk that loads only when WelcomeFlow
- * actually needs it. Returning users never fetch this code.
+ * "Hola, soy LexFlow" in the Caveat handwriting font, revealed left-to-
+ * right with a GSAP timeline while a pen-tip dot tracks the reveal edge —
+ * a robust "being written by hand" effect with no stroke library that can
+ * stall. Lazy-imported by WelcomeFlow so returning users never fetch the
+ * font + gsap.
  *
- * Default-exported for `React.lazy()` compatibility — the named-export
- * adapter in WelcomeFlow.tsx would require an extra `.then(...)` step
- * we don't need.
+ * Invariants:
+ * * Never traps the user: reduced-motion → static heading; a font/gsap
+ *   failure or the safety timeout falls back to the static heading and
+ *   reveals "Continuar".
+ * * The phrase is the one personality moment; the rest of the SPA stays
+ *   sober and dense.
  *
  * --- WHERE TO CHANGE IF X CHANGES ---
- * * Stall safety window    → ``ANIMATION_MAX_MS``.
- * * Resilience invariant    → the welcome must NEVER trap the user behind
- *   a stalled animation (#557): a missed ``onComplete`` falls back to the
- *   static heading + Continuar after the cap; a render throw degrades to
- *   the static heading via ``TegakiBoundary`` (NOT the global crash screen).
+ * * Reveal feel / duration → ``REVEAL_MS`` + the GSAP timeline easing.
+ * * Phrase                 → ``WELCOME_TEXT`` (also update the aria-label).
+ * * Font                   → ``@/assets/fonts/caveat.ttf`` (OFL, bundled).
  */
 
-import { Component, useEffect, useState, type ReactNode } from 'react';
-import { TegakiRenderer } from 'tegaki/react';
-import caveat from 'tegaki/fonts/caveat';
+import { useEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
+
+import caveatTtf from '@/assets/fonts/caveat.ttf';
+import { cn } from '@/lib/utils';
 
 const WELCOME_TEXT = 'Hola, soy LexFlow';
-
-// tegaki occasionally never fires ``onComplete`` (stalls on some
-// machines/fonts). Generous enough not to cut off a real stroke
-// animation, short enough that a stall doesn't strand the user (#557).
-const ANIMATION_MAX_MS = 4000;
+const REVEAL_MS = 2600;
+// Never strand the user behind a stalled animation (the original #557 bug):
+// if the timeline hasn't completed by here, fall back to static + Continuar.
+const SAFETY_MS = REVEAL_MS + 1500;
 
 function prefersReducedMotion(): boolean {
   try {
@@ -37,26 +41,21 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-/**
- * Silent boundary: a tegaki render throw degrades to the static heading
- * (via ``onError``) instead of bubbling to the global ErrorBoundary's
- * full crash screen. Renders nothing while failed — the parent swaps in
- * the static variant.
- */
-class TegakiBoundary extends Component<{ onError: () => void; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError(): { failed: boolean } {
-    return { failed: true };
-  }
-
-  componentDidCatch(): void {
-    this.props.onError();
-  }
-
-  render(): ReactNode {
-    return this.state.failed ? null : this.props.children;
-  }
+// Load the bundled Caveat face once via the FontFace API. A failure is
+// swallowed — the text still renders in the system ``cursive`` fallback.
+let _fontPromise: Promise<void> | null = null;
+function ensureCaveat(): Promise<void> {
+  if (_fontPromise) return _fontPromise;
+  _fontPromise = (async () => {
+    try {
+      const face = new FontFace('CaveatLF', `url(${caveatTtf})`);
+      await face.load();
+      document.fonts.add(face);
+    } catch {
+      /* fall back to system cursive */
+    }
+  })();
+  return _fontPromise;
 }
 
 interface Props {
@@ -65,30 +64,55 @@ interface Props {
 
 export default function WelcomeAnimation({ onContinue }: Props) {
   const [done, setDone] = useState(false);
-  const [animationFailed, setAnimationFailed] = useState(false);
-  const reduced = prefersReducedMotion();
-  // Static = no stroke animation: reduced-motion preference, OR the
-  // animation stalled/threw and we fell back to plain text.
-  const showStatic = reduced || animationFailed;
-  // "Continuar" is available once the animation is done OR we're static.
-  const ready = done || showStatic;
+  const [showStatic, setShowStatic] = useState(prefersReducedMotion);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const penRef = useRef<HTMLSpanElement>(null);
 
-  // Safety net: if the stroke animation never reports completion, fall
-  // back to the static heading + Continuar so the user is never stranded
-  // (the bug in #557 was a permanent "Saltar"-only screen).
   useEffect(() => {
-    if (showStatic || done) return;
-    const timer = window.setTimeout(() => {
-      setAnimationFailed(true);
+    if (showStatic) {
       setDone(true);
-    }, ANIMATION_MAX_MS);
-    return () => window.clearTimeout(timer);
-  }, [showStatic, done]);
+      return;
+    }
+    let cancelled = false;
+    let ctx: gsap.Context | undefined;
+    const safety = window.setTimeout(() => {
+      setShowStatic(true);
+      setDone(true);
+    }, SAFETY_MS);
 
-  const failToStatic = () => {
-    setAnimationFailed(true);
-    setDone(true);
-  };
+    void ensureCaveat().then(() => {
+      if (cancelled || !textRef.current) return;
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({
+          onComplete: () => {
+            window.clearTimeout(safety);
+            setDone(true);
+          },
+        });
+        tl.fromTo(
+          textRef.current,
+          { clipPath: 'inset(0 100% 0 0)' },
+          { clipPath: 'inset(0 0% 0 0)', duration: REVEAL_MS / 1000, ease: 'power1.inOut' },
+        );
+        if (penRef.current) {
+          tl.fromTo(
+            penRef.current,
+            { left: '0%', opacity: 0 },
+            { left: '100%', opacity: 1, duration: REVEAL_MS / 1000, ease: 'power1.inOut' },
+            0,
+          ).to(penRef.current, { opacity: 0, duration: 0.35 });
+        }
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(safety);
+      ctx?.revert();
+    };
+  }, [showStatic]);
+
+  const ready = done || showStatic;
 
   return (
     <div
@@ -97,24 +121,27 @@ export default function WelcomeAnimation({ onContinue }: Props) {
       aria-label="Bienvenida"
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-10 bg-bg text-fg"
     >
-      <div className="flex flex-col items-center gap-6" aria-label={WELCOME_TEXT}>
-        {showStatic ? (
-          // Static heading: reduced-motion, or the fallback when the
-          // stroke animation stalled/threw. Keeps the welcome moment
-          // without movement.
-          <h1 className="font-display text-5xl font-semibold tracking-tight animate-in fade-in duration-700">
-            {WELCOME_TEXT}
-          </h1>
-        ) : (
-          <TegakiBoundary onError={failToStatic}>
-            <TegakiRenderer
-              font={caveat}
-              style={{ fontSize: '64px', color: 'hsl(var(--fg))' }}
-              onComplete={() => setDone(true)}
-            >
-              {WELCOME_TEXT}
-            </TegakiRenderer>
-          </TegakiBoundary>
+      <div className="relative" aria-label={WELCOME_TEXT}>
+        <span
+          ref={textRef}
+          style={
+            showStatic
+              ? { fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }
+              : { fontFamily: "'CaveatLF', cursive", fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }
+          }
+          className={cn(
+            'block whitespace-nowrap',
+            showStatic && 'font-display font-semibold tracking-tight animate-in fade-in duration-700',
+          )}
+        >
+          {WELCOME_TEXT}
+        </span>
+        {!showStatic && (
+          <span
+            ref={penRef}
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500 shadow-[0_0_12px_2px] shadow-indigo-500/50"
+          />
         )}
       </div>
 
