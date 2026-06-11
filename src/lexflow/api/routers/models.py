@@ -19,11 +19,12 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from collections.abc import AsyncIterator, Awaitable
 from typing import Any
 
 import ollama
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -136,23 +137,49 @@ async def _probe(spec: ProviderSpec) -> list[ModelInfo]:
     ]
 
 
+# #554 — probing all 5 providers (2 s timeout each) costs ~2.25 s on every
+# /models call, and Settings + the model picker hit it repeatedly. Cache the
+# flattened result for a short TTL: provider availability doesn't flip
+# second-to-second, and the wizard's "Re-detect" passes ?refresh=true to
+# bypass it. Module-level (the probe result is the same for everyone).
+_MODELS_CACHE_TTL_S = 45.0
+_models_cache: tuple[float, list[ModelInfo]] | None = None
+
+
+def _reset_models_cache() -> None:
+    """Clear the /models probe cache (used by tests to avoid cross-test leak)."""
+    global _models_cache
+    _models_cache = None
+
+
 @router.get(
     "/models",
     response_model=list[ModelInfo],
     summary="List every chat model the user can pick across all providers.",
 )
-async def list_models() -> list[ModelInfo]:
+async def list_models(
+    refresh: bool = Query(False, description="Bypass the cache and re-probe providers now"),
+) -> list[ModelInfo]:
     """Return every available (provider, model) pair, flat.
 
     Each provider is probed concurrently with a short timeout. Unreachable
-    or unconfigured providers still appear in the response as a single
-    placeholder entry (``configured: false``) so the UI can show them.
+    or unconfigured providers still appear as a single placeholder entry
+    (``configured: false``). The result is cached for ~45 s (#554); pass
+    ``?refresh=true`` (e.g. the wizard's re-detect) to force a fresh probe.
     """
+    global _models_cache
+    now = time.monotonic()
+    if not refresh and _models_cache is not None:
+        cached_at, cached = _models_cache
+        if now - cached_at < _MODELS_CACHE_TTL_S:
+            return cached
     # Read through the module attribute so tests can monkeypatch
     # ``PROVIDER_SPECS`` and the change reaches this handler.
     probes: list[Awaitable[list[ModelInfo]]] = [_probe(spec) for spec in provider_registry.PROVIDER_SPECS]
     results = await asyncio.gather(*probes)
-    return [model for batch in results for model in batch]
+    models = [model for batch in results for model in batch]
+    _models_cache = (now, models)
+    return models
 
 
 # ---------------------------------------------------------------------------
