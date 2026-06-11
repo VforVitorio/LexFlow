@@ -25,11 +25,25 @@ export function LeftRail() {
         expanded ? 'w-[220px]' : 'w-[60px]',
       )}
     >
-      {/* Brand */}
+      {/* Brand. When collapsed, the logo doubles as a big, obvious
+          "expand" target so the rail can always be reopened even if the
+          small toggle at the bottom is missed (#565). */}
       <div className={cn('flex h-12 items-center gap-2.5 border-b border-border', expanded ? 'px-3.5' : 'justify-center')}>
-        <BrandMark />
-        {expanded && (
-          <span className="font-display text-[15.5px] font-semibold tracking-tight">LexFlow</span>
+        {expanded ? (
+          <>
+            <BrandMark />
+            <span className="font-display text-[15.5px] font-semibold tracking-tight">LexFlow</span>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={toggle}
+            title={t('nav.expand')}
+            aria-label={t('nav.expand')}
+            className="grid size-9 place-items-center rounded-lg hover:bg-surface-2"
+          >
+            <BrandMark />
+          </button>
         )}
       </div>
 
