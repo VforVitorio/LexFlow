@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.52.3](https://github.com/VforVitorio/LexFlow/compare/v0.52.2...v0.52.3) (2026-06-11)
+
+
+### Performance
+
+* **versions:** cache git log per (path, max_count, HEAD) — kills the 9s tab ([#553](https://github.com/VforVitorio/LexFlow/issues/553)) ([f90f61f](https://github.com/VforVitorio/LexFlow/commit/f90f61f38f64e05df72a9fd7457214d2ee3cbe2b))
+* **versions:** cache git log per (path, max_count, HEAD) — kills the 9s tab ([#553](https://github.com/VforVitorio/LexFlow/issues/553)) ([4f09770](https://github.com/VforVitorio/LexFlow/commit/4f0977010cc8cbc906f2bc5462eba92fa2f3c9f5))
+
 ## [0.52.2](https://github.com/VforVitorio/LexFlow/compare/v0.52.1...v0.52.2) (2026-06-11)
 
 
