@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.52.2](https://github.com/VforVitorio/LexFlow/compare/v0.52.1...v0.52.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **shell:** make the collapsed left rail reopenable via the logo ([#565](https://github.com/VforVitorio/LexFlow/issues/565)) ([ef81449](https://github.com/VforVitorio/LexFlow/commit/ef81449aa971518f5d0e44ca65b1da8568c422fd))
+
 ## [0.52.1](https://github.com/VforVitorio/LexFlow/compare/v0.52.0...v0.52.1) (2026-06-11)
 
 
