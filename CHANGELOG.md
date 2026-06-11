@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.53.0](https://github.com/VforVitorio/LexFlow/compare/v0.52.3...v0.53.0) (2026-06-11)
+
+
+### Features
+
+* **welcome:** GSAP handwriting-reveal calligraphy, replacing tegaki ([#595](https://github.com/VforVitorio/LexFlow/issues/595)) ([a4f684e](https://github.com/VforVitorio/LexFlow/commit/a4f684e313a6ee2334d847ecf19e842325be6ce2))
+* **welcome:** GSAP handwriting-reveal calligraphy, replacing tegaki ([#595](https://github.com/VforVitorio/LexFlow/issues/595)) ([d1071f7](https://github.com/VforVitorio/LexFlow/commit/d1071f7004f94b898e97e85493d6c8dcf06febcf))
+
+
+### Bug Fixes
+
+* **ci:** pass a cwd-relative path to axe --save (unbreaks the a11y job) ([a989cb7](https://github.com/VforVitorio/LexFlow/commit/a989cb7c1d0b1f70f1568d6502ce4de99532c594))
+* **ci:** pass cwd-relative path to axe --save (unbreaks a11y job on all frontend PRs) ([3e02eb5](https://github.com/VforVitorio/LexFlow/commit/3e02eb5286ac5499ae01513fd72ec5d47df24d00))
+
+
+### Performance
+
+* **models:** cache provider probes for a short TTL ([#554](https://github.com/VforVitorio/LexFlow/issues/554)) ([ea20021](https://github.com/VforVitorio/LexFlow/commit/ea20021e0bfbef6c946a9b1c1489d485a854e8a4))
+
 ## [0.52.3](https://github.com/VforVitorio/LexFlow/compare/v0.52.2...v0.52.3) (2026-06-11)
 
 
