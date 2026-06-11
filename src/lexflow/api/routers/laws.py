@@ -33,6 +33,8 @@ def list_laws(
     status: LawStatus | None = Query(None, description="Filter by enforcement status"),
     scope: Scope | None = Query(None, description="Filter by territorial scope"),
     jurisdiction: str | None = Query(None, description="Filter by jurisdiction code (e.g. es-md)"),
+    year_from: int | None = Query(None, ge=0, description="Earliest publication year (inclusive)"),
+    year_to: int | None = Query(None, ge=0, description="Latest publication year (inclusive)"),
 ) -> PaginatedResponse[LawSummary]:
     """Return a paginated list of laws.  All filters are optional."""
     return registry.list_laws(
@@ -42,6 +44,8 @@ def list_laws(
         status=status,
         scope=scope,
         jurisdiction=jurisdiction,
+        year_from=year_from,
+        year_to=year_to,
     )
 
 

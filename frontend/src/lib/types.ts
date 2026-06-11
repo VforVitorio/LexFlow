@@ -433,6 +433,7 @@ export interface ListLawsParams {
    * `/api/tags` (TODO on the backend) for the live list.
    */
   tags?: string[];
+  /** Publication-year range (inclusive), #563. */
   yearFrom?: number;
   yearTo?: number;
   sort?: 'relevance' | 'date' | 'refs' | 'title';
