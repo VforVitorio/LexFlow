@@ -3,10 +3,10 @@
  *
  * Two-step gate shown **after SplashGate ready** and **before App**:
  *
- *   1. Handwritten "Hola, soy LexFlow" rendered via `tegaki`
- *      (one-shot personality moment; the rest of the SPA stays sober
- *      and dense). Implemented in `WelcomeAnimation.tsx`,
- *      **lazy-imported** so returning users never pay the tegaki cost.
+ *   1. Handwritten "Hola, soy LexFlow" — a GSAP left-to-right calligraphy
+ *      reveal in the Caveat font (one-shot personality moment; the rest of
+ *      the SPA stays sober and dense). Implemented in `WelcomeAnimation.tsx`,
+ *      **lazy-imported** so returning users never pay the gsap + font cost.
  *   2. Name prompt — "¿Cómo deberíamos llamarte?" — fed into
  *      `localStorage['lexflow.user-name']` so the greeting in HomePage
  *      (`lib/greeting.ts`) and #248's randomised welcome pool can
@@ -27,9 +27,9 @@ import { useTranslation } from 'react-i18next';
 
 import { USER_NAME_STORAGE_KEY } from '../../lib/greeting';
 
-// Lazy split so the tegaki bundle + Caveat font only download when a
-// first-time user actually reaches the welcome step. Returning users
-// never fetch this chunk.
+// Lazy split so gsap + the Caveat font only download when a first-time
+// user actually reaches the welcome step. Returning users never fetch
+// this chunk.
 const WelcomeAnimation = lazy(() => import('./WelcomeAnimation'));
 
 const WELCOMED_STORAGE_KEY = 'lexflow.welcomed';
