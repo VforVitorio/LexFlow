@@ -29,6 +29,21 @@ def _isolated_chat_db(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None
 
 
 @pytest.fixture(autouse=True)
+def _reset_models_probe_cache() -> Iterator[None]:
+    """Clear the /models probe TTL cache (#554) between tests.
+
+    The cache is a module-level global; without this, a test that probes
+    real (un-mocked) providers leaves a stale result that a later
+    /models-endpoint test reads instead of its own mocks (CI flake on #606).
+    """
+    from lexflow.api.routers import models
+
+    models._reset_models_cache()
+    yield
+    models._reset_models_cache()
+
+
+@pytest.fixture(autouse=True)
 def _isolated_config_dir(
     tmp_path_factory: pytest.TempPathFactory,
     monkeypatch: pytest.MonkeyPatch,
