@@ -11,9 +11,15 @@ export interface LawHeaderProps {
   onBookmark?: () => void;
   /** Called when the user clicks a tag chip — typically navigates to /explorer?tags=… */
   onTagClick?: (tag: string) => void;
+  /**
+   * Real version count from `/laws/{id}/versions` (#592). `law.versiones`
+   * is left at 0 by the law-detail endpoint (the count needs git log), so
+   * the parent passes the loaded length; falls back to `law.versiones`.
+   */
+  versionsCount?: number;
 }
 
-export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick }: LawHeaderProps) {
+export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick, versionsCount }: LawHeaderProps) {
   const { t } = useTranslation();
   const tone =
     law.status === 'vigente' ? 'success' :
@@ -36,7 +42,7 @@ export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick }: La
 
       <div className="mt-3.5 flex flex-wrap items-center gap-6 text-[13px]">
         <Stat label={t('lawHeader.stats.articles')} value={String(law.articulos)} />
-        <Stat label={t('lawHeader.stats.versions')} value={String(law.versiones)} />
+        <Stat label={t('lawHeader.stats.versions')} value={String(versionsCount ?? law.versiones)} />
         <Stat label={t('lawHeader.stats.references')} value={String(law.referencias)} />
         <Stat label={t('lawHeader.stats.lastModified')} value={law.ultimaModificacion ? formatDate(law.ultimaModificacion) : '—'} />
         <span className="ml-auto inline-flex items-center gap-2">
