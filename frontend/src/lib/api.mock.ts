@@ -486,15 +486,32 @@ export const mockApi: ApiClient = {
       };
     },
     async semanticStatus() {
-      // Mock mode: pretend the [semantic] extra is installed and active so
-      // the Settings → Models card renders the "active" path during dev.
+      // Mock mode: report the extra as NOT installed so the Settings card
+      // renders the #578 install flow (two buttons + "¿Qué es esto?"). Honest
+      // about a fresh machine — see the #610/#611 mock-honesty lesson.
       await delay(20);
       return {
-        backend: 'sentence-transformers',
-        installed: true,
-        active: true,
+        backend: 'hash',
+        installed: false,
+        active: false,
         model: 'paraphrase-multilingual-MiniLM-L12-v2',
       };
+    },
+    async *installSemantic() {
+      // Fake the install log so the card's progress UI can be demoed in mock
+      // mode without a 2 GB download.
+      const lines = [
+        'Starting install…',
+        'Resolving dependencies…',
+        'Downloading sentence-transformers (≈2 GB)…',
+        'Installing torch, transformers…',
+      ];
+      for (const status of lines) {
+        await delay(450);
+        yield { type: 'progress' as const, status };
+      }
+      await delay(450);
+      yield { type: 'done' as const, package: 'sentence-transformers>=3.0' };
     },
   },
 };

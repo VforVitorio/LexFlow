@@ -461,7 +461,20 @@
       "semanticLoading": "Comprobando…",
       "semanticActiveBody": "Usando el modelo {{model}}.",
       "semanticEnableHint": "Define LEXFLOW_EMBEDDER=sentence-transformers y reinicia el backend para activarla.",
-      "semanticInstallHint": "Instala el extra (uv sync --extra semantic o pip install \"lexflow[semantic]\") y define LEXFLOW_EMBEDDER=sentence-transformers."
+      "semanticInstallHint": "Instala el extra (uv sync --extra semantic o pip install \"lexflow[semantic]\") y define LEXFLOW_EMBEDDER=sentence-transformers.",
+      "semanticWhatIsThis": "¿Qué es esto?",
+      "semanticInstall": "Instalar",
+      "semanticDisk": "~2 GB de disco",
+      "semanticRam": "~1 GB de RAM",
+      "semanticInstalling": "Instalando…",
+      "semanticInstallDone": "Búsqueda por significado instalada",
+      "semanticInstallDoneMsg": "Ya puedes buscar por significado en todo el corpus.",
+      "semanticInstallError": "No se pudo instalar",
+      "semanticExplainTitle": "Búsqueda por significado",
+      "semanticExplainBody": "Encuentra artículos por lo que significan, no solo por las palabras exactas. Por ejemplo, busca «despido improcedente» y aparecerán normas relacionadas aunque no usen esas palabras literales.",
+      "semanticExplainWhy": "Mejora las búsquedas y las respuestas del chat cuando no recuerdas el término legal exacto. Se descarga una vez y funciona sin conexión.",
+      "semanticCancel": "Cancelar",
+      "semanticGoAhead": "Adelante, instálalo"
     },
     "appearance": {
       "title": "Apariencia",

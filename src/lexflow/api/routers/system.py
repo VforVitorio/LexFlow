@@ -12,9 +12,16 @@ infrastructure probes that don't know the ``/api/v1`` prefix.
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
+import shutil
+import sys
+from collections.abc import AsyncIterator
+from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 
 from lexflow.api.warmup import get_warmup_state
 from lexflow.core.corpus_revision import UNKNOWN_REVISION, submodule_hash
@@ -166,6 +173,139 @@ def get_semantic_status() -> SemanticStatusResponse:
         installed=installed,
         active=backend == SENTENCE_TRANSFORMERS_BACKEND and installed,
         model=settings.embedder_model,
+    )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/system/semantic-install (#578) — install the optional
+# ``[semantic]`` extra in-app with SSE progress, so a lawyer never has to run
+# a terminal command. Mirrors the wire format of ``/models/pull``.
+# ---------------------------------------------------------------------------
+
+# The single package the ``[semantic]`` extra adds (pyproject ``semantic``).
+# Pinned to the same floor as pyproject so the in-app install matches a
+# ``uv sync --extra semantic``. torch + transformers come in as its deps.
+_SEMANTIC_PACKAGE = "sentence-transformers>=3.0"
+
+# Only one install may run at a time per process — a multi-GB torch download
+# started twice would thrash the disk and race the import.
+_SEMANTIC_INSTALL_LOCK = asyncio.Lock()
+
+
+def _sse(event: str, data: dict[str, Any]) -> bytes:
+    """One Server-Sent Event line as UTF-8 bytes (same wire shape as pull)."""
+    payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    return f"event: {event}\ndata: {payload}\n\n".encode()
+
+
+def _resolve_install_command() -> list[str] | None:
+    """Pick the command that installs the ``[semantic]`` extra additively.
+
+    Prefers ``uv pip install`` (fast, and the project's package manager) when
+    ``uv`` is on PATH; otherwise pip-installs into the current interpreter.
+    Both are *additive* — unlike ``uv sync --extra semantic``, which would
+    UNINSTALL the other active extras (chat, dashboards) out from under the
+    running server. Returns ``None`` when no install path is usable.
+
+    --- WHERE TO CHANGE IF PACKAGING CHANGES ---
+    A frozen PyInstaller build has no pip/uv and bundles deps at build time,
+    so this runtime path is dev/source-run only. If the packaged app ever
+    needs the model at runtime, download weights into a user-writable cache
+    dir instead of mutating a venv.
+    """
+    if getattr(sys, "frozen", False):
+        return None
+    uv = shutil.which("uv")
+    if uv:
+        return [uv, "pip", "install", _SEMANTIC_PACKAGE]
+    return [sys.executable, "-m", "pip", "install", _SEMANTIC_PACKAGE]
+
+
+async def _semantic_install_stream() -> AsyncIterator[bytes]:
+    """Run the install subprocess and stream its output as SSE events.
+
+    Generator contract (mirrors ``/models/pull``):
+        * one ``progress`` event per non-empty output line (``{"status": …}``);
+        * a final ``done`` event ``{"package": …}`` on exit code 0;
+        * a single ``error`` event ``{"code", "message"}`` on any failure,
+          then stop. The SPA branches on the code.
+    """
+    command = _resolve_install_command()
+    if command is None:
+        yield _sse(
+            "error",
+            {
+                "code": "semantic_install_unavailable",
+                "message": "Automatic install isn't available in this build. Reinstall with the semantic extra.",
+            },
+        )
+        return
+
+    yield _sse("progress", {"status": "Starting install…"})
+    try:
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+    except OSError as exc:
+        logger.exception("Could not launch semantic install")
+        yield _sse("error", {"code": "semantic_install_spawn_failed", "message": str(exc)})
+        return
+
+    assert process.stdout is not None
+    async for raw_line in process.stdout:
+        line = raw_line.decode(errors="replace").rstrip()
+        if line:
+            yield _sse("progress", {"status": line})
+    return_code = await process.wait()
+
+    if return_code == 0:
+        yield _sse("done", {"package": _SEMANTIC_PACKAGE})
+    else:
+        yield _sse(
+            "error",
+            {"code": "semantic_install_failed", "message": f"Install exited with code {return_code}."},
+        )
+
+
+@router.post(
+    "/semantic-install",
+    summary="Install the optional [semantic] extra and stream progress via SSE (#578).",
+    responses={
+        200: {
+            "description": "Server-sent events stream with progress / done / error.",
+            "content": {"text/event-stream": {}},
+        },
+        429: {"description": "Another semantic install is already running."},
+    },
+)
+async def install_semantic() -> StreamingResponse:
+    """Trigger an in-app install of the ``[semantic]`` extra (#578).
+
+    Replaces the developer CLI instructions the Settings card used to show a
+    lawyer. The SPA renders the streamed status lines as a progress log and,
+    on ``done``, re-queries ``/semantic-status`` to confirm the extra is now
+    installed (the new model is picked up lazily on the next search).
+    """
+    if _SEMANTIC_INSTALL_LOCK.locked():
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "semantic_install_busy",
+                "message": "A semantic install is already running. Wait for it to finish.",
+            },
+        )
+
+    async def gated_stream() -> AsyncIterator[bytes]:
+        async with _SEMANTIC_INSTALL_LOCK:
+            async for chunk in _semantic_install_stream():
+                yield chunk
+
+    return StreamingResponse(
+        gated_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
