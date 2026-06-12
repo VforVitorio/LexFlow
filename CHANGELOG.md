@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.56.0](https://github.com/VforVitorio/LexFlow/compare/v0.55.0...v0.56.0) (2026-06-12)
+
+
+### Features
+
+* **settings:** in-app semantic-search install, no CLI for lawyers ([#578](https://github.com/VforVitorio/LexFlow/issues/578)) ([7f04efd](https://github.com/VforVitorio/LexFlow/commit/7f04efdd947ab89e5a649f3879fa1a91c1d64916))
+* **settings:** in-app semantic-search install, no CLI for lawyers ([#578](https://github.com/VforVitorio/LexFlow/issues/578)) ([9bc7e73](https://github.com/VforVitorio/LexFlow/commit/9bc7e73c303b8cfdf214ffcde41cd36021e076c1))
+* **shell:** drag-resizable left rail and right panel ([#594](https://github.com/VforVitorio/LexFlow/issues/594)) ([c1ac7d4](https://github.com/VforVitorio/LexFlow/commit/c1ac7d445c92cc73824df8f75ba3b5939ed8c25c))
+* **shell:** drag-resizable left rail and right panel ([#594](https://github.com/VforVitorio/LexFlow/issues/594)) ([af50ac0](https://github.com/VforVitorio/LexFlow/commit/af50ac07a88baa42047fd8ce82b38ca3a5e9ee59))
+* **welcome:** true Mac-style stroke-draw calligraphy ([#617](https://github.com/VforVitorio/LexFlow/issues/617)) ([7b1e390](https://github.com/VforVitorio/LexFlow/commit/7b1e390cab828e9b554694d2828716f6e4bc3e83))
+* **welcome:** true Mac-style stroke-draw calligraphy ([#617](https://github.com/VforVitorio/LexFlow/issues/617)) ([7b880d4](https://github.com/VforVitorio/LexFlow/commit/7b880d4cfe6130f74927d13e297f9c90026d7f4f))
+
+
+### Bug Fixes
+
+* **settings:** guard against double-trigger of semantic install (CodeRabbit [#626](https://github.com/VforVitorio/LexFlow/issues/626)) ([2b44863](https://github.com/VforVitorio/LexFlow/commit/2b44863a88aa82ff12d28a1c20dde89ce4defdaa))
+* **shell:** robust drag cleanup + keyboard-resize preventDefault (CodeRabbit [#625](https://github.com/VforVitorio/LexFlow/issues/625)) ([dc309aa](https://github.com/VforVitorio/LexFlow/commit/dc309aad75a0e7b640d7307a9179fc0a96180196))
+* **system:** don't leak exception text on install spawn failure ([#578](https://github.com/VforVitorio/LexFlow/issues/578)) ([9f22228](https://github.com/VforVitorio/LexFlow/commit/9f2222823980b42af918564c811bfbc4661e42ab))
+* **welcome:** no static flash during geometry load + robust shot (CodeRabbit [#628](https://github.com/VforVitorio/LexFlow/issues/628)) ([bad29cf](https://github.com/VforVitorio/LexFlow/commit/bad29cf6c57ca1cb3f9e008c7cc5e0d72e17e5d1))
+
 ## [0.55.0](https://github.com/VforVitorio/LexFlow/compare/v0.54.1...v0.55.0) (2026-06-12)
 
 
