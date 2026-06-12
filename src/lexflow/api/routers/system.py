@@ -248,9 +248,14 @@ async def _semantic_install_stream() -> AsyncIterator[bytes]:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
-    except OSError as exc:
+    except OSError:
+        # Log the trace server-side, but never leak the exception text to the
+        # client (CodeQL: information exposure through an exception).
         logger.exception("Could not launch semantic install")
-        yield _sse("error", {"code": "semantic_install_spawn_failed", "message": str(exc)})
+        yield _sse(
+            "error",
+            {"code": "semantic_install_spawn_failed", "message": "Could not start the installer."},
+        )
         return
 
     assert process.stdout is not None
