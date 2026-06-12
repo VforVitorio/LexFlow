@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.54.0](https://github.com/VforVitorio/LexFlow/compare/v0.53.0...v0.54.0) (2026-06-12)
+
+
+### Features
+
+* **dashboards:** rebuild charts with Recharts — premium themed analytics ([#603](https://github.com/VforVitorio/LexFlow/issues/603)) ([d0443f3](https://github.com/VforVitorio/LexFlow/commit/d0443f33b5112eb88040af48cbf921249bb563b8))
+* **dashboards:** rebuild charts with Recharts — premium themed analytics ([#603](https://github.com/VforVitorio/LexFlow/issues/603)) ([70ee4c6](https://github.com/VforVitorio/LexFlow/commit/70ee4c61bb942464469cb7879573891a24bb28aa))
+* **graph:** force-directed react-force-graph-2d canvas view ([#596](https://github.com/VforVitorio/LexFlow/issues/596)) ([03560a0](https://github.com/VforVitorio/LexFlow/commit/03560a073f47779ad7caa68c92e431781d569584))
+* **graph:** force-directed react-force-graph-2d canvas view ([#596](https://github.com/VforVitorio/LexFlow/issues/596)) ([c27de4f](https://github.com/VforVitorio/LexFlow/commit/c27de4fe7292b887384533ebb401aadfef65dbac))
+
+
+### Bug Fixes
+
+* **law:** render article text as Markdown, not raw source ([#591](https://github.com/VforVitorio/LexFlow/issues/591)) ([79377d7](https://github.com/VforVitorio/LexFlow/commit/79377d76aa6d9742565d917f13787fa4634e4fa5))
+* **law:** render article text as Markdown, not raw source ([#591](https://github.com/VforVitorio/LexFlow/issues/591)) ([c58ae13](https://github.com/VforVitorio/LexFlow/commit/c58ae132c9d3fe622d0b54b233fc9de9c88f94b3))
+* **law:** VERSIONES count from real version history, not the 0 field ([#592](https://github.com/VforVitorio/LexFlow/issues/592)) ([4432154](https://github.com/VforVitorio/LexFlow/commit/443215456ae2ecaedc343e55b62d468820c620b0))
+* **law:** VERSIONES count from real version history, not the 0 field ([#592](https://github.com/VforVitorio/LexFlow/issues/592)) ([7414a99](https://github.com/VforVitorio/LexFlow/commit/7414a99733727339cee1f67466a7e00fd1bf1865))
+* **mock:** honest hardware/model detection — no phantom GPU or models ([#610](https://github.com/VforVitorio/LexFlow/issues/610), [#611](https://github.com/VforVitorio/LexFlow/issues/611)) ([7153957](https://github.com/VforVitorio/LexFlow/commit/7153957c50511606249760aa297a916a4ed4409c))
+* **mock:** honest hardware/model detection — no phantom GPU or models ([#610](https://github.com/VforVitorio/LexFlow/issues/610), [#611](https://github.com/VforVitorio/LexFlow/issues/611)) ([0c4a52c](https://github.com/VforVitorio/LexFlow/commit/0c4a52cee063c48d1519800ba030984c61b0f0d6))
+
 ## [0.53.0](https://github.com/VforVitorio/LexFlow/compare/v0.52.3...v0.53.0) (2026-06-11)
 
 
