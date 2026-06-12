@@ -292,6 +292,18 @@ export interface Model {
 }
 
 /**
+ * An Ollama model already on disk (#597), from `GET /api/v1/models/installed`.
+ * Drives the Settings → Modelos management card (size, loaded badge, actions).
+ */
+export interface InstalledModel {
+  name: string;
+  /** On-disk size in bytes, if Ollama reported it. */
+  sizeBytes: number | null;
+  /** Currently held warm in memory (`ollama ps`). */
+  loaded: boolean;
+}
+
+/**
  * One event from the `POST /api/v1/models/pull` SSE stream (#119).
  *
  * Discriminated union — switch on `type`:
@@ -542,6 +554,12 @@ export interface ApiClient {
   };
   models: {
     list(): Promise<Model[]>;
+    /** Installed Ollama models with size + loaded state (#597). */
+    installed(): Promise<InstalledModel[]>;
+    /** Delete an installed Ollama model (``ollama rm``) (#597). */
+    remove(model: string): Promise<void>;
+    /** Warm a model into memory (``keep: true``) or eject it (``false``) (#597). */
+    load(model: string, keep: boolean): Promise<void>;
     /**
      * Install an Ollama model and stream its progress (#119).
      *

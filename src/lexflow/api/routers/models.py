@@ -321,3 +321,134 @@ async def pull_model(body: ModelPullRequest) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
+
+
+# ---------------------------------------------------------------------------
+# Ollama model management (#597) — list installed / load-warm / eject / delete
+# so a lawyer manages local models from Settings instead of a terminal.
+# ---------------------------------------------------------------------------
+
+# How long a "Cargar" keeps the model warm in Ollama's memory; "Eject" sends
+# 0 to unload it immediately.
+_KEEP_ALIVE_WARM = "30m"
+_KEEP_ALIVE_EJECT = 0
+
+
+class InstalledModel(BaseModel):
+    """One Ollama model already on disk (projected from ``ollama list``)."""
+
+    name: str
+    size_bytes: int | None = Field(default=None, description="On-disk size in bytes, if reported.")
+    loaded: bool = Field(default=False, description="Currently held warm in memory (``ollama ps``).")
+
+
+class InstalledModelsResponse(BaseModel):
+    """Installed Ollama models for the Settings → Modelos management card."""
+
+    models: list[InstalledModel]
+
+
+class ModelNameRequest(BaseModel):
+    """Body carrying a single validated Ollama tag (delete / load / eject)."""
+
+    model: str = Field(..., pattern=_OLLAMA_TAG_PATTERN, min_length=1, max_length=128)
+
+
+class ModelLoadRequest(ModelNameRequest):
+    """Load/eject toggle: ``keep=True`` warms the model, ``False`` ejects it."""
+
+    keep: bool = True
+
+
+@router.get(
+    "/models/installed",
+    response_model=InstalledModelsResponse,
+    summary="List installed Ollama models with size + loaded state (#597).",
+)
+async def list_installed_models() -> InstalledModelsResponse:
+    """Project ``ollama list`` (on-disk) joined with ``ollama ps`` (loaded).
+
+    Ollama not running is not an error here — it just means no local models,
+    so we return an empty list and let the SPA show the "Ollama no detectado"
+    state rather than a 5xx.
+    """
+    client = ollama.AsyncClient()
+    try:
+        listing = await client.list()
+        running = await client.ps()
+    except Exception:
+        logger.info("Ollama unreachable while listing installed models")
+        return InstalledModelsResponse(models=[])
+
+    loaded_names = {getattr(m, "model", None) for m in getattr(running, "models", [])}
+    installed: list[InstalledModel] = []
+    for entry in getattr(listing, "models", []):
+        name = getattr(entry, "model", None)
+        if not name:
+            continue
+        installed.append(
+            InstalledModel(name=name, size_bytes=getattr(entry, "size", None), loaded=name in loaded_names)
+        )
+    installed.sort(key=lambda m: m.name)
+    return InstalledModelsResponse(models=installed)
+
+
+@router.post(
+    "/models/delete",
+    summary="Delete an installed Ollama model (``ollama rm``) (#597).",
+    responses={404: {"description": "Model is not installed."}, 502: {"description": "Ollama unreachable."}},
+)
+async def delete_model(body: ModelNameRequest) -> dict[str, str]:
+    """Remove a model from disk. POST (not DELETE) so the ``name:tag`` colon
+    never has to survive a URL path round-trip through the SPA's client."""
+    client = ollama.AsyncClient()
+    try:
+        await client.delete(body.model)
+    except ollama.ResponseError as exc:
+        if exc.status_code == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"code": "model_not_found", "message": f"{body.model} is not installed."},
+            ) from exc
+        logger.info("Ollama delete failed: status=%s", repr(exc.status_code))
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"code": "model_delete_failed", "message": "Ollama rejected the delete."},
+        ) from exc
+    except Exception as exc:
+        logger.exception("Unexpected error deleting model")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"code": "ollama_unreachable", "message": "Could not reach the Ollama daemon."},
+        ) from exc
+    return {"status": "deleted", "model": body.model}
+
+
+@router.post(
+    "/models/load",
+    summary="Warm a model into memory or eject it (Ollama keep_alive) (#597).",
+    responses={502: {"description": "Ollama unreachable."}},
+)
+async def load_model(body: ModelLoadRequest) -> dict[str, str]:
+    """Preload (``keep=True``) or unload (``keep=False``) a model.
+
+    Issues an empty ``generate`` with ``keep_alive`` set — Ollama's documented
+    way to load/unload without producing tokens.
+    """
+    client = ollama.AsyncClient()
+    keep_alive = _KEEP_ALIVE_WARM if body.keep else _KEEP_ALIVE_EJECT
+    try:
+        await client.generate(model=body.model, prompt="", keep_alive=keep_alive)
+    except ollama.ResponseError as exc:
+        logger.info("Ollama load/eject failed: status=%s", repr(exc.status_code))
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"code": "model_load_failed", "message": "Ollama rejected the request."},
+        ) from exc
+    except Exception as exc:
+        logger.exception("Unexpected error loading/ejecting model")
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail={"code": "ollama_unreachable", "message": "Could not reach the Ollama daemon."},
+        ) from exc
+    return {"status": "loaded" if body.keep else "ejected", "model": body.model}
