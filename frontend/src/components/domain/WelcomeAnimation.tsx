@@ -26,7 +26,6 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 
 import caveatTtf from '@/assets/fonts/caveat.ttf';
-import { cn } from '@/lib/utils';
 
 const WELCOME_TEXT = 'Hola, soy LexFlow';
 const DRAW_MS = 3000;
@@ -195,13 +194,22 @@ export default function WelcomeAnimation({ onContinue }: Props) {
               style={{ filter: 'drop-shadow(0 0 6px rgb(99 102 241 / 0.6))' }}
             />
           </svg>
-        ) : (
+        ) : showStatic ? (
           <span
             style={{ fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }}
-            className={cn(
-              'block whitespace-nowrap text-center font-display font-semibold tracking-tight',
-              showStatic && 'animate-in fade-in duration-700',
-            )}
+            className="block whitespace-nowrap text-center font-display font-semibold tracking-tight animate-in fade-in duration-700"
+          >
+            {WELCOME_TEXT}
+          </span>
+        ) : (
+          // Geometry still loading: hold the layout height with an invisible
+          // copy so the SVG doesn't pop in with a jump — but don't flash the
+          // static heading (that's reserved for the reduced-motion / failure
+          // path). CodeRabbit #628.
+          <span
+            aria-hidden
+            style={{ fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }}
+            className="block whitespace-nowrap text-center font-display font-semibold tracking-tight opacity-0"
           >
             {WELCOME_TEXT}
           </span>

@@ -7,7 +7,9 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1100, height: 760 } });
 const page = await ctx.newPage();
 // Fresh storage: do NOT set lexflow.welcomed, so the welcome actually runs.
-await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded' });
+// networkidle so the lazy WelcomeAnimation chunk + font are loaded before
+// we start sampling frames (CodeRabbit #628).
+await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
 // Wait for the splash/warmup to hand off to the welcome.
 await page.waitForTimeout(2500);
 await page.screenshot({ path: '.shot-welcome-1.png' });
