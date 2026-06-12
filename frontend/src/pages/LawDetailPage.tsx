@@ -65,6 +65,7 @@ export function LawDetailPage() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <LawHeader
           law={law}
+          versionsCount={versions.length}
           onTagClick={(t) => navigate(`/explorer?tags=${encodeURIComponent(t)}`)}
         />
 
@@ -74,7 +75,10 @@ export function LawDetailPage() {
             onChange={(v) => setTab(v as Tab)}
             tabs={[
               { id: 'texto', label: t('lawDetail.tabs.texto'), count: law.articulos },
-              { id: 'versiones', label: t('lawDetail.tabs.versiones'), count: law.versiones },
+              // #592 — count the real version history (useVersions), not the
+              // law-detail `versiones` field, which the backend leaves at 0
+              // (the count needs git log, served by /laws/{id}/versions).
+              { id: 'versiones', label: t('lawDetail.tabs.versiones'), count: versions.length },
               { id: 'grafo', label: t('lawDetail.tabs.grafo') },
               { id: 'refs', label: t('lawDetail.tabs.refs'), count: law.referencias },
               { id: 'disc', label: t('lawDetail.tabs.disc') },
