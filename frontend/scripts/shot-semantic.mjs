@@ -2,8 +2,10 @@
 // "¿Qué es esto?" dialog. node scripts/shot-semantic.mjs <card.png> <dialog.png>
 import { chromium } from '@playwright/test';
 
-const cardOut = process.argv[2] ?? 'semantic-card.png';
-const dialogOut = process.argv[3] ?? 'semantic-dialog.png';
+// Defaults use the `.shot-` prefix so they're covered by the single
+// `.shot-*.png` .gitignore rule and never get committed accidentally.
+const cardOut = process.argv[2] ?? '.shot-semantic-card.png';
+const dialogOut = process.argv[3] ?? '.shot-semantic-dialog.png';
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
