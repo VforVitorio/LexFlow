@@ -4,6 +4,20 @@ import { persist } from 'zustand/middleware';
 export type Theme = 'light' | 'dark';
 export type Density = 'compact' | 'comfortable' | 'cozy';
 
+// Left rail drag-resize bounds (#594). Default matches the old fixed
+// `w-[220px]`; the clamp keeps the rail usable (never narrower than the
+// nav labels, never wide enough to swallow the content column). Exported so
+// the rail's ARIA value range stays in lockstep with the clamp.
+export const LEFT_RAIL_MIN = 180;
+export const LEFT_RAIL_MAX = 420;
+const LEFT_RAIL_DEFAULT = 220;
+
+// Right contextual panel drag-resize bounds (#594). Default matches the
+// old fixed `w-[340px]`.
+export const RIGHT_RAIL_MIN = 280;
+export const RIGHT_RAIL_MAX = 620;
+const RIGHT_RAIL_DEFAULT = 340;
+
 /**
  * Global UI state. Persisted to localStorage so reloads keep the user's
  * preferences (theme, panels, density). Anything app-specific that isn't a
@@ -18,10 +32,18 @@ interface UiState {
   leftExpanded: boolean;
   toggleLeft(): void;
 
+  /** Left rail width in px when expanded (drag-resizable, #594). */
+  leftWidth: number;
+  setLeftWidth(px: number): void;
+
   /** Right rail visible (docked panel on desktop, bottom sheet on mobile). */
   rightOpen: boolean;
   toggleRight(): void;
   setRight(open: boolean): void;
+
+  /** Right rail width in px when docked on desktop (drag-resizable, #594). */
+  rightWidth: number;
+  setRightWidth(px: number): void;
 
   /** Table density (mostly for the Explorer). */
   density: Density;
@@ -61,9 +83,17 @@ export const useUi = create<UiState>()(
       leftExpanded: true,
       toggleLeft: () => set((s) => ({ leftExpanded: !s.leftExpanded })),
 
+      leftWidth: LEFT_RAIL_DEFAULT,
+      setLeftWidth: (px) =>
+        set({ leftWidth: Math.min(LEFT_RAIL_MAX, Math.max(LEFT_RAIL_MIN, Math.round(px))) }),
+
       rightOpen: true,
       toggleRight: () => set((s) => ({ rightOpen: !s.rightOpen })),
       setRight: (open) => set({ rightOpen: open }),
+
+      rightWidth: RIGHT_RAIL_DEFAULT,
+      setRightWidth: (px) =>
+        set({ rightWidth: Math.min(RIGHT_RAIL_MAX, Math.max(RIGHT_RAIL_MIN, Math.round(px))) }),
 
       density: 'comfortable',
       setDensity: (d) => set({ density: d }),
@@ -92,7 +122,9 @@ export const useUi = create<UiState>()(
       partialize: (s) => ({
         theme: s.theme,
         leftExpanded: s.leftExpanded,
+        leftWidth: s.leftWidth,
         rightOpen: s.rightOpen,
+        rightWidth: s.rightWidth,
         density: s.density,
         readingSize: s.readingSize,
         defaultModel: s.defaultModel,

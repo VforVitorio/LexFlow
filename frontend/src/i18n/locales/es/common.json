@@ -9,7 +9,9 @@
     "main": "Navegación principal",
     "collapse": "Colapsar",
     "expand": "Expandir",
-    "recent": "Reciente"
+    "recent": "Reciente",
+    "resize": "Ajustar ancho de la barra lateral",
+    "resizePanel": "Ajustar ancho del panel"
   },
   "shell": {
     "searchPlaceholder": "Buscar leyes, artículos…",
