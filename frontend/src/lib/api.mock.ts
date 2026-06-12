@@ -442,21 +442,26 @@ export const mockApi: ApiClient = {
       return { fromCommit: null, toCommit: null, added: [], modified: [], removed: [] };
     },
     async profile() {
-      // Mock mode: pretend a mid-range developer machine so the wizard
-      // lands on the "balanced 7B" tier instead of degrading to the
-      // free-tier or cloud-only paths.
+      // Mock mode CANNOT know the real machine, so it must NOT invent
+      // hardware or installed models. The old mock claimed a fake RTX 4070
+      // + a running Ollama with two models, which a user in mock mode read
+      // as their real setup (#610: phantom RTX 4070 on a GPU-less WSL box;
+      // #611: "Ollama installed with 2 models" when it isn't). Report an
+      // honest, empty baseline so the wizard shows the "nothing detected →
+      // here's how to set up" path. Real detection needs the backend
+      // (VITE_USE_MOCK=false).
       await delay(50);
       return {
-        totalRamGb: 32,
-        availableRamGb: 18,
-        cpuCores: 16,
-        hasNvidiaGpu: true,
-        vramGb: 12,
-        gpuName: 'NVIDIA GeForce RTX 4070',
+        totalRamGb: 16,
+        availableRamGb: 8,
+        cpuCores: 8,
+        hasNvidiaGpu: false,
+        vramGb: null,
+        gpuName: null,
         isAppleSilicon: false,
         platform: 'linux' as const,
-        ollamaRunning: true,
-        ollamaModels: ['llama3.2:3b', 'qwen2.5:7b'],
+        ollamaRunning: false,
+        ollamaModels: [],
         lmstudioRunning: false,
       };
     },
