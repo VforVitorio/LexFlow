@@ -28,11 +28,14 @@ interface RailResizerProps {
  */
 export function RailResizer({ edge, width, setWidth, min, max, label, dragging, startDrag }: RailResizerProps) {
   const nudge = (e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    // Stop the focused separator from also scrolling the page (#625 review).
+    e.preventDefault();
     // On a left-docked rail, ArrowRight grows it; on a right-docked rail the
     // mapping flips so "toward the viewport edge" always grows.
     const grow = edge === 'left' ? RESIZE_KEY_STEP : -RESIZE_KEY_STEP;
     if (e.key === 'ArrowRight') setWidth(width + grow);
-    else if (e.key === 'ArrowLeft') setWidth(width - grow);
+    else setWidth(width - grow);
   };
 
   return (
