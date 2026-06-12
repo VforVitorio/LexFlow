@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.54.1](https://github.com/VforVitorio/LexFlow/compare/v0.54.0...v0.54.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **settings:** local providers aren't 'Falta clave' — they need no key ([#593](https://github.com/VforVitorio/LexFlow/issues/593)) ([6e439a4](https://github.com/VforVitorio/LexFlow/commit/6e439a47cf0e7bbebc20702c3cba77e2746a8fc4))
+
 ## [0.54.0](https://github.com/VforVitorio/LexFlow/compare/v0.53.0...v0.54.0) (2026-06-12)
 
 
