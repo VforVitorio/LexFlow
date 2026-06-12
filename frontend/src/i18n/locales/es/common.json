@@ -9,7 +9,9 @@
     "main": "Navegación principal",
     "collapse": "Colapsar",
     "expand": "Expandir",
-    "recent": "Reciente"
+    "recent": "Reciente",
+    "resize": "Ajustar ancho de la barra lateral",
+    "resizePanel": "Ajustar ancho del panel"
   },
   "shell": {
     "searchPlaceholder": "Buscar leyes, artículos…",
@@ -123,6 +125,7 @@
     "redetectHint": "Si vas a usar un modelo local, inicia Ollama y pulsa Re-detectar. En cualquier caso puedes elegir un modelo en nube en el siguiente paso.",
     "redetect": "Re-detectar",
     "recommended": "Recomendado",
+    "recommendedForYou": "Recomendado para tu equipo",
     "cloudChosen": "Has elegido",
     "cloudKeyInstructions": "Para usarlo, define la variable de entorno con tu API key de Anthropic (<strong>ANTHROPIC_API_KEY</strong>) antes de iniciar LexFlow. La clave se queda en tu equipo.",
     "cloudCreateKey": "Si todavía no tienes una, puedes crearla en console.anthropic.com.",

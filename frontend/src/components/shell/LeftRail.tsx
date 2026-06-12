@@ -4,25 +4,34 @@ import { useTranslation } from 'react-i18next';
 import { BrandMark } from '@/components/BrandMark';
 import { Kbd } from '@/components/ui';
 import { cn } from '@/lib/utils';
-import { useUi } from '@/lib/store';
+import { useUi, LEFT_RAIL_MIN, LEFT_RAIL_MAX } from '@/lib/store';
 import { useLawsList } from '@/lib/queries';
 import { NAV } from './nav-items';
+import { RailResizer } from './RailResizer';
+import { useEdgeResize } from './use-edge-resize';
 
 export function LeftRail() {
   const expanded = useUi((s) => s.leftExpanded);
+  const leftWidth = useUi((s) => s.leftWidth);
+  const setLeftWidth = useUi((s) => s.setLeftWidth);
   const toggle = useUi((s) => s.toggleLeft);
   const { t } = useTranslation();
   const { data: laws } = useLawsList({}, { staleTime: 60_000 });
   const recent = laws?.items.slice(0, 3) ?? [];
+  const { dragging, startDrag } = useEdgeResize('left', setLeftWidth);
 
   return (
     <nav
       aria-label={t('nav.main')}
       data-tour-id="left-rail"
+      style={expanded ? { width: leftWidth } : undefined}
       className={cn(
         // Hidden on mobile — the BottomTabBar takes over below `md`.
-        'hidden shrink-0 flex-col border-r border-border bg-surface transition-[width] duration-200 overflow-hidden md:flex',
-        expanded ? 'w-[220px]' : 'w-[60px]',
+        'relative hidden shrink-0 flex-col border-r border-border bg-surface overflow-hidden md:flex',
+        // Animate width on collapse/expand, but never while dragging — the
+        // transition would lag a frame behind the pointer.
+        !dragging && 'transition-[width] duration-200',
+        !expanded && 'w-[60px]',
       )}
     >
       {/* Brand. When collapsed, the logo doubles as a big, obvious
@@ -125,6 +134,21 @@ export function LeftRail() {
           {expanded && <Kbd>⌘ \\</Kbd>}
         </button>
       </div>
+
+      {/* Drag-to-resize separator on the right edge (#594). Only when the
+          rail is expanded — the collapsed rail is a fixed icon strip. */}
+      {expanded && (
+        <RailResizer
+          edge="left"
+          width={leftWidth}
+          setWidth={setLeftWidth}
+          min={LEFT_RAIL_MIN}
+          max={LEFT_RAIL_MAX}
+          label={t('nav.resize')}
+          dragging={dragging}
+          startDrag={startDrag}
+        />
+      )}
     </nav>
   );
 }

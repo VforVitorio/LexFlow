@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.55.0](https://github.com/VforVitorio/LexFlow/compare/v0.54.1...v0.55.0) (2026-06-12)
+
+
+### Features
+
+* **wizard:** redesign 'Elige un modelo' step — hero recommendation + clear fit ([#558](https://github.com/VforVitorio/LexFlow/issues/558)) ([7e557fe](https://github.com/VforVitorio/LexFlow/commit/7e557fe28d94c43de3e91aa2f999d57834fb2965))
+
 ## [0.54.1](https://github.com/VforVitorio/LexFlow/compare/v0.54.0...v0.54.1) (2026-06-12)
 
 
