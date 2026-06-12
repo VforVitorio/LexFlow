@@ -1,18 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Clock, SlidersHorizontal, Download, ExternalLink } from 'lucide-react';
+import { Clock, SlidersHorizontal, Download, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ReferenceArea,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { Button, Card, Tabs } from '@/components/ui';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { useDashboard } from '@/lib/queries';
-import { GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_FILL_SOFT } from '@/lib/graph-colors';
+import { GRAPH_KIND_FILL, GRAPH_PRIMARY } from '@/lib/graph-colors';
 import type { MetricCard } from '@/lib/types';
 
-// The dashboard charts borrow the graph palette so the whole product
-// reads as one brand: indigo for the baseline series, amber (the
-// "article" hue) for the "recent" highlight slice on the bar chart.
+// The dashboard charts borrow the graph palette so the whole product reads
+// as one brand: indigo for the baseline series, amber (the "article" hue)
+// to tint the most-recent slice of the hero chart.
 const CHART_PRIMARY = GRAPH_PRIMARY;
-const CHART_PRIMARY_SOFT = GRAPH_PRIMARY_FILL_SOFT;
 const CHART_RECENT = GRAPH_KIND_FILL.article;
 
 type DashboardPreset = 'compliance' | 'analytics';
@@ -26,9 +35,8 @@ export function DashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   // Audit #409 — read the `:preset` URL param so deep links like
-  // `/dashboards/analytics` actually land on Analytics. The page used
-  // to hardcode 'compliance' state and ignore the route param. Tab
-  // changes also navigate so URL ↔ state stay in sync both ways.
+  // `/dashboards/analytics` actually land on Analytics. Tab changes also
+  // navigate so URL ↔ state stay in sync both ways.
   const { preset: presetParam } = useParams<{ preset?: string }>();
   const [preset, setPreset] = useState<DashboardPreset>(asPreset(presetParam));
   useEffect(() => {
@@ -61,12 +69,12 @@ export function DashboardPage() {
         <DashboardSkeleton />
       ) : (
         <>
-          <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {data.cards.map((c) => <DashCard key={c.id} card={c} />)}
           </div>
 
           <Card className="p-5">
-            <div className="mb-3 flex items-baseline gap-2">
+            <div className="mb-1 flex items-baseline gap-2">
               <h3 className="font-display text-base font-semibold">{t('dashboards.chartTitle')}</h3>
               <span className="text-[12px] text-muted">{t('dashboards.chartSubtitle')}</span>
               <span className="ml-auto"><Button size="sm" variant="ghost" icon={<ExternalLink className="size-3.5" />}>{t('dashboards.openInPlotly')}</Button></span>
@@ -79,24 +87,18 @@ export function DashboardPage() {
   );
 }
 
-/**
- * Mirror of the live dashboard layout for the loading state: six metric
- * cards in a responsive grid + one big chart card. Each metric card
- * carries a title line, the big number+delta line, and a sparkline
- * placeholder so the page doesn't reflow when data arrives.
- */
 function DashboardSkeleton() {
   return (
     <div aria-busy>
-      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="p-4.5">
+          <Card key={i} className="p-5">
             <Skeleton className="h-3 w-7/12" />
             <div className="mt-2 flex items-baseline gap-2">
               <Skeleton className="h-7 w-24" />
               <Skeleton className="h-3 w-10" />
             </div>
-            <Skeleton className="mt-3 h-10 w-full" />
+            <Skeleton className="mt-3 h-12 w-full" />
           </Card>
         ))}
       </div>
@@ -105,7 +107,7 @@ function DashboardSkeleton() {
           <Skeleton className="h-4 w-56" />
           <Skeleton className="h-3 w-32" />
         </div>
-        <Skeleton className="h-60 w-full" />
+        <Skeleton className="h-72 w-full" />
       </Card>
     </div>
   );
@@ -114,65 +116,110 @@ function DashboardSkeleton() {
 function DashCard({ card }: { card: MetricCard }) {
   const positive = card.delta.startsWith('+');
   const neutral = card.delta === 'estable';
+  const deltaTone = neutral ? 'text-muted' : positive ? 'text-success' : 'text-danger';
   return (
-    <Card className="p-4.5">
-      <div className="text-[12.5px] text-muted">{card.title}</div>
-      <div className="mt-0.5 flex items-baseline gap-2">
-        <span className="font-display text-[26px] font-semibold -tracking-[0.01em]">{card.value}</span>
-        <span className={`font-mono text-[12px] ${neutral ? 'text-muted' : positive ? 'text-success' : 'text-danger'}`}>{card.delta}</span>
+    <Card className="p-5 transition-shadow hover:shadow-1">
+      <div className="flex items-center justify-between">
+        <div className="text-[12.5px] font-medium text-muted">{card.title}</div>
+        <span className={`inline-flex items-center gap-1 rounded-full bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] ${deltaTone}`}>
+          {!neutral && (positive ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />)}
+          {card.delta}
+        </span>
       </div>
-      <Sparkline data={card.spark} />
+      <div className="mt-1 font-display text-[28px] font-semibold -tracking-[0.01em] tabular-nums">{card.value}</div>
+      <Sparkline data={card.spark} id={card.id} />
     </Card>
   );
 }
 
-function Sparkline({ data }: { data: number[] }) {
-  const w = 220, h = 36;
-  const max = Math.max(...data), min = Math.min(...data);
-  const range = max - min || 1;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+function Sparkline({ data, id }: { data: number[]; id: string }) {
+  const chartData = data.map((v, i) => ({ i, v }));
+  const gradId = `spark-${id}`;
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="mt-2.5 h-10 w-full">
-      <polyline points={pts} fill="none" stroke={CHART_PRIMARY} strokeWidth="1.5" />
-      <polygon points={`0,${h} ${pts} ${w},${h}`} fill={CHART_PRIMARY_SOFT} />
-    </svg>
+    <div className="mt-3 h-12 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={CHART_PRIMARY} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey="v" stroke={CHART_PRIMARY} strokeWidth={2} fill={`url(#${gradId})`} dot={false} isAnimationActive={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
+interface HeroDatum {
+  label: string;
+  value: number;
+}
+
 function BigChart({ values, labels, recentFrom = 0 }: { values: number[]; labels: string[]; recentFrom?: number }) {
-  const w = 880, h = 240, pad = 28;
-  const max = Math.max(...values);
-  const barW = (w - pad * 2) / values.length - 4;
+  const chartData: HeroDatum[] = values.map((v, i) => ({ label: labels[i], value: v }));
+  const recentLabel = labels[recentFrom];
+  const lastLabel = labels[labels.length - 1];
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-60 w-full">
-      {[0, 25, 50, 75, 100].map((t) => (
-        <g key={t}>
-          <line x1={pad} y1={h - pad - (t / 100) * (h - pad * 2)} x2={w - pad} y2={h - pad - (t / 100) * (h - pad * 2)}
-            stroke="hsl(var(--border))" strokeDasharray="3 3" />
-          <text x={pad - 6} y={h - pad - (t / 100) * (h - pad * 2) + 3}
-            textAnchor="end" fontSize="10" fill="hsl(var(--muted-fg))" fontFamily='"JetBrains Mono", monospace'>
-            {Math.round(max * t / 100)}
-          </text>
-        </g>
-      ))}
-      {values.map((v, i) => {
-        const x = pad + i * (barW + 4);
-        const bh = (v / max) * (h - pad * 2);
-        const y = h - pad - bh;
-        const recent = i >= recentFrom;
-        return (
-          <g key={i}>
-            <rect x={x} y={y} width={barW} height={bh}
-              fill={recent ? CHART_RECENT : CHART_PRIMARY} rx={2} />
-            {i % 2 === 0 && (
-              <text x={x + barW / 2} y={h - pad + 12} textAnchor="middle"
-                fontSize="9.5" fill="hsl(var(--muted-fg))" fontFamily='"JetBrains Mono", monospace'>
-                {labels[i]}
-              </text>
-            )}
-          </g>
-        );
-      })}
-    </svg>
+    <div className="h-72 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 12, right: 12, bottom: 0, left: -8 }}>
+          <defs>
+            <linearGradient id="hero-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={CHART_PRIMARY} stopOpacity={0.28} />
+              <stop offset="95%" stopColor={CHART_PRIMARY} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            minTickGap={24}
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-fg))' }}
+          />
+          <YAxis
+            width={40}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-fg))' }}
+          />
+          <Tooltip content={<DashTooltip />} cursor={{ stroke: 'hsl(var(--border-strong))', strokeDasharray: '3 3' }} />
+          {recentLabel && lastLabel && recentFrom < values.length && (
+            // Tint the most-recent window so "lo nuevo" reads at a glance.
+            <ReferenceArea x1={recentLabel} x2={lastLabel} fill={CHART_RECENT} fillOpacity={0.07} strokeOpacity={0} />
+          )}
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={CHART_PRIMARY}
+            strokeWidth={2.5}
+            fill="url(#hero-grad)"
+            dot={{ r: 2.5, fill: CHART_PRIMARY, strokeWidth: 0 }}
+            activeDot={{ r: 4, fill: CHART_PRIMARY, stroke: 'hsl(var(--bg))', strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// Recharts injects active/payload/label when it clones the `content`
+// element; we type only the fields we read (v3's TooltipProps shape shifts).
+interface DashTooltipProps {
+  active?: boolean;
+  label?: string | number;
+  payload?: Array<{ value?: number | string }>;
+}
+
+function DashTooltip({ active, payload, label }: DashTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="rounded-lg border border-border-strong bg-surface px-3 py-2 shadow-lg">
+      <div className="text-[11px] font-medium text-muted">{label}</div>
+      <div className="mt-0.5 font-mono text-[13px] font-semibold text-fg tabular-nums">{payload[0]?.value}</div>
+    </div>
   );
 }
