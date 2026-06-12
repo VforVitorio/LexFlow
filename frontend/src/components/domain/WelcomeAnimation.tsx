@@ -1,24 +1,25 @@
 /**
- * First-run welcome calligraphy (#595 — replaces the flaky tegaki canvas
- * behind #557).
+ * First-run welcome calligraphy (#595 → true stroke-draw, #617).
  *
- * "Hola, soy LexFlow" in the Caveat handwriting font, revealed left-to-
- * right with a GSAP timeline while a pen-tip dot tracks the reveal edge —
- * a robust "being written by hand" effect with no stroke library that can
- * stall. Lazy-imported by WelcomeFlow so returning users never fetch the
- * font + gsap.
+ * "Hola, soy LexFlow" rendered as real SVG glyph paths (extracted from the
+ * bundled Caveat handwriting font with opentype.js) and **drawn stroke by
+ * stroke** via an animated `stroke-dashoffset` — the iconic macOS "hello"
+ * onboarding moment. A pen-tip dot rides the leading edge of the stroke and
+ * the ink fills in behind it, so it reads as a hand writing the phrase
+ * rather than a left-to-right wipe.
  *
  * Invariants:
- * * Never traps the user: reduced-motion → static heading; a font/gsap
- *   failure or the safety timeout falls back to the static heading and
- *   reveals "Continuar".
+ * * Never traps the user: reduced-motion → static heading; a font/opentype/
+ *   gsap failure or the safety timeout falls back to the static heading and
+ *   reveals "Continuar" (#557).
  * * The phrase is the one personality moment; the rest of the SPA stays
  *   sober and dense.
  *
  * --- WHERE TO CHANGE IF X CHANGES ---
- * * Reveal feel / duration → ``REVEAL_MS`` + the GSAP timeline easing.
- * * Phrase                 → ``WELCOME_TEXT`` (also update the aria-label).
- * * Font                   → ``@/assets/fonts/caveat.ttf`` (OFL, bundled).
+ * * Draw feel / duration → ``DRAW_MS`` + the GSAP timeline easing.
+ * * Phrase                → ``WELCOME_TEXT`` (also update the aria-label).
+ * * Font                  → ``@/assets/fonts/caveat.ttf`` (OFL, bundled).
+ * * Stroke weight / size  → ``GLYPH_SIZE`` + ``STROKE_WIDTH`` (font units).
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -28,10 +29,16 @@ import caveatTtf from '@/assets/fonts/caveat.ttf';
 import { cn } from '@/lib/utils';
 
 const WELCOME_TEXT = 'Hola, soy LexFlow';
-const REVEAL_MS = 2600;
+const DRAW_MS = 3000;
 // Never strand the user behind a stalled animation (the original #557 bug):
 // if the timeline hasn't completed by here, fall back to static + Continuar.
-const SAFETY_MS = REVEAL_MS + 1500;
+const SAFETY_MS = DRAW_MS + 1800;
+
+// Internal font units the glyph path is generated at — the SVG viewBox scales
+// it responsively, so these only set the stroke-to-glyph ratio.
+const GLYPH_SIZE = 120;
+const STROKE_WIDTH = 2.4;
+const PAD = 16;
 
 function prefersReducedMotion(): boolean {
   try {
@@ -41,21 +48,41 @@ function prefersReducedMotion(): boolean {
   }
 }
 
-// Load the bundled Caveat face once via the FontFace API. A failure is
-// swallowed — the text still renders in the system ``cursive`` fallback.
-let _fontPromise: Promise<void> | null = null;
-function ensureCaveat(): Promise<void> {
-  if (_fontPromise) return _fontPromise;
-  _fontPromise = (async () => {
+interface GlyphGeometry {
+  d: string;
+  viewBox: string;
+}
+
+/**
+ * Build the SVG path data + viewBox for the phrase, once.
+ *
+ * Parses the bundled Caveat face with opentype.js and projects the phrase to
+ * a single path (glyph contours come out left-to-right, so a dash-offset draw
+ * traces the word in reading order). Cached in a module promise so returning
+ * users never re-parse the font. Resolves null on any failure → static
+ * fallback.
+ */
+let _geometryPromise: Promise<GlyphGeometry | null> | null = null;
+function ensureGeometry(): Promise<GlyphGeometry | null> {
+  if (_geometryPromise) return _geometryPromise;
+  _geometryPromise = (async () => {
     try {
-      const face = new FontFace('CaveatLF', `url(${caveatTtf})`);
-      await face.load();
-      document.fonts.add(face);
+      const [{ parse }, buffer] = await Promise.all([
+        import('opentype.js'),
+        fetch(caveatTtf).then((r) => r.arrayBuffer()),
+      ]);
+      const font = parse(buffer);
+      const path = font.getPath(WELCOME_TEXT, 0, GLYPH_SIZE, GLYPH_SIZE);
+      const box = path.getBoundingBox();
+      const width = box.x2 - box.x1 + PAD * 2;
+      const height = box.y2 - box.y1 + PAD * 2;
+      const viewBox = `${box.x1 - PAD} ${box.y1 - PAD} ${width} ${height}`;
+      return { d: path.toPathData(2), viewBox };
     } catch {
-      /* fall back to system cursive */
+      return null;
     }
   })();
-  return _fontPromise;
+  return _geometryPromise;
 }
 
 interface Props {
@@ -65,54 +92,77 @@ interface Props {
 export default function WelcomeAnimation({ onContinue }: Props) {
   const [done, setDone] = useState(false);
   const [showStatic, setShowStatic] = useState(prefersReducedMotion);
-  const textRef = useRef<HTMLSpanElement>(null);
-  const penRef = useRef<HTMLSpanElement>(null);
+  const [geometry, setGeometry] = useState<GlyphGeometry | null>(null);
+  const pathRef = useRef<SVGPathElement>(null);
+  const penRef = useRef<SVGCircleElement>(null);
 
+  // Resolve the glyph geometry (or fall back to static on failure).
   useEffect(() => {
     if (showStatic) {
       setDone(true);
       return;
     }
     let cancelled = false;
-    let ctx: gsap.Context | undefined;
+    void ensureGeometry().then((geo) => {
+      if (cancelled) return;
+      if (!geo) {
+        setShowStatic(true);
+        setDone(true);
+        return;
+      }
+      setGeometry(geo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [showStatic]);
+
+  // Run the stroke-draw once the path is in the DOM.
+  useEffect(() => {
+    if (!geometry || showStatic) return;
+    const path = pathRef.current;
+    if (!path) return;
+
     const safety = window.setTimeout(() => {
       setShowStatic(true);
       setDone(true);
     }, SAFETY_MS);
 
-    void ensureCaveat().then(() => {
-      if (cancelled || !textRef.current) return;
+    let ctx: gsap.Context | undefined;
+    try {
+      const length = path.getTotalLength();
       ctx = gsap.context(() => {
+        gsap.set(path, { strokeDasharray: length, strokeDashoffset: length, fillOpacity: 0 });
         const tl = gsap.timeline({
           onComplete: () => {
             window.clearTimeout(safety);
             setDone(true);
           },
         });
-        tl.fromTo(
-          textRef.current,
-          { clipPath: 'inset(0 100% 0 0)' },
-          { clipPath: 'inset(0 0% 0 0)', duration: REVEAL_MS / 1000, ease: 'power1.inOut' },
-        );
-        if (penRef.current) {
-          tl.fromTo(
-            penRef.current,
-            { left: '0%', opacity: 0 },
-            { left: '100%', opacity: 1, duration: REVEAL_MS / 1000, ease: 'power1.inOut' },
-            0,
-          ).to(penRef.current, { opacity: 0, duration: 0.35 });
-        }
+        tl.to(path, {
+          strokeDashoffset: 0,
+          duration: DRAW_MS / 1000,
+          ease: 'power1.inOut',
+          onUpdate: () => movePenToStrokeTip(path, penRef.current, length),
+        });
+        // Ink settles in behind the pen, then the pen lifts.
+        tl.to(path, { fillOpacity: 1, duration: 0.5, ease: 'power1.out' }, '-=0.35');
+        tl.to(penRef.current, { opacity: 0, duration: 0.3 }, '<');
       });
-    });
+    } catch {
+      window.clearTimeout(safety);
+      setShowStatic(true);
+      setDone(true);
+    }
 
     return () => {
-      cancelled = true;
       window.clearTimeout(safety);
       ctx?.revert();
     };
-  }, [showStatic]);
+  }, [geometry, showStatic]);
 
   const ready = done || showStatic;
+  const drawing = !!geometry && !showStatic;
 
   return (
     <div
@@ -121,27 +171,40 @@ export default function WelcomeAnimation({ onContinue }: Props) {
       aria-label="Bienvenida"
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-10 bg-bg text-fg"
     >
-      <div className="relative" aria-label={WELCOME_TEXT}>
-        <span
-          ref={textRef}
-          style={
-            showStatic
-              ? { fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }
-              : { fontFamily: "'CaveatLF', cursive", fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }
-          }
-          className={cn(
-            'block whitespace-nowrap',
-            showStatic && 'font-display font-semibold tracking-tight animate-in fade-in duration-700',
-          )}
-        >
-          {WELCOME_TEXT}
-        </span>
-        {!showStatic && (
+      <div className="relative w-[min(86vw,720px)]" aria-label={WELCOME_TEXT}>
+        {drawing ? (
+          <svg
+            viewBox={geometry.viewBox}
+            className="h-auto w-full text-fg"
+            role="img"
+            aria-label={WELCOME_TEXT}
+          >
+            <path
+              ref={pathRef}
+              d={geometry.d}
+              fill="currentColor"
+              stroke="currentColor"
+              strokeWidth={STROKE_WIDTH}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle
+              ref={penRef}
+              r={STROKE_WIDTH * 1.8}
+              className="fill-indigo-500"
+              style={{ filter: 'drop-shadow(0 0 6px rgb(99 102 241 / 0.6))' }}
+            />
+          </svg>
+        ) : (
           <span
-            ref={penRef}
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500 shadow-[0_0_12px_2px] shadow-indigo-500/50"
-          />
+            style={{ fontSize: 'clamp(40px, 9vw, 88px)', lineHeight: 1.1 }}
+            className={cn(
+              'block whitespace-nowrap text-center font-display font-semibold tracking-tight',
+              showStatic && 'animate-in fade-in duration-700',
+            )}
+          >
+            {WELCOME_TEXT}
+          </span>
         )}
       </div>
 
@@ -163,4 +226,14 @@ export default function WelcomeAnimation({ onContinue }: Props) {
       </div>
     </div>
   );
+}
+
+/** Park the pen-tip dot on the point the stroke has reached this frame. */
+function movePenToStrokeTip(path: SVGPathElement, pen: SVGCircleElement | null, length: number): void {
+  if (!pen) return;
+  const offset = Number(gsap.getProperty(path, 'strokeDashoffset')) || 0;
+  const drawn = length - offset;
+  const point = path.getPointAtLength(drawn);
+  pen.setAttribute('cx', String(point.x));
+  pen.setAttribute('cy', String(point.y));
 }
