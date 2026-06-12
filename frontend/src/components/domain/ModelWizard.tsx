@@ -32,6 +32,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   CheckCircle2,
+  Cloud,
   Cpu,
   Download,
   HardDrive,
@@ -328,7 +329,7 @@ function StepPick({
 }) {
   const recommendedKey = useMemo(() => recommendTier(profile), [profile]);
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3 pt-1">
       {TIER_CATALOG.map((tier) => {
         const fit = fitForModel(profile, tier);
         const isSelected = tier.key === selectedKey;
@@ -367,25 +368,43 @@ function TierCard({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={cn(
-        'text-left rounded-lg border-2 bg-surface p-4 transition-colors hover:bg-surface-2',
-        selected ? 'border-indigo-500' : 'border-border',
+        'group relative w-full rounded-xl border p-4 text-left transition-all',
+        selected
+          ? 'border-indigo-500 bg-primary-soft/40 ring-1 ring-indigo-500/30'
+          : recommended
+            ? 'border-indigo-300/70 bg-surface hover:bg-surface-2 dark:border-indigo-400/40'
+            : 'border-border bg-surface hover:border-border-strong hover:bg-surface-2',
       )}
     >
+      {recommended && (
+        // Hero ribbon — ties the recommendation to the detected machine.
+        <span className="absolute -top-2 left-4 inline-flex items-center gap-1 rounded-full bg-indigo-600 px-2 py-0.5 text-[10.5px] font-semibold text-white shadow-sm">
+          <Sparkles className="size-2.5" /> {t('wizard.recommendedForYou')}
+        </span>
+      )}
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            {selected && <CheckCircle2 className="size-4 shrink-0 text-indigo-600 dark:text-indigo-300" />}
             <span className="font-display text-[15px] font-semibold">{tier.title}</span>
-            {recommended && (
-              <Badge tone="info" icon={<Sparkles className="size-3" />}>
-                {t('wizard.recommended')}
-              </Badge>
-            )}
           </div>
           <div className="mt-0.5 font-mono text-[11.5px] text-muted">{tier.model}</div>
           <p className="mt-1.5 text-[12.5px] text-muted">{tier.blurb}</p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-0.5 text-muted">
+              {tier.cloud ? <Cloud className="size-3" /> : <HardDrive className="size-3" />}
+              {tier.cloud ? t('model.cloud') : t('model.local')}
+            </span>
+            {tier.sizeGb != null && !tier.cloud && (
+              <span className="inline-flex items-center rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-muted">
+                {tier.sizeGb} GB
+              </span>
+            )}
+          </div>
         </div>
-        <Badge tone={tone}>{FIT_LABELS[fit]}</Badge>
+        <Badge tone={tone} className="mt-0.5 shrink-0">{FIT_LABELS[fit]}</Badge>
       </div>
     </button>
   );
