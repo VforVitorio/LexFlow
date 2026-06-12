@@ -16,8 +16,8 @@ import type {
   BackendWarmupStatus,
   BackendWhatsNewResponse,
 } from '../../api';
-import type { ApiClient, HealthSnapshot, SemanticStatus } from '../types';
-import { http } from './http';
+import type { ApiClient, HealthSnapshot, SemanticInstallEvent, SemanticStatus } from '../types';
+import { API_BASE, API_PREFIX, ApiError, http } from './http';
 
 /**
  * Wire shape of ``GET /api/v1/system/health``. The Pydantic model is
@@ -111,4 +111,73 @@ export const liveSystemApi: ApiClient['system'] = {
   semanticStatus: async (): Promise<SemanticStatus> => {
     return http<SemanticStatus>('/system/semantic-status');
   },
+  installSemantic: () => streamSemanticInstall(),
 };
+
+/**
+ * Consume the `POST /api/v1/system/semantic-install` SSE stream (#578).
+ *
+ * Same wire format and parsing strategy as `models.pull`'s `streamPull`
+ * (event + data pair, blank-line separator). Ends on `done` OR `error`.
+ */
+async function* streamSemanticInstall(): AsyncIterable<SemanticInstallEvent> {
+  const url = `${API_BASE}${API_PREFIX}/system/semantic-install`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { Accept: 'text/event-stream' },
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => response.statusText);
+    throw new ApiError(response.status, detail || response.statusText);
+  }
+  if (!response.body) {
+    throw new ApiError(500, 'Empty response body from semantic-install endpoint');
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let separator = buffer.indexOf('\n\n');
+    while (separator !== -1) {
+      const rawEvent = buffer.slice(0, separator);
+      buffer = buffer.slice(separator + 2);
+      separator = buffer.indexOf('\n\n');
+      const parsed = parseSemanticEvent(rawEvent);
+      if (parsed) yield parsed;
+    }
+  }
+}
+
+/** Parse one ``event: X\ndata: {...}`` block into a `SemanticInstallEvent`. */
+function parseSemanticEvent(raw: string): SemanticInstallEvent | null {
+  let eventName: string | null = null;
+  const dataParts: string[] = [];
+  for (const line of raw.split('\n')) {
+    if (line.startsWith('event: ')) eventName = line.slice(7).trim();
+    else if (line.startsWith('data: ')) dataParts.push(line.slice(6));
+  }
+  if (!eventName || dataParts.length === 0) return null;
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(dataParts.join('\n'));
+  } catch {
+    return null;
+  }
+  if (eventName === 'progress') {
+    return { type: 'progress', status: String(payload.status ?? '') };
+  }
+  if (eventName === 'done') {
+    return { type: 'done', package: String(payload.package ?? '') };
+  }
+  if (eventName === 'error') {
+    return {
+      type: 'error',
+      code: String(payload.code ?? 'unknown'),
+      message: String(payload.message ?? 'Install failed'),
+    };
+  }
+  return null;
+}
