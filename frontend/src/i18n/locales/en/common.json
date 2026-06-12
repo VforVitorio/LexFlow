@@ -123,6 +123,7 @@
     "redetectHint": "If you're going to use a local model, start Ollama and press Re-detect. Either way you can pick a cloud model in the next step.",
     "redetect": "Re-detect",
     "recommended": "Recommended",
+    "recommendedForYou": "Recommended for your machine",
     "cloudChosen": "You chose",
     "cloudKeyInstructions": "To use it, set the environment variable with your Anthropic API key (<strong>ANTHROPIC_API_KEY</strong>) before launching LexFlow. The key stays on your machine.",
     "cloudCreateKey": "If you don't have one yet, you can create it at console.anthropic.com.",
