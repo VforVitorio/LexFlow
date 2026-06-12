@@ -1,31 +1,37 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Background,
-  BackgroundVariant,
-  Controls,
-  type Edge,
-  Handle,
-  MiniMap,
-  type Node as RFNode,
-  type NodeProps,
-  Position,
-  ReactFlow,
-  ReactFlowProvider,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+/**
+ * Knowledge-graph canvas — force-directed WebGL-class view (#596).
+ *
+ * Replaces the react-flow DOM/SVG radial layout (which looked flat and
+ * couldn't scale past a few hundred nodes) with `react-force-graph-2d`:
+ * a single HTML5 canvas + d3-force simulation. Handles thousands of nodes
+ * at 60 fps, Obsidian-style.
+ *
+ * Public API (props + onSelect contract) is unchanged so `GraphPage.tsx`
+ * doesn't move.
+ *
+ * Design notes:
+ * * `graphData` is memoised on `data` ONLY — selection and kind-filter
+ *   changes must NOT rebuild it, or the simulation restarts on every
+ *   click. Dim + selection state are read live inside the paint closures.
+ * * Labels are drawn only for the selected node or when zoomed past
+ *   `LABEL_ZOOM` — this kills the label-overlap soup at default zoom (#569).
+ * * Colours come from `lib/graph-colors.ts` (literal HSL strings, so the
+ *   canvas can use them directly — CSS `var(--x)` would not resolve here).
+ *   The label colour is the one theme token we resolve at runtime.
+ *
+ * --- WHERE TO CHANGE IF X CHANGES ---
+ * * Palette        → `lib/graph-colors.ts`.
+ * * Node sizing    → `BASE_RADIUS` + `nodeRadius`.
+ * * Label density  → `LABEL_ZOOM`.
+ * * Forces         → the `d3Force` tweaks in the mount effect.
+ */
 
+import { useEffect, useMemo, useRef, useState } from 'react';
+import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
+
+import { GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, GRAPH_PRIMARY } from '@/lib/graph-colors';
+import type { GraphData, GraphEdge, GraphNodeKind } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, GRAPH_PRIMARY, GRAPH_PRIMARY_GLOW, GRAPH_PRIMARY_SOFT, NODE_KIND_LABELS } from '@/lib/graph-colors';
-import type { GraphData, GraphNode, GraphNodeKind } from '@/lib/types';
-
-/** Node size (px) per kind. Law nodes anchor the canvas; articles ring them. */
-const KIND_SIZE: Record<GraphNodeKind, number> = {
-  law: 56,
-  article: 36,
-  reference: 36,
-  amendment: 36,
-  repealed: 40,
-};
 
 export interface GraphCanvasProps {
   data: GraphData;
@@ -35,367 +41,180 @@ export interface GraphCanvasProps {
   className?: string;
 }
 
-/**
- * Obsidian-style graph canvas — closes #87.
- *
- * Replaces the original inline SVG with `@xyflow/react`. Public API
- * (props + onSelect contract) is unchanged so `GraphPage.tsx` doesn't
- * need to move.
- *
- * --- Layout ---
- * The backend doesn't ship node positions yet. We compute a deterministic
- * radial layout once per `data` reference: law-kind nodes anchor a small
- * inner ring; references / amendments sit on a middle ring; articles +
- * repealed go on the outer ring. The result is stable across renders
- * (no force-sim jiggling) and scales to a few hundred nodes per ring
- * before crowding becomes a problem — past that we'll swap to dagre or
- * d3-force per the follow-ups below.
- *
- * --- Performance ---
- * `onlyRenderVisibleElements` keeps off-screen nodes out of the React
- * tree during pan/zoom — required to hold 60 fps once the corpus has
- * thousands of laws (#87 acceptance criterion).
- *
- * --- WHERE TO CHANGE IF X CHANGES ---
- * * Color tokens             → ``lib/graph-colors.ts`` (shared with
- *                               ``GraphPage`` and ``DashboardPage``).
- *                               Edge stroke per kind lives in
- *                               ``GRAPH_EDGE_STROKE`` there.
- * * Node size                 → ``KIND_SIZE`` above.
- * * Layout policy             → ``_layout`` below
- * * Node visual               → ``LfNode`` component
- *
- * --- FOLLOW-UPS (tracked in #87's parent epic) ---
- * 1. Force-directed simulation with adjustable repulsion / link strength
- * 2. Hover preview card (popover with title + first 3 tags)
- * 3. Depth slider (1-hop / 2-hop / 3-hop neighbourhood)
- * 4. Tag-driven hue ring
- * 5. Local-graph mode for ``/laws/:id`` pages
- *
- * The public API (props) stays stable through all of those.
- */
-
-interface LfNodeData extends Record<string, unknown> {
-  label: string;
+/** Node shape fed to the force engine (it mutates x/y/vx/vy in place). */
+interface FGNode {
+  id: string;
   kind: GraphNodeKind;
-  dim: boolean;
-  selected: boolean;
-  /** #143 — PageRank over the subgraph (0..1). Scales node size. */
+  label: string;
   pagerank: number;
-  onSelect: (id: string) => void;
+  x?: number;
+  y?: number;
 }
 
-/**
- * Map a node's PageRank to a px diameter on top of its base kind size.
- * PageRank within a subgraph is tiny (sums to 1 across all nodes), so we
- * scale generously: a node with 3× the mean rank reads visibly bigger
- * without the hubs ballooning off-screen.
- */
-function sizeForNode(kind: GraphNodeKind, pagerank: number): number {
-  const base = KIND_SIZE[kind];
-  // +0..28px on top of the base, capped. 0.15 pagerank (a strong hub in a
-  // ~15-node subgraph) hits the cap.
-  const boost = Math.min(28, pagerank * 190);
-  return Math.round(base + boost);
+interface FGLink {
+  source: string | FGNode;
+  target: string | FGNode;
+  kind?: NonNullable<GraphEdge['kind']>;
 }
 
-const LfNode = memo(function LfNode({ id, data }: NodeProps<RFNode<LfNodeData>>) {
-  const { label, kind, dim, selected: isSelected, pagerank, onSelect } = data;
-  const size = sizeForNode(kind, pagerank);
-  const fill = GRAPH_KIND_FILL[kind];
-  return (
-    <button
-      type="button"
-      className={cn(
-        'group relative grid place-items-center rounded-full transition-opacity',
-        dim ? 'opacity-25' : 'opacity-100',
-      )}
-      style={{ width: size, height: size }}
-      onClick={() => onSelect(id)}
-      aria-label={`${NODE_KIND_LABELS[kind]}: ${label}`}
-    >
-      {/* Connection handles — `@xyflow/react` requires them on every node,
-          even when edges connect arbitrarily. Hidden visually. */}
-      <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
-      <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
-      {isSelected && (
-        <span
-          aria-hidden
-          className="absolute inset-[-10px] rounded-full"
-          style={{ background: GRAPH_PRIMARY_SOFT }}
-        />
-      )}
-      <span
-        aria-hidden
-        className="size-full rounded-full"
-        style={{
-          background: fill,
-          boxShadow: isSelected ? `0 0 0 3px hsl(var(--bg)), 0 0 18px ${GRAPH_PRIMARY_GLOW}` : undefined,
-        }}
-      />
-      {kind === 'law' && (
-        <span
-          aria-hidden
-          className="absolute size-[60%] rounded-full"
-          style={{ border: '1.5px solid hsl(var(--bg) / 0.55)' }}
-        />
-      )}
-      <span
-        className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap text-[11px] font-medium text-fg"
-        style={{ fontFamily: '"JetBrains Mono", monospace', fontWeight: isSelected ? 600 : 500 }}
-      >
-        {label}
-      </span>
-    </button>
-  );
-});
+/** Base node radius (graph units) per kind; laws anchor, the rest ring them. */
+const BASE_RADIUS: Record<GraphNodeKind, number> = {
+  law: 7,
+  article: 4.5,
+  reference: 4.5,
+  amendment: 4.5,
+  repealed: 5,
+};
 
-const NODE_TYPES = { lf: LfNode } as const;
+const LABEL_ZOOM = 1.3;
+const DIM_ALPHA = 0.18;
 
-/**
- * Cheap-and-deterministic radial layout. We compute it once per
- * `nodes` reference (memoised by the caller) and feed the positions
- * straight into react-flow.
- *
- * Picking radii by kind keeps the visual story clear at a glance
- * (laws in the centre, articles on the outside) without needing a
- * force-sim warmup pass.
- */
-function _layout(nodes: GraphNode[]): Map<string, { x: number; y: number }> {
-  const positions = new Map<string, { x: number; y: number }>();
-  const buckets: Record<GraphNodeKind, GraphNode[]> = {
-    law: [], article: [], reference: [], amendment: [], repealed: [],
-  };
-  for (const node of nodes) buckets[node.kind].push(node);
+function nodeRadius(node: FGNode): number {
+  const base = BASE_RADIUS[node.kind] ?? 4.5;
+  // PageRank within a subgraph is tiny (sums to 1); scale generously but cap.
+  return base + Math.min(7, node.pagerank * 45);
+}
 
-  const ringRadius: Record<GraphNodeKind, number> = {
-    law: 180,
-    reference: 320,
-    amendment: 320,
-    article: 460,
-    repealed: 460,
-  };
-  // The inner ring rotates slightly so the law that opened the page sits
-  // at the top — same trick Obsidian uses to "anchor" the focused node.
-  const ringOffset: Record<GraphNodeKind, number> = {
-    law: -Math.PI / 2,
-    reference: -Math.PI / 2 + 0.25,
-    amendment: -Math.PI / 2 - 0.25,
-    article: -Math.PI / 2,
-    repealed: -Math.PI / 2 + Math.PI,
-  };
-
-  for (const kind of Object.keys(buckets) as GraphNodeKind[]) {
-    const bucket = buckets[kind];
-    if (bucket.length === 0) continue;
-    const r = ringRadius[kind];
-    const offset = ringOffset[kind];
-    for (let i = 0; i < bucket.length; i++) {
-      const node = bucket[i];
-      // Prefer backend-supplied positions when present — once the API
-      // ships node coords (issue #146), this branch carries them straight
-      // through.
-      if (node.x != null && node.y != null) {
-        positions.set(node.id, { x: node.x, y: node.y });
-        continue;
-      }
-      const angle = offset + (i * 2 * Math.PI) / bucket.length;
-      positions.set(node.id, {
-        x: Math.cos(angle) * r,
-        y: Math.sin(angle) * r,
-      });
-    }
+function prefersReducedMotion(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
   }
-  return positions;
 }
 
-function GraphCanvasInner({ data, visibleKinds, selected, onSelect, className }: GraphCanvasProps) {
-  const visibleSet = useMemo(
-    () => new Set(data.nodes.filter((n) => visibleKinds.has(n.kind)).map((n) => n.id)),
-    [data, visibleKinds],
-  );
-  const layout = useMemo(() => _layout(data.nodes), [data]);
+/** Append an alpha to a literal ``hsl(h s% l%)`` string for canvas use. */
+function withAlpha(hsl: string, alpha: number): string {
+  return hsl.replace(')', ` / ${alpha})`);
+}
 
-  // #452 — selection must be O(delta), not O(N). The heavy `data.nodes.map`
-  // / `data.edges.map` passes build the full react-flow arrays (one fresh
-  // object + inline `data`/`style` per node and edge) and must NOT depend
-  // on `selected`; otherwise every click re-allocates ALL N nodes and M
-  // edges, handing `<ReactFlow>` brand-new identities and defeating the
-  // `memo`'d `LfNode`. We compute the selection-independent base once, then
-  // a thin overlay re-derives only the 1–2 objects whose highlight state
-  // actually flipped — reusing every untouched object by identity so the
-  // memoised node/edge components don't re-render.
-  const baseNodes = useMemo<RFNode<LfNodeData>[]>(
-    () =>
-      data.nodes.map((n) => {
-        const pos = layout.get(n.id) ?? { x: 0, y: 0 };
-        return {
-          id: n.id,
-          type: 'lf',
-          position: pos,
-          data: {
-            label: n.label,
-            kind: n.kind,
-            dim: !visibleSet.has(n.id) || Boolean(n.dim),
-            // Baseline: unselected. The overlay below flips this for the
-            // single selected node without touching the rest.
-            selected: false,
-            // #143 — PageRank lives in `meta.pagerank` (number) from the
-            // API transformer. Default 0 so mock data (no pagerank) keeps
-            // the base kind size.
-            pagerank: typeof n.meta?.pagerank === 'number' ? n.meta.pagerank : 0,
-            onSelect,
-          },
-          // Disable the default drag — Obsidian-style canvases keep the
-          // layout immutable so the user can rely on relative position
-          // memory across sessions.
-          draggable: false,
-        };
-      }),
-    [data.nodes, layout, visibleSet, onSelect],
-  );
-
-  // Selection overlay (cheap): reuse each base node by identity unless its
-  // `selected` flag actually changes, so only the node(s) gaining/losing
-  // selection get a new object — keeping the memoised `LfNode` stable for
-  // the other N-1 nodes.
-  const flowNodes = useMemo<RFNode<LfNodeData>[]>(
-    () =>
-      baseNodes.map((n) => {
-        const sel = n.id === selected;
-        if (n.data.selected === sel) return n;
-        return { ...n, data: { ...n.data, selected: sel } };
-      }),
-    [baseNodes, selected],
-  );
-
-  const baseEdges = useMemo<Edge[]>(
-    () =>
-      data.edges.map((e) => {
-        const bothVisible = visibleSet.has(e.source) && visibleSet.has(e.target);
-        // Unselected edges pick up the per-kind hue (#144 wire field).
-        // Legacy edges with no kind fall back to the previous neutral
-        // border stroke. The overlay below swaps in the brand-indigo
-        // highlight for edges incident to the selected node.
-        const kindStroke = e.kind ? GRAPH_EDGE_STROKE[e.kind] : 'hsl(var(--border-strong))';
-        return {
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          // Thin curved edges read calmer than the default straight lines
-          // when nodes sit on the same ring. ``smoothstep`` is built in.
-          type: 'smoothstep',
-          animated: false,
-          style: {
-            stroke: kindStroke,
-            strokeWidth: 1,
-            opacity: bothVisible ? 0.55 : 0.08,
-          },
-        };
-      }),
-    [data.edges, visibleSet],
-  );
-
-  // Selection overlay for edges: only edges touching the selected node need
-  // the indigo highlight. We reuse every other base edge by identity so the
-  // bulk of the array stays referentially stable across clicks.
-  const flowEdges = useMemo<Edge[]>(
-    () =>
-      baseEdges.map((e) => {
-        const isSelected = e.source === selected || e.target === selected;
-        if (!isSelected) return e;
-        const bothVisible = visibleSet.has(e.source) && visibleSet.has(e.target);
-        return {
-          ...e,
-          style: {
-            ...e.style,
-            stroke: GRAPH_PRIMARY,
-            strokeWidth: 2,
-            opacity: bothVisible ? 1 : 0.08,
-          },
-        };
-      }),
-    [baseEdges, visibleSet, selected],
-  );
-
-  // Keep the viewport centered on first mount + whenever the dataset
-  // identity changes. Once mounted, the user owns the camera (pan/zoom).
+export function GraphCanvas({ data, visibleKinds, selected, onSelect, className }: GraphCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const handlePaneClick = useCallback(() => {
-    // Clicking empty space deselects, matching Obsidian's interaction.
-    if (selected != null) onSelect('');
-  }, [onSelect, selected]);
-  useEffect(() => {
-    // No-op for now — `fitView` on the ReactFlow component below does
-    // the initial framing. Keeps the ref handy for the upcoming
-    // local-graph "focus on node" follow-up.
+  const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | undefined>(undefined);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const reduced = useMemo(prefersReducedMotion, []);
+
+  // Stable across selection + filter changes (depends on `data` only) so the
+  // simulation never restarts on a click or a chip toggle.
+  const graphData = useMemo(() => {
+    const nodes = data.nodes.map(
+      (n): FGNode => ({
+        id: n.id,
+        kind: n.kind,
+        label: n.label,
+        pagerank: typeof n.meta?.pagerank === 'number' ? n.meta.pagerank : 0,
+      }),
+    );
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const links = data.edges.map((e): FGLink => ({ source: e.source, target: e.target, kind: e.kind }));
+    return { nodes, links, byId };
   }, [data]);
+
+  // The label colour is theme-dependent (`--fg`); the canvas can't read CSS
+  // vars, so resolve it once. Re-reads on remount; good enough for v1.
+  const labelColor = useMemo(() => {
+    try {
+      const v = getComputedStyle(document.documentElement).getPropertyValue('--fg').trim();
+      return v ? `hsl(${v})` : '#9aa0aa';
+    } catch {
+      return '#9aa0aa';
+    }
+  }, []);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0].contentRect;
+      setSize({ w: Math.max(0, Math.floor(r.width)), h: Math.max(0, Math.floor(r.height)) });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const isVisible = (kind: GraphNodeKind) => visibleKinds.has(kind);
+  const resolve = (end: string | FGNode): FGNode | undefined =>
+    typeof end === 'object' ? end : graphData.byId.get(end);
 
   return (
     <div ref={wrapperRef} className={cn('size-full', className)}>
-      <ReactFlow
-        nodes={flowNodes}
-        edges={flowEdges}
-        nodeTypes={NODE_TYPES}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        proOptions={{ hideAttribution: true }}
-        // #87 / #73 60-fps target. Each flag below shaves measurable
-        // CPU off pan/zoom on a 1000+ node graph:
-        //
-        // * `onlyRenderVisibleElements` — culls off-screen nodes from
-        //   the React tree during pan/zoom. The single biggest win on
-        //   the full corpus.
-        // * `nodesDraggable / nodesConnectable / nodesFocusable` —
-        //   we never let the user drag or connect nodes (layout is
-        //   computed deterministically). Disabling them skips the
-        //   per-node listener wiring + hit-testing in xyflow's
-        //   pointer handler.
-        // * `edgesFocusable` — same idea for edges; the SPA doesn't
-        //   surface edge-level interactions.
-        // * `elevateNodesOnSelect: false` — avoids the relatively
-        //   expensive z-index reshuffle on every selection.
-        onlyRenderVisibleElements
-        nodesDraggable={false}
-        nodesConnectable={false}
-        nodesFocusable={false}
-        edgesFocusable={false}
-        elevateNodesOnSelect={false}
-        onPaneClick={handlePaneClick}
-        // Plain pan/zoom — no Obsidian-style inertia for this first cut.
-        panOnDrag
-        panOnScroll
-        zoomOnScroll
-        minZoom={0.2}
-        maxZoom={2}
-      >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--border))" />
-        <Controls showInteractive={false} />
-        <MiniMap
-          pannable
-          zoomable
-          // bgColor MUST be set: react-flow's MiniMap defaults to white, so
-          // in dark theme it rendered as a glaring white box (#569). Theme
-          // it to the surface token so it reads as a panel in both themes.
-          bgColor="hsl(var(--surface))"
-          maskColor="hsl(var(--bg) / 0.6)"
-          nodeStrokeColor="hsl(var(--border-strong))"
-          nodeColor={(node) => GRAPH_KIND_FILL[(node.data as LfNodeData).kind] ?? 'hsl(var(--muted-fg))'}
-        />
-      </ReactFlow>
-    </div>
-  );
-}
+      {size.w > 0 && size.h > 0 && (
+        <ForceGraph2D
+          ref={fgRef}
+          width={size.w}
+          height={size.h}
+          graphData={graphData}
+          backgroundColor="rgba(0,0,0,0)"
+          // Reduced-motion: pre-settle off-screen (warmup) then freeze. Normal:
+          // animate the settle over a bounded number of ticks.
+          warmupTicks={reduced ? 150 : 0}
+          cooldownTicks={reduced ? 0 : 200}
+          onEngineStop={() => fgRef.current?.zoomToFit(400, 56)}
+          enableNodeDrag={false}
+          minZoom={0.4}
+          maxZoom={6}
+          nodeRelSize={1}
+          onNodeClick={(n) => onSelect((n as FGNode).id)}
+          onBackgroundClick={() => {
+            if (selected) onSelect('');
+          }}
+          linkColor={(l) => {
+            const link = l as FGLink;
+            const s = resolve(link.source);
+            const t = resolve(link.target);
+            const dim = (s != null && !isVisible(s.kind)) || (t != null && !isVisible(t.kind));
+            const base = link.kind ? GRAPH_EDGE_STROKE[link.kind] : 'hsl(220 9% 50%)';
+            return withAlpha(base, dim ? 0.06 : 0.5);
+          }}
+          nodeCanvasObjectMode={() => 'replace'}
+          nodeCanvasObject={(n, ctx, scale) => {
+            const node = n as FGNode;
+            const x = node.x ?? 0;
+            const y = node.y ?? 0;
+            const r = nodeRadius(node);
+            const visible = isVisible(node.kind);
+            const isSel = node.id === selected;
 
-/**
- * Public component. Wraps the inner renderer in a ``ReactFlowProvider``
- * so the parent page doesn't need to worry about react-flow's context
- * requirements.
- */
-export function GraphCanvas(props: GraphCanvasProps) {
-  return (
-    <ReactFlowProvider>
-      <GraphCanvasInner {...props} />
-    </ReactFlowProvider>
+            ctx.save();
+            ctx.globalAlpha = visible ? 1 : DIM_ALPHA;
+
+            if (isSel) {
+              ctx.beginPath();
+              ctx.arc(x, y, r + 5, 0, 2 * Math.PI);
+              ctx.fillStyle = withAlpha(GRAPH_PRIMARY, 0.18);
+              ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, 2 * Math.PI);
+            ctx.fillStyle = GRAPH_KIND_FILL[node.kind];
+            ctx.fill();
+            if (isSel) {
+              ctx.lineWidth = 2 / scale;
+              ctx.strokeStyle = GRAPH_PRIMARY;
+              ctx.stroke();
+            }
+
+            if (visible && (isSel || scale > LABEL_ZOOM)) {
+              const fontSize = 12 / scale;
+              ctx.font = `${fontSize}px Inter, system-ui, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'top';
+              ctx.fillStyle = labelColor;
+              const label = node.label.length > 42 ? `${node.label.slice(0, 41)}…` : node.label;
+              ctx.fillText(label, x, y + r + 2 / scale);
+            }
+            ctx.restore();
+          }}
+          nodePointerAreaPaint={(n, color, ctx) => {
+            const node = n as FGNode;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x ?? 0, node.y ?? 0, nodeRadius(node) + 2, 0, 2 * Math.PI);
+            ctx.fill();
+          }}
+        />
+      )}
+    </div>
   );
 }
