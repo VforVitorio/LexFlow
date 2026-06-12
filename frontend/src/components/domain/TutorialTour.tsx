@@ -26,9 +26,97 @@
  * * Re-launch entry point   → `SettingsPage` consumes `useTour()`.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
+
+// Spotlight padding around the target rect, and the dim wash colour (#575).
+const SPOTLIGHT_PAD = 8;
+const SPOTLIGHT_DIM = 'hsl(222 30% 6% / 0.72)';
+
+/**
+ * Self-rendered tour spotlight (#575).
+ *
+ * Reactour's built-in SVG mask collapses to 0×0 in this app's `h-full` /
+ * `#root` layout, so the dim never appears. This component sidesteps it: it
+ * reads the active step's `selector`, measures the real target rect, and
+ * paints a fixed div whose huge `box-shadow` darkens everything *except* the
+ * rounded cut-out over the target. Sits just under Reactour's popover.
+ *
+ * The intro step (`selector: 'body'`) gets no cut-out on purpose — it's a
+ * centred welcome, not a "look here" moment.
+ */
+function TourSpotlight() {
+  const { isOpen, currentStep, steps } = useTour();
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setRect(null);
+      return;
+    }
+    const selector = steps?.[currentStep]?.selector;
+    if (typeof selector !== 'string' || selector === 'body') {
+      setRect(null);
+      return;
+    }
+    const target = document.querySelector(selector);
+    if (!target) {
+      setRect(null);
+      return;
+    }
+    const measure = () => setRect(target.getBoundingClientRect());
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [isOpen, currentStep, steps]);
+
+  if (!isOpen || !rect) return null;
+  // Dim with four solid rects around the target (top / bottom / left / right)
+  // rather than one giant box-shadow — browsers cap shadow spread, so the
+  // shadow trick paints nothing past a point. Four rects always fill. A fifth
+  // transparent div draws the indigo ring on the cut-out. Portaled to <body>
+  // so no transformed ancestor clips them.
+  const hole = {
+    top: rect.top - SPOTLIGHT_PAD,
+    left: rect.left - SPOTLIGHT_PAD,
+    width: rect.width + SPOTLIGHT_PAD * 2,
+    height: rect.height + SPOTLIGHT_PAD * 2,
+  };
+  const dim: React.CSSProperties = { position: 'fixed', background: SPOTLIGHT_DIM, zIndex: 99998, pointerEvents: 'none' };
+  return createPortal(
+    <div aria-hidden>
+      {/* top */}
+      <div style={{ ...dim, top: 0, left: 0, width: '100vw', height: Math.max(0, hole.top) }} />
+      {/* bottom */}
+      <div style={{ ...dim, top: hole.top + hole.height, left: 0, width: '100vw', bottom: 0 }} />
+      {/* left */}
+      <div style={{ ...dim, top: hole.top, left: 0, width: Math.max(0, hole.left), height: hole.height }} />
+      {/* right */}
+      <div style={{ ...dim, top: hole.top, left: hole.left + hole.width, right: 0, height: hole.height }} />
+      {/* ring on the spotlit target */}
+      <div
+        style={{
+          position: 'fixed',
+          top: hole.top,
+          left: hole.left,
+          width: hole.width,
+          height: hole.height,
+          borderRadius: 12,
+          boxShadow: 'inset 0 0 0 1.5px hsl(252 95% 65% / 0.9)',
+          zIndex: 99998,
+          pointerEvents: 'none',
+        }}
+      />
+    </div>,
+    document.body,
+  );
+}
 
 export const TUTORIAL_COMPLETED_STORAGE_KEY = 'lexflow.tutorial-completed';
 
@@ -141,26 +229,33 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       // override the colours so the tour matches the indigo accent the
       // rest of the SPA uses.
       styles={{
+        // Acrylic/glass popover (#575) — translucent surface + backdrop blur,
+        // matching the app's `air-glass` treatment instead of a flat box.
         popover: (base) => ({
           ...base,
-          backgroundColor: 'hsl(var(--surface))',
+          background: 'hsl(var(--surface) / 0.82)',
+          backdropFilter: 'blur(16px) saturate(1.5)',
+          WebkitBackdropFilter: 'blur(16px) saturate(1.5)',
           color: 'hsl(var(--fg))',
-          borderRadius: '0.75rem',
-          padding: '1.25rem',
-          maxWidth: 360,
-          border: '1px solid hsl(var(--border))',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.18)',
+          borderRadius: '1rem',
+          padding: '1.25rem 1.25rem 1rem',
+          maxWidth: 380,
+          border: '1px solid hsl(var(--border-strong))',
+          boxShadow: '0 12px 48px rgba(0, 0, 0, 0.28)',
         }),
-        maskWrapper: (base) => ({
-          ...base,
-          color: 'rgba(0, 0, 0, 0.55)',
-        }),
+        // Hide Reactour's built-in mask entirely. Its full-screen SVG renders
+        // on top of everything (z 99999) but its dim never paints in this
+        // app's layout, and left visible it sits over our own <TourSpotlight>.
+        // We paint the spotlight ourselves below.
+        maskWrapper: (base) => ({ ...base, display: 'none' }),
         badge: (base) => ({
           ...base,
           backgroundColor: 'hsl(252, 95%, 60%)',
         }),
         dot: (base, state) => ({
           ...base,
+          width: 7,
+          height: 7,
           backgroundColor: state?.current ? 'hsl(252, 95%, 60%)' : 'hsl(var(--border-strong))',
         }),
       }}
@@ -172,6 +267,34 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       showNavigation
       showBadge
       showDots
+      // Custom nav (#575): a ghost "Atrás" and a primary "Siguiente", with
+      // the last step ending on an explicit "¡Listo! A disfrutar" CTA so the
+      // tour finishes on a clear completion moment instead of just stopping.
+      prevButton={({ currentStep, setCurrentStep }) =>
+        currentStep === 0 ? (
+          <span />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setCurrentStep((s) => Math.max(0, s - 1))}
+            className="rounded-md px-2.5 py-1.5 text-[13px] font-medium text-muted transition-colors hover:bg-surface-2 hover:text-fg"
+          >
+            Atrás
+          </button>
+        )
+      }
+      nextButton={({ currentStep, stepsLength, setCurrentStep, setIsOpen }) => {
+        const isLast = currentStep === stepsLength - 1;
+        return (
+          <button
+            type="button"
+            onClick={() => (isLast ? setIsOpen(false) : setCurrentStep((s) => Math.min(stepsLength - 1, s + 1)))}
+            className="rounded-md bg-indigo-600 px-3.5 py-1.5 text-[13px] font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          >
+            {isLast ? '¡Listo! A disfrutar' : 'Siguiente'}
+          </button>
+        );
+      }}
       onClickClose={({ setIsOpen }) => {
         _markTutorialCompleted();
         setIsOpen(false);
@@ -196,6 +319,7 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      <TourSpotlight />
     </TourProvider>
   );
 }
