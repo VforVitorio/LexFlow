@@ -3,8 +3,10 @@
 // node scripts/shot-resize.mjs <before.png> <after.png>
 import { chromium } from '@playwright/test';
 
-const beforeOut = process.argv[2] ?? 'rail-before.png';
-const afterOut = process.argv[3] ?? 'rail-after.png';
+// Defaults use the `.shot-` prefix so they're covered by the single
+// `.shot-*.png` .gitignore rule and never get committed accidentally.
+const beforeOut = process.argv[2] ?? '.shot-rail-before.png';
+const afterOut = process.argv[3] ?? '.shot-rail-after.png';
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 820 } });
