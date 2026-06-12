@@ -1,6 +1,9 @@
 import { X } from 'lucide-react';
-import { useUi } from '@/lib/store';
+import { useTranslation } from 'react-i18next';
+import { useUi, RIGHT_RAIL_MIN, RIGHT_RAIL_MAX } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { RailResizer } from './RailResizer';
+import { useEdgeResize } from './use-edge-resize';
 
 /**
  * Generic contextual panel container. Pages render their own content inside —
@@ -15,20 +18,37 @@ import { cn } from '@/lib/utils';
 export function RightRail({ children, className }: { children: React.ReactNode; className?: string }) {
   const open = useUi((s) => s.rightOpen);
   const setRight = useUi((s) => s.setRight);
+  const rightWidth = useUi((s) => s.rightWidth);
+  const setRightWidth = useUi((s) => s.setRightWidth);
+  const { t } = useTranslation();
+  const { dragging, startDrag } = useEdgeResize('right', setRightWidth);
   if (!open) return null;
 
   return (
     <>
-      {/* Desktop: docked side panel. */}
+      {/* Desktop: docked side panel, drag-resizable on its left edge (#594).
+          The aside itself doesn't scroll — an inner div does — so the resize
+          separator stays pinned to the edge instead of scrolling away. */}
       <aside
         role="complementary"
         aria-label="Panel contextual"
+        style={{ width: rightWidth }}
         className={cn(
-          'hidden w-[340px] shrink-0 overflow-auto border-l border-border bg-surface p-5 scrollbar-thin md:block',
-          className,
+          'relative hidden shrink-0 border-l border-border bg-surface md:block',
+          !dragging && 'transition-[width] duration-200',
         )}
       >
-        {children}
+        <div className={cn('h-full overflow-auto p-5 scrollbar-thin', className)}>{children}</div>
+        <RailResizer
+          edge="right"
+          width={rightWidth}
+          setWidth={setRightWidth}
+          min={RIGHT_RAIL_MIN}
+          max={RIGHT_RAIL_MAX}
+          label={t('nav.resizePanel')}
+          dragging={dragging}
+          startDrag={startDrag}
+        />
       </aside>
 
       {/* Mobile: bottom sheet + dismissible backdrop. */}

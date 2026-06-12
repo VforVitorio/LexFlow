@@ -9,7 +9,9 @@
     "main": "Main navigation",
     "collapse": "Collapse",
     "expand": "Expand",
-    "recent": "Recent"
+    "recent": "Recent",
+    "resize": "Resize sidebar width",
+    "resizePanel": "Resize panel width"
   },
   "shell": {
     "searchPlaceholder": "Search laws, articles…",
