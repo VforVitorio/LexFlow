@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { cn } from '@/lib/utils';
+import { LawMarkdown } from '@/components/domain/LawMarkdown';
 import type { Article, ArticleRef } from '@/lib/types';
 
 export interface ArticleBlockProps {
@@ -30,17 +31,19 @@ function ArticleBlockImpl({ article, size = 16, onCitationClick }: ArticleBlockP
       </div>
       <h3 className="mb-2.5 font-display text-[17px] font-semibold">{article.titulo}</h3>
       {article.body.map((clause, i) => (
-        <p
+        // <div> (not <p>): clause.text is Markdown that may render block
+        // elements (headings, GFM tables) which are invalid inside <p> (#591).
+        <div
           key={i}
           className="mb-3 text-pretty leading-relaxed"
           style={{ fontSize: size, lineHeight: 1.7 }}
         >
           {clause.marker && <span className="font-semibold mr-1">{clause.marker}.</span>}
-          {clause.text}{' '}
+          <LawMarkdown>{clause.text}</LawMarkdown>{' '}
           {clause.citations.map((c, ci) => (
             <CitationSup key={ci} index={ci + 1} ref_={c} onClick={() => onCitationClick?.(c)} />
           ))}
-        </p>
+        </div>
       ))}
       {article.refs.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
