@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { liveSecretsApi, type SecretStatusItem } from '@/lib/api/secrets';
 import { api } from '@/lib/api';
@@ -347,8 +347,14 @@ function SemanticSearchCard() {
   const [explainOpen, setExplainOpen] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [log, setLog] = useState<string[]>([]);
+  // Ref guard, not the `installing` state: a rapid double-click (the card
+  // button + the dialog's "Adelante") fires before React re-renders, so the
+  // state alone wouldn't stop a second stream from starting (#626 review).
+  const installingRef = useRef(false);
 
   const runInstall = useCallback(async () => {
+    if (installingRef.current) return;
+    installingRef.current = true;
     setExplainOpen(false);
     setInstalling(true);
     setLog([]);
@@ -375,6 +381,7 @@ function SemanticSearchCard() {
       });
     } finally {
       setInstalling(false);
+      installingRef.current = false;
     }
   }, [refetch, t]);
 
