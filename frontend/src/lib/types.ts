@@ -304,6 +304,19 @@ export type ModelPullEvent =
   | { type: 'done'; model: string }
   | { type: 'error'; code: string; message: string };
 
+/**
+ * One event from the `POST /api/v1/system/semantic-install` SSE stream (#578).
+ *
+ * The semantic extra has no byte counters (pip/uv print opaque log lines), so
+ * `progress` carries a single human-readable `status` line. Terminates on
+ * `done` (extra installed) or `error` (with a `code` the card branches on,
+ * e.g. `semantic_install_unavailable` in a frozen build).
+ */
+export type SemanticInstallEvent =
+  | { type: 'progress'; status: string }
+  | { type: 'done'; package: string }
+  | { type: 'error'; code: string; message: string };
+
 // ─── Sync / status ───────────────────────────────────────────────────────
 
 export interface SyncStatus {
@@ -559,6 +572,12 @@ export interface ApiClient {
     health(): Promise<HealthSnapshot>;
     /** Semantic-search backend availability (#43). Settings → Models card. */
     semanticStatus(): Promise<SemanticStatus>;
+    /**
+     * Install the optional `[semantic]` extra in-app (#578), streaming
+     * progress like `models.pull`. The Settings card consumes this so a
+     * lawyer never copies a `uv sync` command into a terminal.
+     */
+    installSemantic(): AsyncIterable<SemanticInstallEvent>;
   };
 }
 
