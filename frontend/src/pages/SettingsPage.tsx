@@ -284,10 +284,27 @@ function ModelsSection() {
               <span className="font-semibold">{p.vendor}</span>
               <span className="font-mono text-[11px] text-muted">{p.id}</span>
             </div>
-            <div className="text-[12px] text-muted">{p.available ? t('settings.models.connected') : t('settings.models.noKey')}</div>
+            {/* #593 — local providers (Ollama/LM Studio) run on the user's
+                machine and need NO API key, so "Falta clave" was wrong for
+                them. When a local provider isn't available it's just not
+                running/detected; only cloud providers can lack a key. */}
+            <div className="text-[12px] text-muted">
+              {p.available
+                ? t('settings.models.connected')
+                : p.kind === 'local'
+                  ? t('settings.models.notDetected')
+                  : t('settings.models.noKey')}
+            </div>
           </div>
-          <Badge tone={p.available ? 'success' : 'danger'} icon={p.available ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}>
-            {p.available ? t('settings.models.active') : t('settings.models.missingKey')}
+          <Badge
+            tone={p.available ? 'success' : p.kind === 'local' ? 'amber' : 'danger'}
+            icon={p.available ? <CheckCircle2 className="size-3" /> : <AlertTriangle className="size-3" />}
+          >
+            {p.available
+              ? t('settings.models.active')
+              : p.kind === 'local'
+                ? t('settings.models.notRunning')
+                : t('settings.models.missingKey')}
           </Badge>
           <Button size="sm" variant="ghost" onClick={() => setDefaultModel(p.id)} icon={<Cog className="size-3.5" />} />
         </div>
