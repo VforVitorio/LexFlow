@@ -345,11 +345,16 @@ export const CHAT_MESSAGES: Record<string, ChatMessage[]> = {
 
 // ─── Models ──────────────────────────────────────────────────────────────
 
+// Mock mode can't know which providers the user has configured, so every
+// entry is `available: false` ("not set up") — claiming Claude/GPT-4o/Llama
+// were ready misled users in mock mode into thinking providers were
+// configured when they weren't (#611). The catalogue stays so the picker
+// still renders; real availability needs the backend (VITE_USE_MOCK=false).
 export const MODELS: Model[] = [
-  { id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5', vendor: 'Anthropic', kind: 'cloud', available: true },
-  { id: 'gpt-4o',            label: 'GPT-4o',           vendor: 'OpenAI',    kind: 'cloud', available: true },
+  { id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5', vendor: 'Anthropic', kind: 'cloud', available: false },
+  { id: 'gpt-4o',            label: 'GPT-4o',           vendor: 'OpenAI',    kind: 'cloud', available: false },
   { id: 'gemini-2.5-pro',    label: 'Gemini 2.5 Pro',   vendor: 'Google',    kind: 'cloud', available: false },
-  { id: 'llama3.3:70b',      label: 'Llama 3.3 70B',    vendor: 'Ollama',    kind: 'local', available: true },
+  { id: 'llama3.3:70b',      label: 'Llama 3.3 70B',    vendor: 'Ollama',    kind: 'local', available: false },
   { id: 'qwen2.5:32b',       label: 'Qwen 2.5 32B',     vendor: 'LM Studio', kind: 'local', available: false },
 ];
 
