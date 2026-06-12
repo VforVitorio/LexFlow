@@ -464,7 +464,20 @@
       "semanticLoading": "Checking…",
       "semanticActiveBody": "Using model {{model}}.",
       "semanticEnableHint": "Set LEXFLOW_EMBEDDER=sentence-transformers and restart the backend to enable it.",
-      "semanticInstallHint": "Install the extra (uv sync --extra semantic or pip install \"lexflow[semantic]\") and set LEXFLOW_EMBEDDER=sentence-transformers."
+      "semanticInstallHint": "Install the extra (uv sync --extra semantic or pip install \"lexflow[semantic]\") and set LEXFLOW_EMBEDDER=sentence-transformers.",
+      "semanticWhatIsThis": "What's this?",
+      "semanticInstall": "Install",
+      "semanticDisk": "~2 GB disk",
+      "semanticRam": "~1 GB RAM",
+      "semanticInstalling": "Installing…",
+      "semanticInstallDone": "Semantic search installed",
+      "semanticInstallDoneMsg": "You can now search the whole corpus by meaning.",
+      "semanticInstallError": "Couldn't install",
+      "semanticExplainTitle": "Search by meaning",
+      "semanticExplainBody": "Finds articles by what they mean, not just exact words. For example, search 'unfair dismissal' and related laws show up even if they don't use those exact words.",
+      "semanticExplainWhy": "It improves search and chat answers when you don't recall the exact legal term. Downloaded once, then it works offline.",
+      "semanticCancel": "Cancel",
+      "semanticGoAhead": "Go ahead, install it"
     },
     "appearance": {
       "title": "Appearance",

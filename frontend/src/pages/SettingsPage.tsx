@@ -1,7 +1,20 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { liveSecretsApi, type SecretStatusItem } from '@/lib/api/secrets';
-import { Settings as Cog, CheckCircle2, AlertTriangle, Wand2, Sparkles } from 'lucide-react';
+import { api } from '@/lib/api';
+import {
+  Settings as Cog,
+  CheckCircle2,
+  AlertTriangle,
+  Wand2,
+  Sparkles,
+  HelpCircle,
+  Download,
+  Loader2,
+  HardDrive,
+  MemoryStick,
+  X,
+} from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
@@ -317,17 +330,60 @@ function ModelsSection() {
 }
 
 /**
- * #43 — Settings → Models "semantic search" card.
+ * #43 / #578 — Settings → Models "semantic search" card.
  *
  * Surfaces whether the optional ``[semantic]`` extra is installed and
  * whether real (model-based) ranking is in effect, reading
- * ``GET /api/v1/system/semantic-status``. The "install" is instructional
- * (no one-click runtime pip install) — we tell the user the exact
- * command + env var rather than pretend to do it for them.
+ * ``GET /api/v1/system/semantic-status``.
+ *
+ * When the extra is NOT installed the card shows a lawyer-friendly pair of
+ * buttons — "¿Qué es esto?" (a jargon-free explanation) and "Instalar"
+ * (an in-app install streamed from ``POST /system/semantic-install``,
+ * #578) — instead of the developer ``uv sync`` command it used to print.
  */
 function SemanticSearchCard() {
   const { t } = useTranslation();
-  const { data, isLoading } = useSemanticStatus();
+  const { data, isLoading, refetch } = useSemanticStatus();
+  const [explainOpen, setExplainOpen] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  // Ref guard, not the `installing` state: a rapid double-click (the card
+  // button + the dialog's "Adelante") fires before React re-renders, so the
+  // state alone wouldn't stop a second stream from starting (#626 review).
+  const installingRef = useRef(false);
+
+  const runInstall = useCallback(async () => {
+    if (installingRef.current) return;
+    installingRef.current = true;
+    setExplainOpen(false);
+    setInstalling(true);
+    setLog([]);
+    try {
+      for await (const event of api.system.installSemantic()) {
+        if (event.type === 'progress') {
+          setLog((prev) => [...prev, event.status]);
+        } else if (event.type === 'done') {
+          toast({
+            tone: 'success',
+            title: t('settings.models.semanticInstallDone'),
+            message: t('settings.models.semanticInstallDoneMsg'),
+          });
+          await refetch();
+        } else {
+          toast({ tone: 'danger', title: t('settings.models.semanticInstallError'), message: event.message });
+        }
+      }
+    } catch (exc) {
+      toast({
+        tone: 'danger',
+        title: t('settings.models.semanticInstallError'),
+        message: exc instanceof Error ? exc.message : String(exc),
+      });
+    } finally {
+      setInstalling(false);
+      installingRef.current = false;
+    }
+  }, [refetch, t]);
 
   const statusBadge = () => {
     if (!data) return null;
@@ -342,12 +398,16 @@ function SemanticSearchCard() {
     return <Badge tone="neutral">{t('settings.models.semanticNotInstalled')}</Badge>;
   };
 
+  // The contextual line under the badge. The not-installed case no longer
+  // shows a CLI command — the buttons below carry the action (#578).
   const body = () => {
     if (!data) return null;
     if (data.active) return t('settings.models.semanticActiveBody', { model: data.model });
     if (data.installed) return t('settings.models.semanticEnableHint');
-    return t('settings.models.semanticInstallHint');
+    return null;
   };
+
+  const showInstallUi = !!data && !data.installed;
 
   return (
     <>
@@ -367,10 +427,113 @@ function SemanticSearchCard() {
             </div>
             <p className="mt-1.5 text-[12.5px] text-muted">{t('settings.models.semanticSubtitle')}</p>
             {body() && <p className="mt-2 text-[12.5px] text-muted">{body()}</p>}
+
+            {showInstallUi && !installing && (
+              <>
+                <SemanticCostRow />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" variant="secondary" icon={<HelpCircle className="size-3.5" />} onClick={() => setExplainOpen(true)}>
+                    {t('settings.models.semanticWhatIsThis')}
+                  </Button>
+                  <Button size="sm" variant="primary" icon={<Download className="size-3.5" />} onClick={runInstall}>
+                    {t('settings.models.semanticInstall')}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {installing && <SemanticInstallLog log={log} />}
           </div>
         </div>
       </Card>
+
+      {explainOpen && (
+        <SemanticExplainDialog onCancel={() => setExplainOpen(false)} onConfirm={runInstall} />
+      )}
     </>
+  );
+}
+
+/** Disk + RAM cost chips, so the user knows the price before installing (#578). */
+function SemanticCostRow() {
+  const { t } = useTranslation();
+  return (
+    <div className="mt-2.5 flex flex-wrap gap-2 text-[12px] text-muted">
+      <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-2 px-2 py-1">
+        <HardDrive className="size-3.5" />
+        {t('settings.models.semanticDisk')}
+      </span>
+      <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-2 px-2 py-1">
+        <MemoryStick className="size-3.5" />
+        {t('settings.models.semanticRam')}
+      </span>
+    </div>
+  );
+}
+
+/** Streaming install log — opaque pip/uv lines rendered as a tail. */
+function SemanticInstallLog({ log }: { log: string[] }) {
+  const { t } = useTranslation();
+  const last = log[log.length - 1] ?? t('settings.models.semanticInstalling');
+  return (
+    <div className="mt-3 rounded-lg border border-border bg-surface-2 p-3">
+      <div className="flex items-center gap-2 text-[12.5px] font-medium text-fg">
+        <Loader2 className="size-3.5 animate-spin text-indigo-600 dark:text-indigo-300" />
+        {t('settings.models.semanticInstalling')}
+      </div>
+      <p className="mt-1 truncate font-mono text-[11.5px] text-muted">{last}</p>
+    </div>
+  );
+}
+
+/**
+ * "¿Qué es esto?" explanation dialog (#578). Jargon-free copy aimed at a
+ * lawyer, the disk/RAM cost, and a clear Cancel / Go-ahead pair. Same
+ * hand-rolled overlay shell as the model wizard.
+ */
+function SemanticExplainDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('settings.models.semanticExplainTitle')}
+      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="air-glass-strong w-full max-w-md p-6 animate-in fade-in slide-in-from-bottom-2 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
+            <Sparkles className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-base font-semibold">{t('settings.models.semanticExplainTitle')}</h3>
+          </div>
+          <button
+            type="button"
+            aria-label={t('settings.models.semanticCancel')}
+            onClick={onCancel}
+            className="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-fg"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <p className="mt-3 text-[13px] leading-relaxed text-fg">{t('settings.models.semanticExplainBody')}</p>
+        <p className="mt-2 text-[12.5px] leading-relaxed text-muted">{t('settings.models.semanticExplainWhy')}</p>
+        <div className="mt-4"><SemanticCostRow /></div>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button size="sm" variant="secondary" onClick={onCancel}>
+            {t('settings.models.semanticCancel')}
+          </Button>
+          <Button size="sm" variant="primary" icon={<Download className="size-3.5" />} onClick={onConfirm}>
+            {t('settings.models.semanticGoAhead')}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
