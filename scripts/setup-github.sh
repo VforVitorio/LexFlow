@@ -18,10 +18,19 @@ REPO="${GH_REPO:-VforVitorio/LexFlow}"
 # The REST API rejects -F restrictions= (empty string), so we pass the
 # whole payload as JSON via --input -. Keep contexts in sync with
 # .github/workflows/ci.yml job names (test / lint / typecheck / frontend-build).
+#
+# strict=false ("require branches up to date before merging" = OFF): with a
+# fast, sequential, small-PR solo flow, strict=true forced a manual "Update
+# branch" rebase on every PR whenever main advanced (release-please bumps,
+# back-to-back merges), which auto-merge can't do on its own. Turning it off
+# lets auto-merge land PRs the moment their required checks are green. The
+# checks still ran on the PR's own commit; the only thing dropped is the
+# re-validation of the exact merge — acceptable here, revisit (merge queue)
+# if concurrent conflicting PRs become common. (2026-06-11)
 read -r -d '' PROTECTION_PAYLOAD <<'JSON' || true
 {
   "required_status_checks": {
-    "strict": true,
+    "strict": false,
     "contexts": ["test", "lint", "typecheck", "frontend-build"]
   },
   "enforce_admins": false,
