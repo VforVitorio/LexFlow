@@ -21,8 +21,11 @@ on:
       # otherwise a broken bump (like the @v1 → @v2 fix) only surfaces
       # post-merge on main.
       - ".github/workflows/osv-scanner.yml"
+      # The ignore list — editing an accepted-risk entry must re-scan.
+      - "osv-scanner.toml"
   schedule:
     - cron: "30 6 * * 1"  # Weekly, Monday 06:30 UTC (≈ 08:30 Europe/Madrid)
+  workflow_dispatch: {}  # Manual re-scan (e.g. to re-check after editing the ignore list)
 
 permissions:
   actions: read
