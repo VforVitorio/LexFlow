@@ -477,7 +477,18 @@
       "semanticExplainBody": "Encuentra artículos por lo que significan, no solo por las palabras exactas. Por ejemplo, busca «despido improcedente» y aparecerán normas relacionadas aunque no usen esas palabras literales.",
       "semanticExplainWhy": "Mejora las búsquedas y las respuestas del chat cuando no recuerdas el término legal exacto. Se descarga una vez y funciona sin conexión.",
       "semanticCancel": "Cancelar",
-      "semanticGoAhead": "Adelante, instálalo"
+      "semanticGoAhead": "Adelante, instálalo",
+      "installedTitle": "Modelos instalados",
+      "installedEmpty": "No hay modelos locales instalados. Usa «Volver a lanzar wizard» para instalar uno.",
+      "installedInMemory": "En memoria",
+      "installedLoad": "Cargar",
+      "installedEject": "Liberar",
+      "installedDelete": "Eliminar",
+      "installedDeleteConfirm": "¿Eliminar {{name}} del disco? Tendrás que volver a descargarlo para usarlo.",
+      "installedLoaded": "Modelo cargado en memoria",
+      "installedEjected": "Modelo liberado de memoria",
+      "installedDeleted": "Modelo eliminado",
+      "installedActionError": "No se pudo completar la acción"
     },
     "appearance": {
       "title": "Apariencia",

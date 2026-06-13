@@ -9,8 +9,14 @@
  */
 
 import type { BackendModelInfo } from '../../api';
-import type { ApiClient, Model, ModelPullEvent } from '../types';
+import type { ApiClient, InstalledModel, Model, ModelPullEvent } from '../types';
 import { API_BASE, API_PREFIX, ApiError, http } from './http';
+
+interface BackendInstalledModel {
+  name: string;
+  size_bytes: number | null;
+  loaded: boolean;
+}
 
 export const liveModelsApi: ApiClient['models'] = {
   list: async () => {
@@ -24,6 +30,20 @@ export const liveModelsApi: ApiClient['models'] = {
       kind: m.local ? 'local' : 'cloud',
       available: m.configured,
     }));
+  },
+  installed: async () => {
+    const raw = await http<{ models: BackendInstalledModel[] }>('/models/installed');
+    return raw.models.map<InstalledModel>((m) => ({
+      name: m.name,
+      sizeBytes: m.size_bytes,
+      loaded: m.loaded,
+    }));
+  },
+  remove: async (model: string) => {
+    await http<void>('/models/delete', { method: 'POST', body: JSON.stringify({ model }) });
+  },
+  load: async (model: string, keep: boolean) => {
+    await http<void>('/models/load', { method: 'POST', body: JSON.stringify({ model, keep }) });
   },
   pull: (model: string) => streamPull(model),
 };

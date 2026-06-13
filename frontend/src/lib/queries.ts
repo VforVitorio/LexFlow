@@ -12,7 +12,7 @@ import { api } from './api';
 import { liveTelemetryApi, type TelemetryStatus } from './api/telemetry';
 import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
-  ChatMessage, Model, SyncStatus, DashboardData, ListLawsParams,
+  ChatMessage, Model, InstalledModel, SyncStatus, DashboardData, ListLawsParams,
   SearchResults, SemanticSearchResults, HybridSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
   GraphGlobalFilters, GraphGlobalResult,
 } from './types';
@@ -32,6 +32,7 @@ export const qk = {
   chatThreads: () => ['chat', 'threads'] as const,
   chatThread:  (id: string) => ['chat', 'thread', id] as const,
   models:      () => ['models'] as const,
+  modelsInstalled: () => ['models', 'installed'] as const,
   dashboard:   (preset: 'compliance' | 'analytics') => ['dashboard', preset] as const,
   sync:        () => ['sync'] as const,
 };
@@ -232,6 +233,15 @@ export function useDeleteChatThread() {
 
 export function useModels() {
   return useQuery<Model[]>({ queryKey: qk.models(), queryFn: () => api.models.list(), staleTime: 5 * 60_000 });
+}
+
+/** Installed Ollama models for the Settings management card (#597). */
+export function useInstalledModels() {
+  return useQuery<InstalledModel[]>({
+    queryKey: qk.modelsInstalled(),
+    queryFn: () => api.models.installed(),
+    staleTime: 30_000,
+  });
 }
 
 export function useSyncStatus() {
