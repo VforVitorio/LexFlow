@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.58.1](https://github.com/VforVitorio/LexFlow/compare/v0.58.0...v0.58.1) (2026-06-13)
+
+
+### Bug Fixes
+
+* **ci:** repair OSV-Scanner — bump broken [@v1](https://github.com/v1) reusable to [@v2](https://github.com/v2).3.8 ([9e108be](https://github.com/VforVitorio/LexFlow/commit/9e108bed941ff6ae50acf38b185a5436e14bf623))
+* **ci:** repair OSV-Scanner (broken [@v1](https://github.com/v1) reusable → [@v2](https://github.com/v2).3.8) ([4fe7cf3](https://github.com/VforVitorio/LexFlow/commit/4fe7cf3267f8df978e4c971c2cd8c807449e904b))
+
+
+### Documentation
+
+* **claude:** log OSV-Scanner [@v1](https://github.com/v1) break + premature --auto merge lessons ([12883d5](https://github.com/VforVitorio/LexFlow/commit/12883d522e30e50f913f7ced168037ef91c91b6f))
+* **claude:** log OSV-Scanner + auto-merge lessons (§11) ([badb873](https://github.com/VforVitorio/LexFlow/commit/badb873bfb82129df149c61b95337777f29dfa2f))
+
 ## [0.58.0](https://github.com/VforVitorio/LexFlow/compare/v0.57.0...v0.58.0) (2026-06-13)
 
 
