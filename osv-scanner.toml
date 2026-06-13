@@ -12,10 +12,10 @@
 # so there is nothing to bump to. Re-evaluate when torch ships a patch.
 [[IgnoredVulns]]
 id = "PYSEC-2026-139"
-ignoreUntil = 2026-09-13
+ignoreUntil = 2026-09-13T00:00:00Z
 reason = "torch (opt-in [semantic] extra); no upstream fix as of 2026-06-13. Re-evaluate at review date."
 
 [[IgnoredVulns]]
 id = "GHSA-rrmf-rvhw-rf47"
-ignoreUntil = 2026-09-13
+ignoreUntil = 2026-09-13T00:00:00Z
 reason = "torch (opt-in [semantic] extra); no upstream fix as of 2026-06-13. Re-evaluate at review date."
