@@ -1,0 +1,21 @@
+# OSV-Scanner ignore list.
+#
+# Only for advisories we have CONSCIOUSLY accepted — each entry needs a reason
+# and a review date (`ignoreUntil`) so it can't rot silently. Auto-discovered
+# by osv-scanner for lockfiles in this directory (uv.lock).
+
+# torch 2.10.0 — transitive dependency of the OPT-IN `[semantic]` extra
+# (sentence-transformers). It is NOT in the default/runtime install and NOT in
+# the CI test/typecheck deps (ci.yml installs an explicit extra list, never
+# --all-extras, to keep torch off the runners). Both advisories below have NO
+# fixed version available upstream as of 2026-06-13 (OSV "FIXED VERSION: --"),
+# so there is nothing to bump to. Re-evaluate when torch ships a patch.
+[[IgnoredVulns]]
+id = "PYSEC-2026-139"
+ignoreUntil = 2026-09-13
+reason = "torch (opt-in [semantic] extra); no upstream fix as of 2026-06-13. Re-evaluate at review date."
+
+[[IgnoredVulns]]
+id = "GHSA-rrmf-rvhw-rf47"
+ignoreUntil = 2026-09-13
+reason = "torch (opt-in [semantic] extra); no upstream fix as of 2026-06-13. Re-evaluate at review date."
