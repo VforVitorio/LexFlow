@@ -14,13 +14,17 @@ import {
   HardDrive,
   MemoryStick,
   X,
+  Trash2,
+  Play,
+  Power,
 } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
-import { useHealth, useModels, useSemanticStatus, useSyncStatus, useRunSync, useTelemetryStatus, useWhatsNew } from '@/lib/queries';
+import { useHealth, useModels, useInstalledModels, useSemanticStatus, useSyncStatus, useRunSync, useTelemetryStatus, useWhatsNew } from '@/lib/queries';
+import type { InstalledModel } from '@/lib/types';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { useUi } from '@/lib/store';
 import { cn, timeAgo } from '@/lib/utils';
@@ -323,9 +327,148 @@ function ModelsSection() {
         </div>
       ))}
 
+      <InstalledModelsCard />
       <ApiKeysCard />
       <SemanticSearchCard />
     </>
+  );
+}
+
+/** Human-readable on-disk size; Ollama reports bytes. */
+function formatModelSize(bytes: number | null): string {
+  if (bytes == null) return '—';
+  const gb = bytes / 1_000_000_000;
+  if (gb >= 1) return `${gb.toFixed(1)} GB`;
+  const mb = bytes / 1_000_000;
+  return `${Math.round(mb)} MB`;
+}
+
+/**
+ * #597 — installed Ollama models with per-model actions (load / eject /
+ * delete), so a lawyer manages local models without a terminal. Install of
+ * new models stays in the wizard ("Volver a lanzar wizard" above), which
+ * already streams `ollama pull`.
+ */
+function InstalledModelsCard() {
+  const { t } = useTranslation();
+  const { data: installed = [], isLoading, refetch } = useInstalledModels();
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const toggleLoad = async (model: InstalledModel) => {
+    setBusy(model.name);
+    try {
+      await api.models.load(model.name, !model.loaded);
+      toast({
+        tone: 'success',
+        title: model.loaded ? t('settings.models.installedEjected') : t('settings.models.installedLoaded'),
+        message: model.name,
+      });
+      await refetch();
+    } catch (exc) {
+      toast({
+        tone: 'danger',
+        title: t('settings.models.installedActionError'),
+        message: exc instanceof Error ? exc.message : String(exc),
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const remove = async (name: string) => {
+    if (!window.confirm(t('settings.models.installedDeleteConfirm', { name }))) return;
+    setBusy(name);
+    try {
+      await api.models.remove(name);
+      toast({ tone: 'success', title: t('settings.models.installedDeleted'), message: name });
+      await refetch();
+    } catch (exc) {
+      toast({
+        tone: 'danger',
+        title: t('settings.models.installedActionError'),
+        message: exc instanceof Error ? exc.message : String(exc),
+      });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <>
+      <div className="label-caps mb-2 mt-6">{t('settings.models.installedTitle')}</div>
+      {isLoading ? (
+        <Skeleton className="h-16 w-full" />
+      ) : installed.length === 0 ? (
+        <Card className="p-4">
+          <p className="text-[12.5px] text-muted">{t('settings.models.installedEmpty')}</p>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {installed.map((model) => (
+            <InstalledModelRow
+              key={model.name}
+              model={model}
+              busy={busy === model.name}
+              onToggleLoad={() => toggleLoad(model)}
+              onDelete={() => remove(model.name)}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function InstalledModelRow({
+  model,
+  busy,
+  onToggleLoad,
+  onDelete,
+}: {
+  model: InstalledModel;
+  busy: boolean;
+  onToggleLoad: () => void;
+  onDelete: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center gap-3.5 rounded-lg border border-border bg-surface p-3.5">
+      <div className="inline-flex size-9 shrink-0 items-center justify-center rounded-md bg-success-soft text-success">
+        <HardDrive className="size-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate font-mono text-[13px] font-medium">{model.name}</span>
+          {model.loaded && (
+            <Badge tone="success" icon={<Power className="size-3" />}>
+              {t('settings.models.installedInMemory')}
+            </Badge>
+          )}
+        </div>
+        <div className="text-[12px] text-muted">{formatModelSize(model.sizeBytes)}</div>
+      </div>
+      {busy ? (
+        <Loader2 className="size-4 animate-spin text-muted" />
+      ) : (
+        <>
+          <Button
+            size="sm"
+            variant="secondary"
+            icon={model.loaded ? <Power className="size-3.5" /> : <Play className="size-3.5" />}
+            onClick={onToggleLoad}
+          >
+            {model.loaded ? t('settings.models.installedEject') : t('settings.models.installedLoad')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-label={t('settings.models.installedDelete')}
+            icon={<Trash2 className="size-3.5" />}
+            onClick={onDelete}
+          />
+        </>
+      )}
+    </div>
   );
 }
 

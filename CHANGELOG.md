@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.57.0](https://github.com/VforVitorio/LexFlow/compare/v0.56.0...v0.57.0) (2026-06-12)
+
+
+### Features
+
+* **tour:** spotlight + acrylic popover + explicit finish step ([#575](https://github.com/VforVitorio/LexFlow/issues/575)) ([7b6609d](https://github.com/VforVitorio/LexFlow/commit/7b6609d1f508841512d72ee6397ef8212bc27e36))
+* **tour:** spotlight backdrop + acrylic popover + explicit finish step ([#575](https://github.com/VforVitorio/LexFlow/issues/575)) ([605a17f](https://github.com/VforVitorio/LexFlow/commit/605a17fe18dfdda9877057ddda21e43057f7f86f))
+
 ## [0.56.0](https://github.com/VforVitorio/LexFlow/compare/v0.55.0...v0.56.0) (2026-06-12)
 
 

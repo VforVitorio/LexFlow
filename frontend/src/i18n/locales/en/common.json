@@ -477,7 +477,18 @@
       "semanticExplainBody": "Finds articles by what they mean, not just exact words. For example, search 'unfair dismissal' and related laws show up even if they don't use those exact words.",
       "semanticExplainWhy": "It improves search and chat answers when you don't recall the exact legal term. Downloaded once, then it works offline.",
       "semanticCancel": "Cancel",
-      "semanticGoAhead": "Go ahead, install it"
+      "semanticGoAhead": "Go ahead, install it",
+      "installedTitle": "Installed models",
+      "installedEmpty": "No local models installed. Use \"Relaunch wizard\" to install one.",
+      "installedInMemory": "In memory",
+      "installedLoad": "Load",
+      "installedEject": "Eject",
+      "installedDelete": "Delete",
+      "installedDeleteConfirm": "Delete {{name}} from disk? You'll have to download it again to use it.",
+      "installedLoaded": "Model loaded into memory",
+      "installedEjected": "Model ejected from memory",
+      "installedDeleted": "Model deleted",
+      "installedActionError": "Couldn't complete the action"
     },
     "appearance": {
       "title": "Appearance",

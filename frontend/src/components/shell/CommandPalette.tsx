@@ -143,7 +143,7 @@ export function CommandPalette() {
           <Kbd>esc</Kbd>
         </div>
 
-        <div className="max-h-[420px] overflow-auto p-2 scrollbar-thin">
+        <div role="listbox" aria-label="Resultados" className="max-h-[420px] overflow-auto p-2 scrollbar-thin">
           {items.length === 0 && (
             <div className="px-6 py-10 text-center text-sm text-muted">Sin resultados para "{q}".</div>
           )}
@@ -158,6 +158,8 @@ export function CommandPalette() {
                   return (
                     <button
                       key={it.id}
+                      role="option"
+                      aria-selected={active === idx}
                       onMouseEnter={() => setActive(idx)}
                       onClick={() => it.run()}
                       className={cn(

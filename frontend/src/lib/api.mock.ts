@@ -382,6 +382,21 @@ export const mockApi: ApiClient = {
       await delay(60);
       return MODELS;
     },
+    // Mock installed Ollama models (#597) — a small on-disk set so the
+    // Settings management card renders with size + loaded state in dev.
+    async installed() {
+      await delay(60);
+      return [
+        { name: 'llama3.2:3b', sizeBytes: 2_000_000_000, loaded: false },
+        { name: 'qwen2.5:7b', sizeBytes: 4_700_000_000, loaded: true },
+      ];
+    },
+    async remove(_model: string) {
+      await delay(200);
+    },
+    async load(_model: string, _keep: boolean) {
+      await delay(200);
+    },
     // Mock pull (#119) — emit 5 fake progress events + a final done. Useful
     // for SPA dev when no Ollama daemon is running.
     async *pull(model: string) {
