@@ -224,4 +224,31 @@ describe('listLawsQuery', () => {
     expect(q.status).toBeUndefined();
     expect(q.scope).toBeUndefined();
   });
+
+  it('passes the publication-year range straight through (#563)', () => {
+    const q = listLawsQuery({ yearFrom: 2018, yearTo: 2024 });
+    expect(q.year_from).toBe(2018);
+    expect(q.year_to).toBe(2024);
+  });
+
+  it('sends every active filter together — none is dropped when combined', () => {
+    const q = listLawsQuery({
+      rango: ['Ley Orgánica'],
+      status: ['vigente'],
+      ambito: ['Autonómica'],
+      yearFrom: 2020,
+      yearTo: 2024,
+      cursor: '2',
+      limit: 30,
+    });
+    expect(q).toMatchObject({
+      rank: 'ley_organica',
+      status: 'in_force',
+      scope: 'Autonómico', // SCOPE_MAP key for the 'Autonómica' chip
+      year_from: 2020,
+      year_to: 2024,
+      page: 2,
+      page_size: 30,
+    });
+  });
 });
