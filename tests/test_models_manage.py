@@ -85,7 +85,8 @@ class TestDeleteModel:
         monkeypatch.setattr(models_router.ollama.AsyncClient, "delete", fake_delete)
         response = client.post("/api/v1/models/delete", json={"model": "ghost:1b"})
         assert response.status_code == 404
-        assert response.json()["detail"]["code"] == "model_not_found"
+        # `detail` is a plain string per the /api/v1 contract (CodeRabbit #629).
+        assert "not installed" in response.json()["detail"]
 
     def test_rejects_malformed_name(self, client: TestClient) -> None:
         response = client.post("/api/v1/models/delete", json={"model": "bad name!!"})

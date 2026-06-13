@@ -405,21 +405,24 @@ async def delete_model(body: ModelNameRequest) -> dict[str, str]:
     try:
         await client.delete(body.model)
     except ollama.ResponseError as exc:
+        # Keep `detail` a plain string — the /api/v1 contract is FastAPI's
+        # default {"detail": "<message>"}, which the SPA's error boundary reads
+        # straight into a toast (CodeRabbit #629).
         if exc.status_code == 404:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"code": "model_not_found", "message": f"{body.model} is not installed."},
+                detail=f"{body.model} is not installed.",
             ) from exc
         logger.info("Ollama delete failed: status=%s", repr(exc.status_code))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={"code": "model_delete_failed", "message": "Ollama rejected the delete."},
+            detail="Ollama rejected the delete request.",
         ) from exc
     except Exception as exc:
         logger.exception("Unexpected error deleting model")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={"code": "ollama_unreachable", "message": "Could not reach the Ollama daemon."},
+            detail="Could not reach the Ollama daemon.",
         ) from exc
     return {"status": "deleted", "model": body.model}
 
@@ -443,12 +446,12 @@ async def load_model(body: ModelLoadRequest) -> dict[str, str]:
         logger.info("Ollama load/eject failed: status=%s", repr(exc.status_code))
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={"code": "model_load_failed", "message": "Ollama rejected the request."},
+            detail="Ollama rejected the request.",
         ) from exc
     except Exception as exc:
         logger.exception("Unexpected error loading/ejecting model")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail={"code": "ollama_unreachable", "message": "Could not reach the Ollama daemon."},
+            detail="Could not reach the Ollama daemon.",
         ) from exc
     return {"status": "loaded" if body.keep else "ejected", "model": body.model}
