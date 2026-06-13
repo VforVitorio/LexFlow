@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.58.0](https://github.com/VforVitorio/LexFlow/compare/v0.57.0...v0.58.0) (2026-06-13)
+
+
+### Features
+
+* **models:** in-app installed-model management — load/eject/delete ([#597](https://github.com/VforVitorio/LexFlow/issues/597)) ([47882d4](https://github.com/VforVitorio/LexFlow/commit/47882d479e673ac6f8717a9e12da9ab6f7116cad))
+
+
+### Bug Fixes
+
+* **e2e:** repair the golden-path Playwright suite ([#551](https://github.com/VforVitorio/LexFlow/issues/551)) ([e88a99b](https://github.com/VforVitorio/LexFlow/commit/e88a99bdd7d73b36e57c1f048c8c612ecf8b9d95))
+* **e2e:** repair the golden-path Playwright suite ([#551](https://github.com/VforVitorio/LexFlow/issues/551)) ([39eb015](https://github.com/VforVitorio/LexFlow/commit/39eb015dbf7ff82da3286ef1b4d01b576a06d2f5))
+* **models:** string-shaped HTTP detail + script cleanup (CodeRabbit [#629](https://github.com/VforVitorio/LexFlow/issues/629)) ([56eb089](https://github.com/VforVitorio/LexFlow/commit/56eb089b2354414dc10ec3ac313050ebe20c7d02))
+
 ## [0.57.0](https://github.com/VforVitorio/LexFlow/compare/v0.56.0...v0.57.0) (2026-06-12)
 
 
