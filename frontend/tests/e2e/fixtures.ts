@@ -22,6 +22,7 @@ async function seedOnboardingFlags(context: import('@playwright/test').BrowserCo
   await context.addInitScript(() => {
     try {
       localStorage.setItem('lexflow.welcomed', 'true');
+      localStorage.setItem('lexflow.onboarded', '1');
       localStorage.setItem('lexflow.wizard-completed', 'true');
       localStorage.setItem('lexflow.tutorial-completed', 'true');
     } catch {
