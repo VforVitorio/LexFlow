@@ -9,15 +9,32 @@ class LawRank(StrEnum):
     """Hierarchical rank of a legal norm.
 
     Values match the raw ``rank`` field in legalize-es YAML frontmatter.
+    The full set was audited against the live corpus (#549) so real ranks
+    stop bucketing into ``OTRO`` — that gap broke the Explorer rank filter
+    and rank-based analytics for ~5k laws (resolución, decreto-ley,
+    acuerdo internacional, leyes forales, …). ``OTRO`` stays the genuine
+    catch-all for values not yet present in the corpus.
     """
 
     LEY = "ley"
     LEY_ORGANICA = "ley_organica"
+    LEY_FORAL = "ley_foral"
     REAL_DECRETO = "real_decreto"
     REAL_DECRETO_LEY = "real_decreto_ley"
     REAL_DECRETO_LEGISLATIVO = "real_decreto_legislativo"
+    DECRETO = "decreto"
+    DECRETO_LEY = "decreto_ley"
     DECRETO_LEGISLATIVO = "decreto_legislativo"
+    DECRETO_LEY_FORAL = "decreto_ley_foral"
+    DECRETO_FORAL_LEGISLATIVO = "decreto_foral_legislativo"
     ORDEN = "orden"
+    RESOLUCION = "resolucion"
+    CIRCULAR = "circular"
+    INSTRUCCION = "instruccion"
+    ACUERDO = "acuerdo"
+    ACUERDO_INTERNACIONAL = "acuerdo_internacional"
+    REGLAMENTO = "reglamento"
+    CONSTITUCION = "constitucion"
     OTRO = "otro"
 
 
