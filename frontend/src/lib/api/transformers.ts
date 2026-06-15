@@ -40,14 +40,30 @@ import type {
 
 // ─── Enum maps ───────────────────────────────────────────────────────────
 
+// Backend LawRank enum value → SPA label. Covers every rank present in the
+// live corpus (#549) so real ranks render their own label instead of
+// collapsing to "Otro" — `orden` (2.4k laws), `resolucion` (800), etc. used
+// to mismap here even though the backend modelled them.
 export const RANK_MAP: Record<string, RangoNormativo> = {
+  constitucion: 'Norma constitucional',
   ley: 'Ley',
   ley_organica: 'Ley Orgánica',
+  ley_foral: 'Ley Foral',
   real_decreto: 'Real Decreto',
   real_decreto_ley: 'Real Decreto',
   real_decreto_legislativo: 'RD Legislativo',
+  decreto: 'Decreto',
+  decreto_ley: 'Decreto-ley',
   decreto_legislativo: 'RD Legislativo',
-  orden: 'Otro',
+  decreto_ley_foral: 'Decreto-ley Foral',
+  decreto_foral_legislativo: 'Decreto Foral Legislativo',
+  orden: 'Orden',
+  resolucion: 'Resolución',
+  circular: 'Circular',
+  instruccion: 'Instrucción',
+  acuerdo: 'Acuerdo',
+  acuerdo_internacional: 'Acuerdo Internacional',
+  reglamento: 'Reglamento',
   otro: 'Otro',
 };
 
