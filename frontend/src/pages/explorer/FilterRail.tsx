@@ -14,7 +14,25 @@ import { cn, statusLabel } from '@/lib/utils';
 import type { Ambito, LawStatus, RangoNormativo } from '@/lib/types';
 
 const STATUSES: LawStatus[] = ['vigente', 'modificada', 'derogada'];
-const RANGOS: RangoNormativo[] = ['Norma constitucional', 'Ley Orgánica', 'Ley', 'Real Decreto', 'RD Legislativo'];
+// Rank chips, ordered roughly by corpus volume (#549). Every option maps to a
+// real backend LawRank so the filter actually narrows; the long tail (acuerdo,
+// reglamento, …) still renders its own label in the table via RANK_MAP, it just
+// isn't promoted to a chip here.
+const RANGOS: RangoNormativo[] = [
+  'Norma constitucional',
+  'Ley Orgánica',
+  'Ley',
+  'Ley Foral',
+  'Real Decreto',
+  'RD Legislativo',
+  'Decreto',
+  'Decreto-ley',
+  'Orden',
+  'Resolución',
+  'Circular',
+  'Instrucción',
+  'Acuerdo Internacional',
+];
 // Only scopes that exist in the corpus + map to a backend Scope.
 // 'UE' has no SCOPE_MAP entry, so its reverse-lookup returned undefined
 // and NO scope param was sent → the filter silently did nothing (#567).

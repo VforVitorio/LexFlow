@@ -342,4 +342,7 @@ jobs:
         run: uv sync --extra chat --extra dashboards --extra dev --frozen
 
       - name: Audit installed dependency graph
-        run: uv run --with pip-audit pip-audit
+        # --skip-editable: don't audit the editable local `lexflow` package
+        # (it isn't on PyPI, so pip-audit errored "Dependency not found").
+        # Third-party deps are still fully audited.
+        run: uv run --with pip-audit pip-audit --skip-editable

@@ -95,6 +95,15 @@ describe('transformLaw', () => {
     expect(law.ambito).toBe('Estatal');
   });
 
+  it('maps previously-OTRO corpus ranks to their real label (#549)', () => {
+    const rangoFor = (rank: string) => transformLaw({ ...lawSummary, rank: rank as BackendLawSummary['rank'] }).rango;
+    expect(rangoFor('orden')).toBe('Orden'); // 2.4k laws used to show "Otro"
+    expect(rangoFor('resolucion')).toBe('Resolución');
+    expect(rangoFor('decreto_ley')).toBe('Decreto-ley');
+    expect(rangoFor('ley_foral')).toBe('Ley Foral');
+    expect(rangoFor('constitucion')).toBe('Norma constitucional');
+  });
+
   it('uses the BOE identifier as id', () => {
     const law = transformLaw(lawSummary);
     expect(law.id).toBe('BOE-A-2000-323');
@@ -208,6 +217,11 @@ describe('listLawsQuery', () => {
 
   it('reverse-maps the first rango chip to its backend enum value', () => {
     expect(listLawsQuery({ rango: ['Ley Orgánica'] }).rank).toBe('ley_organica');
+  });
+
+  it('reverse-maps a newly-modelled rank so its filter actually sends (#549)', () => {
+    expect(listLawsQuery({ rango: ['Orden'] }).rank).toBe('orden');
+    expect(listLawsQuery({ rango: ['Resolución'] }).rank).toBe('resolucion');
   });
 
   it('reverse-maps the first status chip to its backend enum value', () => {
