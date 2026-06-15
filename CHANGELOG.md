@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.58.2](https://github.com/VforVitorio/LexFlow/compare/v0.58.1...v0.58.2) (2026-06-15)
+
+
+### Bug Fixes
+
+* **ci:** regenerate locks so npm ci accepts the overrides + skip-editable pip-audit ([92e4401](https://github.com/VforVitorio/LexFlow/commit/92e44011390055d8a2aee1d9ede39f585eaa5bdd))
+* **rank:** model every corpus LawRank so real ranks stop bucketing to OTRO ([#549](https://github.com/VforVitorio/LexFlow/issues/549)) ([764fd2a](https://github.com/VforVitorio/LexFlow/commit/764fd2ab35a0b8cc8290f84eda63ab451e3fd928))
+* **rank:** model every corpus LawRank so real ranks stop bucketing to OTRO ([#549](https://github.com/VforVitorio/LexFlow/issues/549)) ([6239338](https://github.com/VforVitorio/LexFlow/commit/6239338a0180ccb5389a33ebccb9f66f2f9f4088))
+
 ## [0.58.1](https://github.com/VforVitorio/LexFlow/compare/v0.58.0...v0.58.1) (2026-06-13)
 
 
