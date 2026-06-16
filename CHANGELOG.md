@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.58.3](https://github.com/VforVitorio/LexFlow/compare/v0.58.2...v0.58.3) (2026-06-16)
+
+
+### Bug Fixes
+
+* **graph:** resolve textual law citations into graph edges ([#569](https://github.com/VforVitorio/LexFlow/issues/569)) ([0f774f7](https://github.com/VforVitorio/LexFlow/commit/0f774f754e7763e27b64054d8a808071b7d3322b))
+* **graph:** resolve textual law citations into graph edges ([#569](https://github.com/VforVitorio/LexFlow/issues/569)) ([7e7779c](https://github.com/VforVitorio/LexFlow/commit/7e7779c59bdd1b8b45a5d3d28041c1d8b55efbcc))
+
 ## [0.58.2](https://github.com/VforVitorio/LexFlow/compare/v0.58.1...v0.58.2) (2026-06-15)
 
 
