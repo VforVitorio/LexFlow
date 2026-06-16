@@ -4,10 +4,17 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from lexflow.core.enums import LawRank, LawStatus
+from lexflow.core.models import LawMetadata
 from lexflow.core.registry import LawRegistry
 from lexflow.graph.algorithms import pagerank, top_laws
 from lexflow.graph.builder import build_graph
 from lexflow.graph.model import LegalGraph
+
+
+def _law(graph: LegalGraph, law_id: str, title: str) -> None:
+    graph.add_law(LawMetadata(identifier=law_id, title=title, rank=LawRank.LEY, status=LawStatus.IN_FORCE))
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -79,3 +86,26 @@ def test_get_subgraph_contains_seed(sample_law_dir: Path) -> None:
     seed = registry.law_ids[0]
     sub = graph.get_subgraph(seed, depth=1)
     assert seed in sub.nodes
+
+
+def test_get_subgraph_caps_hub_neighbourhood() -> None:
+    # A hub cited by many laws must not return a hairball (#569).
+    graph = LegalGraph()
+    _law(graph, "HUB", "Ley 1/2000")
+    for i in range(20):
+        _law(graph, f"L{i}", f"Ley {i}/2001")
+        graph.add_reference(f"L{i}", "HUB")
+    sub = graph.get_subgraph("HUB", depth=1, max_nodes=5)
+    assert "HUB" in sub.nodes
+    assert sub.number_of_nodes() == 5  # seed + 4 neighbours, capped
+
+
+def test_get_subgraph_cap_keeps_highest_degree() -> None:
+    graph = LegalGraph()
+    for nid, title in [("SEED", "Ley 1/2000"), ("HI", "Ley 2/2000"), ("LO", "Ley 3/2000"), ("X", "Ley 4/2000")]:
+        _law(graph, nid, title)
+    graph.add_reference("SEED", "HI")
+    graph.add_reference("SEED", "LO")
+    graph.add_reference("HI", "X")  # HI has degree 2, LO degree 1
+    sub = graph.get_subgraph("SEED", depth=1, max_nodes=2)
+    assert set(sub.nodes) == {"SEED", "HI"}  # higher-degree neighbour wins the single slot

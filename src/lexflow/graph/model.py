@@ -13,6 +13,11 @@ import networkx as nx
 from lexflow.core.enums import ReferenceKind
 from lexflow.core.models import LawMetadata
 
+# A handful of laws (the Constitution, Ley 39/2015, …) are cited by thousands
+# of others, so an uncapped depth-2 ego-graph around them is an unrenderable
+# hairball (and slow to PageRank-enrich). Bound it; see ``get_subgraph``.
+MAX_SUBGRAPH_NODES = 250
+
 
 class LegalGraph:
     def __init__(self) -> None:
@@ -156,17 +161,31 @@ class LegalGraph:
             return []
         return list(self._g.successors(law_id))
 
-    def get_subgraph(self, law_id: str, depth: int = 1) -> nx.DiGraph:
-        """Return subgraph of laws reachable from law_id within depth hops."""
+    def get_subgraph(self, law_id: str, depth: int = 1, max_nodes: int = MAX_SUBGRAPH_NODES) -> nx.DiGraph:
+        """Return ego-subgraph around law_id within depth hops, capped at max_nodes.
+
+        When a hop would exceed *max_nodes*, only the highest-degree candidates
+        are kept (the connected backbone), so a hub law yields a renderable,
+        most-relevant neighbourhood instead of a hairball. Expansion continues
+        only from the kept nodes. ``ponytail: degree-ranked; switch to PageRank
+        if/when it's persisted on nodes (it's computed per-request today).``
+        """
         nodes = {law_id}
         frontier = {law_id}
         for _ in range(depth):
-            next_frontier: set[str] = set()
+            room = max_nodes - len(nodes)
+            if room <= 0:
+                break
+            candidates: set[str] = set()
             for node in frontier:
-                next_frontier.update(self._g.successors(node))
-                next_frontier.update(self._g.predecessors(node))
-            frontier = next_frontier - nodes
-            nodes.update(frontier)
+                candidates.update(self._g.successors(node))
+                candidates.update(self._g.predecessors(node))
+            candidates -= nodes
+            if len(candidates) > room:
+                ranked = sorted(candidates, key=self._g.degree, reverse=True)
+                candidates = set(ranked[:room])
+            nodes.update(candidates)
+            frontier = candidates
         return self._g.subgraph(nodes).copy()
 
     def node_count(self) -> int:
