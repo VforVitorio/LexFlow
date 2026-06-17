@@ -13,6 +13,10 @@ Splits startup work into three tiers so the server can accept requests
   1. Full metadata preload (10-30 s on 12 K laws).
   2. In-memory search index build (10-30 s, depends on metadata).
   3. Graph build/load (sub-second if cache hits; 30-90 s cold).
+  4. Semantic index build/load (opt-in; cache-hydrate when warm, else a
+     full embed pass — minutes for the real model on first run, #548).
+     Best-effort: a missing/failed embedder is logged and skipped, never
+     fails the core warm-up.
 
 * **Lazy on demand** — individual law full parse + per-call subgraph
   enrichment. Unchanged.
@@ -46,6 +50,7 @@ from lexflow.api.dependencies import get_graph, get_law_registry
 from lexflow.core.exceptions import LexFlowError
 from lexflow.core.metadata_cache import load_or_preload_metadata
 from lexflow.core.search_cache import load_or_build_search
+from lexflow.search.service import ensure_semantic_index
 from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -66,6 +71,7 @@ class WarmupState:
     metadata_ready: bool = False
     search_ready: bool = False
     graph_ready: bool = False
+    semantic_ready: bool = False
     error: str | None = None
     started_at: float | None = None
     completed_at: float | None = None
@@ -73,7 +79,13 @@ class WarmupState:
 
     @property
     def ready(self) -> bool:
-        """All warm-up stages complete."""
+        """Core warm-up complete (metadata + search + graph).
+
+        Excludes the opt-in semantic stage on purpose: browse, full-text
+        and graph work without it, so a missing/failed embedder must not
+        keep the app reporting "not ready" (#548). ``semantic_ready`` is
+        surfaced separately.
+        """
         return self.metadata_ready and self.search_ready and self.graph_ready
 
 
@@ -139,6 +151,24 @@ async def _run_warmup() -> None:
             _state.graph_ready = True
         _mark("graph", started=stage_started)
         logger.info("Warmup: graph stage complete (%.2fs)", time.monotonic() - stage_started)
+
+        # Stage 4 — semantic index (opt-in). Pre-build so the first
+        # semantic/hybrid query doesn't trigger a multi-minute cold embed
+        # pass (#548). Best-effort and isolated in its own try/except: the
+        # [semantic] extra may be absent or the model may fail to load, and
+        # that must not fail the core warm-up or flip ``ready`` — browse,
+        # full-text and graph work without it.
+        stage_started = time.monotonic()
+        try:
+            await asyncio.to_thread(ensure_semantic_index, registry)
+            with _state_lock:
+                _state.semantic_ready = True
+            _mark("semantic", started=stage_started)
+            logger.info("Warmup: semantic index stage complete (%.2fs)", time.monotonic() - stage_started)
+        # Embedder import/model-load failures span ImportError/RuntimeError
+        # on top of the usual I/O + data errors; swallow them (opt-in feature).
+        except (OSError, ValueError, LexFlowError, RuntimeError, ImportError):
+            logger.warning("Warmup: semantic index pre-build skipped/failed", exc_info=True)
 
     # ``preload_all_metadata`` and ``search_text`` can raise on bad data;
     # ``get_graph`` can raise on submodule misconfiguration. Capture the
