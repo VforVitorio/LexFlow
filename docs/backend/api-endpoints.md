@@ -5,7 +5,7 @@ liveness probes). Sources: [`src/lexflow/api/routers/`](../../src/lexflow/api/ro
 Models referenced below are documented in [core-models.md](core-models.md) and the
 response wrappers in [`core/schemas.py`](../../src/lexflow/core/schemas.py).
 
-Last verified against release 0.36.x.
+Last verified against release 0.58.x.
 
 ## Laws — [`routers/laws.py`](../../src/lexflow/api/routers/laws.py)
 

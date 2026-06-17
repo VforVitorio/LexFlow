@@ -1,5 +1,16 @@
 # Arquitectura de LexFlow
 
+> **LEGACY — no uses este documento como referencia.**
+> Describe la arquitectura original basada en Reflex (frontend Python). Reflex fue
+> descartado el 2026-05-22; el frontend es ahora React 18 + TypeScript. Este fichero
+> se conserva por trazabilidad histórica.
+>
+> Documentación actual: [`docs/architecture/overview.md`](architecture/overview.md),
+> [`docs/architecture/backend.md`](architecture/backend.md) y
+> [`docs/architecture/frontend.md`](architecture/frontend.md).
+
+---
+
 Este documento describe las decisiones arquitectónicas del proyecto, el razonamiento detrás de cada elección tecnológica y cómo encajan las piezas entre sí.
 
 ---
