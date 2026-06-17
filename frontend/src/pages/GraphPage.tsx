@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
-import { GraphCanvas } from '@/components/domain/GraphCanvas';
+import { GraphCanvasLazy } from '@/components/domain/GraphCanvasLazy';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { SkeletonCanvas } from '@/components/domain/Skeleton';
@@ -157,7 +157,7 @@ export function GraphPage() {
         </div>
 
         <div className="relative flex-1 overflow-hidden bg-bg">
-          <GraphCanvas data={graph} visibleKinds={filters} selected={selected} onSelect={setSelected} />
+          <GraphCanvasLazy data={graph} visibleKinds={filters} selected={selected} onSelect={setSelected} />
 
           {/* Legend — frosted glass overlay (Opera Air language).
               Two columns: nodes on top, edges below, separated by a thin

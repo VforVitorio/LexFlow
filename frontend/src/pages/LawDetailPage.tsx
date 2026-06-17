@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus, X, GitCompareArrows, ExternalLink } from 'lucide-react';
 import { LawHeader } from '@/components/domain/LawHeader';
 import { ArticleBlock } from '@/components/domain/ArticleBlock';
-import { GraphCanvas } from '@/components/domain/GraphCanvas';
+import { GraphCanvasLazy } from '@/components/domain/GraphCanvasLazy';
 import { VersionTimeline } from '@/components/domain/VersionTimeline';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { Skeleton, SkeletonLines } from '@/components/domain/Skeleton';
@@ -191,7 +191,7 @@ function LawDetailGraphTab({ lawId, onOpenGlobalGraph }: { lawId: string; onOpen
   }
   return (
     <div className="relative flex-1 overflow-hidden bg-bg">
-      <GraphCanvas data={graph} visibleKinds={visibleKinds} selected={selected} onSelect={setSelected} />
+      <GraphCanvasLazy data={graph} visibleKinds={visibleKinds} selected={selected} onSelect={setSelected} />
       <Button
         className="absolute top-3 right-3"
         size="sm"

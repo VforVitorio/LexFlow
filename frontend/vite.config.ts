@@ -25,7 +25,12 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // No sourcemaps in the build: dist/ is destined for the desktop package
+    // (#397), where the ~3.7 MB of .map files are dead weight (#555). Dev
+    // debugging uses the dev server's own maps, not this build. Flip to true
+    // (or gate on an env var) if a web-hosted, debuggable SPA build is ever
+    // needed.
+    sourcemap: false,
     target: 'es2020',
   },
 });
