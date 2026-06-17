@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.58.4](https://github.com/VforVitorio/LexFlow/compare/v0.58.3...v0.58.4) (2026-06-17)
+
+
+### Bug Fixes
+
+* **spa:** correct project-root depth so prod serves the SPA ([#552](https://github.com/VforVitorio/LexFlow/issues/552)) ([d410ee9](https://github.com/VforVitorio/LexFlow/commit/d410ee9565f71b004a95e0336f1597188ede1bc7))
+* **spa:** correct project-root depth so prod serves the SPA ([#552](https://github.com/VforVitorio/LexFlow/issues/552)) ([d8243f5](https://github.com/VforVitorio/LexFlow/commit/d8243f533a5da5a6ae3447f435925819e4844d72))
+
 ## [0.58.3](https://github.com/VforVitorio/LexFlow/compare/v0.58.2...v0.58.3) (2026-06-16)
 
 
