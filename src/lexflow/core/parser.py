@@ -88,12 +88,15 @@ def _safe_enum(enum_cls: type, value: Any, default: Any) -> Any:
 
 
 # #145 — tag normalisation. The frontmatter expresses topics under
-# `tags`, `categories` and/or `keywords`, with values that may be a list
-# or a comma-separated string. We fold them all into one normalised,
-# de-duplicated, order-preserving list of kebab-case ASCII slugs so the
-# `/api/v1/tags` vocabulary is consistent regardless of source spelling.
+# `tags`, `categories`, `keywords` and/or `subjects` (the key legalize-es
+# actually uses, e.g. `subjects: ["Cementerios", "Defunciones"]`), with values
+# that may be a list or a comma-separated string. We fold them all into one
+# normalised, de-duplicated, order-preserving list of kebab-case ASCII slugs so
+# the `/api/v1/tags` vocabulary is consistent regardless of source spelling.
+# Without `subjects` the whole corpus parsed to zero tags, so #tag search, the
+# tag chips and the tag filter showed nothing (#669).
 
-_TAG_SOURCE_KEYS = ("tags", "categories", "keywords")
+_TAG_SOURCE_KEYS = ("tags", "categories", "keywords", "subjects")
 _TAG_SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 
