@@ -338,10 +338,14 @@ class WarmupStatusResponse(BaseModel):
     generic spinner.
     """
 
-    ready: bool = Field(..., description="All warm-up stages complete.")
+    ready: bool = Field(..., description="Core warm-up stages (metadata, search, graph) complete.")
     metadata_ready: bool = Field(..., description="Frontmatter preload finished.")
     search_ready: bool = Field(..., description="In-memory search index built.")
     graph_ready: bool = Field(..., description="Knowledge graph loaded/rebuilt.")
+    semantic_ready: bool = Field(
+        default=False,
+        description="Opt-in semantic index pre-built (#548). Not part of `ready` — semantic search is optional.",
+    )
     error: str | None = Field(
         default=None,
         description="Last warm-up error message, if any stage failed (the other stages can still report ready).",
