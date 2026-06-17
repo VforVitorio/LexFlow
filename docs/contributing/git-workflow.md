@@ -1,18 +1,21 @@
 # Git Workflow
 
-LexFlow uses a two-trunk model with feature branches off `dev`. The shape is
-fixed; the rules below are enforced by branch protection
-([operations/ci-cd.md](../operations/ci-cd.md)) and CI.
+LexFlow uses **trunk-based development** (since 2026-05-30). `main` is the
+only long-lived branch. Feature branches come off `main` and PR back to `main`
+directly. The old `dev` integration branch was retired and no longer exists on
+the remote.
+
+Branch protection is enforced by CI
+([operations/ci-cd.md](../operations/ci-cd.md)).
 
 ## Branches
 
 | Branch     | Purpose | How it advances |
 |------------|---------|-----------------|
-| `main`     | Stable, protected. The source of releases. | **Only** through PRs from `dev`. |
-| `dev`      | Integration trunk. All ongoing work converges here. | Through PRs from `feat/*`, `fix/*`, `docs/*`. |
-| `feat/<name>` | New feature.            | Branched from `dev`, merged back into `dev`. |
-| `fix/<name>`  | Bug fix.                | Branched from `dev`, merged back into `dev`. |
-| `docs/<name>` | Docs-only change.       | Branched from `dev`, merged back into `dev`. |
+| `main`     | Protected. The only long-lived branch; source of releases. | Through PRs from `feat/*`, `fix/*`, `docs/*`. |
+| `feat/<name>` | New feature.            | Branched from `main`, merged back into `main`. |
+| `fix/<name>`  | Bug fix.                | Branched from `main`, merged back into `main`. |
+| `docs/<name>` | Docs-only change.       | Branched from `main`, merged back into `main`. |
 
 Use kebab-case for the suffix (`feat/test-infra`, `fix/empty-submodule`,
 `docs/api-client`).
@@ -20,21 +23,18 @@ Use kebab-case for the suffix (`feat/test-infra`, `fix/empty-submodule`,
 ## Lifecycle
 
 ```
-main ─────────────────────●────────────────────●─────►
-                          ↑                    ↑
-dev  ──●──●──●──●──●──●──●●──●──●──●──●──●──●──●─────►
+main ──●──●──●──●──●──●──●──●──●──●─────►
         ↑     ↑           ↑     ↑
         feat/explorer     fix/sync-race
 ```
 
-1. `git switch dev && git pull`.
+1. `git switch main && git pull`.
 2. `git switch -c feat/your-thing`.
-3. Commit. Push. Open a PR **to `dev`**.
+3. Commit. Push. Open a PR **to `main`**.
 4. CI runs `test`, `lint`, `typecheck` — all three must be green.
 5. PR merges. Branch is auto-deleted by GitHub (see below).
-6. Periodically a maintainer opens a PR `dev → main` to cut a release.
 
-Never branch from `main` directly. Never merge a feature branch into `main`.
+Never merge a feature branch into `main` directly without a PR.
 
 ## No squash merges
 
@@ -44,18 +44,18 @@ useful. LexFlow keeps the full history:
 - **Allowed merge methods:** merge commit, rebase-and-merge.
 - **Disallowed:** squash merge.
 
-Keep your branch tidy *before* opening the PR — `git rebase -i` against `dev`
-to clean up WIP commits. The history that lands on `dev` is the history that
+Keep your branch tidy *before* opening the PR — `git rebase -i` against `main`
+to clean up WIP commits. The history that lands on `main` is the history that
 stays.
 
 ## Auto-delete on merge
 
 GitHub's "Automatically delete head branches" is enabled on the repo. Once a
-PR merges, the feature branch is removed from the remote. Pull `dev` and
+PR merges, the feature branch is removed from the remote. Pull `main` and
 prune your local tracking refs:
 
 ```bash
-git switch dev && git pull
+git switch main && git pull
 git fetch --prune
 ```
 
@@ -66,8 +66,8 @@ git fetch --prune
 - One logical change per commit; the body explains *why* if the subject
   doesn't.
 - Conventional Commits (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`,
-  `chore:`, `ci:`) are honoured by release-please on `main` and drive
-  automatic version bumps — see
+  `chore:`, `ci:`) are honoured by release-please and drive automatic
+  version bumps — see
   [operations/ci-cd.md](../operations/ci-cd.md#release-pleaseyml--releases).
 
 Example:
@@ -81,11 +81,12 @@ on the legalize-es repo. Powers the frontend DiffPage.
 
 ## Forbidden
 
-- **Force-pushing to `main` or `dev`.** Branch protection rejects this.
+- **Force-pushing to `main`.** Branch protection rejects this.
 - **Skipping hooks** (`--no-verify`, `--no-gpg-sign`). If a hook fails, fix
   the underlying issue and commit again.
 - **Squash-merging.** See above.
-- **Branching from `main`.** Always branch from up-to-date `dev`.
+- **Branching from `main` to push directly** — use a PR. The only exception
+  is a maintainer emergency fix with explicit conversation resolution.
 
 ## When in doubt
 

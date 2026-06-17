@@ -2,7 +2,7 @@
 
 Source: [`src/lexflow/`](../../src/lexflow/). Entry point: [`main.py`](../../main.py).
 
-Verified against release 0.36.x.
+Verified against release 0.58.x.
 
 ## Package layout
 

@@ -44,13 +44,11 @@ Vite starts on `http://localhost:5173` and proxies `/api/*` to whatever
 With `VITE_USE_MOCK=true` in `.env.local` the UI runs against an in-process
 fake API — useful for designing pages without a live backend.
 
-> **State of the frontend (May 2026):** the `src/lib/*` modules referenced
-> throughout [`frontend/README.md`](../../frontend/README.md) (`api.ts`,
-> `api.mock.ts`, `mock-data.ts`, `queries.ts`, `store.ts`, `hotkeys.ts`,
-> `utils.ts`) are **not yet committed**. Imports from `@/lib/...` in pages and
-> shell components will fail until those modules exist. Track this in the
-> frontend Epic (#TBD); for now the page files compile but the app does not
-> boot end-to-end.
+> The `src/lib/*` modules (`api.ts`, `api.mock.ts`, `mock-data.ts`, `queries.ts`,
+> `store.ts`, `hotkeys.ts`, `utils.ts` and more) are present in the repository.
+> `npm run dev` starts correctly. Use `VITE_USE_MOCK=false` in `.env.local` to
+> talk to a live backend, or keep the default `VITE_USE_MOCK=true` to run
+> against the in-process mock without a running backend.
 
 ## Mode 3 — Both together (production-like)
 
