@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.58.8](https://github.com/VforVitorio/LexFlow/compare/v0.58.7...v0.58.8) (2026-06-17)
+
+
+### Bug Fixes
+
+* **graph:** bump cache version to rebuild with [#569](https://github.com/VforVitorio/LexFlow/issues/569) citation resolution ([#664](https://github.com/VforVitorio/LexFlow/issues/664)) ([f790680](https://github.com/VforVitorio/LexFlow/commit/f7906803f9775eec72357c32637e47abfe97003a))
+* light up the graph cache + tag taxonomy ([#664](https://github.com/VforVitorio/LexFlow/issues/664), [#669](https://github.com/VforVitorio/LexFlow/issues/669)) ([281dfe8](https://github.com/VforVitorio/LexFlow/commit/281dfe82c2f134e3cd2d9c8d4ea0314bab455839))
+* **parser:** read tags from legalize-es 'subjects' frontmatter key ([#669](https://github.com/VforVitorio/LexFlow/issues/669)) ([64dc7b7](https://github.com/VforVitorio/LexFlow/commit/64dc7b72b488e502e8b6f8cc57034e5095518d8c))
+
 ## [0.58.7](https://github.com/VforVitorio/LexFlow/compare/v0.58.6...v0.58.7) (2026-06-17)
 
 
