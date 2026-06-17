@@ -59,6 +59,7 @@ def get_warmup_status() -> WarmupStatusResponse:
         metadata_ready=state.metadata_ready,
         search_ready=state.search_ready,
         graph_ready=state.graph_ready,
+        semantic_ready=state.semantic_ready,
         error=state.error,
         durations_seconds=state.durations_seconds,
     )

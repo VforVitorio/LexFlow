@@ -32,6 +32,7 @@ class TestSystemWarmupEndpoint:
             "metadata_ready": False,
             "search_ready": False,
             "graph_ready": False,
+            "semantic_ready": False,
             "error": None,
             "durations_seconds": {},
         }
@@ -118,14 +119,78 @@ class TestWarmupStateInvariants:
         assert fresh.metadata_ready is False
         assert fresh.search_ready is False
         assert fresh.graph_ready is False
+        assert fresh.semantic_ready is False
         assert fresh.error is None
         assert fresh.durations_seconds == {}
         assert fresh.ready is False
 
-    def test_ready_flag_requires_all_stages(self) -> None:
+    def test_ready_flag_requires_all_core_stages(self) -> None:
         state = get_warmup_state()
         state.metadata_ready = True
         state.search_ready = True
         assert state.ready is False, "graph still pending"
         state.graph_ready = True
         assert state.ready is True
+
+    def test_ready_excludes_opt_in_semantic_stage(self) -> None:
+        # Semantic is opt-in (#548): its readiness must not gate `ready`.
+        state = get_warmup_state()
+        state.metadata_ready = state.search_ready = state.graph_ready = True
+        state.semantic_ready = False
+        assert state.ready is True
+        state.metadata_ready = False
+        state.semantic_ready = True
+        assert state.ready is False
+
+
+class TestWarmupSemanticStage:
+    """Stage 4 pre-builds the semantic index so the first query isn't cold (#548).
+
+    The heavy stage functions are stubbed so the test is fast and deterministic
+    (no corpus parse, no embedder). What we assert is the orchestration: the
+    stage runs and marks ``semantic_ready``, and a failure stays best-effort.
+    """
+
+    @staticmethod
+    def _stub_core_stages(monkeypatch: pytest.MonkeyPatch) -> object:
+        from pathlib import Path
+        from types import SimpleNamespace
+
+        import lexflow.api.warmup as warmup
+
+        monkeypatch.setattr(warmup, "get_settings", lambda: SimpleNamespace(data_path=Path(".")))
+        monkeypatch.setattr(warmup, "get_law_registry", lambda: object())
+        monkeypatch.setattr(warmup, "load_or_preload_metadata", lambda *a, **k: None)
+        monkeypatch.setattr(warmup, "load_or_build_search", lambda *a, **k: None)
+        monkeypatch.setattr(warmup, "get_graph", lambda *a, **k: None)
+        return warmup
+
+    async def test_prewarms_semantic_and_marks_ready(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        warmup = self._stub_core_stages(monkeypatch)
+        seen: dict[str, bool] = {}
+        monkeypatch.setattr(warmup, "ensure_semantic_index", lambda registry: seen.setdefault("called", True))
+
+        reset_warmup_state()
+        await warmup._run_warmup()
+
+        state = warmup.get_warmup_state()
+        assert seen.get("called") is True
+        assert state.semantic_ready is True
+        assert state.ready is True
+        assert state.error is None
+
+    async def test_semantic_failure_is_best_effort(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        warmup = self._stub_core_stages(monkeypatch)
+
+        def boom(registry: object) -> None:
+            raise RuntimeError("model download failed")
+
+        monkeypatch.setattr(warmup, "ensure_semantic_index", boom)
+
+        reset_warmup_state()
+        await warmup._run_warmup()
+
+        state = warmup.get_warmup_state()
+        assert state.semantic_ready is False
+        assert state.ready is True  # core stages unaffected
+        assert state.error is None  # opt-in failure is logged, not surfaced as a global error
