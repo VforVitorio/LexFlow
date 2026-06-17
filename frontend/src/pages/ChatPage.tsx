@@ -23,6 +23,7 @@ import { useUi } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 import type { ChatMessage as ChatMessageT, ChatSource } from '@/lib/types';
+import { groupThreads } from './chat/group-threads';
 
 const FALLBACK_THREAD_ID = 'eipd';
 
@@ -354,27 +355,3 @@ export function ChatPage() {
   );
 }
 
-/**
- * Bucket threads by recency into stable keys. The keys map to
- * `chat.groups.<key>` in the locale files — the caller translates the
- * label so this stays pure and language-agnostic.
- */
-type ThreadBucket = 'today' | 'yesterday' | 'week';
-
-function groupThreads(threads: { id: string; title: string; updatedAt: string }[]) {
-  const today: typeof threads = [];
-  const yesterday: typeof threads = [];
-  const week: typeof threads = [];
-  const now = Date.now();
-  for (const thread of threads) {
-    const age = (now - new Date(thread.updatedAt).getTime()) / 86400000;
-    if (age < 1) today.push(thread);
-    else if (age < 2) yesterday.push(thread);
-    else week.push(thread);
-  }
-  return [
-    ['today', today],
-    ['yesterday', yesterday],
-    ['week', week],
-  ].filter(([, list]) => (list as typeof threads).length > 0) as [ThreadBucket, typeof threads][];
-}
