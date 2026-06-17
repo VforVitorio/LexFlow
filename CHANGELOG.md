@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.58.6](https://github.com/VforVitorio/LexFlow/compare/v0.58.5...v0.58.6) (2026-06-17)
+
+
+### Refactoring
+
+* **explorer:** extract client filter/sort into a tested module ([#556](https://github.com/VforVitorio/LexFlow/issues/556)) ([37ea373](https://github.com/VforVitorio/LexFlow/commit/37ea373af19fc6f248f3354b2e674acaf93ddd75))
+* **spa:** decompose 4 more god components into tested modules ([#556](https://github.com/VforVitorio/LexFlow/issues/556)) ([5bb99a8](https://github.com/VforVitorio/LexFlow/commit/5bb99a8f725c74afe5ad821da0ecbae0ecd28b07))
+* **spa:** decompose the top god components into tested modules ([#556](https://github.com/VforVitorio/LexFlow/issues/556)) ([c1b7937](https://github.com/VforVitorio/LexFlow/commit/c1b793745817bbda55b958ead6fb37ba4965e8b7))
+
 ## [0.58.5](https://github.com/VforVitorio/LexFlow/compare/v0.58.4...v0.58.5) (2026-06-17)
 
 
