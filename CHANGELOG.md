@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.58.5](https://github.com/VforVitorio/LexFlow/compare/v0.58.4...v0.58.5) (2026-06-17)
+
+
+### Bug Fixes
+
+* **warmup:** pre-build the semantic index in background warm-up ([#548](https://github.com/VforVitorio/LexFlow/issues/548)) ([8330f3b](https://github.com/VforVitorio/LexFlow/commit/8330f3be03935538a1abccdde6f8a9a07632f324))
+* **warmup:** pre-build the semantic index in background warm-up ([#548](https://github.com/VforVitorio/LexFlow/issues/548)) ([9c1f199](https://github.com/VforVitorio/LexFlow/commit/9c1f199b5903eadb9da25baa73890a21ad0b35b6))
+
+
+### Performance
+
+* **frontend:** drop dist sourcemaps + lazy-load the graph canvas ([#555](https://github.com/VforVitorio/LexFlow/issues/555)) ([05bec2c](https://github.com/VforVitorio/LexFlow/commit/05bec2c19f70ce63605826da6788ab9ba952d75f))
+* **frontend:** drop dist sourcemaps + lazy-load the graph canvas ([#555](https://github.com/VforVitorio/LexFlow/issues/555)) ([aa47601](https://github.com/VforVitorio/LexFlow/commit/aa47601d23a2586695c88c4144c2969412464d8a))
+
 ## [0.58.4](https://github.com/VforVitorio/LexFlow/compare/v0.58.3...v0.58.4) (2026-06-17)
 
 
