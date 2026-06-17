@@ -25,7 +25,11 @@ from fastapi.responses import FileResponse
 
 logger = logging.getLogger(__name__)
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[4]
+# spa.py lives at <repo>/src/lexflow/api/spa.py, so the repo root is 3 parents
+# up (api → lexflow → src → repo). Off-by-one here lands above the repo, where
+# frontend/dist never exists, so mount_spa silently skips and prod serves no SPA
+# (#552). test_spa.py pins this so the depth can't drift again.
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
 SPA_DIR: Path = _PROJECT_ROOT / "frontend" / "dist"
 
 
