@@ -10,7 +10,8 @@ import { SkeletonCanvas } from '@/components/domain/Skeleton';
 import { RightRail } from '@/components/shell/RightRail';
 import { useGraph, useGraphTop, useWarmup } from '@/lib/queries';
 import { EDGE_KIND_LABELS, GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, NODE_KIND_LABELS, type GraphEdgeKind } from '@/lib/graph-colors';
-import type { GraphData, GraphNodeKind } from '@/lib/types';
+import type { GraphNodeKind } from '@/lib/types';
+import { buildNodeIndex, resolveNeighbourNodes } from './graph/neighbour-utils';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 const ALL_EDGE_KINDS: GraphEdgeKind[] = ['cites', 'develops', 'modifies', 'repeals'];
@@ -61,22 +62,14 @@ export function GraphPage() {
   // Audit #409 perf: the right-rail used to do O(N) `.find()` per
   // neighbour to resolve each label, and the warmup poll re-ran the
   // chain every 2 s. Build a stable id → node Map once per graph and
-  // memoise the neighbour slice on the (edges, selected) tuple.
+  // memoise the resolved neighbours on the (edges, selected) tuple.
   // Declared BEFORE the early returns below so the hooks are called
   // unconditionally (rules-of-hooks). ``graph`` may be undefined while
   // loading; the optional chain keeps the memo deps stable.
-  const nodeById = useMemo(() => {
-    const map = new Map<string, GraphData['nodes'][number]>();
-    for (const n of graph?.nodes ?? []) map.set(n.id, n);
-    return map;
-  }, [graph?.nodes]);
+  const nodeById = useMemo(() => buildNodeIndex(graph?.nodes ?? []), [graph?.nodes]);
   const neighbours = useMemo(
-    () => (
-      selected && graph
-        ? graph.edges.filter((e) => e.source === selected || e.target === selected).slice(0, 12)
-        : []
-    ),
-    [graph, selected],
+    () => resolveNeighbourNodes(graph?.edges ?? [], nodeById, selected),
+    [graph?.edges, nodeById, selected],
   );
   const node = selected ? nodeById.get(selected) ?? null : null;
 
@@ -214,12 +207,9 @@ export function GraphPage() {
 
             <div className="label-caps mb-2 mt-4">{t('graph.connections')}</div>
             <div className="flex flex-wrap gap-1.5">
-              {neighbours.map((e) => {
-                const other = e.source === node.id ? e.target : e.source;
-                const o = graph.nodes.find((n) => n.id === other);
-                if (!o) return null;
-                return <Chip key={e.id} onClick={() => setSelected(other)}>{o.label}</Chip>;
-              })}
+              {neighbours.map(({ edge: e, otherNode: o, otherId }) => (
+                <Chip key={e.id} onClick={() => setSelected(otherId)}>{o.label}</Chip>
+              ))}
             </div>
 
             {/* Audit #409: only law-kind nodes have a meaningful

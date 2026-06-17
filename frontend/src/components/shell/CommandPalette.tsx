@@ -6,6 +6,7 @@ import { useUi } from '@/lib/store';
 import { useSearch, useTags } from '@/lib/queries';
 import { cn } from '@/lib/utils';
 import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
+import { STATIC_COMMANDS, filterCommands } from './command-palette/commands';
 
 interface PaletteItem {
   id: string;
@@ -61,13 +62,24 @@ export function CommandPalette() {
       ? vocab.filter(({ tag }) => tag.toLowerCase().includes(tagQuery)).slice(0, 6)
       : (q.trim() === '' ? vocab.slice(0, 5) : []);
 
-    const commands: PaletteItem[] = ([
-      { id: 'theme',     group: 'Comandos', icon: <Moon className="size-3.5" />,        title: 'Cambiar tema',            kbd: '⌘ .', run: () => { toggleTheme(); setPaletteOpen(false); } },
-      { id: 'go-graph',  group: 'Comandos', icon: <Network className="size-3.5" />,     title: 'Ir al grafo',             kbd: 'g g', run: () => { navigate('/graph'); setPaletteOpen(false); } },
-      { id: 'go-chat',   group: 'Comandos', icon: <MessagesSquare className="size-3.5" />,title: 'Ir al chat',           kbd: 'g c', run: () => { navigate('/chat'); setPaletteOpen(false); } },
-      { id: 'go-dash',   group: 'Comandos', icon: <BarChart3 className="size-3.5" />,   title: 'Cuadros de mando',        kbd: 'g d', run: () => { navigate('/dashboards'); setPaletteOpen(false); } },
-      { id: 'export',    group: 'Comandos', icon: <Download className="size-3.5" />,    title: 'Exportar página como PDF', run: () => { window.print(); setPaletteOpen(false); } },
-    ] as PaletteItem[]).filter((c) => !q || c.title.toLowerCase().includes(q.toLowerCase()));
+    // Icon and run-callback map, keyed by CommandId — kept here because they
+    // capture React context (navigate, toggleTheme, setPaletteOpen) and
+    // contain JSX, which would make the commands module impure.
+    const commandExtras: Record<string, { icon: React.ReactNode; run: () => void }> = {
+      theme:    { icon: <Moon className="size-3.5" />,             run: () => { toggleTheme(); setPaletteOpen(false); } },
+      'go-graph': { icon: <Network className="size-3.5" />,        run: () => { navigate('/graph'); setPaletteOpen(false); } },
+      'go-chat':  { icon: <MessagesSquare className="size-3.5" />, run: () => { navigate('/chat'); setPaletteOpen(false); } },
+      'go-dash':  { icon: <BarChart3 className="size-3.5" />,      run: () => { navigate('/dashboards'); setPaletteOpen(false); } },
+      export:   { icon: <Download className="size-3.5" />,         run: () => { window.print(); setPaletteOpen(false); } },
+    };
+
+    const commands: PaletteItem[] = filterCommands(STATIC_COMMANDS, q).map((def) => ({
+      id: def.id,
+      group: 'Comandos' as const,
+      title: def.title,
+      kbd: def.kbd,
+      ...commandExtras[def.id],
+    }));
 
     return [
       ...tagSuggestions.map<PaletteItem>(({ tag, count }) => ({

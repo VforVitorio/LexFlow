@@ -6,6 +6,7 @@ import { Badge, Button, Callout, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { FilterRail } from '@/pages/explorer/FilterRail';
+import { applyClientFilterSort, type LawSort } from '@/pages/explorer/client-filter-sort';
 import { useLawsList, useTags } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
@@ -25,7 +26,7 @@ export function ExplorerPage() {
   // converted to numbers in `params`, dropped when empty/invalid.
   const [yearFrom, setYearFrom] = useState('');
   const [yearTo, setYearTo] = useState('');
-  const [sort, setSort] = useState<'relevance' | 'date' | 'refs' | 'title'>('relevance');
+  const [sort, setSort] = useState<LawSort>('relevance');
   // Toggled by the empty-state "How to search" button (#476). Surfaces an
   // inline help panel explaining the search syntax instead of a no-op.
   const [showSearchHelp, setShowSearchHelp] = useState(false);
@@ -77,57 +78,12 @@ export function ExplorerPage() {
   // (a fresh `?? []` array every render would defeat its memoisation).
   const items = useMemo(() => data?.items ?? [], [data]);
 
-  /**
-   * Client-side sort + narrow over the LOADED PAGE only.
-   *
-   * `listLawsQuery` (lib/api/transformers.ts) drops `q`, `sort` and
-   * `tags` because the backend list endpoint does not accept them yet,
-   * which left the search box, the sort selector and the tag chips
-   * decorative (#475). Until corpus-wide search lands on the backend we
-   * apply them here as a PAGE-SCOPED fallback: this operates on `items`
-   * (the current page returned by the server), NOT on the whole corpus —
-   * so it sorts/narrows what is already on screen, it does not fetch or
-   * search across pages.
-   *
-   * WHERE TO CHANGE IF X CHANGES: when the backend accepts q/sort/tags,
-   * move these back into `listLawsQuery` and delete this block.
-   */
-  const displayed = useMemo(() => {
-    let rows = items;
-
-    // FILTER — narrow the current page honestly (page-scoped, not corpus-wide).
-    if (plainQ) {
-      const needle = plainQ.toLowerCase();
-      rows = rows.filter((l) =>
-        l.title.toLowerCase().includes(needle) ||
-        l.short.toLowerCase().includes(needle) ||
-        l.boe.toLowerCase().includes(needle),
-      );
-    }
-    if (allTags.size) {
-      // AND over the law's tags: every active tag must be present.
-      rows = rows.filter((l) => {
-        const lawTags = new Set((l.tags ?? []).map((tag) => tag.toLowerCase()));
-        return [...allTags].every((tag) => lawTags.has(tag.toLowerCase()));
-      });
-    }
-
-    // SORT — `relevance` keeps the server order; the rest sort a copy.
-    if (sort === 'relevance') return rows;
-    const sorted = [...rows];
-    switch (sort) {
-      case 'date':
-        sorted.sort((a, b) => b.publicada.localeCompare(a.publicada));
-        break;
-      case 'title':
-        sorted.sort((a, b) => (a.short || a.title).localeCompare(b.short || b.title));
-        break;
-      case 'refs':
-        sorted.sort((a, b) => b.referencias - a.referencias);
-        break;
-    }
-    return sorted;
-  }, [items, plainQ, allTags, sort]);
+  // Page-scoped search/sort/tag fallback (#475) — narrows + sorts the loaded
+  // page only. Logic + rationale live in `explorer/client-filter-sort.ts`.
+  const displayed = useMemo(
+    () => applyClientFilterSort(items, { plainQ, allTags, sort }),
+    [items, plainQ, allTags, sort],
+  );
 
   // #566 — `#`-triggered tag autocomplete for the search box. When the
   // token under the cursor starts with `#`, suggest matching tags from the

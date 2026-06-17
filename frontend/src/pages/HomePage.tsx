@@ -11,6 +11,7 @@ import { formatNumber, modKey, timeAgo, statusLabel, formatDate } from '@/lib/ut
 import { cn } from '@/lib/utils';
 import { pickGreeting } from '@/lib/greeting';
 import type { Law } from '@/lib/types';
+import { groupByRecency } from './home/recency-groups';
 
 const EXAMPLE_QUERIES = [
   'Cambios al Código Penal en 2024',
@@ -18,33 +19,6 @@ const EXAMPLE_QUERIES = [
   'Diff entre v1.0 y v1.3 de la LOPDGDD',
   'Leyes autonómicas sobre vivienda',
 ];
-
-/** Date buckets for the "Qué ha cambiado" section. Labels live under
- *  `home.buckets.<bucket>` in the locale files — render via `t()`. */
-type RecencyBucket = 'today' | 'yesterday' | 'this-week' | 'this-month' | 'older';
-
-const BUCKET_ORDER: RecencyBucket[] = ['today', 'yesterday', 'this-week', 'this-month', 'older'];
-
-function recencyBucket(iso: string, now: Date): RecencyBucket {
-  const days = (now.getTime() - new Date(iso).getTime()) / 86_400_000;
-  if (days < 1) return 'today';
-  if (days < 2) return 'yesterday';
-  if (days < 7) return 'this-week';
-  if (days < 30) return 'this-month';
-  return 'older';
-}
-
-/** Bucket the most-recent laws into date groups for display. */
-function groupByRecency(laws: Law[], now: Date): Array<{ bucket: RecencyBucket; items: Law[] }> {
-  const map = new Map<RecencyBucket, Law[]>();
-  for (const l of laws) {
-    const b = recencyBucket(l.publicada, now);
-    const arr = map.get(b) ?? [];
-    arr.push(l);
-    map.set(b, arr);
-  }
-  return BUCKET_ORDER.filter((b) => map.has(b)).map((bucket) => ({ bucket, items: map.get(bucket)! }));
-}
 
 export function HomePage() {
   const navigate = useNavigate();
