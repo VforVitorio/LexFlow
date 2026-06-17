@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.58.7](https://github.com/VforVitorio/LexFlow/compare/v0.58.6...v0.58.7) (2026-06-17)
+
+
+### Documentation
+
+* refresh README and docs to current state ([b5ada23](https://github.com/VforVitorio/LexFlow/commit/b5ada235e245642b03dd64258c6d20191fed31db))
+* refresh README and docs to current state ([abf5313](https://github.com/VforVitorio/LexFlow/commit/abf5313a185bf617ece51964805f0c74786c5ef9))
+
 ## [0.58.6](https://github.com/VforVitorio/LexFlow/compare/v0.58.5...v0.58.6) (2026-06-17)
 
 
