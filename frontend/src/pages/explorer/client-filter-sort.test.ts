@@ -34,8 +34,9 @@ describe('applyClientFilterSort', () => {
   });
 
   it('filters by free text across title/short/boe, case-insensitive', () => {
-    expect(applyClientFilterSort(base, { ...relevance, plainQ: 'ley' }).map((l) => l.id)).toEqual(['a', 'c']);
-    expect(applyClientFilterSort(base, { ...relevance, plainQ: 'lopd' }).map((l) => l.id)).toEqual(['a']);
+    expect(applyClientFilterSort(base, { ...relevance, plainQ: 'ley' }).map((l) => l.id)).toEqual(['a', 'c']); // title
+    expect(applyClientFilterSort(base, { ...relevance, plainQ: 'lopd' }).map((l) => l.id)).toEqual(['a']); // short
+    expect(applyClientFilterSort(base, { ...relevance, plainQ: 'boe-b' }).map((l) => l.id)).toEqual(['b']); // boe
   });
 
   it('AND-filters by tags', () => {
