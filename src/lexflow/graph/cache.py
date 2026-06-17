@@ -14,9 +14,15 @@ from lexflow.graph.builder import build_graph
 from lexflow.graph.model import LegalGraph
 
 logger = logging.getLogger(__name__)
-# v2 adds the dangling-reference index to the payload (#230). Older caches
-# lack it, so bumping forces one rebuild on upgrade to populate it.
-CACHE_VERSION = "2"
+# Bump whenever the BUILDER's output changes, not just the on-disk shape: the
+# cache is keyed by corpus revision only, so a logic change that doesn't touch
+# the corpus would otherwise keep serving a stale graph.
+# v2 added the dangling-reference index to the payload (#230).
+# v3 forces a rebuild so #569's citation resolution takes effect — pre-#569
+# caches held the sparse edge set (3,779 edges), so a hub's depth-2 ego-graph
+# came back with ~4 nodes instead of the resolved graph (#664). Follow-up:
+# key the cache on a builder-logic hash so this can't silently regress again.
+CACHE_VERSION = "3"
 
 
 def save_graph(graph: LegalGraph, cache_path: Path, data_hash: str) -> None:
