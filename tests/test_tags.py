@@ -51,6 +51,11 @@ class TestExtractTags:
         }
         assert extract_tags(raw) == ["laboral", "social", "empleo"]
 
+    def test_reads_subjects_the_key_legalize_es_uses(self) -> None:
+        # legalize-es frontmatter carries topics under `subjects` (#669).
+        raw = {"subjects": ["Cementerios", "Defunciones", "Iglesia Católica"]}
+        assert extract_tags(raw) == ["cementerios", "defunciones", "iglesia-catolica"]
+
     def test_missing_sources_yield_empty(self) -> None:
         assert extract_tags({"title": "x"}) == []
 
