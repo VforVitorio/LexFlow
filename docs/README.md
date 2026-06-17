@@ -59,7 +59,7 @@ task-oriented pages.
 | File | What it covers |
 |------|----------------|
 | [conventions.md](contributing/conventions.md) | Python + TypeScript coding conventions |
-| [git-workflow.md](contributing/git-workflow.md) | `main`/`dev`/`feat-*`, no squash, branch auto-delete |
+| [git-workflow.md](contributing/git-workflow.md) | trunk-based (`main` only), `feat-*`/`fix-*`/`docs-*` off `main`, no squash, branch auto-delete |
 | [pull-requests.md](contributing/pull-requests.md) | PR template, required checks, review etiquette |
 
 ---

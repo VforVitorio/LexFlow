@@ -3,7 +3,7 @@
 Source: [`frontend/src/`](../../frontend/src/). Bundler: Vite. Framework:
 React 18 + TypeScript.
 
-Verified against release 0.36.x.
+Verified against release 0.58.x.
 
 ## Layout
 

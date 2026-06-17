@@ -1,13 +1,13 @@
 # Pull Requests
 
-Every change to LexFlow lands through a PR. Direct pushes to `main` or `dev`
+Every change to LexFlow lands through a PR. Direct pushes to `main`
 are rejected by branch protection.
 
 ## Opening a PR
 
 1. Push your feature branch (`feat/*`, `fix/*`, or `docs/*` — see
    [git-workflow.md](./git-workflow.md)).
-2. Target **`dev`**, not `main`. Only release PRs from `dev` target `main`.
+2. Target **`main`**.
 3. Fill in the PR template — see below.
 
 ## The PR template
@@ -46,18 +46,16 @@ Three required contexts:
 | `lint`     | `uvx ruff check .` + `uvx ruff format --check .` |
 | `typecheck`| `uv run mypy src/lexflow/`                    |
 
-On `main`, all three are required *strictly* (`strict: true` — PR must be
-up to date with `main`). On `dev`, the same three checks must pass.
+All three are required *strictly* (`strict: true` — PR must be up to date
+with `main`).
 
 If `lint` or `typecheck` fails, fix locally and push again — do **not**
 silence the check with `# type: ignore` or `# noqa` blindly.
 
 ## Reviews
 
-- **`dev`:** CI green is enough; reviews are encouraged but not required.
-- **`main`:** PRs from `dev` go through review. The branch-protection rule
-  dismisses stale reviews on new commits and requires conversation
-  resolution before merge.
+CI green is a prerequisite; reviews are encouraged. The branch-protection
+rule requires conversation resolution before merge.
 
 Be specific in review comments — point at lines, suggest replacements
 inline. The
@@ -89,7 +87,7 @@ Branch protection on `main` is **strict**: an out-of-date PR cannot merge
 until it is updated against `main`. To avoid manual "Update branch" clicks
 on dependency bumps,
 [`.github/workflows/auto-update-prs.yml`](../../.github/workflows/auto-update-prs.yml)
-runs on every push to `main` / `dev` and calls the `update-branch` endpoint
+runs on every push to `main` and calls the `update-branch` endpoint
 on every open PR labelled `area: deps` or `area: ci-cd` (unless
 `do-not-rebase` is set). See
 [operations/ci-cd.md](../operations/ci-cd.md#auto-update-prsyml--keep-prs-rebased).
@@ -99,19 +97,19 @@ For your own feature PRs, rebase manually:
 ```bash
 git switch feat/your-thing
 git fetch origin
-git rebase origin/dev
+git rebase origin/main
 git push --force-with-lease
 ```
 
 `--force-with-lease` is safe on feature branches; it is **never** allowed on
-`main` or `dev`.
+`main`.
 
 ## After merge
 
 GitHub auto-deletes the head branch. Locally:
 
 ```bash
-git switch dev
+git switch main
 git pull
 git fetch --prune
 ```

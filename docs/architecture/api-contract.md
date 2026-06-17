@@ -14,7 +14,7 @@ under `/api/v1/`.
 The proxy is configured in [`frontend/vite.config.ts`](../../frontend/vite.config.ts);
 no CORS configuration is needed in dev. The router prefixes are applied in
 [`src/lexflow/api/app.py`](../../src/lexflow/api/app.py) — 13 routers under
-`/api/v1` as of release 0.36.x:
+`/api/v1` as of release 0.58.x:
 
 ```python
 app.include_router(search.router,       prefix="/api/v1")  # MUST come before laws — see laws router note

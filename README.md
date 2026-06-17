@@ -115,7 +115,7 @@ LexFlow/
 ├── frontend/             # React + TypeScript (Vite)
 │   └── src/
 │       ├── api/          # schema.ts generado de /openapi.json + cliente tipado
-│       ├── pages/        # Rutas (TanStack Router)
+│       ├── pages/        # Rutas (React Router DOM)
 │       ├── components/   # shadcn/ui primitivos + UI compuesta
 │       ├── stores/       # Estado cliente (Zustand)
 │       ├── hooks/        # Hooks de TanStack Query
@@ -156,7 +156,7 @@ LexFlow/
 |---|---|
 | Build | Vite |
 | Framework | React 18 + TypeScript strict |
-| Routing | TanStack Router (typed, file-based) |
+| Routing | React Router DOM v6 |
 | Server state | TanStack Query |
 | Client state | Zustand |
 | Styling | Tailwind CSS + shadcn/ui (Radix) |
