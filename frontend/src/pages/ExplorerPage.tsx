@@ -10,7 +10,8 @@ import { applyClientFilterSort, type LawSort } from '@/pages/explorer/client-fil
 import { useLawsList, useTags } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
-import type { LawStatus, RangoNormativo, Ambito } from '@/lib/types';
+import type { LawStatus, RangoNormativo, Ambito, JurisdictionCode } from '@/lib/types';
+import { COMMUNITIES } from '@/lib/types';
 
 export function ExplorerPage() {
   const navigate = useNavigate();
@@ -26,6 +27,8 @@ export function ExplorerPage() {
   // converted to numbers in `params`, dropped when empty/invalid.
   const [yearFrom, setYearFrom] = useState('');
   const [yearTo, setYearTo] = useState('');
+  // Single-select: one community at a time (or undefined = all).
+  const [jurisdiction, setJurisdiction] = useState<JurisdictionCode | undefined>(undefined);
   const [sort, setSort] = useState<LawSort>('relevance');
   // Toggled by the empty-state "How to search" button (#476). Surfaces an
   // inline help panel explaining the search syntax instead of a no-op.
@@ -68,9 +71,10 @@ export function ExplorerPage() {
       tags: allTags.size ? [...allTags] : undefined,
       yearFrom: Number.isFinite(from) ? from : undefined,
       yearTo: Number.isFinite(to) ? to : undefined,
+      jurisdiction,
       sort,
     };
-  }, [plainQ, status, rango, ambito, allTags, yearFrom, yearTo, sort]);
+  }, [plainQ, status, rango, ambito, allTags, yearFrom, yearTo, jurisdiction, sort]);
 
   const { data, isLoading } = useLawsList(params);
   const { data: vocab = [] } = useTags();
@@ -130,6 +134,8 @@ export function ExplorerPage() {
         setYearFrom={setYearFrom}
         yearTo={yearTo}
         setYearTo={setYearTo}
+        jurisdiction={jurisdiction}
+        setJurisdiction={setJurisdiction}
       />
 
       {/* Mobile filter sheet — same FilterRail wrapped in a slide-in panel
@@ -170,6 +176,8 @@ export function ExplorerPage() {
                 setYearFrom={setYearFrom}
                 yearTo={yearTo}
                 setYearTo={setYearTo}
+                jurisdiction={jurisdiction}
+                setJurisdiction={setJurisdiction}
                 inline
               />
             </div>
@@ -240,6 +248,11 @@ export function ExplorerPage() {
             {[...ambito].map((a) => (
               <Chip key={a} dismissable onDismiss={() => setAmbito(toggle(ambito, a))}>{a}</Chip>
             ))}
+            {jurisdiction && (
+              <Chip dismissable onDismiss={() => setJurisdiction(undefined)}>
+                {COMMUNITIES.find((c) => c.code === jurisdiction)?.name ?? jurisdiction}
+              </Chip>
+            )}
             {[...allTags].map((t) => (
               <Chip
                 key={t}
@@ -264,7 +277,7 @@ export function ExplorerPage() {
               <EmptyState
                 title={t('explorer.empty.title')}
                 description={t('explorer.empty.description')}
-                primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); } }}
+                primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); } }}
                 secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
               />
               {showSearchHelp && (

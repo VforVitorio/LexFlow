@@ -11,7 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { Hash } from 'lucide-react';
 import { Checkbox, Input } from '@/components/ui';
 import { cn, statusLabel } from '@/lib/utils';
-import type { Ambito, LawStatus, RangoNormativo } from '@/lib/types';
+import type { Ambito, JurisdictionCode, LawStatus, RangoNormativo } from '@/lib/types';
+import { COMMUNITIES } from '@/lib/types';
 
 const STATUSES: LawStatus[] = ['vigente', 'modificada', 'derogada'];
 // Rank chips, ordered roughly by corpus volume (#549). Every option maps to a
@@ -66,6 +67,12 @@ interface FilterRailProps {
   yearTo: string;
   setYearTo: (v: string) => void;
   /**
+   * Autonomous community filter — single code or `undefined` (= all).
+   * Mirrors the backend `jurisdiction` query param (`'es-md'`, etc.).
+   */
+  jurisdiction: JurisdictionCode | undefined;
+  setJurisdiction: (code: JurisdictionCode | undefined) => void;
+  /**
    * When `true`, the rail renders as a plain `<section>` without the
    * fixed-width / hidden-on-mobile chrome — used inside the mobile
    * filter sheet where the parent owns the dialog wrapper.
@@ -87,6 +94,8 @@ export function FilterRail({
   setYearFrom,
   yearTo,
   setYearTo,
+  jurisdiction,
+  setJurisdiction,
   inline = false,
 }: FilterRailProps) {
   const { t } = useTranslation();
@@ -105,6 +114,8 @@ export function FilterRail({
       setYearFrom={setYearFrom}
       yearTo={yearTo}
       setYearTo={setYearTo}
+      jurisdiction={jurisdiction}
+      setJurisdiction={setJurisdiction}
     />
   );
   if (inline) {
@@ -134,6 +145,8 @@ function FilterRailBody({
   setYearFrom,
   yearTo,
   setYearTo,
+  jurisdiction,
+  setJurisdiction,
 }: Omit<FilterRailProps, 'inline'>) {
   const { t } = useTranslation();
   return (
@@ -171,6 +184,35 @@ function FilterRailBody({
             label={a}
           />
         ))}
+      </FilterGroup>
+
+      {/* Comunidad autónoma — single-select. Clicking the active chip
+          deselects it (back to "all"); clicking another selects it.
+          The list uses chip-toggle buttons so the visual pattern matches
+          the tags facet rather than the checkbox facets, since only one
+          value is active at a time. */}
+      <FilterGroup title={t('explorer.groups.comunidad', 'Comunidad')}>
+        <div className="flex flex-wrap gap-1.5">
+          {COMMUNITIES.map(({ code, name }) => {
+            const active = jurisdiction === code;
+            return (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setJurisdiction(active ? undefined : code)}
+                className={cn(
+                  'rounded-full border px-2 py-px text-[11.5px] font-medium transition-colors',
+                  active
+                    ? 'border-transparent bg-indigo-600 text-white'
+                    : 'border-border-strong bg-surface text-fg hover:bg-surface-2',
+                )}
+                aria-pressed={active}
+              >
+                {name}
+              </button>
+            );
+          })}
+        </div>
       </FilterGroup>
 
       <FilterGroup title={t('explorer.groups.year')}>

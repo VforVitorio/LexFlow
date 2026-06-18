@@ -34,6 +34,55 @@ export type RangoNormativo =
 
 export type Ambito = 'Estatal' | 'UE' | 'Autonómica' | 'Local';
 
+/**
+ * Jurisdiction code as expected by the backend `jurisdiction` query param.
+ * `'es'` is the national (estatal) scope; the rest are NUTS-1 region codes.
+ */
+export type JurisdictionCode =
+  | 'es'
+  | 'es-an'
+  | 'es-ar'
+  | 'es-as'
+  | 'es-cb'
+  | 'es-cl'
+  | 'es-cm'
+  | 'es-cn'
+  | 'es-ct'
+  | 'es-ex'
+  | 'es-ga'
+  | 'es-ib'
+  | 'es-mc'
+  | 'es-md'
+  | 'es-nc'
+  | 'es-pv'
+  | 'es-ri'
+  | 'es-vc';
+
+/**
+ * Display name for each jurisdiction code. Ordered as they appear in the UI
+ * (national first, then alphabetical by display name).
+ */
+export const COMMUNITIES: ReadonlyArray<{ code: JurisdictionCode; name: string }> = [
+  { code: 'es',    name: 'Estatal' },
+  { code: 'es-an', name: 'Andalucía' },
+  { code: 'es-ar', name: 'Aragón' },
+  { code: 'es-as', name: 'Asturias' },
+  { code: 'es-cb', name: 'Cantabria' },
+  { code: 'es-cl', name: 'Castilla y León' },
+  { code: 'es-cm', name: 'Castilla-La Mancha' },
+  { code: 'es-cn', name: 'Canarias' },
+  { code: 'es-ct', name: 'Cataluña' },
+  { code: 'es-ex', name: 'Extremadura' },
+  { code: 'es-ga', name: 'Galicia' },
+  { code: 'es-ib', name: 'Islas Baleares' },
+  { code: 'es-mc', name: 'Región de Murcia' },
+  { code: 'es-md', name: 'Madrid' },
+  { code: 'es-nc', name: 'Navarra' },
+  { code: 'es-pv', name: 'País Vasco' },
+  { code: 'es-ri', name: 'La Rioja' },
+  { code: 'es-vc', name: 'Comunidad Valenciana' },
+] as const;
+
 export interface Law {
   /** Internal stable id (e.g. "CE-1978", "LO-3-2018"). Used in URLs. */
   id: string;
@@ -473,6 +522,13 @@ export interface ListLawsParams {
   /** Publication-year range (inclusive), #563. */
   yearFrom?: number;
   yearTo?: number;
+  /**
+   * Autonomous community filter. Omit to return all jurisdictions.
+   * Maps directly to the backend `jurisdiction` query param
+   * (e.g. `'es-md'` → `GET /api/v1/laws?jurisdiction=es-md`).
+   * Single-select: the backend accepts one code at a time.
+   */
+  jurisdiction?: JurisdictionCode;
   sort?: 'relevance' | 'date' | 'refs' | 'title';
   cursor?: string | null;
   limit?: number;
