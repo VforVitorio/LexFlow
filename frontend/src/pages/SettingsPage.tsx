@@ -274,6 +274,7 @@ function ModelsSection() {
         <ModelWizard
           onComplete={() => setWizardOpen(false)}
           onSkip={() => setWizardOpen(false)}
+          onLater={() => setWizardOpen(false)}
         />
       )}
 

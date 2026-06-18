@@ -27,7 +27,7 @@
  * Re-launch entrypoint → `pages/SettingsPage.tsx → ModelsSection`.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
 import {
@@ -45,6 +45,7 @@ import {
 import { Badge, Button } from '@/components/ui';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { api } from '@/lib/api';
+import { liveSecretsApi } from '@/lib/api/secrets';
 import {
   FIT_LABELS,
   FIT_TONES,
@@ -87,10 +88,17 @@ export function ModelWizardGate({ children }: { children: React.ReactNode }) {
           setOpen(false);
         }}
         onSkip={() => {
-          // "Saltar" doesn't mark the wizard as completed — it stays
-          // available from Settings. We close the modal for this
+          // "Saltar" (X button) doesn't mark the wizard as completed — it
+          // stays available from Settings. We close the modal for this
           // session via a separate storage key.
           markWizardSkipped();
+          setOpen(false);
+        }}
+        onLater={() => {
+          // "Lo haré más tarde" (footer button) permanently marks the wizard
+          // done without persisting a model choice — leaves the chat in
+          // "no model configured" state until the user visits Settings → Modelos.
+          markWizardCompleted();
           setOpen(false);
         }}
       />
@@ -101,18 +109,28 @@ export function ModelWizardGate({ children }: { children: React.ReactNode }) {
 /**
  * Standalone wizard (no gate). Used by the "Volver a lanzar wizard"
  * button in Settings → Modelos, where the parent owns the open state.
+ *
+ * Props:
+ *   onComplete   — model chosen + persisted; wizard is done.
+ *   onSkip       — X button: session-only dismiss (wizard reappears next launch).
+ *   onLater      — "Lo haré más tarde" footer button: marks wizard permanently
+ *                  done WITHOUT persisting a model choice (user sets up in Settings).
  */
 export function ModelWizard({
   onComplete,
   onSkip,
+  onLater,
 }: {
   onComplete: (tier: TierKey) => void;
   onSkip: () => void;
+  onLater: () => void;
 }) {
   const { t } = useTranslation();
   const profileQuery = useSystemProfile();
   const [step, setStep] = useState<Step>(1);
   const [selectedKey, setSelectedKey] = useState<TierKey | null>(null);
+  // #672 — for cloud tiers: true only once the Anthropic key is confirmed present.
+  const [cloudKeyReady, setCloudKeyReady] = useState(false);
 
   // Once the profile loads, pre-select the recommended tier. Re-runs
   // when refetch returns new data, but only if the user hasn't picked
@@ -132,6 +150,14 @@ export function ModelWizard({
   const goNext = () => setStep((s) => Math.min(stepCount, s + 1) as Step);
 
   const finish = () => {
+    // #672 — cloud tiers are only usable once the API key is in place.
+    // Guard: if the user somehow reaches finish on a cloud tier without a
+    // key (shouldn't happen with the disabled button, but belt-and-braces),
+    // skip the "configured" toast and don't persist the model choice.
+    if (selectedTier.cloud && !cloudKeyReady) {
+      onComplete(selectedTier.key);
+      return;
+    }
     persistPreferredModel(selectedTier);
     toast({ tone: 'success', title: t('wizard.configuredToast'), message: selectedTier.model });
     onComplete(selectedTier.key);
@@ -154,16 +180,23 @@ export function ModelWizard({
           <StepPick profile={profile} selectedKey={selectedTier.key} onSelect={setSelectedKey} />
         )}
         {step === 3 && (
-          <StepConfirm tier={selectedTier} profile={profile} onRefetchProfile={profileQuery.refetch} />
+          <StepConfirm
+            tier={selectedTier}
+            profile={profile}
+            onRefetchProfile={profileQuery.refetch}
+            onCloudKeyChange={setCloudKeyReady}
+          />
         )}
 
         <WizardFooter
           step={step}
           tier={selectedTier}
           profileReady={!!profile}
+          cloudKeyReady={cloudKeyReady}
           onBack={goBack}
           onNext={goNext}
           onFinish={finish}
+          onLater={onLater}
         />
       </div>
     </div>
@@ -200,32 +233,54 @@ function WizardFooter({
   step,
   tier,
   profileReady,
+  cloudKeyReady,
   onBack,
   onNext,
   onFinish,
+  onLater,
 }: {
   step: Step;
   tier: ModelTier;
   profileReady: boolean;
+  /** #672 — true once the Anthropic key is confirmed present (cloud tiers only). */
+  cloudKeyReady: boolean;
   onBack: () => void;
   onNext: () => void;
   onFinish: () => void;
+  /** #673 — permanently marks wizard done without a model; user finishes in Settings. */
+  onLater: () => void;
 }) {
   const { t } = useTranslation();
   const isLast = step === 3;
+
+  // #672: the primary "Usar" button on the final cloud step is disabled
+  // until the API key is confirmed — prevents the false "Modelo configurado"
+  // success state from firing on bare selection.
+  const finishDisabled = isLast && tier.cloud && !cloudKeyReady;
+
   return (
     <div className="mt-6 flex items-center justify-between gap-3">
-      {step > 1 ? (
-        <Button variant="ghost" onClick={onBack}>
-          {t('wizard.back')}
-        </Button>
-      ) : (
-        <span />
-      )}
+      <div className="flex items-center gap-2">
+        {step > 1 ? (
+          <Button variant="ghost" onClick={onBack}>
+            {t('wizard.back')}
+          </Button>
+        ) : (
+          <span />
+        )}
+        {/* #673 — "Lo haré más tarde": permanently completes the wizard
+            without configuring a model. Shown from step 2 onwards so the
+            user always has an escape that doesn't trap them in the flow. */}
+        {step >= 2 && (
+          <Button variant="ghost" onClick={onLater} className="text-muted text-[13px]">
+            {t('wizard.skipLater')}
+          </Button>
+        )}
+      </div>
       <Button
         variant="primary"
         onClick={isLast ? onFinish : onNext}
-        disabled={step === 1 && !profileReady}
+        disabled={(step === 1 && !profileReady) || finishDisabled}
       >
         {isLast ? t('wizard.use', { tier: tier.title.split(' — ')[0].toLowerCase() }) : t('wizard.continue')}
       </Button>
@@ -416,35 +471,16 @@ function StepConfirm({
   tier,
   profile,
   onRefetchProfile,
+  onCloudKeyChange,
 }: {
   tier: ModelTier;
   profile: SystemProfile | null;
   onRefetchProfile: () => void;
+  /** #672 — called whenever the Anthropic key status is (re-)checked. */
+  onCloudKeyChange: (ready: boolean) => void;
 }) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
   if (tier.cloud) {
-    return (
-      <div className="flex flex-col gap-3 text-[13.5px]">
-        <p>
-          {t('wizard.cloudChosen')} <strong>{tier.title}</strong>.{' '}
-          {/* Static translator copy with one <strong> — rendered via
-              <Trans> so the markup is code-owned, not raw HTML. */}
-          <Trans i18nKey="wizard.cloudKeyInstructions" components={{ strong: <strong /> }} />
-        </p>
-        <p className="text-muted">
-          {t('wizard.cloudCreateKey')}
-        </p>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => navigate('/settings')}
-          className="self-start"
-        >
-          {t('wizard.openSettings')}
-        </Button>
-      </div>
-    );
+    return <CloudKeyConfirm tier={tier} onKeyStatusChange={onCloudKeyChange} />;
   }
 
   const isInstalled = profile?.ollamaModels.includes(tier.model) ?? false;
@@ -455,6 +491,97 @@ function StepConfirm({
       ollamaRunning={profile?.ollamaRunning ?? false}
       onRefetchProfile={onRefetchProfile}
     />
+  );
+}
+
+/**
+ * Step 3 — cloud path (#672).
+ *
+ * Checks whether the Anthropic API key is already stored in the OS keyring
+ * via `GET /api/v1/secrets`. Fires `onKeyStatusChange` whenever the status
+ * is (re-)fetched so the parent can gate the "Usar" button accordingly.
+ *
+ * The user can open Settings → Modelos in a separate tab, paste the key,
+ * then press "Comprobar de nuevo" here — the check re-fetches without
+ * blocking the wizard or refreshing the page.
+ *
+ * --- WHERE TO CHANGE IF X CHANGES ---
+ * Secrets endpoint shape → `lib/api/secrets.ts` + `api/routers/secrets.py`.
+ * Cloud provider name → `liveSecretsApi.CloudProvider` union type.
+ */
+function CloudKeyConfirm({
+  tier,
+  onKeyStatusChange,
+}: {
+  tier: ModelTier;
+  onKeyStatusChange: (ready: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [keyConfigured, setKeyConfigured] = useState<boolean | null>(null);
+
+  const checkKey = useCallback(async () => {
+    try {
+      const items = await liveSecretsApi.list();
+      const anthropic = items.find((item) => item.provider === 'anthropic');
+      const ready = anthropic?.configured ?? false;
+      setKeyConfigured(ready);
+      onKeyStatusChange(ready);
+    } catch {
+      // If the secrets endpoint is unreachable (e.g. backend down), we
+      // stay in the "not configured" state — safe fail, don't unblock.
+      setKeyConfigured(false);
+      onKeyStatusChange(false);
+    }
+  }, [onKeyStatusChange]);
+
+  useEffect(() => {
+    void checkKey();
+  }, [checkKey]);
+
+  return (
+    <div className="flex flex-col gap-3 text-[13.5px]">
+      <p>
+        {t('wizard.cloudChosen')} <strong>{tier.title}</strong>.{' '}
+        {/* Static translator copy with one <strong> — rendered via
+            <Trans> so the markup is code-owned, not raw HTML. */}
+        <Trans i18nKey="wizard.cloudKeyInstructions" components={{ strong: <strong /> }} />
+      </p>
+      <p className="text-muted">
+        {t('wizard.cloudCreateKey')}
+      </p>
+
+      {/* Key status indicator — drives the parent's "Usar" button gate. */}
+      {keyConfigured === null && (
+        <div className="flex items-center gap-2 rounded-md border border-border bg-surface p-3 text-[12.5px] text-muted">
+          <RefreshCw className="size-3.5 animate-spin" />
+          <span>{t('wizard.cloudKeyRefresh')}…</span>
+        </div>
+      )}
+      {keyConfigured === true && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success-soft p-3">
+          <CheckCircle2 className="size-4 text-success" />
+          <span className="text-success font-medium">{t('wizard.cloudKeyReady')}</span>
+        </div>
+      )}
+      {keyConfigured === false && (
+        <div className="flex items-center justify-between gap-3 rounded-md border border-amber-300/60 bg-amber-soft p-3 text-[12.5px] text-amber-700 dark:text-amber-300">
+          <span>{t('wizard.cloudKeyNotSet')}</span>
+          <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} onClick={() => void checkKey()}>
+            {t('wizard.cloudKeyRefresh')}
+          </Button>
+        </div>
+      )}
+
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={() => navigate('/settings')}
+        className="self-start"
+      >
+        {t('wizard.openSettings')}
+      </Button>
+    </div>
   );
 }
 
