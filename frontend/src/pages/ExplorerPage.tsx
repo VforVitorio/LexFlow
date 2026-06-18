@@ -287,7 +287,7 @@ export function ExplorerPage() {
           <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
             {isSearchMode ? (
               <>
-                <span className="font-mono text-fg">{searchData?.total ?? 0}</span> {t('explorer.countOf')} <span className="font-mono">{searchData?.total ?? 0}</span> {t('explorer.countUnit')}
+                <span className="font-mono text-fg">{searchHits.length}</span> {t('explorer.countOf')} <span className="font-mono">{searchData?.total ?? 0}</span> {t('explorer.countUnit')}
               </>
             ) : (
               <>
@@ -331,7 +331,7 @@ export function ExplorerPage() {
                 <EmptyState
                   title={t('explorer.empty.title')}
                   description={t('explorer.empty.description')}
-                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); } }}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); } }}
                   secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
                 />
                 {showSearchHelp && (
@@ -407,7 +407,7 @@ export function ExplorerPage() {
                 <EmptyState
                   title={t('explorer.empty.title')}
                   description={t('explorer.empty.description')}
-                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); } }}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); } }}
                   secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
                 />
                 {showSearchHelp && (
