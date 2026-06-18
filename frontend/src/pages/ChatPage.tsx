@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send, Pencil, Trash2 } from 'lucide-react';
@@ -48,6 +48,17 @@ export function ChatPage() {
     navigate(`/chat/${encodeURIComponent(id)}`);
   };
   const [draft, setDraft] = useState('');
+  // Pre-fill the composer from a Home suggestion chip (passed via router
+  // state) so a "¿Qué exige el art. 28?" chip lands on a chat with the
+  // question ready instead of an empty box (#667). Reacts to state changes
+  // (not mount-only) and narrows the runtime type before setting.
+  const location = useLocation();
+  useEffect(() => {
+    const incoming = (location.state as { draft?: unknown } | null)?.draft;
+    if (typeof incoming === 'string' && incoming.trim().length > 0) {
+      setDraft(incoming);
+    }
+  }, [location.state]);
   const [stream, setStream] = useState<ChatMessageT | null>(null);
   // Optimistic echo of the just-sent user turn. The backend persists it
   // as part of /send, but the thread query only refetches *after* the

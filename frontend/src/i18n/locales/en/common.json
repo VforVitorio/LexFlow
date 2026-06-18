@@ -143,7 +143,11 @@
     "install": "Install",
     "configuredToast": "Model configured",
     "installedToast": "Model installed",
-    "pullFailed": "Pull failed"
+    "pullFailed": "Pull failed",
+    "skipLater": "I'll do this later",
+    "cloudKeyReady": "Anthropic key configured — ready to use",
+    "cloudKeyNotSet": "No Anthropic key saved yet.",
+    "cloudKeyRefresh": "Check again"
   },
   "help": {
     "label": "Help",

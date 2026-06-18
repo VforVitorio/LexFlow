@@ -143,7 +143,11 @@
     "install": "Instalar",
     "configuredToast": "Modelo configurado",
     "installedToast": "Modelo instalado",
-    "pullFailed": "Pull failed"
+    "pullFailed": "Error en la descarga",
+    "skipLater": "Lo haré más tarde",
+    "cloudKeyReady": "Clave de Anthropic configurada — listo para usar",
+    "cloudKeyNotSet": "Todavía no hay clave de Anthropic guardada.",
+    "cloudKeyRefresh": "Comprobar de nuevo"
   },
   "help": {
     "label": "Ayuda",

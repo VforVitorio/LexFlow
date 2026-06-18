@@ -24,8 +24,8 @@ export interface ArticleBlockProps {
 function ArticleBlockImpl({ article, size = 16, onCitationClick }: ArticleBlockProps) {
   return (
     <article id={`art-${article.num}`} className="relative mb-9">
-      <div className="absolute left-[-72px] top-1 hidden w-14 text-right md:block">
-        <div className="font-mono text-[13px] font-semibold text-amber-700 dark:text-amber-400">
+      <div className="absolute left-[-80px] top-1 hidden w-[4.5rem] pl-1 text-right md:block">
+        <div className="whitespace-nowrap font-mono text-[13px] font-semibold text-amber-700 dark:text-amber-400">
           Art. {article.num}
         </div>
       </div>
