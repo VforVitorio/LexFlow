@@ -13,7 +13,8 @@ import { RightRail } from '@/components/shell/RightRail';
 import { useGraph, useLaw, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
-import type { Article, ArticleRef, GraphNodeKind, LawDetail } from '@/lib/types';
+import type { Article, ArticleRef, GraphData, GraphNodeKind, LawDetail } from '@/lib/types';
+import { RelatedLaws } from './RelatedLaws';
 
 const ALL_GRAPH_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 
@@ -29,6 +30,11 @@ export function LawDetailPage() {
 
   const { data: law, isLoading, error, refetch } = useLaw(lawId);
   const { data: versions = [] } = useVersions(lawId);
+  // Hoisted here (rather than inside LawDetailGraphTab) so the related-laws
+  // panel in the right rail is populated on every tab, not just 'grafo'.
+  // TanStack Query deduplicates the request — LawDetailGraphTab uses the same
+  // cache key, so there is only ever one network call.
+  const { data: graph } = useGraph(lawId);
 
   // Articles already arrive embedded in the law-detail response — no
   // need to fetch them a second time (the old `api.laws.references()`
@@ -118,7 +124,7 @@ export function LawDetailPage() {
           </div>
         )}
         {tab === 'grafo' && lawId && (
-          <LawDetailGraphTab lawId={lawId} onOpenGlobalGraph={() => navigate('/graph')} />
+          <LawDetailGraphTab lawId={lawId} graph={graph} onOpenGlobalGraph={() => navigate('/graph')} />
         )}
         {tab === 'refs' && (
           <LawDetailRefsTab refs={lawRefs} onRefClick={setSelectedRef} />
@@ -133,6 +139,8 @@ export function LawDetailPage() {
       <RightRail>
         <DetailRightRail
           law={law}
+          graph={graph}
+          lawId={lawId ?? ''}
           selectedRef={selectedRef}
           onDismiss={() => setSelectedRef(null)}
           onNavigate={navigate}
@@ -173,12 +181,25 @@ function LawDetailRefsTab({ refs, onRefClick }: { refs: ArticleRef[]; onRefClick
  * current law so the user can explore the local neighbourhood without
  * leaving the page. ``Open global view`` still navigates to the full
  * ``/graph`` page for corpus-wide exploration.
+ *
+ * Accepts the pre-fetched `graph` from the parent (hoisted at page level)
+ * so TanStack Query's cache is shared — no duplicate network request.
  */
-function LawDetailGraphTab({ lawId, onOpenGlobalGraph }: { lawId: string; onOpenGlobalGraph: () => void }) {
+function LawDetailGraphTab({
+  lawId,
+  graph,
+  onOpenGlobalGraph,
+}: {
+  lawId: string;
+  /** Pre-fetched subgraph from the parent; `undefined` while loading. */
+  graph: GraphData | undefined;
+  onOpenGlobalGraph: () => void;
+}) {
   const { t } = useTranslation();
   const visibleKinds = useMemo(() => new Set(ALL_GRAPH_KINDS), []);
   const [selected, setSelected] = useState<string | null>(lawId);
-  const { data: graph, isLoading, error } = useGraph(lawId);
+  // Re-subscribe so we get `isLoading` / `error` states without re-fetching.
+  const { isLoading, error } = useGraph(lawId);
   if (error) {
     return (
       <div className="flex-1 overflow-auto p-12 text-center text-muted">
@@ -247,9 +268,18 @@ function relatedRefsFor(articles: Article[]): ArticleRef[] {
 }
 
 function DetailRightRail({
-  law, selectedRef, onDismiss, onNavigate,
+  law,
+  graph,
+  lawId,
+  selectedRef,
+  onDismiss,
+  onNavigate,
 }: {
   law: LawDetail;
+  /** Subgraph centred on this law; `undefined` while the request is in-flight. */
+  graph: GraphData | undefined;
+  /** The current law's id — passed to `RelatedLaws` to exclude itself. */
+  lawId: string;
   selectedRef: ArticleRef | null;
   onDismiss: () => void;
   onNavigate: (to: string) => void;
@@ -316,6 +346,12 @@ function DetailRightRail({
           </div>
         </>
       )}
+
+      <RelatedLaws
+        graph={graph}
+        currentLawId={lawId}
+        onNavigate={(id) => onNavigate(`/laws/${encodeURIComponent(id)}`)}
+      />
     </>
   );
 }
