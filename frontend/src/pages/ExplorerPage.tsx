@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Download, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X } from 'lucide-react';
+import { Search, Download, ChevronRight, BookOpenText, Hash, SlidersHorizontal, X, FileText } from 'lucide-react';
 import { Badge, Button, Callout, Chip, Input, Tabs } from '@/components/ui';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { FilterRail } from '@/pages/explorer/FilterRail';
 import { applyClientFilterSort, type LawSort } from '@/pages/explorer/client-filter-sort';
-import { useLawsList, useTags } from '@/lib/queries';
+import { useLawsList, useTags, useSearch } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
-import type { LawStatus, RangoNormativo, Ambito, JurisdictionCode } from '@/lib/types';
+import { RANK_MAP, STATUS_MAP, SCOPE_MAP } from '@/lib/api/transformers';
+import type { LawStatus, RangoNormativo, Ambito, JurisdictionCode, SearchFacets } from '@/lib/types';
 import { COMMUNITIES } from '@/lib/types';
 
 export function ExplorerPage() {
@@ -76,18 +77,61 @@ export function ExplorerPage() {
     };
   }, [plainQ, status, rango, ambito, allTags, yearFrom, yearTo, jurisdiction, sort]);
 
-  const { data, isLoading } = useLawsList(params);
-  const { data: vocab = [] } = useTags();
-  // Memoise so the `displayed` derivation below has a stable input reference
-  // (a fresh `?? []` array every render would defeat its memoisation).
-  const items = useMemo(() => data?.items ?? [], [data]);
+  /**
+   * Search mode is active when the user has typed ≥ 2 non-tag characters.
+   * In search mode we call the corpus-wide `/laws/search` endpoint with
+   * the same facet filters; in browse mode we use the paginated list.
+   */
+  const isSearchMode = plainQ.trim().length >= 2;
 
+  /**
+   * Facets for the corpus search endpoint (#671). Mirror of `listLawsQuery`
+   * in transformers — each SPA label is reversed to the backend enum value.
+   * The backend accepts single-value filters (first selected item), same as
+   * the list endpoint.
+   */
+  const searchFacets = useMemo((): SearchFacets => {
+    const from = Number.parseInt(yearFrom, 10);
+    const to = Number.parseInt(yearTo, 10);
+    return {
+      rank: rango.size
+        ? Object.entries(RANK_MAP).find(([, v]) => v === [...rango][0])?.[0]
+        : undefined,
+      status: status.size
+        ? Object.entries(STATUS_MAP).find(([, v]) => v === [...status][0])?.[0]
+        : undefined,
+      scope: ambito.size
+        ? Object.entries(SCOPE_MAP).find(([, v]) => v === [...ambito][0])?.[0]
+        : undefined,
+      jurisdiction,
+      year_from: Number.isFinite(from) ? from : undefined,
+      year_to: Number.isFinite(to) ? to : undefined,
+    };
+  }, [rango, status, ambito, jurisdiction, yearFrom, yearTo]);
+
+  // ── Browse mode (no query) ────────────────────────────────────────────
+  const { data: browseData, isLoading: browseLoading } = useLawsList(params, {
+    enabled: !isSearchMode,
+  });
+  const items = useMemo(() => browseData?.items ?? [], [browseData]);
   // Page-scoped search/sort/tag fallback (#475) — narrows + sorts the loaded
   // page only. Logic + rationale live in `explorer/client-filter-sort.ts`.
   const displayed = useMemo(
     () => applyClientFilterSort(items, { plainQ, allTags, sort }),
     [items, plainQ, allTags, sort],
   );
+
+  // ── Search mode (query ≥ 2 chars) ─────────────────────────────────────
+  const { data: searchData, isLoading: searchLoading } = useSearch(
+    isSearchMode ? plainQ : '',
+    searchFacets,
+  );
+  const searchHits = useMemo(() => searchData?.hits ?? [], [searchData]);
+
+  // Unified loading flag for the current mode.
+  const isLoading = isSearchMode ? searchLoading : browseLoading;
+
+  const { data: vocab = [] } = useTags();
 
   // #566 — `#`-triggered tag autocomplete for the search box. When the
   // token under the cursor starts with `#`, suggest matching tags from the
@@ -241,7 +285,15 @@ export function ExplorerPage() {
             <Button variant="secondary" icon={<Download className="size-3.5" />} className="hidden sm:inline-flex">{t('explorer.export')}</Button>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-muted">
-            <span className="font-mono text-fg">{displayed.length}</span> {t('explorer.countOf')} <span className="font-mono">{data?.total ?? 0}</span> {t('explorer.countUnit')} ·
+            {isSearchMode ? (
+              <>
+                <span className="font-mono text-fg">{searchHits.length}</span> {t('explorer.countOf')} <span className="font-mono">{searchData?.total ?? 0}</span> {t('explorer.countUnit')}
+              </>
+            ) : (
+              <>
+                <span className="font-mono text-fg">{displayed.length}</span> {t('explorer.countOf')} <span className="font-mono">{browseData?.total ?? 0}</span> {t('explorer.countUnit')}
+              </>
+            )} ·
             {[...status].map((s) => (
               <Chip key={s} dismissable onDismiss={() => setStatus(toggle(status, s))}>{statusLabel(s)}</Chip>
             ))}
@@ -270,118 +322,197 @@ export function ExplorerPage() {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table / Search results */}
         <div className="flex-1 overflow-auto scrollbar-thin">
-          {!isLoading && displayed.length === 0 ? (
-            <div className="p-8">
-              <EmptyState
-                title={t('explorer.empty.title')}
-                description={t('explorer.empty.description')}
-                primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); } }}
-                secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
-              />
-              {showSearchHelp && (
-                <Callout tone="info" title={t('explorer.searchHelp.title')} className="mx-auto mt-4 max-w-md text-left">
-                  <ul className="ml-4 list-disc space-y-1">
-                    <li>{t('explorer.searchHelp.freetext')}</li>
-                    <li>{t('explorer.searchHelp.tags')}</li>
-                    <li>{t('explorer.searchHelp.filters')}</li>
-                  </ul>
-                </Callout>
-              )}
-            </div>
+          {isSearchMode ? (
+            /* ── Search mode ────────────────────────────────────────── */
+            !isLoading && searchHits.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title={t('explorer.empty.title')}
+                  description={t('explorer.empty.description')}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); } }}
+                  secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
+                />
+                {showSearchHelp && (
+                  <Callout tone="info" title={t('explorer.searchHelp.title')} className="mx-auto mt-4 max-w-md text-left">
+                    <ul className="ml-4 list-disc space-y-1">
+                      <li>{t('explorer.searchHelp.freetext')}</li>
+                      <li>{t('explorer.searchHelp.tags')}</li>
+                      <li>{t('explorer.searchHelp.filters')}</li>
+                    </ul>
+                  </Callout>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {/* Skeleton rows while search is loading */}
+                {isLoading &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-2 px-8 py-4">
+                      <Skeleton className="h-3.5 w-1/3" />
+                      <Skeleton className="h-2.5 w-2/3" />
+                      <Skeleton className="h-2.5 w-1/2" />
+                    </div>
+                  ))}
+                {/* Search result rows */}
+                {!isLoading &&
+                  searchHits.map((hit) => {
+                    const lawId = (hit.payload?.lawId as string | undefined) ?? hit.id;
+                    const articleNum = hit.payload?.articleNum as string | undefined;
+                    const href = `/laws/${encodeURIComponent(lawId)}`;
+                    return (
+                      <div
+                        key={hit.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => navigate(href)}
+                        onKeyDown={(e) => e.key === 'Enter' && navigate(href)}
+                        className="group flex cursor-pointer items-start gap-3.5 px-8 py-4 transition-colors hover:bg-surface-2/50"
+                      >
+                        <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
+                          {articleNum ? (
+                            <FileText className="size-3.5" />
+                          ) : (
+                            <BookOpenText className="size-3.5" />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <span className="truncate font-semibold leading-snug">{hit.title}</span>
+                            {articleNum && (
+                              <span className="shrink-0 font-mono text-[11px] text-muted">
+                                Art.&nbsp;{articleNum}
+                              </span>
+                            )}
+                          </div>
+                          {hit.snippet && (
+                            <HighlightedSnippet
+                              snippet={hit.snippet}
+                              match={hit.match ?? null}
+                              className="mt-1 line-clamp-2 text-[12.5px] text-muted"
+                            />
+                          )}
+                        </div>
+                        <ChevronRight className="mt-1 size-3.5 shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                      </div>
+                    );
+                  })}
+              </div>
+            )
           ) : (
-            <table className="w-full border-collapse text-[13.5px]">
-              <thead className="sticky top-0 z-[1] bg-bg">
-                <tr className="border-b border-border">
-                  <Th className="w-[40%] pl-8">{t('explorer.cols.law')}</Th>
-                  <Th>{t('explorer.cols.status')}</Th>
-                  <Th>{t('explorer.cols.rango')}</Th>
-                  <Th>{t('explorer.cols.published')}</Th>
-                  <Th className="text-right">{t('explorer.cols.articles')}</Th>
-                  <Th className="text-right">{t('explorer.cols.refs')}</Th>
-                  <Th className="w-10" />
-                </tr>
-              </thead>
-              {/* During first-load show skeleton rows shaped like the real
-                  data so the table doesn't reflow on hydration. Only fires
-                  when we have no items yet — once a page is in cache the
-                  refetch happens silently against the stale rows. */}
-              {isLoading && items.length === 0 && (
-                <tbody aria-busy>
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="border-b border-border" style={{ height: rowH }}>
-                      <td className="pl-8 pr-3 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <Skeleton className="size-7 shrink-0 rounded-md" />
-                          <div className="flex w-full flex-col gap-1.5">
-                            <Skeleton className="h-3 w-2/5" />
-                            {density !== 'compact' && <Skeleton className="h-2.5 w-3/4" />}
+            /* ── Browse mode (no query) ─────────────────────────────── */
+            !isLoading && displayed.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  title={t('explorer.empty.title')}
+                  description={t('explorer.empty.description')}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); } }}
+                  secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
+                />
+                {showSearchHelp && (
+                  <Callout tone="info" title={t('explorer.searchHelp.title')} className="mx-auto mt-4 max-w-md text-left">
+                    <ul className="ml-4 list-disc space-y-1">
+                      <li>{t('explorer.searchHelp.freetext')}</li>
+                      <li>{t('explorer.searchHelp.tags')}</li>
+                      <li>{t('explorer.searchHelp.filters')}</li>
+                    </ul>
+                  </Callout>
+                )}
+              </div>
+            ) : (
+              <table className="w-full border-collapse text-[13.5px]">
+                <thead className="sticky top-0 z-[1] bg-bg">
+                  <tr className="border-b border-border">
+                    <Th className="w-[40%] pl-8">{t('explorer.cols.law')}</Th>
+                    <Th>{t('explorer.cols.status')}</Th>
+                    <Th>{t('explorer.cols.rango')}</Th>
+                    <Th>{t('explorer.cols.published')}</Th>
+                    <Th className="text-right">{t('explorer.cols.articles')}</Th>
+                    <Th className="text-right">{t('explorer.cols.refs')}</Th>
+                    <Th className="w-10" />
+                  </tr>
+                </thead>
+                {/* During first-load show skeleton rows shaped like the real
+                    data so the table doesn't reflow on hydration. Only fires
+                    when we have no items yet — once a page is in cache the
+                    refetch happens silently against the stale rows. */}
+                {isLoading && items.length === 0 && (
+                  <tbody aria-busy>
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <tr key={i} className="border-b border-border" style={{ height: rowH }}>
+                        <td className="pl-8 pr-3 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <Skeleton className="size-7 shrink-0 rounded-md" />
+                            <div className="flex w-full flex-col gap-1.5">
+                              <Skeleton className="h-3 w-2/5" />
+                              {density !== 'compact' && <Skeleton className="h-2.5 w-3/4" />}
+                            </div>
+                          </div>
+                        </td>
+                        <td><Skeleton className="h-4 w-16 rounded-full" /></td>
+                        <td><Skeleton className="h-3 w-20" /></td>
+                        <td><Skeleton className="h-3 w-16" /></td>
+                        <td className="text-right"><Skeleton className="ml-auto h-3 w-8" /></td>
+                        <td className="text-right"><Skeleton className="ml-auto h-3 w-10" /></td>
+                        <td />
+                      </tr>
+                    ))}
+                  </tbody>
+                )}
+                <tbody>
+                  {displayed.map((l) => (
+                    <tr
+                      key={l.id}
+                      onClick={() => navigate(`/laws/${encodeURIComponent(l.id)}`)}
+                      className="cursor-pointer border-b border-border transition-colors hover:bg-surface-2/50"
+                      style={{ height: rowH }}
+                    >
+                      <td className={cn('pl-8 pr-3', density === 'compact' ? 'py-2' : 'py-3')}>
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
+                            <BookOpenText className="size-3.5" />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="truncate font-semibold">{l.short}</div>
+                            {density !== 'compact' && (
+                              <div className="truncate text-[11.5px] text-muted">{l.title}</div>
+                            )}
+                            {density === 'cozy' && l.tags && l.tags.length > 0 && (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {l.tags.slice(0, 5).map((t) => (
+                                  <button
+                                    key={t}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setTags((prev) => {
+                                        const n = new Set(prev);
+                                        n.has(t) ? n.delete(t) : n.add(t);
+                                        return n;
+                                      });
+                                    }}
+                                    className="inline-flex items-center gap-0.5 rounded-full bg-primary-soft/60 px-1.5 py-px font-mono text-[10.5px] text-indigo-700 hover:bg-primary-soft dark:text-indigo-200"
+                                  >
+                                    #{t}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
-                      <td><Skeleton className="h-4 w-16 rounded-full" /></td>
-                      <td><Skeleton className="h-3 w-20" /></td>
-                      <td><Skeleton className="h-3 w-16" /></td>
-                      <td className="text-right"><Skeleton className="ml-auto h-3 w-8" /></td>
-                      <td className="text-right"><Skeleton className="ml-auto h-3 w-10" /></td>
-                      <td />
+                      <td><Badge tone={l.status === 'vigente' ? 'success' : l.status === 'derogada' ? 'danger' : 'amber'}>{statusLabel(l.status)}</Badge></td>
+                      <td className="text-muted">{l.rango}</td>
+                      <td className="font-mono text-[12px] text-muted">{formatDate(l.publicada)}</td>
+                      <td className="pr-4 text-right font-mono">{l.articulos}</td>
+                      <td className="pr-4 text-right font-mono text-muted">{formatNumber(l.referencias)}</td>
+                      <td className="pr-5"><ChevronRight className="size-3.5 text-muted" /></td>
                     </tr>
                   ))}
                 </tbody>
-              )}
-              <tbody>
-                {displayed.map((l) => (
-                  <tr
-                    key={l.id}
-                    onClick={() => navigate(`/laws/${encodeURIComponent(l.id)}`)}
-                    className="cursor-pointer border-b border-border transition-colors hover:bg-surface-2/50"
-                    style={{ height: rowH }}
-                  >
-                    <td className={cn('pl-8 pr-3', density === 'compact' ? 'py-2' : 'py-3')}>
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
-                          <BookOpenText className="size-3.5" />
-                        </span>
-                        <div className="min-w-0">
-                          <div className="truncate font-semibold">{l.short}</div>
-                          {density !== 'compact' && (
-                            <div className="truncate text-[11.5px] text-muted">{l.title}</div>
-                          )}
-                          {density === 'cozy' && l.tags && l.tags.length > 0 && (
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {l.tags.slice(0, 5).map((t) => (
-                                <button
-                                  key={t}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setTags((prev) => {
-                                      const n = new Set(prev);
-                                      n.has(t) ? n.delete(t) : n.add(t);
-                                      return n;
-                                    });
-                                  }}
-                                  className="inline-flex items-center gap-0.5 rounded-full bg-primary-soft/60 px-1.5 py-px font-mono text-[10.5px] text-indigo-700 hover:bg-primary-soft dark:text-indigo-200"
-                                >
-                                  #{t}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td><Badge tone={l.status === 'vigente' ? 'success' : l.status === 'derogada' ? 'danger' : 'amber'}>{statusLabel(l.status)}</Badge></td>
-                    <td className="text-muted">{l.rango}</td>
-                    <td className="font-mono text-[12px] text-muted">{formatDate(l.publicada)}</td>
-                    <td className="pr-4 text-right font-mono">{l.articulos}</td>
-                    <td className="pr-4 text-right font-mono text-muted">{formatNumber(l.referencias)}</td>
-                    <td className="pr-5"><ChevronRight className="size-3.5 text-muted" /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              </table>
+            )
           )}
         </div>
       </div>
@@ -394,6 +525,40 @@ function Th({ children, className }: { children?: React.ReactNode; className?: s
     <th className={cn('label-caps whitespace-nowrap px-3 py-2.5 text-left', className)}>
       <span className="inline-flex items-center gap-1">{children}</span>
     </th>
+  );
+}
+
+/**
+ * Renders a search snippet with the matched substring highlighted.
+ *
+ * `match` carries the character offsets returned by the backend
+ * (`match_start` / `match_end` on `SearchResult`). When `match` is null
+ * the snippet is shown as plain text — the hit was title-only or the
+ * offset fell outside the trimmed window.
+ */
+function HighlightedSnippet({
+  snippet,
+  match,
+  className,
+}: {
+  snippet: string;
+  match: { start: number; end: number } | null;
+  className?: string;
+}) {
+  if (!match || match.start < 0 || match.end <= match.start || match.end > snippet.length) {
+    return <p className={className}>{snippet}</p>;
+  }
+  const before = snippet.slice(0, match.start);
+  const highlighted = snippet.slice(match.start, match.end);
+  const after = snippet.slice(match.end);
+  return (
+    <p className={className}>
+      {before}
+      <mark className="rounded-[2px] bg-amber-200/70 px-px text-inherit dark:bg-amber-500/30">
+        {highlighted}
+      </mark>
+      {after}
+    </p>
   );
 }
 

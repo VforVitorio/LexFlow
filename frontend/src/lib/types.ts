@@ -403,6 +403,35 @@ export interface SyncStatus {
 
 // ─── Search ──────────────────────────────────────────────────────────────
 
+/**
+ * Facet params accepted by the corpus-wide search endpoint
+ * (`GET /api/v1/laws/search`). Mirror of the facets the Explorer
+ * already wires to `laws.list` — single-value because the backend
+ * accepts one value per filter at a time.
+ *
+ * --- WHERE TO CHANGE IF X CHANGES ---
+ * Backend adds a new filter param → add a field here and wire it in
+ * `api/search.ts` `buildSearchQuery` and `listLawsQuery` in `transformers.ts`.
+ */
+export interface SearchFacets {
+  /** Backend `LawRank` enum value (e.g. `'real_decreto'`). */
+  rank?: string;
+  /** Backend `LawStatus` enum value (e.g. `'in_force'`). */
+  status?: string;
+  /** Backend `Scope` enum value (e.g. `'Estatal'`). */
+  scope?: string;
+  /** NUTS-1 jurisdiction code (e.g. `'es-md'`). */
+  jurisdiction?: JurisdictionCode;
+  /** Inclusive start of publication year range. */
+  year_from?: number;
+  /** Inclusive end of publication year range. */
+  year_to?: number;
+  /** Result page (1-based). */
+  page?: number;
+  /** Hits per page. */
+  page_size?: number;
+}
+
 export type SearchHitKind = 'law' | 'article' | 'thread' | 'dashboard' | 'command';
 
 export interface SearchHit {
@@ -582,7 +611,15 @@ export interface ApiClient {
     stats(): Promise<GraphStats>;
   };
   search: {
-    universal(q: string): Promise<SearchResults>;
+    /**
+     * Corpus-wide full-text search (#102, #671).
+     *
+     * `facets` maps directly to the backend's filter params (rank, status,
+     * scope, jurisdiction, year_from, year_to). Omit to search without
+     * filtering. Pass `page` / `page_size` for pagination; defaults on the
+     * backend are page=1, page_size=20.
+     */
+    universal(q: string, facets?: SearchFacets): Promise<SearchResults>;
     /**
      * Semantic search over the article corpus (#477).
      *
