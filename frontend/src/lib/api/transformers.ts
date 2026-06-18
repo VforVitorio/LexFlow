@@ -301,5 +301,9 @@ export function listLawsQuery(params: ListLawsParams): Record<string, unknown> {
     // filters on `publication_date.year` (inclusive).
     year_from: params.yearFrom,
     year_to: params.yearTo,
+    // Autonomous community filter — passed straight through; the backend
+    // `jurisdiction` param accepts the NUTS-1 code as-is (e.g. `'es-md'`).
+    // Omitted when undefined so the backend returns all jurisdictions.
+    jurisdiction: params.jurisdiction,
   };
 }
