@@ -49,15 +49,16 @@ export function ChatPage() {
   };
   const [draft, setDraft] = useState('');
   // Pre-fill the composer from a Home suggestion chip (passed via router
-  // state), once on mount — so a "¿Qué exige el art. 28?" chip lands on a
-  // chat with the question ready instead of an empty box (#667).
+  // state) so a "¿Qué exige el art. 28?" chip lands on a chat with the
+  // question ready instead of an empty box (#667). Reacts to state changes
+  // (not mount-only) and narrows the runtime type before setting.
   const location = useLocation();
   useEffect(() => {
-    const incoming = (location.state as { draft?: string } | null)?.draft;
-    if (incoming) setDraft(incoming);
-    // run once on mount — the chip click is the only producer of this state
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const incoming = (location.state as { draft?: unknown } | null)?.draft;
+    if (typeof incoming === 'string' && incoming.trim().length > 0) {
+      setDraft(incoming);
+    }
+  }, [location.state]);
   const [stream, setStream] = useState<ChatMessageT | null>(null);
   // Optimistic echo of the just-sent user turn. The backend persists it
   // as part of /send, but the thread query only refetches *after* the
