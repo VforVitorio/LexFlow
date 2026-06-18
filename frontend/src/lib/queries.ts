@@ -14,7 +14,7 @@ import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, InstalledModel, SyncStatus, DashboardData, ListLawsParams,
   SearchResults, SemanticSearchResults, HybridSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
-  GraphGlobalFilters, GraphGlobalResult,
+  GraphGlobalFilters, GraphGlobalResult, SearchFacets,
 } from './types';
 
 export const qk = {
@@ -28,7 +28,8 @@ export const qk = {
   articles:    (lawId: string, num: string) => ['articles', lawId, num] as const,
   tags:        () => ['tags'] as const,
   graph:       (id: string, depth?: number) => ['graph', id, depth ?? 2] as const,
-  search:      (q: string) => ['search', q] as const,
+  /** Search key includes facets so different filter combinations coexist in cache. */
+  search:      (q: string, facets?: SearchFacets) => ['search', q, facets ?? {}] as const,
   chatThreads: () => ['chat', 'threads'] as const,
   chatThread:  (id: string) => ['chat', 'thread', id] as const,
   models:      () => ['models'] as const,
@@ -137,14 +138,22 @@ export function useGlobalGraph(filters: GraphGlobalFilters = {}) {
 
 // ─── Search ──────────────────────────────────────────────────────────────
 
-export function useSearch(q: string) {
-  // Backend `/api/v1/search` requires `q` of length ≥ 2 (`min_length=2`).
-  // Disparar la query con un solo carácter devuelve 422 y mete ruido en
-  // los logs — gateamos aquí para mantener el contrato alineado.
+/**
+ * Corpus-wide full-text search with optional facet filters (#671).
+ *
+ * When `facets` is provided, the query key includes the facet bag so
+ * different filter combinations coexist in the cache. The min-length
+ * gate (≥ 2 chars) prevents 422 from the backend `min_length=2` validator.
+ *
+ * In `ExplorerPage` this replaces the page-scoped client filter when the
+ * user has typed a non-empty query — browse mode (no query) stays on
+ * `useLawsList`.
+ */
+export function useSearch(q: string, facets?: SearchFacets) {
   const trimmed = q.trim();
   return useQuery<SearchResults>({
-    queryKey: qk.search(trimmed),
-    queryFn: () => api.search.universal(trimmed),
+    queryKey: qk.search(trimmed, facets),
+    queryFn: () => api.search.universal(trimmed, facets),
     enabled: trimmed.length >= 2,
     staleTime: 10_000,
   });
@@ -360,4 +369,4 @@ export function useSystemProfile() {
 
 // ─── Re-exports for convenience ─────────────────────────────────────────
 
-export type { Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread, ChatMessage };
+export type { Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread, ChatMessage, SearchFacets };

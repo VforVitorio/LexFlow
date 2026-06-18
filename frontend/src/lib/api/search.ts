@@ -12,7 +12,7 @@
  */
 
 import type { BackendSearchResponse, BackendSemanticSearchResponse } from '../../api';
-import type { ApiClient, HybridSearchResults, SearchResults, SemanticSearchResults } from '../types';
+import type { ApiClient, HybridSearchResults, SearchFacets, SearchResults, SemanticSearchResults } from '../types';
 import { http, qs } from './http';
 
 /**
@@ -31,9 +31,20 @@ interface BackendHybridSearchResponse {
   }[];
 }
 
+/**
+ * Build the query-string params for `GET /api/v1/laws/search`.
+ *
+ * The endpoint accepts `q` plus optional facet filters (same names as the
+ * list endpoint: rank, status, scope, jurisdiction, year_from, year_to) and
+ * pagination (page, page_size). Undefined values are omitted by `qs`.
+ */
+function buildSearchQuery(q: string, facets: SearchFacets = {}): string {
+  return qs({ q, ...facets });
+}
+
 export const liveSearchApi: ApiClient['search'] = {
-  universal: async (q) => {
-    const raw = await http<BackendSearchResponse>(`/laws/search${qs({ q })}`);
+  universal: async (q, facets) => {
+    const raw = await http<BackendSearchResponse>(`/laws/search${buildSearchQuery(q, facets)}`);
     const hits: SearchResults['hits'] = raw.items.map((h) => ({
       kind: h.article_number ? 'article' : 'law',
       id: h.article_number ? `${h.law_id}::${h.article_number}` : h.law_id,
