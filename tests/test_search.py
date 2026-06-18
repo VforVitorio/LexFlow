@@ -35,6 +35,18 @@ class TestSearchIndex:
         assert result.total > 0
         assert any(r.law_id == "BOE-A-2000-323" for r in result.items)
 
+    def test_law_filter_restricts_hits_before_pagination(self) -> None:
+        # "ley" matches entries across both laws; the facet filter (#671) keeps
+        # only one law, and the total reflects the drop (filtered before paging).
+        idx = self._build_index()
+        unfiltered = idx.search("ley")
+        assert {r.law_id for r in unfiltered.items} >= {"BOE-A-2000-323", "BOE-A-2018-16673"}
+
+        filtered = idx.search("ley", law_filter=lambda lid: lid == "BOE-A-2018-16673")
+        assert filtered.total >= 1
+        assert filtered.total < unfiltered.total
+        assert all(r.law_id == "BOE-A-2018-16673" for r in filtered.items)
+
     def test_finds_matching_article(self) -> None:
         idx = self._build_index()
         result = idx.search("procesos civiles")

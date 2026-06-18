@@ -7,6 +7,7 @@ Designed for Phase 1; Phase 7 will introduce semantic search with embeddings.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from lexflow.core.schemas import SearchResponse, SearchResult
@@ -115,10 +116,14 @@ class SearchIndex:
         *,
         page: int = 1,
         page_size: int = 20,
+        law_filter: Callable[[str], bool] | None = None,
     ) -> SearchResponse:
         """Search for *query* across all indexed entries.
 
         Returns results sorted by relevance (title matches score higher).
+        ``law_filter`` (#671) keeps only hits whose ``law_id`` satisfies the
+        predicate — applied AFTER ranking but BEFORE pagination so facet-filtered
+        search keeps correct totals and page boundaries.
         """
         query_lower = query.lower()
         scored: list[tuple[float, SearchEntry]] = []
@@ -129,6 +134,9 @@ class SearchIndex:
                 scored.append((score, entry))
 
         scored.sort(key=lambda x: x[0], reverse=True)
+
+        if law_filter is not None:
+            scored = [(score, entry) for score, entry in scored if law_filter(entry.law_id)]
 
         total = len(scored)
         start = (page - 1) * page_size

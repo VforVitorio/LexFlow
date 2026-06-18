@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
+from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
 from threading import Lock
@@ -184,15 +185,61 @@ class LawRegistry:
         *,
         page: int = 1,
         page_size: int = 20,
+        rank: LawRank | None = None,
+        status: LawStatus | None = None,
+        scope: Scope | None = None,
+        jurisdiction: str | None = None,
+        year_from: int | None = None,
+        year_to: int | None = None,
     ) -> SearchResponse:
-        """Full-text search across all laws.
+        """Full-text search across all laws, optionally facet-filtered (#671).
 
-        Builds the search index lazily on first call from all cached laws
-        and metadata.
+        Builds the search index lazily on first call from all cached laws and
+        metadata. The facet filters mirror :meth:`list_laws` so the Explorer can
+        search the whole corpus AND narrow by community/rank/status/year with a
+        single, consistent contract.
         """
         if not self._search_index.is_built:
             self._build_search_index()
-        return self._search_index.search(query, page=page, page_size=page_size)
+        law_filter = self._build_facet_filter(
+            rank=rank,
+            status=status,
+            scope=scope,
+            jurisdiction=jurisdiction,
+            year_from=year_from,
+            year_to=year_to,
+        )
+        return self._search_index.search(query, page=page, page_size=page_size, law_filter=law_filter)
+
+    def _build_facet_filter(
+        self,
+        *,
+        rank: LawRank | None,
+        status: LawStatus | None,
+        scope: Scope | None,
+        jurisdiction: str | None,
+        year_from: int | None,
+        year_to: int | None,
+    ) -> Callable[[str], bool] | None:
+        """Build a ``law_id`` predicate from facet filters, or ``None`` if none set.
+
+        Reuses :func:`apply_law_filters` so search faceting stays identical to
+        the ``/laws`` list endpoint. Returns ``None`` when no facet is active so
+        plain search pays no extra cost.
+        """
+        if not any([rank, status, scope, jurisdiction, year_from, year_to]):
+            return None
+        filtered = apply_law_filters(
+            self._build_summaries(),
+            rank=rank,
+            status=status,
+            scope=scope,
+            jurisdiction=jurisdiction,
+            year_from=year_from,
+            year_to=year_to,
+        )
+        allowed = {summary.identifier for summary in filtered}
+        return allowed.__contains__
 
     def tag_counts(self) -> list[tuple[str, int]]:
         """Aggregate the tag vocabulary across all laws (#145).
