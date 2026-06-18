@@ -13,11 +13,30 @@ import { pickGreeting } from '@/lib/greeting';
 import type { Law } from '@/lib/types';
 import { groupByRecency } from './home/recency-groups';
 
-const EXAMPLE_QUERIES = [
-  'Cambios al Código Penal en 2024',
-  '¿Qué exige el art. 28 de la LOPDGDD?',
-  'Diff entre v1.0 y v1.3 de la LOPDGDD',
-  'Leyes autonómicas sobre vivienda',
+type ChipKind = 'chat' | 'diff' | 'explorer';
+
+interface ExampleChip {
+  label: string;
+  kind: ChipKind;
+  /** Route target. For 'chat' and 'explorer' this is already passed via
+   *  the onClick handler below; kept here for documentation clarity. */
+  target: string;
+}
+
+/**
+ * Suggestion chips shown in the search hero.
+ *
+ * Each chip declares a `kind` so the click handler can route to the
+ * correct surface instead of always sending everything to the Explorer:
+ *   - 'chat'     → /chat   (natural-language questions)
+ *   - 'diff'     → /laws/{id}/diff  (version-comparison prompts)
+ *   - 'explorer' → /explorer?q=…   (plain keyword searches)
+ */
+const EXAMPLE_CHIPS: ExampleChip[] = [
+  { label: 'Cambios al Código Penal en 2024',    kind: 'chat',     target: '/chat' },
+  { label: '¿Qué exige el art. 28 de la LOPDGDD?', kind: 'chat',  target: '/chat' },
+  { label: 'Diff entre v1.0 y v1.3 de la LOPDGDD', kind: 'diff',  target: '/laws/LO-3-2018/diff' },
+  { label: 'Leyes autonómicas sobre vivienda',   kind: 'explorer', target: '/explorer?q=leyes+auton%C3%B3micas+vivienda' },
 ];
 
 export function HomePage() {
@@ -63,14 +82,14 @@ export function HomePage() {
             <Kbd>{modKey} K</Kbd>
           </button>
           <div className="mt-3 flex flex-wrap gap-2">
-            {EXAMPLE_QUERIES.map((q) => (
+            {EXAMPLE_CHIPS.map(({ label, target }) => (
               <Chip
-                key={q}
+                key={label}
                 icon={<Sparkles className="size-3" />}
                 className="bg-bg"
-                onClick={() => navigate(`/explorer?q=${encodeURIComponent(q)}`)}
+                onClick={() => navigate(target)}
               >
-                {q}
+                {label}
               </Chip>
             ))}
           </div>
