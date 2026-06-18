@@ -82,12 +82,14 @@ export function HomePage() {
             <Kbd>{modKey} K</Kbd>
           </button>
           <div className="mt-3 flex flex-wrap gap-2">
-            {EXAMPLE_CHIPS.map(({ label, target }) => (
+            {EXAMPLE_CHIPS.map(({ label, kind, target }) => (
               <Chip
                 key={label}
                 icon={<Sparkles className="size-3" />}
                 className="bg-bg"
-                onClick={() => navigate(target)}
+                // Chat chips carry the question through router state so ChatPage
+                // can pre-fill the composer instead of landing on an empty chat.
+                onClick={() => navigate(target, kind === 'chat' ? { state: { draft: label } } : undefined)}
               >
                 {label}
               </Chip>
