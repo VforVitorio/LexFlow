@@ -206,9 +206,11 @@ export function GraphPage() {
             <p className="mt-1.5 text-[13px] text-muted">{t(`graph.kindDesc.${node.kind}`)}</p>
 
             <div className="label-caps mb-2 mt-4">{t('graph.connections')}</div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-col gap-1.5">
               {neighbours.map(({ edge: e, otherNode: o, otherId }) => (
-                <Chip key={e.id} onClick={() => setSelected(otherId)}>{o.label}</Chip>
+                <Chip key={e.id} onClick={() => setSelected(otherId)} className="w-full justify-start text-left">
+                  <span className="truncate">{o.label}</span>
+                </Chip>
               ))}
             </div>
 
