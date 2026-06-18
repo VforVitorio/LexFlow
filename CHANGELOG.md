@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.60.0](https://github.com/VforVitorio/LexFlow/compare/v0.59.0...v0.60.0) (2026-06-18)
+
+
+### Features
+
+* **discovery:** autonomous-community facet + 'Leyes relacionadas' panel ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([bfdc69a](https://github.com/VforVitorio/LexFlow/commit/bfdc69af7b54b90a04247d7ff383437e5c516cac))
+* **explorer:** corpus-wide faceted search in the Explorer ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([99e1e6b](https://github.com/VforVitorio/LexFlow/commit/99e1e6bcda6e8d8246ca1bbad923d9c011b7bac0))
+* **explorer:** corpus-wide faceted search with highlighted snippets ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([872438f](https://github.com/VforVitorio/LexFlow/commit/872438fe29baef4c20a2fff14ff8d9917e93659f))
+* **explorer:** filter laws by autonomous community (jurisdiction facet) ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([de7ebe8](https://github.com/VforVitorio/LexFlow/commit/de7ebe8c1020fa7b2749eb19999abf5b4275d3e0))
+* **law-detail:** add 'Leyes relacionadas' panel sourced from the knowledge graph ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([9ff5836](https://github.com/VforVitorio/LexFlow/commit/9ff583696507baab24b85fc766c629ea80503446))
+* **search:** facet-aware full-text search ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([f5d47d0](https://github.com/VforVitorio/LexFlow/commit/f5d47d0fca23d3c115eb586c35a178edc2d6c901))
+* **search:** facet-filter full-text search by jurisdiction/rank/status/year ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([11a8ec2](https://github.com/VforVitorio/LexFlow/commit/11a8ec217a74bf56bb6653eed642cdefd3b9131c))
+
+
+### Bug Fixes
+
+* **explorer:** show displayed/total search count + clear tags on 'clear filters' ([#684](https://github.com/VforVitorio/LexFlow/issues/684) review) ([2af7bc6](https://github.com/VforVitorio/LexFlow/commit/2af7bc6d592004829603ee5aa78aaff7faaa9584))
+
 ## [0.59.0](https://github.com/VforVitorio/LexFlow/compare/v0.58.8...v0.59.0) (2026-06-18)
 
 
