@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.59.0](https://github.com/VforVitorio/LexFlow/compare/v0.58.8...v0.59.0) (2026-06-18)
+
+
+### Features
+
+* **chat:** prefill the composer from Home chat chips so the question carries over ([#667](https://github.com/VforVitorio/LexFlow/issues/667)) ([bc46f9b](https://github.com/VforVitorio/LexFlow/commit/bc46f9bc4beb91331d063048ec606134f642a887))
+
+
+### Bug Fixes
+
+* **frontend:** QA-2 cluster — gutter, conexiones, home chips, versions, wizard, onboarding ([82ebe31](https://github.com/VforVitorio/LexFlow/commit/82ebe31e2a2ac5dc600ab75b394550f93195bf82))
+* **graph:** stack Conexiones neighbours in a column so they don't overlap ([#666](https://github.com/VforVitorio/LexFlow/issues/666)) ([c5a72fc](https://github.com/VforVitorio/LexFlow/commit/c5a72fc3a226c0f85b3d3c66cf6b56866a170798))
+* **home:** route example chips to chat/diff/explorer instead of 0-result search ([#667](https://github.com/VforVitorio/LexFlow/issues/667)) ([b8a95ac](https://github.com/VforVitorio/LexFlow/commit/b8a95ac4da3d795d7cdabf2d8f6896abbbaf80e9))
+* **i18n:** translate 'pullFailed' in the Spanish locale ([7924961](https://github.com/VforVitorio/LexFlow/commit/79249617170b91f3e6a718e6aa469f995806c339))
+* **onboarding:** show first-run onboarding on fresh/blocked storage ([#674](https://github.com/VforVitorio/LexFlow/issues/674)) ([17e918b](https://github.com/VforVitorio/LexFlow/commit/17e918b9af2d83184b8aba154ddffeb4b3802514))
+* **reader:** keep the article-number gutter from clipping/wrapping ([#665](https://github.com/VforVitorio/LexFlow/issues/665)) ([90533c5](https://github.com/VforVitorio/LexFlow/commit/90533c5984f4791f1b699bc2426b47f8b6c54bf9))
+* **versions:** show date not commit hash + clamp end-label overflow in the timeline ([#668](https://github.com/VforVitorio/LexFlow/issues/668)) ([77d7c10](https://github.com/VforVitorio/LexFlow/commit/77d7c10611355954118e87078e07e045c2304ab7))
+* **wizard:** gate 'model configured' on a real API key + add 'Lo haré más tarde' skip ([#672](https://github.com/VforVitorio/LexFlow/issues/672), [#673](https://github.com/VforVitorio/LexFlow/issues/673)) ([2292884](https://github.com/VforVitorio/LexFlow/commit/2292884c1d272cc97ca8083a5a83abd6cf0acceb))
+
+
+### Refactoring
+
+* **chat:** react to router-state changes + narrow type in composer prefill ([#667](https://github.com/VforVitorio/LexFlow/issues/667) review) ([69a028d](https://github.com/VforVitorio/LexFlow/commit/69a028dd41f1e170d3efbe9909649efa48ab6cda))
+
 ## [0.58.8](https://github.com/VforVitorio/LexFlow/compare/v0.58.7...v0.58.8) (2026-06-17)
 
 
