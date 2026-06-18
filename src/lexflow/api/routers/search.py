@@ -19,6 +19,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response
 
 from lexflow.api.dependencies import get_law_registry, get_search_index
+from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.registry import LawRegistry
 from lexflow.core.schemas import (
     HybridSearchHit,
@@ -39,9 +40,26 @@ def _run_search(
     page: int,
     page_size: int,
     registry: LawRegistry,
+    *,
+    rank: LawRank | None = None,
+    status: LawStatus | None = None,
+    scope: Scope | None = None,
+    jurisdiction: str | None = None,
+    year_from: int | None = None,
+    year_to: int | None = None,
 ) -> SearchResponse:
     """Shared search execution for both the canonical + deprecated routes."""
-    return registry.search_text(q, page=page, page_size=page_size)
+    return registry.search_text(
+        q,
+        page=page,
+        page_size=page_size,
+        rank=rank,
+        status=status,
+        scope=scope,
+        jurisdiction=jurisdiction,
+        year_from=year_from,
+        year_to=year_to,
+    )
 
 
 @router.get(
@@ -54,9 +72,28 @@ def search_laws(
     q: str = Query(..., min_length=2, max_length=200, description="Search query"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    rank: LawRank | None = Query(None, description="Filter by law rank"),
+    status: LawStatus | None = Query(None, description="Filter by enforcement status"),
+    scope: Scope | None = Query(None, description="Filter by territorial scope"),
+    jurisdiction: str | None = Query(None, description="Filter by jurisdiction code (e.g. es-md)"),
+    year_from: int | None = Query(None, ge=0, description="Earliest publication year (inclusive)"),
+    year_to: int | None = Query(None, ge=0, description="Latest publication year (inclusive)"),
 ) -> SearchResponse:
-    """Search across all laws and articles for the given query string."""
-    return _run_search(q, page, page_size, registry)
+    """Search across all laws and articles for the given query string, with the
+    same facet filters as ``/laws`` so search can be narrowed by
+    community/rank/status/year (#671)."""
+    return _run_search(
+        q,
+        page,
+        page_size,
+        registry,
+        rank=rank,
+        status=status,
+        scope=scope,
+        jurisdiction=jurisdiction,
+        year_from=year_from,
+        year_to=year_to,
+    )
 
 
 @router.get(
