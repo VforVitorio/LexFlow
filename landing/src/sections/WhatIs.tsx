@@ -12,6 +12,11 @@ import { useTranslation } from 'react-i18next';
  * Layout is left-aligned to match every other section on the page; the
  * earlier centred version felt different from its neighbours and the user
  * preferred consistency.
+ *
+ * `whatIs.anchor` is a single definitional sentence designed to be quoted
+ * verbatim by AI search engines (GEO citability anchor). It sits above the
+ * editorial paragraphs as a `<p>` with a visually distinct treatment so it
+ * reads as a standalone definition.
  */
 
 interface StatItem { value: string; label: string; }
@@ -36,6 +41,8 @@ export function WhatIs() {
           <span className="label-caps">{t('whatIs.eyebrow')}</span>
         </div>
         <h2 className="section-title section-title-accent what-is-title">{t('whatIs.title')}</h2>
+        {/* Definitional anchor: a single complete sentence AI engines can cite. */}
+        <p className="what-is-anchor">{t('whatIs.anchor')}</p>
         <div className="what-is-body">
           <p>{renderBold(t('whatIs.p1'))}</p>
           <p>{renderBold(t('whatIs.p2'))}</p>
