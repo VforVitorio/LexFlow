@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.61.0](https://github.com/VforVitorio/LexFlow/compare/v0.60.0...v0.61.0) (2026-06-19)
+
+
+### Features
+
+* **editor:** TipTap rich-text editor base ([#598](https://github.com/VforVitorio/LexFlow/issues/598)) ([9031b0c](https://github.com/VforVitorio/LexFlow/commit/9031b0c4d7c2571268cf99f542c9d10fcd6c98d0))
+* **editor:** TipTap rich-text editor base with local autosave ([#598](https://github.com/VforVitorio/LexFlow/issues/598)) ([7fd4939](https://github.com/VforVitorio/LexFlow/commit/7fd49390f47cff5b738b9baa1008a0fd18dd3ff7))
+* **landing:** SEO/GEO — meta, JSON-LD, robots, sitemap, llms.txt ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([11bccb7](https://github.com/VforVitorio/LexFlow/commit/11bccb7d0cf2ed807ccbcb0a68f9a5b47f6ba246))
+* **landing:** SEO/GEO pass — meta+OG, JSON-LD, robots.txt, sitemap, llms.txt ([#671](https://github.com/VforVitorio/LexFlow/issues/671)) ([0fff268](https://github.com/VforVitorio/LexFlow/commit/0fff26829e8a55e7ffbaf7aaf4575c79a19d9bc4))
+
+
+### Bug Fixes
+
+* **editor:** enforce read-only via disabled fieldset + keep autosave context fresh via refs ([#598](https://github.com/VforVitorio/LexFlow/issues/598) review) ([bcfe7a7](https://github.com/VforVitorio/LexFlow/commit/bcfe7a750cc0eef4f7d52f630c127de0a6031b5b))
+* **editor:** regenerate frontend lock so npm ci resolves the tiptap dep tree ([#598](https://github.com/VforVitorio/LexFlow/issues/598)) ([261f3d4](https://github.com/VforVitorio/LexFlow/commit/261f3d4449f74270d2d5780b201596f82b841c69))
+
 ## [0.60.0](https://github.com/VforVitorio/LexFlow/compare/v0.59.0...v0.60.0) (2026-06-18)
 
 
