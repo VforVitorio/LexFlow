@@ -58,6 +58,19 @@ export function EditorPage() {
   // Ref to hold the active autosave timeout so it can be cancelled on unmount.
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // `useEditor`'s `onUpdate` closes over the values at creation time, so the
+  // debounced save must read the CURRENT docId/title from refs — otherwise a
+  // queued save can write content under a stale id or roll back a newer title
+  // (#598 review).
+  const docIdRef = useRef(docId);
+  const titleRef = useRef(title);
+  useEffect(() => {
+    docIdRef.current = docId;
+  }, [docId]);
+  useEffect(() => {
+    titleRef.current = title;
+  }, [title]);
+
   const editor = useEditor({
     extensions: [
       // StarterKit includes: Document, Paragraph, Text, Bold, Italic,
@@ -76,8 +89,8 @@ export function EditorPage() {
       }
       autosaveTimer.current = setTimeout(() => {
         saveDocument({
-          id: docId,
-          title,
+          id: docIdRef.current,
+          title: titleRef.current,
           content: ed.getJSON(),
         });
       }, AUTOSAVE_DELAY_MS);
@@ -97,6 +110,12 @@ export function EditorPage() {
   // correct content and reset the title.
   useEffect(() => {
     if (!editor) return;
+    // A queued autosave from the previous doc must not fire after the switch —
+    // it would write the old content under the new id (#598 review).
+    if (autosaveTimer.current !== null) {
+      clearTimeout(autosaveTimer.current);
+      autosaveTimer.current = null;
+    }
     const doc = getDocument(docId) ?? makeDefaultDocument(docId);
     setTitle(doc.title);
     // `setContent` resets the editor state to the new JSON document.

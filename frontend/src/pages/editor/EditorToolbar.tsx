@@ -112,11 +112,15 @@ export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly }: EditorTo
     <div
       role="toolbar"
       aria-label="Editor toolbar"
-      className={cn(
-        'flex flex-wrap items-center gap-0.5 rounded-lg border border-border bg-surface px-2 py-1.5 shadow-sm',
-        isReadOnly && 'opacity-50 pointer-events-none',
-      )}
+      className="flex flex-wrap items-center gap-0.5 rounded-lg border border-border bg-surface px-2 py-1.5 shadow-sm"
     >
+      {/* Action controls wrapped in a disabled <fieldset> so read-only blocks
+          BOTH pointer and keyboard activation (#598 review). The read/edit
+          toggle lives outside the fieldset, so it stays clickable. */}
+      <fieldset
+        disabled={isReadOnly}
+        className={cn('m-0 flex min-w-0 flex-wrap items-center gap-0.5 border-0 p-0', isReadOnly && 'opacity-50')}
+      >
       {/* Heading levels */}
       <ToolButton
         icon={<Heading1 className="size-3.5" />}
@@ -195,8 +199,10 @@ export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly }: EditorTo
         onPress={() => editor.chain().focus().redo().run()}
       />
 
-      {/* Read / Edit toggle — not affected by isReadOnly dimming; always clickable */}
-      <div className={cn('ml-auto', isReadOnly && 'pointer-events-auto opacity-100')}>
+      </fieldset>
+
+      {/* Read / Edit toggle — outside the fieldset, so it stays clickable in read-only. */}
+      <div className="ml-auto">
         <Button
           type="button"
           variant={isReadOnly ? 'secondary' : 'ghost'}
