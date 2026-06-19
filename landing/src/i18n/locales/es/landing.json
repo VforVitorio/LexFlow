@@ -23,16 +23,17 @@
   "stats": [
     { "value": "4", "unit": "", "label": "Capas que comparten datos — API, grafo, chat y paneles" },
     { "value": "5", "unit": "", "label": "Proveedores de LLM soportados mediante herramientas MCP" },
-    { "value": "42", "unit": "K+", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
+    { "value": "~12", "unit": "K", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
     { "value": "100", "unit": "%", "label": "Código abierto bajo licencia Apache 2.0" }
   ],
   "whatIs": {
     "eyebrow": "Vale, ¿pero qué es esto?",
     "title": "LexFlow en dos párrafos.",
+    "anchor": "LexFlow es una plataforma open source (Apache 2.0) que convierte el corpus completo de la legislación española del BOE —unas 12.000 leyes en formato Markdown del proyecto legalize-es— en un producto navegable con cuatro capas: búsqueda full-text, grafo de referencias, chat con IA que cita el BOE real, y paneles de analítica legislativa, todo ejecutándose en local sin dependencias de nube.",
     "p1": "LexFlow es una **plataforma open source** que coge toda la legislación española —el corpus completo del BOE, ya en formato Markdown gracias al proyecto **legalize-es**— y la convierte en algo navegable: un buscador rápido, un grafo de referencias entre normas, un chat que cita el artículo exacto y paneles que enseñan cómo cambia la ley con el tiempo.",
     "p2": "El objetivo es sencillo: que cualquier persona que trabaje con la ley —o que simplemente quiera entenderla— deje de perder horas saltando entre pestañas del BOE. Todo se ejecuta en local, sin enviar consultas a la nube, y el código es público para que cualquiera pueda revisarlo o mejorarlo.",
     "stats": [
-      { "value": "42K+",   "label": "leyes indexadas"   },
+      { "value": "~12K",   "label": "leyes indexadas"   },
       { "value": "100%",   "label": "código abierto"    },
       { "value": "Local",  "label": "se ejecuta en tu máquina" }
     ]
@@ -230,6 +231,36 @@
     { "name": "Distribución standalone", "desc": "Binarios con PyInstaller: .exe · .dmg · .AppImage. Docker ya está hecho.", "status": "progress" },
     { "name": "Búsqueda semántica y RAG", "desc": "Embeddings, índice vectorial y chat aumentado por recuperación.", "status": "planned" }
   ],
+  "faq": {
+    "eyebrow": "Preguntas frecuentes",
+    "title": "Respuestas rápidas.",
+    "items": [
+      {
+        "q": "¿Qué es LexFlow?",
+        "a": "LexFlow es una plataforma open source (Apache 2.0) que convierte el corpus completo de la legislación española del BOE —unas 12.000 leyes en Markdown del proyecto legalize-es— en un producto navegable con búsqueda full-text, grafo de referencias, chat con IA que cita el BOE real, y paneles de analítica legislativa. Se ejecuta en local como un único binario."
+      },
+      {
+        "q": "¿Es gratuito?",
+        "a": "Sí, completamente. LexFlow es software libre bajo licencia Apache 2.0: puedes usarlo, modificarlo y distribuirlo sin coste. No hay planes de pago ni funcionalidades de pago."
+      },
+      {
+        "q": "¿Qué es legalize-es?",
+        "a": "legalize-es es un repositorio público en Git que contiene toda la legislación española del BOE en formato Markdown, mantenido por la comunidad y actualizado regularmente. LexFlow lo usa como corpus de datos: parsea esos ficheros Markdown para construir el índice de búsqueda, el grafo de referencias y el contexto del chat."
+      },
+      {
+        "q": "¿Funciona sin conexión?",
+        "a": "Sí. LexFlow es local-first: el corpus de leyes se indexa en tu máquina al arrancar. Si usas Ollama como proveedor de IA, el chat también funciona completamente sin conexión. Con otros proveedores (OpenAI, Anthropic, Google) las consultas al modelo salen a la nube, pero los datos del BOE nunca salen de tu equipo."
+      },
+      {
+        "q": "¿Qué modelos de IA admite?",
+        "a": "LexFlow admite cinco proveedores a través de herramientas MCP: Ollama (local, sin conexión), LM Studio (local), OpenAI, Anthropic y Google. El proveedor activo se cambia desde la configuración sin reiniciar la app."
+      },
+      {
+        "q": "¿En qué sistemas operativos funciona?",
+        "a": "LexFlow está disponible como binario standalone para Windows, macOS y Linux. No requiere instalar Python, Docker ni ninguna dependencia adicional."
+      }
+    ]
+  },
   "authors": {
     "eyebrow": "Quién está detrás",
     "title": "Las personas que lo construyen.",
@@ -239,13 +270,13 @@
         "login": "VforVitorio",
         "name": "Víctor",
         "role": "Co-autor",
-        "bio": "AI & Data Intern en NTT DATA España. 4º curso de Ingeniería de Sistemas Inteligentes en UIE Campus Coruña. Construye IA para la Fórmula 1 — desde el modelado de telemetría hasta el razonamiento multi-agente."
+        "bio": "AI & Data Intern en NTT DATA España. 4º curso de Ingeniería de Sistemas Inteligentes en UIE Campus Coruña. Construye IA para la Fórmula 1 — desde el modelado de telemetría hasta el razonamiento multi-agente. Arquitecto de LexFlow: diseñó y desarrolló el parser de legalize-es, el grafo en NetworkX, la integración MCP y el frontend en React."
       },
       {
         "login": "Santisoutoo",
         "name": "Santiago",
         "role": "Co-autor",
-        "bio": "Futuro ingeniero apasionado por la industria de la aviación. Construye sistemas inteligentes con IA y datos para mejorar el rendimiento y reforzar la seguridad."
+        "bio": "Futuro ingeniero apasionado por la industria de la aviación. Construye sistemas inteligentes con IA y datos para mejorar el rendimiento y reforzar la seguridad. Co-diseñador de LexFlow: contribuye al backend, los paneles de analítica y la calidad del corpus de datos legislativos."
       }
     ]
   },

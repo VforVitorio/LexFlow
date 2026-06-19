@@ -23,16 +23,17 @@
   "stats": [
     { "value": "4", "unit": "", "label": "Integrated layers sharing data — API, graph, chat & dashboards" },
     { "value": "5", "unit": "", "label": "LLM providers supported through MCP tools" },
-    { "value": "42", "unit": "K+", "label": "Spanish laws indexed from the legalize-es corpus" },
+    { "value": "~12", "unit": "K", "label": "Spanish laws indexed from the legalize-es corpus" },
     { "value": "100", "unit": "%", "label": "Open source under the Apache 2.0 license" }
   ],
   "whatIs": {
     "eyebrow": "OK, but what is this?",
     "title": "LexFlow in two paragraphs.",
+    "anchor": "LexFlow is an open-source platform (Apache 2.0) that turns the full body of Spanish legislation from the BOE — around 12,000 laws in Markdown from the legalize-es project — into a navigable product with four layers: full-text search, a cross-reference graph, an AI chat that cites the real BOE, and legislative analytics dashboards, all running locally with no cloud dependencies.",
     "p1": "LexFlow is an **open-source platform** that takes the full body of Spanish legislation — the BOE corpus, already in Markdown thanks to the **legalize-es** project — and turns it into something walkable: fast search, a graph of cross-references between statutes, a chat that cites the exact article, and dashboards that show how the law shifts over time.",
     "p2": "The goal is simple: anyone who works with the law — or just wants to understand it — should stop losing hours jumping between BOE tabs. Everything runs locally, no cloud round-trips, and the code is public so anyone can review or improve it.",
     "stats": [
-      { "value": "42K+",   "label": "laws indexed"           },
+      { "value": "~12K",   "label": "laws indexed"           },
       { "value": "100%",   "label": "open source"            },
       { "value": "Local",  "label": "runs on your machine"   }
     ]
@@ -230,6 +231,36 @@
     { "name": "Standalone distribution", "desc": "PyInstaller binaries: .exe · .dmg · .AppImage. Docker already done.", "status": "progress" },
     { "name": "Semantic search & RAG", "desc": "Embeddings, vector index, retrieval-augmented chat.", "status": "planned" }
   ],
+  "faq": {
+    "eyebrow": "Frequently asked questions",
+    "title": "Quick answers.",
+    "items": [
+      {
+        "q": "What is LexFlow?",
+        "a": "LexFlow is an open-source platform (Apache 2.0) that turns the full body of Spanish legislation from the BOE — around 12,000 laws in Markdown from the legalize-es project — into a navigable product with full-text search, a cross-reference graph, an AI chat that cites the real BOE, and legislative analytics dashboards. It runs locally as a single binary."
+      },
+      {
+        "q": "Is it free?",
+        "a": "Yes, completely. LexFlow is free software under the Apache 2.0 license: you can use, modify and distribute it at no cost. There are no paid plans or paid features."
+      },
+      {
+        "q": "What is legalize-es?",
+        "a": "legalize-es is a public Git repository containing the full body of Spanish BOE legislation in Markdown, maintained by the community and updated regularly. LexFlow uses it as its data corpus: it parses those Markdown files to build the search index, the cross-reference graph and the chat context."
+      },
+      {
+        "q": "Does it work offline?",
+        "a": "Yes. LexFlow is local-first: the law corpus is indexed on your machine at startup. If you use Ollama as your AI provider, the chat also works completely offline. With other providers (OpenAI, Anthropic, Google) model queries go to the cloud, but BOE data never leaves your machine."
+      },
+      {
+        "q": "Which AI models does it support?",
+        "a": "LexFlow supports five providers through MCP tools: Ollama (local, offline), LM Studio (local), OpenAI, Anthropic and Google. The active provider is switched from settings without restarting the app."
+      },
+      {
+        "q": "Which operating systems does it support?",
+        "a": "LexFlow is available as a standalone binary for Windows, macOS and Linux. No Python, Docker or additional dependencies required."
+      }
+    ]
+  },
   "authors": {
     "eyebrow": "Behind the project",
     "title": "The people who build it.",
@@ -239,13 +270,13 @@
         "login": "VforVitorio",
         "name": "Víctor",
         "role": "Co-author",
-        "bio": "AI & Data Intern at NTT DATA Spain. 4th-year Intelligent Systems Engineering at UIE Campus Coruña. Building AI for Formula 1 — from telemetry modelling to multi-agent reasoning."
+        "bio": "AI & Data Intern at NTT DATA Spain. 4th-year Intelligent Systems Engineering at UIE Campus Coruña. Building AI for Formula 1 — from telemetry modelling to multi-agent reasoning. LexFlow's architect: designed and built the legalize-es parser, the NetworkX graph, the MCP integration and the React frontend."
       },
       {
         "login": "Santisoutoo",
         "name": "Santiago",
         "role": "Co-author",
-        "bio": "Future engineer passionate about the aviation industry. Building intelligent systems with AI and data to enhance performance and reinforce safety."
+        "bio": "Future engineer passionate about the aviation industry. Building intelligent systems with AI and data to enhance performance and reinforce safety. Co-designer of LexFlow: contributes to the backend, analytics dashboards and the quality of the legislative data corpus."
       }
     ]
   },
