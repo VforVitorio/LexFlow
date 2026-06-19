@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0b14"/>
+      <stop offset="100%" stop-color="#0d0f22"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#3140c2"/>
+      <stop offset="100%" stop-color="#4f5de0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Subtle grid pattern -->
+  <g stroke="#3140c2" stroke-opacity="0.06" stroke-width="1">
+    <line x1="0" y1="105" x2="1200" y2="105"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="525" x2="1200" y2="525"/>
+    <line x1="200" y1="0" x2="200" y2="630"/>
+    <line x1="400" y1="0" x2="400" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="800" y1="0" x2="800" y2="630"/>
+    <line x1="1000" y1="0" x2="1000" y2="630"/>
+  </g>
+
+  <!-- Accent glow orb (top-right) -->
+  <circle cx="980" cy="140" r="220" fill="#3140c2" fill-opacity="0.08"/>
+  <circle cx="980" cy="140" r="120" fill="#3140c2" fill-opacity="0.06"/>
+
+  <!-- Left accent bar -->
+  <rect x="80" y="200" width="4" height="230" rx="2" fill="url(#accentGrad)"/>
+
+  <!-- LexFlow wordmark -->
+  <text
+    x="108"
+    y="305"
+    font-family="'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    font-size="96"
+    font-weight="700"
+    letter-spacing="-3"
+    fill="#ffffff"
+    filter="url(#glow)"
+  >LexFlow</text>
+
+  <!-- Tagline -->
+  <text
+    x="108"
+    y="365"
+    font-family="'Inter', -apple-system, BlinkMacSystemFont, sans-serif"
+    font-size="28"
+    font-weight="400"
+    letter-spacing="0.5"
+    fill="#a0a8d0"
+  >Legislación española, viva y navegable</text>
+
+  <!-- Feature chips row -->
+  <!-- Chip 1: Grafo -->
+  <rect x="108" y="400" width="150" height="38" rx="8" fill="#3140c2" fill-opacity="0.22"/>
+  <rect x="108" y="400" width="150" height="38" rx="8" fill="none" stroke="#3140c2" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="183" y="424" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="500" fill="#a0b0ff">Grafo de leyes</text>
+
+  <!-- Chip 2: Chat IA -->
+  <rect x="272" y="400" width="130" height="38" rx="8" fill="#3140c2" fill-opacity="0.22"/>
+  <rect x="272" y="400" width="130" height="38" rx="8" fill="none" stroke="#3140c2" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="337" y="424" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="500" fill="#a0b0ff">Chat con IA</text>
+
+  <!-- Chip 3: 12.000+ leyes -->
+  <rect x="416" y="400" width="160" height="38" rx="8" fill="#3140c2" fill-opacity="0.22"/>
+  <rect x="416" y="400" width="160" height="38" rx="8" fill="none" stroke="#3140c2" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="496" y="424" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="500" fill="#a0b0ff">12.000+ leyes</text>
+
+  <!-- Chip 4: Open source -->
+  <rect x="590" y="400" width="148" height="38" rx="8" fill="#3140c2" fill-opacity="0.22"/>
+  <rect x="590" y="400" width="148" height="38" rx="8" fill="none" stroke="#3140c2" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="664" y="424" text-anchor="middle" font-family="'Inter', sans-serif" font-size="16" font-weight="500" fill="#a0b0ff">Open source</text>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="598" width="1200" height="3" fill="url(#accentGrad)" opacity="0.7"/>
+
+  <!-- Bottom-right: GitHub URL -->
+  <text
+    x="1120"
+    y="578"
+    text-anchor="end"
+    font-family="'JetBrains Mono', 'Courier New', monospace"
+    font-size="16"
+    fill="#4f5de0"
+    opacity="0.8"
+  >github.com/VforVitorio/LexFlow</text>
+</svg>

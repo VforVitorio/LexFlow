@@ -1,0 +1,19 @@
+{
+  "name": "LexFlow",
+  "short_name": "LexFlow",
+  "description": "Plataforma open source para explorar, buscar y analizar la legislación española. Grafo de conocimiento, chat con IA y API REST sobre 12.000+ leyes.",
+  "start_url": "/LexFlow/",
+  "scope": "/LexFlow/",
+  "display": "standalone",
+  "theme_color": "#3140c2",
+  "background_color": "#0a0b14",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/LexFlow/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
