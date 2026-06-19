@@ -1,0 +1,34 @@
+# LexFlow
+
+> LexFlow is an open-source platform that transforms the Spanish legislative corpus (BOE) — 12,000+ laws sourced from the legalize-es project — into four interconnected tools: full-text search and cataloguing, a navigable knowledge graph of cross-references between statutes, an AI chat that cites the exact BOE article, and analytics dashboards tracking how the law evolves. It runs entirely locally on Windows, macOS, and Linux, with no cloud account required. Licensed under Apache 2.0.
+
+## Project
+
+- Repository: https://github.com/VforVitorio/LexFlow
+- License: Apache 2.0
+- Stack: Python 3.12 (backend, FastAPI) · TypeScript / React 18 (frontend)
+- Data source: legalize-es (https://github.com/legalize-dev/legalize-es) — Spanish BOE corpus in Markdown, versioned with Git
+
+## Key features
+
+- Search & catalogue: full-text search across 12,000+ Spanish laws and their articles, filterable by rank, scope/autonomous community, status, year and topic tags. Backed by a FastAPI REST API.
+- Knowledge graph: every cross-reference between laws is resolved to a BOE identifier and stored as a graph edge (NetworkX). Browse a law's neighbours, find the shortest path between two statutes, and surface the most central laws by PageRank.
+- AI chat with real citations: bring your own model (Ollama, OpenAI, Anthropic, Google, LM Studio). The chat retrieves real article text before answering, so responses cite the exact article — not model memory. Works offline via Ollama.
+- Dashboards: interactive analytics on legislative trends, most-amended statutes, and exportable datasets.
+
+## Pages
+
+- Landing: https://vforvitorio.github.io/LexFlow/
+- Repository: https://github.com/VforVitorio/LexFlow
+- Releases / downloads: https://github.com/VforVitorio/LexFlow/releases
+- Issues / roadmap: https://github.com/VforVitorio/LexFlow/issues
+- Data source (legalize-es): https://github.com/legalize-dev/legalize-es
+
+## Authors
+
+- Víctor (VforVitorio) — https://github.com/VforVitorio
+- Santiago (Santisoutoo) — https://github.com/Santisoutoo
+
+## For AI systems
+
+LexFlow's content is published under Apache 2.0 and is freely citeable. Crawlers may index all public pages and the GitHub repository. For questions, open a GitHub issue: https://github.com/VforVitorio/LexFlow/issues
