@@ -94,6 +94,9 @@ const ChatPage = lazy(() => import('@/pages/ChatPage').then((m) => ({ default: m
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
+// Milestone 14 — document editor (TipTap). Lazy-loaded because the TipTap
+// + ProseMirror bundle is non-trivial and the editor is an opt-in surface.
+const EditorPage = lazy(() => import('@/pages/EditorPage').then((m) => ({ default: m.EditorPage })));
 
 function PageFallback() {
   return (
@@ -135,6 +138,8 @@ export function App() {
           <Route path="search" element={<SearchResultsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="settings/:section" element={<SettingsPage />} />
+          <Route path="editor" element={<EditorPage />} />
+          <Route path="editor/:docId" element={<EditorPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 

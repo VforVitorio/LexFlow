@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Settings, PanelLeft, PanelRightOpen } from 'lucide-react';
+import { Settings, PanelLeft, PanelRightOpen, FileEdit } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark } from '@/components/BrandMark';
 import { Kbd } from '@/components/ui';
@@ -104,8 +104,25 @@ export function LeftRail() {
         </div>
       )}
 
-      {/* Bottom: settings + collapse */}
+      {/* Bottom: editor + settings + collapse */}
       <div className={cn('border-t border-border p-2 flex flex-col gap-0.5', !expanded && 'items-center')}>
+        {/* Editor — secondary destination; not in the main NAV array so it
+            doesn't appear in the mobile BottomTabBar (which is sized for 5). */}
+        <NavLink
+          to="/editor"
+          title={!expanded ? t('nav.editor') : undefined}
+          className={({ isActive }) =>
+            cn(
+              'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] transition-colors',
+              isActive ? 'text-fg bg-surface-2' : 'text-muted hover:bg-surface-2',
+              !expanded && 'justify-center px-0 py-2.5',
+            )
+          }
+        >
+          <FileEdit className="size-[17px]" />
+          {expanded && <span className="flex-1 text-left">{t('nav.editor')}</span>}
+          {expanded && <Kbd>g n</Kbd>}
+        </NavLink>
         <NavLink
           to="/settings"
           title={!expanded ? t('nav.settings') : undefined}
