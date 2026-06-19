@@ -5,13 +5,138 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#3140c2" />
+    <meta
+      name="description"
+      content="LexFlow: plataforma open source para explorar, buscar y analizar la legislación española. Grafo de conocimiento, chat con IA que cita el BOE real, paneles de analítica y API REST sobre 12.000+ leyes del corpus legalize-es. Local-first, Apache 2.0."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://vforvitorio.github.io/LexFlow/" />
     <title>LexFlow · Legislación viva</title>
+
+    <!-- Open Graph / social + AI link previews (#671) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LexFlow" />
+    <meta property="og:url" content="https://vforvitorio.github.io/LexFlow/" />
+    <meta property="og:title" content="LexFlow · Legislación española, viva y navegable" />
+    <meta
+      property="og:description"
+      content="Plataforma open source para explorar la legislación española: grafo de conocimiento, chat con IA que cita el BOE real, paneles de analítica y API REST sobre 12.000+ leyes. Local-first, Apache 2.0."
+    />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="LexFlow · Legislación española, viva y navegable" />
+    <meta
+      name="twitter:description"
+      content="Explora la legislación española: grafo de conocimiento, chat con IA que cita el BOE, analítica y API REST sobre 12.000+ leyes. Open source, local-first."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Structured data for AI search + rich results (#671). Static in <head>
+         so crawlers read it without executing the SPA's JS. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "SoftwareApplication",
+            "@id": "https://vforvitorio.github.io/LexFlow/#app",
+            "name": "LexFlow",
+            "alternateName": "LexFlow · Legislación viva",
+            "description": "Open-source platform to explore, search and query Spanish legislation. Combines a knowledge graph of cross-references, an AI legal chat that cites the real BOE, full-text search across 12,000+ laws, and analytics dashboards — runs locally, no account required.",
+            "url": "https://vforvitorio.github.io/LexFlow/",
+            "applicationCategory": "LegalApplication",
+            "operatingSystem": "Windows, macOS, Linux",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+            "license": "https://www.apache.org/licenses/LICENSE-2.0",
+            "codeRepository": "https://github.com/VforVitorio/LexFlow",
+            "downloadUrl": "https://github.com/VforVitorio/LexFlow/releases",
+            "isAccessibleForFree": true,
+            "inLanguage": ["es", "en"],
+            "featureList": [
+              "Full-text search across 12,000+ Spanish laws",
+              "Knowledge graph of cross-references between statutes",
+              "AI legal chat with real BOE citations (Ollama, OpenAI, Anthropic, Google, LM Studio)",
+              "Offline mode with local LLMs via Ollama",
+              "Analytics dashboards on legislative trends",
+              "REST API with OpenAPI docs"
+            ],
+            "isBasedOn": {
+              "@type": "Dataset",
+              "name": "legalize-es",
+              "url": "https://github.com/legalize-dev/legalize-es",
+              "description": "Spanish BOE legislative corpus in Markdown, versioned with Git"
+            },
+            "author": [
+              { "@type": "Person", "name": "Víctor Vega Sobral", "url": "https://github.com/VforVitorio" },
+              { "@type": "Person", "name": "Santiago", "url": "https://github.com/Santisoutoo" }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://vforvitorio.github.io/LexFlow/#website",
+            "name": "LexFlow",
+            "url": "https://vforvitorio.github.io/LexFlow/",
+            "inLanguage": ["es", "en"],
+            "about": { "@id": "https://vforvitorio.github.io/LexFlow/#app" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://vforvitorio.github.io/LexFlow/#org",
+            "name": "LexFlow",
+            "url": "https://vforvitorio.github.io/LexFlow/",
+            "logo": "https://vforvitorio.github.io/LexFlow/favicon.svg",
+            "sameAs": ["https://github.com/VforVitorio/LexFlow"]
+          }
+        ]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "url": "https://vforvitorio.github.io/LexFlow/",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Qué es LexFlow?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LexFlow es una plataforma open source para explorar la legislación española. Indexa 12.000+ leyes del corpus legalize-es (BOE), las conecta en un grafo de conocimiento de referencias cruzadas, ofrece un chat con IA que cita el artículo exacto, y paneles de analítica. Se ejecuta localmente, sin cuenta ni nube."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿LexFlow es gratis?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí. LexFlow es 100% open source bajo licencia Apache 2.0. No hay suscripción, ni cuenta, ni coste de uso."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Qué modelos de IA admite LexFlow?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "LexFlow admite cinco proveedores LLM: Ollama (local y offline), OpenAI, Anthropic, Google y LM Studio. El chat cita el artículo real del BOE en cada respuesta."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Puedo usar LexFlow sin conexión?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí. LexFlow es local-first: toda la aplicación corre en tu equipo. El chat funciona offline conectando un modelo local de Ollama."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
