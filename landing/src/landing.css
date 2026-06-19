@@ -2161,6 +2161,80 @@
   color: hsl(var(--muted-fg));
   letter-spacing: 0.02em;
 }
+/* Definitional anchor: one complete sentence an AI search engine can quote.  */
+/* Sits between the section title and the editorial paragraphs; distinguished */
+/* by a left border in the accent colour and a slightly larger size.          */
+.landing-root .what-is-anchor {
+  max-width: 720px;
+  margin: 20px 0 0;
+  padding: 14px 18px;
+  border-left: 3px solid hsl(var(--violet-500));
+  border-radius: 0 10px 10px 0;
+  background: hsl(var(--violet-500) / 0.06);
+  font-size: 16px;
+  line-height: 1.6;
+  color: hsl(var(--muted-fg));
+}
+[data-theme='light'] .landing-root .what-is-anchor {
+  background: hsl(var(--violet-600) / 0.06);
+  border-left-color: hsl(var(--violet-600));
+}
+
+/* -------------------------------------------------------------------------- */
+/* FAQ section                                                                  */
+/* -------------------------------------------------------------------------- */
+.landing-root .faq-list {
+  margin: 28px 0 0;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.landing-root .faq-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  background: hsl(var(--surface));
+  transition: border-color 0.15s ease;
+}
+.landing-root .faq-item--open {
+  border-color: hsl(var(--violet-500) / 0.5);
+}
+[data-theme='light'] .landing-root .faq-item--open {
+  border-color: hsl(var(--violet-600) / 0.4);
+}
+.landing-root .faq-question {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: hsl(var(--fg));
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.landing-root .faq-question:focus-visible {
+  outline: 2px solid hsl(var(--violet-500));
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+.landing-root .faq-chevron {
+  flex-shrink: 0;
+  margin-left: 12px;
+  font-size: 20px;
+  line-height: 1;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .faq-answer {
+  margin: 0;
+  padding: 0 20px 16px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: hsl(var(--muted-fg));
+}
 
 /* -------------------------------------------------------------------------- */
 /* DevContrib banner — sits at the top of the .para-devs zone                 */
