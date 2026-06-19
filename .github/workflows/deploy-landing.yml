@@ -67,7 +67,10 @@ jobs:
           CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
         run: |
           if [ -n "$CF_BEACON_TOKEN" ]; then
-            sed -i "s/__VITE_CF_BEACON_TOKEN__/${CF_BEACON_TOKEN}/g" dist/index.html
+            # Escape sed-special chars (/, &, \) so a token containing them
+            # never breaks the substitution.
+            escaped=$(printf '%s' "$CF_BEACON_TOKEN" | sed -e 's/[\/&\\]/\\&/g')
+            sed -i "s/__VITE_CF_BEACON_TOKEN__/${escaped}/g" dist/index.html
             echo "Cloudflare Web Analytics beacon token injected."
           else
             echo "CF_BEACON_TOKEN secret not set; leaving placeholder (Cloudflare will ignore it)."
