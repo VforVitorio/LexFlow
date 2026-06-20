@@ -29,6 +29,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
 import { useEditorStore, DEFAULT_DOC_ID, makeDefaultDocument } from '@/lib/editor-store';
 import { EditorToolbar } from '@/pages/editor/EditorToolbar';
 import { cn } from '@/lib/utils';
@@ -78,6 +79,10 @@ export function EditorPage() {
       // ListItem, Blockquote, HorizontalRule, HardBreak, History (undo/redo),
       // Dropcursor, Gapcursor.
       StarterKit,
+      // Empty-state hint. Sets `is-editor-empty` + `data-placeholder` on the
+      // first empty paragraph; the CSS that renders it lives in the editor
+      // container below (`is-editor-empty:first-child::before`).
+      Placeholder.configure({ placeholder: 'Empieza a escribir tu documento…' }),
     ],
     content: initialDoc.content,
     editable: !isReadOnly,
