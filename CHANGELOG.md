@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.64.0](https://github.com/VforVitorio/LexFlow/compare/v0.63.0...v0.64.0) (2026-06-20)
+
+
+### Features
+
+* **editor:** show an empty-state placeholder in the document editor ([f0dd04d](https://github.com/VforVitorio/LexFlow/commit/f0dd04d70c585a4b0f17db03adbb5c1b1f23b2dd))
+* **editor:** show an empty-state placeholder in the document editor ([b548820](https://github.com/VforVitorio/LexFlow/commit/b548820da630654eb36af2c81b38e0e9db44bcea))
+
+
+### Bug Fixes
+
+* **editor:** regenerate package-lock so npm ci accepts the placeholder dep ([5dd767a](https://github.com/VforVitorio/LexFlow/commit/5dd767a86a32f0be69125e15addcd4a973284f42))
+* **welcome:** draw the calligraphy from empty, not from a flash of the filled text ([6f2cfec](https://github.com/VforVitorio/LexFlow/commit/6f2cfeca513af0636b190318f08a16f3554b7bf2))
+* **welcome:** draw the calligraphy from empty, not from a flash of the filled text ([bc55a2e](https://github.com/VforVitorio/LexFlow/commit/bc55a2e2357b73434cb45f2257851c13abb857d6))
+
 ## [0.63.0](https://github.com/VforVitorio/LexFlow/compare/v0.62.0...v0.63.0) (2026-06-20)
 
 
