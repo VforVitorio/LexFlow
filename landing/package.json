@@ -6,17 +6,9 @@
   "description": "LexFlow marketing landing — standalone static site, deployed to GitHub Pages, independent from the SPA in ../frontend.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "postbuild": "react-snap",
+    "build": "tsc --noEmit && vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
-  },
-  "reactSnap": {
-    "include": ["/LexFlow/"],
-    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"],
-    "inlineCss": false,
-    "skipThirdPartyRequests": true,
-    "headless": true
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.0",
@@ -29,10 +21,10 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^5.2.0",
-    "react-snap": "^1.23.0",
     "typescript": "^5.6.3",
     "vite": "^8.0.16"
   },
