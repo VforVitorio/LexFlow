@@ -1,6 +1,6 @@
 [project]
 name = "lexflow"
-version = "0.62.0"
+version = "0.63.0"
 description = "Open source platform for exploring, analyzing and querying Spanish legislation — powered by FastAPI, knowledge graphs and AI."
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -22,7 +22,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "pydantic>=2.10",
-    "pydantic-settings>=2.7",
+    "pydantic-settings>=2.14.2",
     "networkx>=3.4",
     "numpy>=1.26",
     "scipy>=1.13",
