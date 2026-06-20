@@ -16,6 +16,7 @@ import { Roadmap } from './sections/Roadmap';
 import { CTA } from './sections/CTA';
 import { Downloads } from './sections/Downloads';
 import { Authors } from './sections/Authors';
+import { FAQ } from './sections/FAQ';
 import { DevContrib } from './sections/DevContrib';
 import { HowItWorks } from './sections/HowItWorks';
 import { Footer } from './sections/Footer';
@@ -34,7 +35,8 @@ import './landing.css';
  * Personas         — for whom (#181).
  * Layers           — what it solves, framed as 4 user problems (#182).
  * UserFlow         — how you use it, 3 steps, no code (#183).
- * Authors · CTA    — close on people + invitation.
+ * Authors · FAQ    — credibility signals + structured Q&A for AI citability.
+ * Downloads · CTA  — close on invitation.
  * <div #para-devs> — dev-tone wrapper (#184). Stack, BuiltOn, HowItWorks,
  *                    PoweredBy, Roadmap live here with reduced visual
  *                    weight so non-dev visitors can ignore the section.
@@ -72,6 +74,7 @@ export function LandingPage() {
         <RevealSection><Layers lang={lang} /></RevealSection>
         <RevealSection><UserFlow /></RevealSection>
         <RevealSection><Authors /></RevealSection>
+        <RevealSection><FAQ /></RevealSection>
         <RevealSection><Downloads /></RevealSection>
         <RevealSection><CTA /></RevealSection>
 

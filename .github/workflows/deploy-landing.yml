@@ -54,28 +54,34 @@ jobs:
           VITE_BASE_PATH: /LexFlow/
         run: npm run build
 
-      # GitHub Pages serves 404.html for any path it cannot resolve to a
-      # static file. The landing is a single page so the 404 is just the
-      # same index.html (visitor lands on the marketing page either way).
-      - name: 404 fallback (index.html → 404.html)
-        run: cp dist/index.html dist/404.html
-
       # #162 — substitute Cloudflare Web Analytics beacon token. The HTML
       # ships with the placeholder __VITE_CF_BEACON_TOKEN__; this step
-      # replaces it with the secret. We can't gate the step on the secret
-      # being set (GitHub Actions doesn't expose `secrets.*` in step `if:`),
-      # so the shell checks at run-time and is a graceful no-op when the
-      # secret is unset.
+      # replaces it with the real token from the CF_BEACON_TOKEN secret.
+      # We can't gate the step on the secret being set (GitHub Actions
+      # doesn't expose `secrets.*` in step `if:`), so the shell checks at
+      # run-time and is a graceful no-op when the secret is unset (forks,
+      # non-prod runs). Must run BEFORE the 404 fallback copy so 404.html
+      # automatically inherits the injected token.
       - name: Inject Cloudflare Analytics token
         env:
           CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
         run: |
           if [ -n "$CF_BEACON_TOKEN" ]; then
-            sed -i "s/__VITE_CF_BEACON_TOKEN__/${CF_BEACON_TOKEN}/g" dist/index.html dist/404.html
+            # Escape sed-special chars (/, &, \) so a token containing them
+            # never breaks the substitution.
+            escaped=$(printf '%s' "$CF_BEACON_TOKEN" | sed -e 's/[\/&\\]/\\&/g')
+            sed -i "s/__VITE_CF_BEACON_TOKEN__/${escaped}/g" dist/index.html
             echo "Cloudflare Web Analytics beacon token injected."
           else
             echo "CF_BEACON_TOKEN secret not set; leaving placeholder (Cloudflare will ignore it)."
           fi
+
+      # GitHub Pages serves 404.html for any path it cannot resolve to a
+      # static file. The landing is a single page so the 404 is just the
+      # same index.html — copy AFTER token injection so 404.html already
+      # has the beacon token substituted.
+      - name: 404 fallback (index.html → 404.html)
+        run: cp dist/index.html dist/404.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

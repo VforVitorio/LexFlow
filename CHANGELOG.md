@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.62.0](https://github.com/VforVitorio/LexFlow/compare/v0.61.0...v0.62.0) (2026-06-19)
+
+
+### Features
+
+* **landing:** add og:image social card, PWA manifest, and apple-touch-icon ([3f27f44](https://github.com/VforVitorio/LexFlow/commit/3f27f44150ca0d3e88e93b4cf7110b29278fab84))
+* **landing:** add SEO/GEO copy — definitional anchor, FAQ section, expanded author bios ([abdfc72](https://github.com/VforVitorio/LexFlow/commit/abdfc723947ac36ebdbac494cd581b19d2d80028))
+* **landing:** rasterize og-image + apple-touch icon to PNG ([#690](https://github.com/VforVitorio/LexFlow/issues/690) review) ([ce66ba8](https://github.com/VforVitorio/LexFlow/commit/ce66ba821ab4d809b56a4a36f8521dd81dc8c166))
+* **landing:** SEO/GEO copy — definitional anchor, FAQ, expanded author bios ([624f3cd](https://github.com/VforVitorio/LexFlow/commit/624f3cdb0cc46f7fe6c8aaee79f31bd50a5ca501))
+* **landing:** social-preview og:image, PWA manifest, apple-touch-icon ([560d5e0](https://github.com/VforVitorio/LexFlow/commit/560d5e00183f1241de75a1e80d116d1499d8575d))
+
 ## [0.61.0](https://github.com/VforVitorio/LexFlow/compare/v0.60.0...v0.61.0) (2026-06-19)
 
 
