@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.63.0](https://github.com/VforVitorio/LexFlow/compare/v0.62.0...v0.63.0) (2026-06-20)
+
+
+### Features
+
+* **landing:** prerender SPA at build time (Playwright) for crawlable SEO body ([d4e6459](https://github.com/VforVitorio/LexFlow/commit/d4e6459d4444e8190ff463b87a48f49bddd1331e))
+* **landing:** prerender via headless Chromium post-build, drop react-snap (vite-8 compatible) ([#689](https://github.com/VforVitorio/LexFlow/issues/689)) ([e503381](https://github.com/VforVitorio/LexFlow/commit/e50338126edcc5e14734948842a3c49a95df07ce))
+
+
+### Bug Fixes
+
+* **deps:** bump pydantic-settings to 2.14.2 (GHSA-4xgf-cpjx-pc3j) ([3ff3d8a](https://github.com/VforVitorio/LexFlow/commit/3ff3d8a9c9be29c0e66b6c5c43d2f9a8e457c73e))
+* **deps:** bump pydantic-settings to 2.14.2 (GHSA-4xgf-cpjx-pc3j) ([29593c4](https://github.com/VforVitorio/LexFlow/commit/29593c4b331bb3516b1aace185f4680701881b42))
+* **landing:** gate hydration on childElementCount, not hasChildNodes ([#689](https://github.com/VforVitorio/LexFlow/issues/689)) ([38bd306](https://github.com/VforVitorio/LexFlow/commit/38bd30607e11dce8f71431149f1fa6027d15f3e7))
+
 ## [0.62.0](https://github.com/VforVitorio/LexFlow/compare/v0.61.0...v0.62.0) (2026-06-19)
 
 
