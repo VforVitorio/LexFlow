@@ -12,7 +12,6 @@
 ### Bug Fixes
 
 * **deps:** bump pydantic-settings to 2.14.2 (GHSA-4xgf-cpjx-pc3j) ([3ff3d8a](https://github.com/VforVitorio/LexFlow/commit/3ff3d8a9c9be29c0e66b6c5c43d2f9a8e457c73e))
-* **deps:** bump pydantic-settings to 2.14.2 (GHSA-4xgf-cpjx-pc3j) ([29593c4](https://github.com/VforVitorio/LexFlow/commit/29593c4b331bb3516b1aace185f4680701881b42))
 * **landing:** gate hydration on childElementCount, not hasChildNodes ([#689](https://github.com/VforVitorio/LexFlow/issues/689)) ([38bd306](https://github.com/VforVitorio/LexFlow/commit/38bd30607e11dce8f71431149f1fa6027d15f3e7))
 
 ## [0.62.0](https://github.com/VforVitorio/LexFlow/compare/v0.61.0...v0.62.0) (2026-06-19)
