@@ -129,9 +129,15 @@ export default function WelcomeAnimation({ onContinue }: Props) {
 
     let ctx: gsap.Context | undefined;
     try {
+      // Real geometry length is for the pen tip; the stroke dash runs in the
+      // normalized pathLength=1 space set on the element, so dash values are 0..1.
       const length = path.getTotalLength();
       ctx = gsap.context(() => {
-        gsap.set(path, { strokeDasharray: length, strokeDashoffset: length, fillOpacity: 0 });
+        gsap.set(path, { strokeDasharray: 1, strokeDashoffset: 1, fillOpacity: 0 });
+        // Park the pen on the first point and reveal it, so it rides the stroke
+        // from the start instead of flashing at the viewBox origin.
+        const start = path.getPointAtLength(0);
+        gsap.set(penRef.current, { attr: { cx: start.x, cy: start.y }, opacity: 1 });
         const tl = gsap.timeline({
           onComplete: () => {
             window.clearTimeout(safety);
@@ -145,7 +151,7 @@ export default function WelcomeAnimation({ onContinue }: Props) {
           onUpdate: () => movePenToStrokeTip(path, penRef.current, length),
         });
         // Ink settles in behind the pen, then the pen lifts.
-        tl.to(path, { fillOpacity: 1, duration: 0.5, ease: 'power1.out' }, '-=0.35');
+        tl.to(path, { fillOpacity: 1, duration: 0.5, ease: 'power1.out' }, '-=0.3');
         tl.to(penRef.current, { opacity: 0, duration: 0.3 }, '<');
       });
     } catch {
@@ -186,12 +192,23 @@ export default function WelcomeAnimation({ onContinue }: Props) {
               strokeWidth={STROKE_WIDTH}
               strokeLinecap="round"
               strokeLinejoin="round"
+              // The FIRST browser paint must already be empty. Normalize the
+              // path length to 1 and hide both the stroke (full-length dash,
+              // fully offset) and the fill via static attributes — otherwise
+              // the complete filled word paints for one frame before the draw
+              // effect runs (the "text appears, then paints" bug). GSAP then
+              // animates strokeDashoffset 1 → 0 to trace it by hand.
+              pathLength={1}
+              strokeDasharray={1}
+              strokeDashoffset={1}
+              fillOpacity={0}
             />
             <circle
               ref={penRef}
               r={STROKE_WIDTH * 1.8}
               className="fill-indigo-500"
               style={{ filter: 'drop-shadow(0 0 6px rgb(99 102 241 / 0.6))' }}
+              opacity={0}
             />
           </svg>
         ) : showStatic ? (
@@ -239,8 +256,10 @@ export default function WelcomeAnimation({ onContinue }: Props) {
 /** Park the pen-tip dot on the point the stroke has reached this frame. */
 function movePenToStrokeTip(path: SVGPathElement, pen: SVGCircleElement | null, length: number): void {
   if (!pen) return;
+  // strokeDashoffset is normalized to pathLength=1, so it runs 1 → 0; map the
+  // drawn fraction back onto the real geometry length for the tip position.
   const offset = Number(gsap.getProperty(path, 'strokeDashoffset')) || 0;
-  const drawn = length - offset;
+  const drawn = (1 - offset) * length;
   const point = path.getPointAtLength(drawn);
   pen.setAttribute('cx', String(point.x));
   pen.setAttribute('cy', String(point.y));
