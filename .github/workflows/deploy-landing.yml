@@ -49,6 +49,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The build prerenders the landing with headless Chromium (#689).
+      - name: Install Chromium (prerender)
+        run: npx playwright install --with-deps chromium
+
       - name: Build landing (with /LexFlow/ base)
         env:
           VITE_BASE_PATH: /LexFlow/
