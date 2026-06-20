@@ -38,7 +38,7 @@ const app = (
 
 const rootEl = document.getElementById('root')!;
 
-if (rootEl.hasChildNodes()) {
+if (rootEl.childElementCount > 0) {
   hydrateRoot(rootEl, app);
 } else {
   createRoot(rootEl).render(app);
