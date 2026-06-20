@@ -300,6 +300,12 @@ jobs:
         if: steps.changes.outputs.landing == 'true'
         run: npm ci
 
+      # The build prerenders the landing with headless Chromium (#689); the
+      # browser binary must be present for `npm run build` to succeed.
+      - name: Install Chromium (prerender)
+        if: steps.changes.outputs.landing == 'true'
+        run: npx playwright install --with-deps chromium
+
       - name: Typecheck
         if: steps.changes.outputs.landing == 'true'
         run: npm run typecheck
