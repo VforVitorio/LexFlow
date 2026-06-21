@@ -32,6 +32,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEditorStore, DEFAULT_DOC_ID, makeDefaultDocument } from '@/lib/editor-store';
 import { EditorToolbar } from '@/pages/editor/EditorToolbar';
+import { CitationPicker } from '@/pages/editor/CitationPicker';
+import { LegalCitation } from '@/pages/editor/extensions/LegalCitation';
 import { cn } from '@/lib/utils';
 
 /** Debounce window before a content change is written to localStorage (ms). */
@@ -55,6 +57,9 @@ export function EditorPage() {
 
   // Whether the editor is in read-only (preview) mode.
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false);
+
+  // Whether the corpus citation picker is open (#599).
+  const [citationPickerOpen, setCitationPickerOpen] = useState<boolean>(false);
 
   // Ref to hold the active autosave timeout so it can be cancelled on unmount.
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,6 +88,8 @@ export function EditorPage() {
       // first empty paragraph; the CSS that renders it lives in the editor
       // container below (`is-editor-empty:first-child::before`).
       Placeholder.configure({ placeholder: 'Empieza a escribir tu documento…' }),
+      // Typed, corpus-resolved legal citations (#599). Inserted via CitationPicker.
+      LegalCitation,
     ],
     content: initialDoc.content,
     editable: !isReadOnly,
@@ -188,7 +195,13 @@ export function EditorPage() {
           editor={editor}
           isReadOnly={isReadOnly}
           onToggleReadOnly={handleToggleReadOnly}
+          onInsertCitation={() => setCitationPickerOpen(true)}
         />
+      )}
+
+      {/* Corpus citation picker (#599) — mounted only while open. */}
+      {editor && citationPickerOpen && (
+        <CitationPicker editor={editor} onClose={() => setCitationPickerOpen(false)} />
       )}
 
       {/* TipTap content area */}

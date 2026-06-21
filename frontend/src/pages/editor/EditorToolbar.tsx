@@ -29,6 +29,7 @@ import {
   List,
   ListOrdered,
   Quote,
+  Scale,
   Undo2,
   Redo2,
   Eye,
@@ -43,6 +44,8 @@ interface EditorToolbarProps {
   editor: Editor;
   isReadOnly: boolean;
   onToggleReadOnly: () => void;
+  /** Open the corpus citation picker (#599). Owned by EditorPage. */
+  onInsertCitation: () => void;
 }
 
 /** A thin divider between button groups. */
@@ -86,7 +89,7 @@ function ToolButton({ icon, label, active, disabled, onPress }: ToolButtonProps)
  * button at the right of the bar — owned by EditorPage so the state lives
  * one level up (it also drives `editor.setEditable`).
  */
-export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly }: EditorToolbarProps) {
+export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly, onInsertCitation }: EditorToolbarProps) {
   // `useEditorState` subscribes to ProseMirror transactions and re-renders
   // only when the selected values change — cheaper than shouldRerenderOnTransaction.
   const editorState = useEditorState({
@@ -175,7 +178,12 @@ export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly }: EditorTo
 
       <Divider />
 
-      {/* Blockquote — used for legal citations */}
+      {/* Citations: typed legal citation (#599) + plain blockquote */}
+      <ToolButton
+        icon={<Scale className="size-3.5" />}
+        label="Insertar cita legal"
+        onPress={onInsertCitation}
+      />
       <ToolButton
         icon={<Quote className="size-3.5" />}
         label="Blockquote (legal citation)"
