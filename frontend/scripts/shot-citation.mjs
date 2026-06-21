@@ -29,12 +29,17 @@ if (theme === 'dark') {
   }
 }
 
-async function insertCitation(query) {
+async function insertCitation(query, shotOpen) {
   await page.locator('button[aria-label="Insertar cita legal"]').click();
   const input = page.locator('input[placeholder*="citar" i]');
   await input.waitFor({ state: 'visible' });
   await input.fill(query);
   await page.locator('[role="option"]').first().waitFor({ state: 'visible', timeout: 5000 });
+  if (shotOpen) {
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: shotOpen });
+    console.log('open-picker shot saved:', shotOpen);
+  }
   await page.locator('[role="option"]').first().click();
   await page.waitForTimeout(400);
 }
@@ -43,7 +48,7 @@ async function insertCitation(query) {
 const pm = page.locator('.ProseMirror');
 await pm.click();
 await page.keyboard.type('Como recoge la ');
-await insertCitation('constitu');
+await insertCitation('constitu', process.argv[4]);
 await page.keyboard.type('en su ');
 await insertCitation('igualdad');
 await page.keyboard.type(', el principio de no discriminación es un derecho fundamental.');

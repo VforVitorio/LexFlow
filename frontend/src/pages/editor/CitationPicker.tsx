@@ -7,11 +7,15 @@
  * (EditorPage owns the open/close state), so its hooks run from a clean slate
  * each time and the input can autofocus on mount.
  *
+ * Only *resolvable* hits are shown: `useSearch` is universal, so rows that
+ * `citationFromHit` can't turn into a citation are filtered out — no dead rows
+ * that silently no-op on select.
+ *
  * --- WHERE TO CHANGE IF SEARCH / INSERTION CHANGES ---
  * - Hit → node attributes mapping → `citationFromHit` in `./citation-utils`.
  * - The corpus query → `useSearch` in `@/lib/queries`.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { BookOpenText, FileText, Scale } from 'lucide-react';
 import { Kbd } from '@/components/ui';
@@ -31,25 +35,33 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
   const [active, setActive] = useState(0);
 
   const { data, isFetching } = useSearch(q);
-  const hits = data?.hits ?? [];
+
+  // Keep only hits that resolve to a citation, paired with their attributes —
+  // `citationFromHit` is the single source of truth for "can this be cited?".
+  const resolvable = useMemo(
+    () =>
+      (data?.hits ?? []).flatMap((hit) => {
+        const attrs = citationFromHit(hit);
+        return attrs ? [{ hit, attrs }] : [];
+      }),
+    [data],
+  );
 
   // Autofocus the input on mount.
   useEffect(() => {
     requestAnimationFrame(() => inputRef.current?.focus());
   }, []);
 
-  // Reset the active row whenever the result set changes so Enter always
-  // targets a valid row even after the list shortens (mirrors CommandPalette).
+  // Clamp the active row whenever the (async) result set changes so Enter can
+  // never target an invalid index — including the empty-list case.
   useEffect(() => {
-    setActive(0);
-  }, [q]);
+    setActive((a) => (resolvable.length === 0 ? 0 : Math.min(a, resolvable.length - 1)));
+  }, [q, resolvable.length]);
 
   const insert = (index: number) => {
-    const hit = hits[index];
-    if (!hit) return;
-    const attrs = citationFromHit(hit);
-    if (!attrs) return; // unresolvable hit (no lawId) — skip silently
-    editor.chain().focus().insertLegalCitation(attrs).run();
+    const entry = resolvable[index];
+    if (!entry) return;
+    editor.chain().focus().insertLegalCitation(entry.attrs).run();
     onClose();
   };
 
@@ -60,7 +72,7 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
         onClose();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setActive((a) => Math.min(hits.length - 1, a + 1));
+        setActive((a) => (resolvable.length === 0 ? 0 : Math.min(resolvable.length - 1, a + 1)));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setActive((a) => Math.max(0, a - 1));
@@ -72,7 +84,7 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hits, active]);
+  }, [resolvable, active]);
 
   const showHint = q.trim().length < 2;
 
@@ -103,14 +115,14 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
               Escribe al menos 2 caracteres para buscar en el corpus.
             </div>
           )}
-          {!showHint && hits.length === 0 && (
+          {!showHint && resolvable.length === 0 && (
             <div className="px-6 py-10 text-center text-sm text-muted">
               {isFetching ? 'Buscando…' : `Sin resultados para "${q}".`}
             </div>
           )}
-          {hits.map((h, idx) => (
+          {resolvable.map(({ hit }, idx) => (
             <button
-              key={h.id}
+              key={hit.id}
               role="option"
               aria-selected={active === idx}
               onMouseEnter={() => setActive(idx)}
@@ -123,21 +135,21 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
               <span
                 className={cn(
                   'inline-flex size-6 shrink-0 items-center justify-center rounded',
-                  h.kind === 'law'
+                  hit.kind === 'law'
                     ? 'bg-primary-soft text-indigo-700'
                     : 'bg-amber-soft text-amber-700 dark:text-amber-300',
                 )}
               >
-                {h.kind === 'law' ? <BookOpenText className="size-3.5" /> : <FileText className="size-3.5" />}
+                {hit.kind === 'law' ? <BookOpenText className="size-3.5" /> : <FileText className="size-3.5" />}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{h.title}</div>
-                {h.snippet && (
+                <div className="truncate font-medium">{hit.title}</div>
+                {hit.snippet && (
                   <div className="truncate text-[12px] text-muted">
                     <HighlightedSnippet
-                      text={h.snippet}
-                      match={h.match}
-                      prefix={h.articleNumber ? `Art. ${h.articleNumber} — ` : undefined}
+                      text={hit.snippet}
+                      match={hit.match}
+                      prefix={hit.articleNumber ? `Art. ${hit.articleNumber} — ` : undefined}
                     />
                   </div>
                 )}
@@ -154,7 +166,7 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
           <span className="inline-flex items-center gap-1">
             <Kbd>↵</Kbd> insertar cita
           </span>
-          <span className="ml-auto font-mono">{hits.length} resultados</span>
+          <span className="ml-auto font-mono">{resolvable.length} resultados</span>
         </div>
       </div>
     </div>

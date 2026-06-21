@@ -26,6 +26,7 @@
  * - Switch from localStorage to server sync → update `useEditorStore`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -199,10 +200,14 @@ export function EditorPage() {
         />
       )}
 
-      {/* Corpus citation picker (#599) — mounted only while open. */}
-      {editor && citationPickerOpen && (
-        <CitationPicker editor={editor} onClose={() => setCitationPickerOpen(false)} />
-      )}
+      {/* Corpus citation picker (#599) — portaled to <body> so the fixed overlay
+          isn't clipped/anchored by this page's `overflow-auto` scroll container. */}
+      {editor &&
+        citationPickerOpen &&
+        createPortal(
+          <CitationPicker editor={editor} onClose={() => setCitationPickerOpen(false)} />,
+          document.body,
+        )}
 
       {/* TipTap content area */}
       <div
