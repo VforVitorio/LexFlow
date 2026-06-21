@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.65.0](https://github.com/VforVitorio/LexFlow/compare/v0.64.0...v0.65.0) (2026-06-21)
+
+
+### Features
+
+* **editor:** typed legal citations resolved against the corpus ([14e7dc3](https://github.com/VforVitorio/LexFlow/commit/14e7dc3428a6020fb71a4bd489a69de24c7c1488)), closes [#599](https://github.com/VforVitorio/LexFlow/issues/599)
+
+
+### Bug Fixes
+
+* **editor:** address CodeRabbit review on the citation picker ([222eef3](https://github.com/VforVitorio/LexFlow/commit/222eef34b8103d518efedd3e3b55cdb549f704c1))
+
 ## [0.64.0](https://github.com/VforVitorio/LexFlow/compare/v0.63.0...v0.64.0) (2026-06-20)
 
 
