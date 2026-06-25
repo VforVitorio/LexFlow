@@ -31,6 +31,7 @@ import {
   Quote,
   Scale,
   LayoutTemplate,
+  Sparkles,
   Undo2,
   Redo2,
   Eye,
@@ -49,6 +50,8 @@ interface EditorToolbarProps {
   onInsertCitation: () => void;
   /** Open the document-template library (#600). Owned by EditorPage. */
   onOpenTemplates: () => void;
+  /** Open the AI drafting assistant panel (#601). Owned by EditorPage. */
+  onOpenAiPanel: () => void;
 }
 
 /** A thin divider between button groups. */
@@ -98,6 +101,7 @@ export function EditorToolbar({
   onToggleReadOnly,
   onInsertCitation,
   onOpenTemplates,
+  onOpenAiPanel,
 }: EditorToolbarProps) {
   // `useEditorState` subscribes to ProseMirror transactions and re-renders
   // only when the selected values change — cheaper than shouldRerenderOnTransaction.
@@ -207,6 +211,13 @@ export function EditorToolbar({
         icon={<LayoutTemplate className="size-3.5" />}
         label="Plantillas"
         onPress={onOpenTemplates}
+      />
+
+      {/* AI drafting assistant (#601) */}
+      <ToolButton
+        icon={<Sparkles className="size-3.5" />}
+        label="Asistente de redacción IA"
+        onPress={onOpenAiPanel}
       />
 
       <Divider />

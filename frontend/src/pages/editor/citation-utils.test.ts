@@ -8,8 +8,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { SearchHit } from '@/lib/types';
-import { citationFromHit } from './citation-utils';
+import type { ChatSource, SearchHit } from '@/lib/types';
+import { citationFromHit, citationFromSource } from './citation-utils';
 
 function makeHit(overrides: Partial<SearchHit>): SearchHit {
   return {
@@ -64,5 +64,36 @@ describe('citationFromHit', () => {
   it('returns null when the hit has no resolvable lawId', () => {
     expect(citationFromHit(makeHit({ payload: {} }))).toBeNull();
     expect(citationFromHit(makeHit({ payload: undefined }))).toBeNull();
+  });
+});
+
+describe('citationFromSource', () => {
+  const source: ChatSource = {
+    law: 'Ley Orgánica 3/2018 (LOPDGDD)',
+    article: 'Art. 28',
+    date: '2018-12-06',
+    snippet: '…',
+    target: { lawId: 'LO-3-2018', articleNum: '28' },
+  };
+
+  it('maps an article-scoped source to a citation', () => {
+    expect(citationFromSource(source)).toEqual({
+      lawId: 'LO-3-2018',
+      articleNum: '28',
+      label: 'Art. 28 · Ley Orgánica 3/2018 (LOPDGDD)',
+    });
+  });
+
+  it('maps a law-only source (no article) to a citation', () => {
+    const attrs = citationFromSource({ ...source, article: '', target: { lawId: 'LO-3-2018' } });
+    expect(attrs).toEqual({
+      lawId: 'LO-3-2018',
+      articleNum: null,
+      label: 'Ley Orgánica 3/2018 (LOPDGDD)',
+    });
+  });
+
+  it('returns null when the source has no resolved target', () => {
+    expect(citationFromSource({ ...source, target: undefined })).toBeNull();
   });
 });
