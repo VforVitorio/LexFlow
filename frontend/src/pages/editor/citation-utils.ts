@@ -10,7 +10,7 @@
  * client (`lib/api/search.ts`) and mirrored by the mock (`lib/api.mock.ts`).
  * If those change, this is the single place that reads them.
  */
-import type { SearchHit } from '@/lib/types';
+import type { ChatSource, SearchHit } from '@/lib/types';
 
 /** Structured attributes stored on a `legalCitation` editor node. */
 export interface CitationAttrs {
@@ -51,4 +51,22 @@ export function citationFromHit(hit: SearchHit): CitationAttrs | null {
 
   const articleNum = hit.kind === 'article' && hit.articleNumber ? hit.articleNumber : null;
   return { lawId, articleNum, label: citationLabel(hit) };
+}
+
+/**
+ * Resolve a streamed RAG source (a `source` SSE event from the chat stack)
+ * into citation node attributes (#601).
+ *
+ * The agentic loop surfaces the laws/articles it grounded an answer on as
+ * `ChatSource`s; this turns each into a typed citation so AI-drafted text is
+ * inserted with clickable, corpus-resolved references. Returns `null` when the
+ * source has no resolved `target.lawId`.
+ */
+export function citationFromSource(source: ChatSource): CitationAttrs | null {
+  const target = source.target;
+  if (!target?.lawId) return null;
+
+  const articleNum = target.articleNum ?? null;
+  const label = source.article ? `${source.article} · ${source.law}` : source.law;
+  return { lawId: target.lawId, articleNum, label };
 }

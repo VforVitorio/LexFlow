@@ -35,6 +35,7 @@ import { useEditorStore, DEFAULT_DOC_ID, makeDefaultDocument } from '@/lib/edito
 import { EditorToolbar } from '@/pages/editor/EditorToolbar';
 import { CitationPicker } from '@/pages/editor/CitationPicker';
 import { TemplatesDialog } from '@/pages/editor/TemplatesDialog';
+import { AiDraftPanel } from '@/pages/editor/AiDraftPanel';
 import { LegalCitation } from '@/pages/editor/extensions/LegalCitation';
 import { cn } from '@/lib/utils';
 
@@ -65,6 +66,9 @@ export function EditorPage() {
 
   // Whether the template library is open (#600).
   const [templatesOpen, setTemplatesOpen] = useState<boolean>(false);
+
+  // Whether the AI drafting assistant panel is open (#601).
+  const [aiPanelOpen, setAiPanelOpen] = useState<boolean>(false);
 
   // Ref to hold the active autosave timeout so it can be cancelled on unmount.
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -202,6 +206,7 @@ export function EditorPage() {
           onToggleReadOnly={handleToggleReadOnly}
           onInsertCitation={() => setCitationPickerOpen(true)}
           onOpenTemplates={() => setTemplatesOpen(true)}
+          onOpenAiPanel={() => setAiPanelOpen(true)}
         />
       )}
 
@@ -219,6 +224,14 @@ export function EditorPage() {
         templatesOpen &&
         createPortal(
           <TemplatesDialog editor={editor} onClose={() => setTemplatesOpen(false)} />,
+          document.body,
+        )}
+
+      {/* AI drafting assistant (#601) — right-docked drawer, portaled to <body>. */}
+      {editor &&
+        aiPanelOpen &&
+        createPortal(
+          <AiDraftPanel editor={editor} onClose={() => setAiPanelOpen(false)} />,
           document.body,
         )}
 
