@@ -34,6 +34,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { useEditorStore, DEFAULT_DOC_ID, makeDefaultDocument } from '@/lib/editor-store';
 import { EditorToolbar } from '@/pages/editor/EditorToolbar';
 import { CitationPicker } from '@/pages/editor/CitationPicker';
+import { TemplatesDialog } from '@/pages/editor/TemplatesDialog';
 import { LegalCitation } from '@/pages/editor/extensions/LegalCitation';
 import { cn } from '@/lib/utils';
 
@@ -61,6 +62,9 @@ export function EditorPage() {
 
   // Whether the corpus citation picker is open (#599).
   const [citationPickerOpen, setCitationPickerOpen] = useState<boolean>(false);
+
+  // Whether the template library is open (#600).
+  const [templatesOpen, setTemplatesOpen] = useState<boolean>(false);
 
   // Ref to hold the active autosave timeout so it can be cancelled on unmount.
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -197,6 +201,7 @@ export function EditorPage() {
           isReadOnly={isReadOnly}
           onToggleReadOnly={handleToggleReadOnly}
           onInsertCitation={() => setCitationPickerOpen(true)}
+          onOpenTemplates={() => setTemplatesOpen(true)}
         />
       )}
 
@@ -206,6 +211,14 @@ export function EditorPage() {
         citationPickerOpen &&
         createPortal(
           <CitationPicker editor={editor} onClose={() => setCitationPickerOpen(false)} />,
+          document.body,
+        )}
+
+      {/* Template library (#600) — portaled to <body> for the same reason. */}
+      {editor &&
+        templatesOpen &&
+        createPortal(
+          <TemplatesDialog editor={editor} onClose={() => setTemplatesOpen(false)} />,
           document.body,
         )}
 
