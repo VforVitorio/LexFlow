@@ -30,6 +30,7 @@ import {
   ListOrdered,
   Quote,
   Scale,
+  LayoutTemplate,
   Undo2,
   Redo2,
   Eye,
@@ -46,6 +47,8 @@ interface EditorToolbarProps {
   onToggleReadOnly: () => void;
   /** Open the corpus citation picker (#599). Owned by EditorPage. */
   onInsertCitation: () => void;
+  /** Open the document-template library (#600). Owned by EditorPage. */
+  onOpenTemplates: () => void;
 }
 
 /** A thin divider between button groups. */
@@ -89,7 +92,13 @@ function ToolButton({ icon, label, active, disabled, onPress }: ToolButtonProps)
  * button at the right of the bar — owned by EditorPage so the state lives
  * one level up (it also drives `editor.setEditable`).
  */
-export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly, onInsertCitation }: EditorToolbarProps) {
+export function EditorToolbar({
+  editor,
+  isReadOnly,
+  onToggleReadOnly,
+  onInsertCitation,
+  onOpenTemplates,
+}: EditorToolbarProps) {
   // `useEditorState` subscribes to ProseMirror transactions and re-renders
   // only when the selected values change — cheaper than shouldRerenderOnTransaction.
   const editorState = useEditorState({
@@ -189,6 +198,15 @@ export function EditorToolbar({ editor, isReadOnly, onToggleReadOnly, onInsertCi
         label="Blockquote (legal citation)"
         active={isBlockquote}
         onPress={() => editor.chain().focus().toggleBlockquote().run()}
+      />
+
+      <Divider />
+
+      {/* Templates (#600) */}
+      <ToolButton
+        icon={<LayoutTemplate className="size-3.5" />}
+        label="Plantillas"
+        onPress={onOpenTemplates}
       />
 
       <Divider />
