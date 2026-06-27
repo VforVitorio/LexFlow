@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.66.0](https://github.com/VforVitorio/LexFlow/compare/v0.65.0...v0.66.0) (2026-06-25)
+
+
+### Features
+
+* **editor:** AI-assisted drafting grounded in the corpus ([b247b3e](https://github.com/VforVitorio/LexFlow/commit/b247b3ea17c6d5f18dfdf45a5dbdedbbb69cbc5e))
+* **editor:** document templates with corpus-filled variables ([79202dd](https://github.com/VforVitorio/LexFlow/commit/79202ddc2f652676258ef3a4158696f0492ec833))
+
 ## [0.65.0](https://github.com/VforVitorio/LexFlow/compare/v0.64.0...v0.65.0) (2026-06-21)
 
 
