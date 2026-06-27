@@ -36,7 +36,10 @@ import { EditorToolbar } from '@/pages/editor/EditorToolbar';
 import { CitationPicker } from '@/pages/editor/CitationPicker';
 import { TemplatesDialog } from '@/pages/editor/TemplatesDialog';
 import { AiDraftPanel } from '@/pages/editor/AiDraftPanel';
+import { CommentsPanel } from '@/pages/editor/CommentsPanel';
 import { LegalCitation } from '@/pages/editor/extensions/LegalCitation';
+import { CommentMark } from '@/pages/editor/extensions/CommentMark';
+import { useCommentStore } from '@/lib/comment-store';
 import { cn } from '@/lib/utils';
 
 /** Debounce window before a content change is written to localStorage (ms). */
@@ -70,6 +73,11 @@ export function EditorPage() {
   // Whether the AI drafting assistant panel is open (#601).
   const [aiPanelOpen, setAiPanelOpen] = useState<boolean>(false);
 
+  // Comments side panel (#602): open state + the comment to autofocus on open.
+  const [commentsOpen, setCommentsOpen] = useState<boolean>(false);
+  const [focusCommentId, setFocusCommentId] = useState<string | null>(null);
+  const addComment = useCommentStore((s) => s.addComment);
+
   // Ref to hold the active autosave timeout so it can be cancelled on unmount.
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -99,6 +107,8 @@ export function EditorPage() {
       Placeholder.configure({ placeholder: 'Empieza a escribir tu documento…' }),
       // Typed, corpus-resolved legal citations (#599). Inserted via CitationPicker.
       LegalCitation,
+      // Inline comment anchors (#602). The note text lives in comment-store.
+      CommentMark,
     ],
     content: initialDoc.content,
     editable: !isReadOnly,
@@ -169,6 +179,23 @@ export function EditorPage() {
     setIsReadOnly((prev) => !prev);
   }, []);
 
+  /**
+   * Comment the current selection (#602): snapshot the quote, anchor a
+   * `comment` mark over it, store the (empty) note, then open the panel
+   * focused on the new comment so the user types the note straight away.
+   */
+  const handleAddComment = useCallback(() => {
+    if (!editor) return;
+    const { from, to, empty } = editor.state.selection;
+    if (empty) return;
+    const quote = editor.state.doc.textBetween(from, to, ' ');
+    const commentId = crypto.randomUUID();
+    editor.chain().focus().setComment({ commentId, resolved: false }).run();
+    addComment({ id: commentId, docId, quote, note: '' });
+    setFocusCommentId(commentId);
+    setCommentsOpen(true);
+  }, [editor, docId, addComment]);
+
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
       {/* Page header: editable title + doc id breadcrumb */}
@@ -207,6 +234,11 @@ export function EditorPage() {
           onInsertCitation={() => setCitationPickerOpen(true)}
           onOpenTemplates={() => setTemplatesOpen(true)}
           onOpenAiPanel={() => setAiPanelOpen(true)}
+          onAddComment={handleAddComment}
+          onOpenComments={() => {
+            setFocusCommentId(null);
+            setCommentsOpen(true);
+          }}
         />
       )}
 
@@ -235,6 +267,19 @@ export function EditorPage() {
           document.body,
         )}
 
+      {/* Comments / annotations (#602) — right-docked drawer, portaled to <body>. */}
+      {editor &&
+        commentsOpen &&
+        createPortal(
+          <CommentsPanel
+            editor={editor}
+            docId={docId}
+            focusCommentId={focusCommentId}
+            onClose={() => setCommentsOpen(false)}
+          />,
+          document.body,
+        )}
+
       {/* TipTap content area */}
       <div
         className={cn(
@@ -251,6 +296,12 @@ export function EditorPage() {
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0',
+          // Inline comment highlight (#602): amber span; resolved → dotted underline only.
+          '[&_.ProseMirror_.lex-comment]:rounded-sm [&_.ProseMirror_.lex-comment]:bg-[hsl(var(--amber-500)/0.28)]',
+          '[&_.ProseMirror_.lex-comment]:box-decoration-clone [&_.ProseMirror_.lex-comment]:px-0.5',
+          '[&_.ProseMirror_.lex-comment--resolved]:bg-transparent [&_.ProseMirror_.lex-comment--resolved]:px-0',
+          '[&_.ProseMirror_.lex-comment--resolved]:underline [&_.ProseMirror_.lex-comment--resolved]:decoration-dotted',
+          '[&_.ProseMirror_.lex-comment--resolved]:decoration-amber-400/70',
           isReadOnly && 'cursor-default',
         )}
       >
