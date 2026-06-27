@@ -1,13 +1,10 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from '@/components/shell/AppShell';
-import { HomePage } from '@/pages/HomePage';
-import { ExplorerPage } from '@/pages/ExplorerPage';
-import { LawDetailPage } from '@/pages/LawDetailPage';
-import { SearchResultsPage } from '@/pages/SearchResultsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { usePageViewTelemetry } from '@/lib/telemetry';
+import { useUi } from '@/lib/store';
 
 const ONBOARDED_STORAGE_KEY = 'lexflow.onboarded';
 
@@ -81,13 +78,17 @@ function useFirstLaunchGate(): void {
   }, [location.pathname, navigate]);
 }
 
-// Audit #409 perf: the SPA used to eagerly import every page, so the
-// initial bundle dragged the chat stack, react-flow, the model wizard,
-// the MCP servers section and the dashboards charts into the cold-start
-// payload. We now lazy-load anything that doesn't render on the Home
-// route. HomePage, ExplorerPage and LawDetailPage stay eager because
-// they're the most common landing surfaces; SearchResultsPage stays
-// because Cmd-K can land there at any moment.
+// Audit #409 / #712 perf: every page is lazy-loaded so the cold-start entry
+// bundle stays small (it previously dragged the chat stack, react-flow, the
+// model wizard, the dashboards charts AND four eager pages — incl.
+// react-markdown via LawDetailPage — into the entry chunk). The four most
+// common landing surfaces (Home, Explorer, LawDetail, Search) are PREFETCHED
+// the moment the command palette opens (see the effect in `App`), so Cmd-K
+// navigation still feels instant despite being lazy.
+const HomePage = lazy(() => import('@/pages/HomePage').then((m) => ({ default: m.HomePage })));
+const ExplorerPage = lazy(() => import('@/pages/ExplorerPage').then((m) => ({ default: m.ExplorerPage })));
+const LawDetailPage = lazy(() => import('@/pages/LawDetailPage').then((m) => ({ default: m.LawDetailPage })));
+const SearchResultsPage = lazy(() => import('@/pages/SearchResultsPage').then((m) => ({ default: m.SearchResultsPage })));
 const DiffPage = lazy(() => import('@/pages/DiffPage').then((m) => ({ default: m.DiffPage })));
 const GraphPage = lazy(() => import('@/pages/GraphPage').then((m) => ({ default: m.GraphPage })));
 const ChatPage = lazy(() => import('@/pages/ChatPage').then((m) => ({ default: m.ChatPage })));
@@ -117,6 +118,16 @@ export function App() {
   // Audit #471 — redirect first-launch users to ``/onboarding`` until
   // they complete it.
   useFirstLaunchGate();
+  // #712 perf — prefetch the common Cmd-K destinations as soon as the palette
+  // opens, so navigating to them from search is instant even though the routes
+  // are now lazy. Same module specifiers as the lazy() calls → warms the chunk.
+  const paletteOpen = useUi((s) => s.paletteOpen);
+  useEffect(() => {
+    if (!paletteOpen) return;
+    void import('@/pages/ExplorerPage');
+    void import('@/pages/LawDetailPage');
+    void import('@/pages/SearchResultsPage');
+  }, [paletteOpen]);
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>

@@ -32,5 +32,23 @@ export default defineConfig({
     // needed.
     sourcemap: false,
     target: 'es2020',
+    // #712 perf — split stable third-party deps into their own chunks so the
+    // browser can cache them across app-code deploys (and they stay out of the
+    // per-route chunks). App code splits per-route via React.lazy in App.tsx.
+    rollupOptions: {
+      output: {
+        // rolldown-vite requires the function form (object form is rollup-only).
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+            return 'vendor-react';
+          }
+          if (/[\\/]node_modules[\\/](@tanstack[\\/]react-query|zustand)[\\/]/.test(id)) {
+            return 'vendor-state';
+          }
+          return undefined;
+        },
+      },
+    },
   },
 });
