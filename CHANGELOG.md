@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.67.0](https://github.com/VforVitorio/LexFlow/compare/v0.66.0...v0.67.0) (2026-06-27)
+
+
+### Features
+
+* **editor:** inline comments and annotations ([8476ddd](https://github.com/VforVitorio/LexFlow/commit/8476dddac08092c37493c5395a7e5b752045ac5e))
+* **editor:** inline comments and annotations ([727d1cf](https://github.com/VforVitorio/LexFlow/commit/727d1cf0b41eab7a3ca24c993c344489b61497e8))
+
+
+### Performance
+
+* **app:** shrink the entry bundle with lazy routes + vendor chunks ([2f9bc44](https://github.com/VforVitorio/LexFlow/commit/2f9bc441d6c1c3aacdfa7ecb538b8c8e026308f0))
+* **app:** shrink the entry bundle with lazy routes + vendor chunks ([b8e4b07](https://github.com/VforVitorio/LexFlow/commit/b8e4b076adbada067b7a979ad2d09d4a401039b4))
+
 ## [0.66.0](https://github.com/VforVitorio/LexFlow/compare/v0.65.0...v0.66.0) (2026-06-25)
 
 
