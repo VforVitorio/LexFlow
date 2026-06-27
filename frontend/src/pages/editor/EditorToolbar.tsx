@@ -32,6 +32,8 @@ import {
   Scale,
   LayoutTemplate,
   Sparkles,
+  MessageSquarePlus,
+  MessageSquare,
   Undo2,
   Redo2,
   Eye,
@@ -52,6 +54,10 @@ interface EditorToolbarProps {
   onOpenTemplates: () => void;
   /** Open the AI drafting assistant panel (#601). Owned by EditorPage. */
   onOpenAiPanel: () => void;
+  /** Comment the current selection (#602). Owned by EditorPage. */
+  onAddComment: () => void;
+  /** Open the comments side panel (#602). Owned by EditorPage. */
+  onOpenComments: () => void;
 }
 
 /** A thin divider between button groups. */
@@ -102,6 +108,8 @@ export function EditorToolbar({
   onInsertCitation,
   onOpenTemplates,
   onOpenAiPanel,
+  onAddComment,
+  onOpenComments,
 }: EditorToolbarProps) {
   // `useEditorState` subscribes to ProseMirror transactions and re-renders
   // only when the selected values change — cheaper than shouldRerenderOnTransaction.
@@ -118,11 +126,23 @@ export function EditorToolbar({
       isBulletList: snap.editor.isActive('bulletList'),
       isOrderedList: snap.editor.isActive('orderedList'),
       isBlockquote: snap.editor.isActive('blockquote'),
+      isEmptySelection: snap.editor.state.selection.empty,
     }),
   });
 
-  const { canUndo, canRedo, isH1, isH2, isH3, isBold, isItalic, isBulletList, isOrderedList, isBlockquote } =
-    editorState;
+  const {
+    canUndo,
+    canRedo,
+    isH1,
+    isH2,
+    isH3,
+    isBold,
+    isItalic,
+    isBulletList,
+    isOrderedList,
+    isBlockquote,
+    isEmptySelection,
+  } = editorState;
 
   return (
     <div
@@ -218,6 +238,19 @@ export function EditorToolbar({
         icon={<Sparkles className="size-3.5" />}
         label="Asistente de redacción IA"
         onPress={onOpenAiPanel}
+      />
+
+      {/* Comments / annotations (#602) */}
+      <ToolButton
+        icon={<MessageSquarePlus className="size-3.5" />}
+        label="Comentar la selección"
+        disabled={isEmptySelection}
+        onPress={onAddComment}
+      />
+      <ToolButton
+        icon={<MessageSquare className="size-3.5" />}
+        label="Ver comentarios"
+        onPress={onOpenComments}
       />
 
       <Divider />
