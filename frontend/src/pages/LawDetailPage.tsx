@@ -34,6 +34,11 @@ export function LawDetailPage() {
   // panel in the right rail is populated on every tab, not just 'grafo'.
   // TanStack Query deduplicates the request — LawDetailGraphTab uses the same
   // cache key, so there is only ever one network call.
+  //
+  // Audit #713 P2 proposed gating this with `enabled: tab === 'grafo'`. Rejected
+  // on purpose: `DetailRightRail` below consumes `graph` for the related-laws
+  // panel on EVERY tab, so gating it would leave that panel empty outside the
+  // grafo tab. The subgraph is genuinely needed on load — do not gate it.
   const { data: graph } = useGraph(lawId);
 
   // Articles already arrive embedded in the law-detail response — no

@@ -26,7 +26,7 @@
  * * Forces         → the `d3Force` tweaks in the mount effect.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 
 import { GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, GRAPH_PRIMARY } from '@/lib/graph-colors';
@@ -92,7 +92,10 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | undefined>(undefined);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const reduced = useMemo(prefersReducedMotion, []);
+  // `reduced` starts from the current OS preference but updates at runtime
+  // when the user toggles reduced-motion in system settings (see the
+  // matchMedia change-listener effect below).
+  const [reduced, setReduced] = useState(prefersReducedMotion);
 
   // Stable across selection + filter changes (depends on `data` only) so the
   // simulation never restarts on a click or a chip toggle.
@@ -132,7 +135,72 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
     return () => ro.disconnect();
   }, []);
 
-  const isVisible = (kind: GraphNodeKind) => visibleKinds.has(kind);
+  /**
+   * Pause the force-graph animation when the canvas leaves the viewport and
+   * resume it when it re-enters. Prevents the d3 simulation + canvas redraw
+   * loop from burning CPU/GPU while the graph is not visible (scrolled away
+   * or in a background tab).
+   *
+   * Risk: if the simulation has not yet settled when the element is scrolled
+   * out, the graph will be "frozen mid-layout" until it returns to view.
+   * In practice this is fine — the layout continues from where it left off
+   * on resume — but the first zoom-to-fit (`onEngineStop`) will only fire
+   * once the engine finally stops after the resume, not at the mid-layout
+   * pause point.
+   */
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      const isIntersecting = entries[0].isIntersecting;
+      if (isIntersecting) {
+        fgRef.current?.resumeAnimation();
+      } else {
+        fgRef.current?.pauseAnimation();
+      }
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, {
+      // Fire when the canvas is fully offscreen (threshold 0) or any part
+      // of it is back in view. Using root:null (viewport) intentionally.
+      threshold: 0,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /**
+   * React to the user toggling reduced-motion in their OS settings at
+   * runtime. When reduced-motion turns on we pause the simulation (the
+   * animation stays frozen — the force engine already used warmupTicks to
+   * pre-settle when `reduced` was true at mount, so the positions are still
+   * valid). When reduced-motion turns off we resume so the graph can animate
+   * normally again.
+   *
+   * Note: changing `reduced` in state also causes a re-render, which updates
+   * `warmupTicks`/`cooldownTicks` on the `<ForceGraph2D>` element for any
+   * subsequent data changes, not just the current animation state.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setReduced(e.matches);
+      if (e.matches) {
+        fgRef.current?.pauseAnimation();
+      } else {
+        fgRef.current?.resumeAnimation();
+      }
+    };
+
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
+
+  const isVisible = useCallback((kind: GraphNodeKind) => visibleKinds.has(kind), [visibleKinds]);
   const resolve = (end: string | FGNode): FGNode | undefined =>
     typeof end === 'object' ? end : graphData.byId.get(end);
 
