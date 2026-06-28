@@ -4,6 +4,7 @@ import { Search, BookOpenText, FileText, Moon, Network, MessagesSquare, BarChart
 import { Kbd } from '@/components/ui';
 import { useUi } from '@/lib/store';
 import { useSearch, useTags } from '@/lib/queries';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import { cn } from '@/lib/utils';
 import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
 import { STATIC_COMMANDS, filterCommands } from './command-palette/commands';
@@ -25,8 +26,14 @@ export function CommandPalette() {
   const toggleTheme = useUi((s) => s.toggleTheme);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [q, setQ] = useState('');
   const [active, setActive] = useState(0);
+
+  // P0 a11y #714: without a trap, Tab moved focus to the inert page behind
+  // the open palette. Trap it inside the panel; the input keeps its own
+  // rAF autofocus, so the trap only handles Tab-wrap + focus restore.
+  useFocusTrap(panelRef, paletteOpen);
 
   useEffect(() => {
     if (paletteOpen) {
@@ -140,6 +147,7 @@ export function CommandPalette() {
       onClick={() => setPaletteOpen(false)}
     >
       <div
+        ref={panelRef}
         onClick={(e) => e.stopPropagation()}
         className="air-glass-strong w-[580px] max-w-[92vw] overflow-hidden"
       >

@@ -190,6 +190,7 @@ export function AiDraftPanel({ editor, onClose }: AiDraftPanelProps) {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
+            aria-label="Instrucción para redactar"
             placeholder="p. ej. Redacta una cláusula sobre protección de datos…"
             rows={3}
             className="w-full resize-none rounded-lg border border-border bg-bg px-3 py-2 text-[13.5px] outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-muted"

@@ -103,6 +103,7 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-label="Buscar una ley o artículo para citar"
             placeholder="Buscar una ley o artículo para citar…"
             className="flex-1 bg-transparent text-[14.5px] outline-none placeholder:text-muted"
           />

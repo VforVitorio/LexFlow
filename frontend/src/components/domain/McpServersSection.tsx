@@ -15,7 +15,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, Upload } from 'lucide-react';
-import { Badge, Button, Card, Switch, Tabs } from '@/components/ui';
+import { Badge, Button, Card, Switch, Tabs, useConfirm } from '@/components/ui';
 import {
   liveMcpServersApi,
   type McpServerCommand,
@@ -258,6 +258,7 @@ function BundleInstaller({ onInstalled }: { onInstalled: () => Promise<void> }) 
 
 function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Promise<void> }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const summary = renderCommand(row.command, t('mcp.noCommand'));
   const isBuiltin = row.kind === 'builtin';
 
@@ -277,7 +278,13 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
 
   const onDelete = async () => {
     if (isBuiltin) return;
-    if (!window.confirm(t('mcp.confirmDelete', { name: row.name }))) return;
+    const ok = await confirm({
+      title: t('common.delete'),
+      message: t('mcp.confirmDelete', { name: row.name }),
+      confirmLabel: t('common.delete'),
+      tone: 'danger',
+    });
+    if (!ok) return;
     try {
       await liveMcpServersApi.remove(row.name);
       await onChange();

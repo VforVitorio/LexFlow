@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render(): ReactNode {
     if (this.state.error) {
       return (
-        <div className="grid h-screen place-items-center bg-bg p-6">
+        <div className="grid h-dvh place-items-center bg-bg p-6">
           <div className="max-w-md rounded-xl border border-border bg-surface p-6 shadow-lg">
             <div className="flex items-center gap-2 text-danger">
               <AlertTriangle className="size-5" />

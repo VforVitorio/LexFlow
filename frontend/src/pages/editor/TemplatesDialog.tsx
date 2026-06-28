@@ -106,6 +106,7 @@ export function TemplatesDialog({ editor, onClose }: TemplatesDialogProps) {
                     saveCurrent();
                   }
                 }}
+                aria-label="Nombre de la plantilla"
                 placeholder="Guardar documento actual como…"
                 className="flex-1 rounded-lg border border-border bg-surface px-3 py-1.5 text-[13.5px] outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-muted"
               />

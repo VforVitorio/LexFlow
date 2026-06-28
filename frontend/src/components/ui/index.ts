@@ -4,6 +4,8 @@ export * from './Button';
 export * from './Callout';
 export * from './Card';
 export * from './Checkbox';
+export * from './ConfirmDialog';
+export { useConfirm, type ConfirmOptions } from '@/lib/confirm';
 export * from './Chip';
 export * from './Input';
 export * from './Kbd';
