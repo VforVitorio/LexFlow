@@ -135,70 +135,61 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
     return () => ro.disconnect();
   }, []);
 
+  // Viewport visibility, tracked in state so the single animation-control
+  // effect below can compose it with reduced-motion. CodeRabbit #725: two
+  // effects toggling `fgRef` independently let the last event win (a
+  // reduced-motion change could resume an offscreen graph, and vice-versa).
+  // Defaults to true so the graph animates until proven offscreen.
+  const [onScreen, setOnScreen] = useState(true);
+
   /**
-   * Pause the force-graph animation when the canvas leaves the viewport and
-   * resume it when it re-enters. Prevents the d3 simulation + canvas redraw
-   * loop from burning CPU/GPU while the graph is not visible (scrolled away
-   * or in a background tab).
-   *
-   * Risk: if the simulation has not yet settled when the element is scrolled
-   * out, the graph will be "frozen mid-layout" until it returns to view.
-   * In practice this is fine — the layout continues from where it left off
-   * on resume — but the first zoom-to-fit (`onEngineStop`) will only fire
-   * once the engine finally stops after the resume, not at the mid-layout
-   * pause point.
+   * Track whether the canvas is in the viewport. Only updates state — the
+   * combined effect below decides whether to actually pause/resume.
    */
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el || typeof IntersectionObserver === 'undefined') return;
-
-    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
-      const isIntersecting = entries[0].isIntersecting;
-      if (isIntersecting) {
-        fgRef.current?.resumeAnimation();
-      } else {
-        fgRef.current?.pauseAnimation();
-      }
-    };
-
-    const observer = new IntersectionObserver(handleIntersection, {
-      // Fire when the canvas is fully offscreen (threshold 0) or any part
-      // of it is back in view. Using root:null (viewport) intentionally.
-      threshold: 0,
-    });
+    const observer = new IntersectionObserver(
+      (entries) => setOnScreen(entries[0].isIntersecting),
+      // root:null (viewport); threshold 0 = toggle at fully offscreen / any re-entry.
+      { threshold: 0 },
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
   /**
-   * React to the user toggling reduced-motion in their OS settings at
-   * runtime. When reduced-motion turns on we pause the simulation (the
-   * animation stays frozen — the force engine already used warmupTicks to
-   * pre-settle when `reduced` was true at mount, so the positions are still
-   * valid). When reduced-motion turns off we resume so the graph can animate
-   * normally again.
-   *
-   * Note: changing `reduced` in state also causes a re-render, which updates
-   * `warmupTicks`/`cooldownTicks` on the `<ForceGraph2D>` element for any
-   * subsequent data changes, not just the current animation state.
+   * Track runtime changes to the OS reduced-motion preference. Only updates
+   * state; the combined effect applies it. Changing `reduced` also re-renders,
+   * updating `warmupTicks`/`cooldownTicks` on `<ForceGraph2D>` for subsequent
+   * data changes.
    */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setReduced(e.matches);
-      if (e.matches) {
-        fgRef.current?.pauseAnimation();
-      } else {
-        fgRef.current?.resumeAnimation();
-      }
-    };
-
+    const handleChange = (e: MediaQueryListEvent) => setReduced(e.matches);
     mql.addEventListener('change', handleChange);
     return () => mql.removeEventListener('change', handleChange);
   }, []);
+
+  /**
+   * Single source of truth for the force-graph animation: run it only when the
+   * canvas is on-screen AND reduced-motion is off. Composing both conditions
+   * here — rather than toggling `fgRef` from each listener — stops them from
+   * fighting (a reduced-motion change can't resume an offscreen graph).
+   *
+   * Risk: if the simulation hasn't settled when paused (scrolled away early),
+   * the layout freezes mid-computation and resumes from there on return; the
+   * first zoom-to-fit (`onEngineStop`) fires only once the engine finally stops.
+   */
+  useEffect(() => {
+    const shouldAnimate = onScreen && !reduced;
+    if (shouldAnimate) {
+      fgRef.current?.resumeAnimation();
+    } else {
+      fgRef.current?.pauseAnimation();
+    }
+  }, [onScreen, reduced]);
 
   const isVisible = useCallback((kind: GraphNodeKind) => visibleKinds.has(kind), [visibleKinds]);
   const resolve = (end: string | FGNode): FGNode | undefined =>

@@ -126,6 +126,9 @@ export function ChatPage() {
   // into a single rAF: cancel the pending frame and reschedule, then run
   // scrollIntoView inside the frame. Behaviour is unchanged for the common
   // case (new message/turn) — the rAF just prevents per-token scroll jank.
+  // `activeId` is a dep too (CodeRabbit #725): switching to a thread with the
+  // same message count and no active stream must still jump the reused scroll
+  // container to the bottom instead of keeping the previous thread's offset.
   useEffect(() => {
     if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
     scrollRafRef.current = requestAnimationFrame(() => {
@@ -138,7 +141,7 @@ export function ChatPage() {
         scrollRafRef.current = null;
       }
     };
-  }, [visible.length, stream]);
+  }, [visible.length, stream, activeId]);
 
   const startNewThread = async () => {
     // Audit #463 — replace the legacy "navigate to empty rail" stub
