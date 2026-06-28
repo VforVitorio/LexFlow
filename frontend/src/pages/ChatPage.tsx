@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send, Pencil, Trash2 } from 'lucide-react';
-import { Button, Chip, Kbd } from '@/components/ui';
+import { Button, Chip, Kbd, useConfirm } from '@/components/ui';
 import { ChatMessage } from '@/components/domain/ChatMessage';
 import { ModelChip } from '@/components/domain/ModelChip';
 import { CitationCard } from '@/components/domain/CitationCard';
@@ -30,6 +30,7 @@ const FALLBACK_THREAD_ID = 'eipd';
 export function ChatPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const defaultModel = useUi((s) => s.defaultModel);
   const setDefaultModel = useUi((s) => s.setDefaultModel);
   const qc = useQueryClient();
@@ -67,6 +68,15 @@ export function ChatPage() {
   const [pendingUser, setPendingUser] = useState<ChatMessageT | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Inline rename in the rail (a11y #714 — replaces the inaccessible
+  // `window.prompt`). When `editingId` is set the row swaps its title
+  // button for a focused text input.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (editingId) renameInputRef.current?.focus();
+  }, [editingId]);
 
   // Auto-select the first *available* model once /models loads. The store
   // no longer hardcodes a cloud model; if the persisted defaultModel isn't
@@ -125,10 +135,14 @@ export function ChatPage() {
     }
   };
 
-  const handleRename = async (threadId: string, currentTitle: string) => {
-    const next = window.prompt(t('chat.renamePrompt'), currentTitle);
-    if (next == null) return;
-    const trimmed = next.trim();
+  const startRename = (threadId: string, currentTitle: string) => {
+    setEditValue(currentTitle);
+    setEditingId(threadId);
+  };
+
+  const commitRename = async (threadId: string, currentTitle: string) => {
+    const trimmed = editValue.trim();
+    setEditingId(null);
     if (!trimmed || trimmed === currentTitle) return;
     try {
       await renameThread.mutateAsync({ threadId, title: trimmed });
@@ -139,7 +153,13 @@ export function ChatPage() {
   };
 
   const handleDelete = async (threadId: string, title: string) => {
-    if (!window.confirm(t('chat.deleteConfirm', { title }))) return;
+    const ok = await confirm({
+      title: t('common.delete'),
+      message: t('chat.deleteConfirm', { title }),
+      confirmLabel: t('common.delete'),
+      tone: 'danger',
+    });
+    if (!ok) return;
     try {
       await deleteThread.mutateAsync(threadId);
       if (activeId === threadId) navigate('/chat');
@@ -240,25 +260,40 @@ export function ChatPage() {
                     activeId === thread.id ? 'bg-primary-soft' : 'hover:bg-surface-2',
                   )}
                 >
-                  <button
-                    onClick={() => selectThread(thread.id)}
-                    className={cn(
-                      'min-w-0 flex-1 truncate text-left text-[13px]',
-                      activeId === thread.id && 'font-semibold text-indigo-700 dark:text-indigo-200',
-                    )}
-                  >
-                    {thread.title}
-                  </button>
+                  {editingId === thread.id ? (
+                    <input
+                      ref={renameInputRef}
+                      aria-label={t('chat.renameAria', { title: thread.title })}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => commitRename(thread.id, thread.title)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') commitRename(thread.id, thread.title);
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
+                      className="min-w-0 flex-1 rounded border border-indigo-400 bg-surface px-1.5 py-0.5 text-[13px] outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  ) : (
+                    <button
+                      onClick={() => selectThread(thread.id)}
+                      className={cn(
+                        'min-w-0 flex-1 truncate text-left text-[13px]',
+                        activeId === thread.id && 'font-semibold text-indigo-700 dark:text-indigo-200',
+                      )}
+                    >
+                      {thread.title}
+                    </button>
+                  )}
                   <button
                     aria-label={t('chat.renameAria', { title: thread.title })}
-                    className="rounded p-1 text-muted opacity-0 hover:text-fg group-hover:opacity-100"
-                    onClick={() => handleRename(thread.id, thread.title)}
+                    className="rounded p-1 text-muted opacity-0 hover:text-fg focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 group-hover:opacity-100"
+                    onClick={() => startRename(thread.id, thread.title)}
                   >
                     <Pencil className="size-3" />
                   </button>
                   <button
                     aria-label={t('chat.deleteAria', { title: thread.title })}
-                    className="rounded p-1 text-muted opacity-0 hover:text-rose-600 group-hover:opacity-100 dark:hover:text-rose-400"
+                    className="rounded p-1 text-muted opacity-0 hover:text-rose-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 group-hover:opacity-100 dark:hover:text-rose-400"
                     onClick={() => handleDelete(thread.id, thread.title)}
                   >
                     <Trash2 className="size-3" />

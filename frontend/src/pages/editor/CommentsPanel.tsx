@@ -92,6 +92,7 @@ export function CommentsPanel({ editor, docId, focusCommentId, onClose }: Commen
         ref={focusCommentId === c.id ? focusRef : undefined}
         value={c.note}
         onChange={(e) => updateNote(c.id, e.target.value)}
+        aria-label="Nota del comentario"
         placeholder="Escribe tu nota…"
         rows={2}
         className="w-full resize-none rounded border border-border bg-surface px-2 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-muted"

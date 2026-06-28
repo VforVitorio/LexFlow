@@ -19,7 +19,7 @@ import {
   Power,
 } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Avatar, Badge, Button, Card, Tabs } from '@/components/ui';
+import { Avatar, Badge, Button, Card, Tabs, useConfirm } from '@/components/ui';
 import { McpServersSection } from '@/components/domain/McpServersSection';
 import { ModelWizard } from '@/components/domain/ModelWizard';
 import { useTutorialRelaunch } from '@/components/domain/use-tutorial-relaunch';
@@ -352,6 +352,7 @@ function formatModelSize(bytes: number | null): string {
  */
 function InstalledModelsCard() {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const { data: installed = [], isLoading, refetch } = useInstalledModels();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -377,7 +378,13 @@ function InstalledModelsCard() {
   };
 
   const remove = async (name: string) => {
-    if (!window.confirm(t('settings.models.installedDeleteConfirm', { name }))) return;
+    const ok = await confirm({
+      title: t('common.delete'),
+      message: t('settings.models.installedDeleteConfirm', { name }),
+      confirmLabel: t('common.delete'),
+      tone: 'danger',
+    });
+    if (!ok) return;
     setBusy(name);
     try {
       await api.models.remove(name);
@@ -732,6 +739,7 @@ function ApiKeysCard() {
 
 function ApiKeyRow({ row, onChange }: { row: SecretStatusItem; onChange: () => Promise<void> }) {
   const { t } = useTranslation();
+  const confirm = useConfirm();
   const [draft, setDraft] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -756,7 +764,13 @@ function ApiKeyRow({ row, onChange }: { row: SecretStatusItem; onChange: () => P
   };
 
   const remove = async () => {
-    if (!window.confirm(t('settings.models.apiKeyConfirmDelete', { provider: row.provider }))) return;
+    const ok = await confirm({
+      title: t('common.delete'),
+      message: t('settings.models.apiKeyConfirmDelete', { provider: row.provider }),
+      confirmLabel: t('common.delete'),
+      tone: 'danger',
+    });
+    if (!ok) return;
     setBusy(true);
     try {
       await liveSecretsApi.remove(row.provider);

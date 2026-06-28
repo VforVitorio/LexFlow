@@ -4,6 +4,7 @@ import { LeftRail } from './LeftRail';
 import { BottomTabBar } from './BottomTabBar';
 import { TopBar } from './TopBar';
 import { CommandPalette } from './CommandPalette';
+import { ConfirmProvider } from '@/components/ui';
 import { HelpDrawer } from '@/components/domain/HelpDrawer';
 import { useUi } from '@/lib/store';
 import { useHotkey, useGoToHotkey } from '@/lib/hotkeys';
@@ -31,6 +32,7 @@ export function AppShell() {
   });
 
   return (
+    <ConfirmProvider>
     <div className="flex h-full w-full overflow-hidden bg-bg text-fg">
       <a href="#main" className="skip-link">Saltar al contenido principal</a>
       <LeftRail />
@@ -55,5 +57,6 @@ export function AppShell() {
       {/* #132 — contextual help drawer (desktop-only floating ?). */}
       <HelpDrawer />
     </div>
+    </ConfirmProvider>
   );
 }

@@ -209,9 +209,6 @@ export function HelpDrawer() {
 
       {open && (
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('help.dialogAria', { title: t(content.title) })}
           className="fixed inset-0 z-[50] bg-black/30 backdrop-blur-[2px]"
           onClick={(e) => {
             // Click on the backdrop dismisses; click inside the panel
@@ -221,6 +218,9 @@ export function HelpDrawer() {
         >
           <div
             ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('help.dialogAria', { title: t(content.title) })}
             tabIndex={-1}
             className={cn(
               'absolute right-0 top-0 h-full w-full max-w-md bg-bg shadow-2xl',
