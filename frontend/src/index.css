@@ -132,7 +132,11 @@
    *                        highlight that catches the eye.
    */
   .air-glass {
-    @apply rounded-xl border border-black/5 bg-surface/60 shadow-xl backdrop-blur-xl;
+    /* backdrop-blur-xl was downgraded to backdrop-blur-sm (~4px) for perf:
+     * always-on graph overlays (GraphPage legend/controls) paid a constant
+     * GPU cost for a level of blur only modals need. Light blur is still
+     * readable over the graph canvas. Modals use .air-glass-strong. */
+    @apply rounded-xl border border-black/5 bg-surface/60 shadow-xl backdrop-blur-sm;
   }
   [data-theme="dark"] .air-glass {
     @apply border-white/10;

@@ -68,6 +68,10 @@ export function ChatPage() {
   const [pendingUser, setPendingUser] = useState<ChatMessageT | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // Scroll-to-bottom rAF ref: coalesces per-token scroll calls during SSE
+  // streaming into a single frame so the scroll stays smooth. The id lets
+  // us cancel a queued frame on cleanup (avoids calling into an unmounted DOM).
+  const scrollRafRef = useRef<number | null>(null);
   // Inline rename in the rail (a11y #714 — replaces the inaccessible
   // `window.prompt`). When `editingId` is set the row swaps its title
   // button for a focused text input.
@@ -117,9 +121,27 @@ export function ChatPage() {
     [msgs],
   );
 
+  // Scroll to bottom whenever visible messages change or a stream token
+  // arrives. `stream` fires on every SSE token, so we coalesce rapid calls
+  // into a single rAF: cancel the pending frame and reschedule, then run
+  // scrollIntoView inside the frame. Behaviour is unchanged for the common
+  // case (new message/turn) — the rAF just prevents per-token scroll jank.
+  // `activeId` is a dep too (CodeRabbit #725): switching to a thread with the
+  // same message count and no active stream must still jump the reused scroll
+  // container to the bottom instead of keeping the previous thread's offset.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView?.({ block: 'end' });
-  }, [visible.length, stream]);
+    if (scrollRafRef.current !== null) cancelAnimationFrame(scrollRafRef.current);
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      bottomRef.current?.scrollIntoView?.({ block: 'end' });
+    });
+    return () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
+  }, [visible.length, stream, activeId]);
 
   const startNewThread = async () => {
     // Audit #463 — replace the legacy "navigate to empty rail" stub

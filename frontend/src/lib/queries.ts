@@ -63,6 +63,7 @@ export function useVersions(id: string | undefined) {
     queryKey: qk.laws.versions(id || ''),
     queryFn: () => api.laws.versions(id!),
     enabled: !!id,
+    staleTime: 30 * 60_000,
   });
 }
 
@@ -192,7 +193,11 @@ export function useHybridSearch(q: string, limit = 10) {
 // ─── Chat ────────────────────────────────────────────────────────────────
 
 export function useChatThreads() {
-  return useQuery<ChatThread[]>({ queryKey: qk.chatThreads(), queryFn: () => api.chat.threads() });
+  return useQuery<ChatThread[]>({
+    queryKey: qk.chatThreads(),
+    queryFn: () => api.chat.threads(),
+    staleTime: 5 * 60_000,
+  });
 }
 
 export function useChatThread(id: string | undefined) {
@@ -200,6 +205,11 @@ export function useChatThread(id: string | undefined) {
     queryKey: qk.chatThread(id || ''),
     queryFn: () => api.chat.thread(id!),
     enabled: !!id,
+    // Invalidated explicitly by send/create/delete mutations — no need to
+    // re-fetch on every revisit. gcTime keeps the thread in cache for 10 min
+    // after the component unmounts so switching threads is instant.
+    staleTime: Infinity,
+    gcTime: 10 * 60_000,
   });
 }
 
@@ -266,7 +276,11 @@ export function useRunSync() {
 }
 
 export function useDashboard(preset: 'compliance' | 'analytics') {
-  return useQuery<DashboardData>({ queryKey: qk.dashboard(preset), queryFn: () => api.dashboards.metrics(preset) });
+  return useQuery<DashboardData>({
+    queryKey: qk.dashboard(preset),
+    queryFn: () => api.dashboards.metrics(preset),
+    staleTime: 10 * 60_000,
+  });
 }
 
 // ─── System ──────────────────────────────────────────────────────────────
@@ -295,13 +309,14 @@ export function useWarmup() {
 /**
  * Fetch what changed in the corpus since *since* commit (#228).
  * Used by the WhatsNewPanel inside SplashGate. Single fetch, no polling.
- * Result is stale immediately so a re-mount always refetches.
+ * Result stays fresh for 5 minutes so the warmup splash does not refetch
+ * it on every re-mount within the same session.
  */
 export function useWhatsNew(since: string | null) {
   return useQuery<WhatsNewStatus>({
     queryKey: ['system', 'whats-new', since ?? ''] as const,
     queryFn: () => api.system.whatsNew(since),
-    staleTime: 0,
+    staleTime: 5 * 60_000,
   });
 }
 

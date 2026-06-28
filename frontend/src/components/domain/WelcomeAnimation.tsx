@@ -20,6 +20,7 @@
  * * Phrase                → ``WELCOME_TEXT`` (also update the aria-label).
  * * Font                  → ``@/assets/fonts/caveat.ttf`` (OFL, bundled).
  * * Stroke weight / size  → ``GLYPH_SIZE`` + ``STROKE_WIDTH`` (font units).
+ * * Pen smoothness        → ``PEN_SAMPLES`` (higher = smoother but more memory).
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -38,6 +39,15 @@ const SAFETY_MS = DRAW_MS + 1800;
 const GLYPH_SIZE = 120;
 const STROKE_WIDTH = 2.4;
 const PAD = 16;
+
+// Number of {x, y} positions pre-sampled along the path before the animation
+// starts. Calling getPointAtLength() every frame forces a layout-equivalent SVG
+// measurement on each tick (perf bug). Instead we sample the path ONCE here and
+// look up by index in the per-frame callback — zero layout cost per frame.
+//
+// 600 samples at 60 fps / 3 s = ~180 frames → ~3 samples per rendered frame,
+// so interpolation is visually indistinguishable from the continuous version.
+const PEN_SAMPLES = 600;
 
 function prefersReducedMotion(): boolean {
   try {
@@ -129,14 +139,22 @@ export default function WelcomeAnimation({ onContinue }: Props) {
 
     let ctx: gsap.Context | undefined;
     try {
-      // Real geometry length is for the pen tip; the stroke dash runs in the
-      // normalized pathLength=1 space set on the element, so dash values are 0..1.
+      // Real geometry length is needed to pre-sample pen positions; the stroke
+      // dash runs in the normalized pathLength=1 space set on the element, so
+      // dash values are 0..1 while the pen samples are in real SVG coordinates.
       const length = path.getTotalLength();
+
+      // Pre-sample PEN_SAMPLES+1 points along the path ONCE here, before the
+      // animation starts. The per-frame callback then looks up by index — no
+      // getPointAtLength() calls during the animation (avoids per-frame layout).
+      const penSamples = buildPenSamples(path, length, PEN_SAMPLES);
+
       ctx = gsap.context(() => {
         gsap.set(path, { strokeDasharray: 1, strokeDashoffset: 1, fillOpacity: 0 });
-        // Park the pen on the first point and reveal it, so it rides the stroke
-        // from the start instead of flashing at the viewBox origin.
-        const start = path.getPointAtLength(0);
+        // Park the pen on the first pre-sampled point and reveal it, so it
+        // rides the stroke from the start instead of flashing at the viewBox
+        // origin. penSamples[0] is always the point at distance 0.
+        const start = penSamples[0];
         gsap.set(penRef.current, { attr: { cx: start.x, cy: start.y }, opacity: 1 });
         const tl = gsap.timeline({
           onComplete: () => {
@@ -148,7 +166,7 @@ export default function WelcomeAnimation({ onContinue }: Props) {
           strokeDashoffset: 0,
           duration: DRAW_MS / 1000,
           ease: 'power1.inOut',
-          onUpdate: () => movePenToStrokeTip(path, penRef.current, length),
+          onUpdate: () => movePenToStrokeTip(path, penRef.current, penSamples),
         });
         // Ink settles in behind the pen, then the pen lifts.
         tl.to(path, { fillOpacity: 1, duration: 0.5, ease: 'power1.out' }, '-=0.3');
@@ -253,14 +271,53 @@ export default function WelcomeAnimation({ onContinue }: Props) {
   );
 }
 
-/** Park the pen-tip dot on the point the stroke has reached this frame. */
-function movePenToStrokeTip(path: SVGPathElement, pen: SVGCircleElement | null, length: number): void {
-  if (!pen) return;
-  // strokeDashoffset is normalized to pathLength=1, so it runs 1 → 0; map the
-  // drawn fraction back onto the real geometry length for the tip position.
+interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * Pre-sample the SVG path into a fixed-size array of {x, y} points.
+ *
+ * Calling getPointAtLength() on every animation frame forces the browser to
+ * perform a layout-equivalent geometry measurement each tick — effectively a
+ * forced reflow inside the GSAP onUpdate callback. By sampling the full path
+ * once up front we pay that cost exactly once and then look up positions in
+ * O(1) per frame with no layout involvement.
+ *
+ * The caller passes the real geometry length (from getTotalLength()) so we
+ * distribute samples uniformly across the actual path, not just 0..1.
+ */
+function buildPenSamples(path: SVGPathElement, length: number, count: number): Point[] {
+  const points: Point[] = [];
+  for (let i = 0; i <= count; i++) {
+    const distance = (i / count) * length;
+    const pt = path.getPointAtLength(distance);
+    points.push({ x: pt.x, y: pt.y });
+  }
+  return points;
+}
+
+/**
+ * Park the pen-tip dot on the point the stroke has reached this frame.
+ *
+ * Reads the GSAP-managed strokeDashoffset (cheap — no layout), converts the
+ * normalized 1→0 offset into a 0..1 progress fraction, then looks up the
+ * nearest pre-sampled point. No getPointAtLength() call here — zero per-frame
+ * layout cost.
+ */
+function movePenToStrokeTip(
+  path: SVGPathElement,
+  pen: SVGCircleElement | null,
+  penSamples: Point[],
+): void {
+  if (!pen || penSamples.length === 0) return;
+  // strokeDashoffset runs 1 → 0; (1 - offset) is the fraction drawn so far.
   const offset = Number(gsap.getProperty(path, 'strokeDashoffset')) || 0;
-  const drawn = (1 - offset) * length;
-  const point = path.getPointAtLength(drawn);
+  const progress = Math.min(1, Math.max(0, 1 - offset));
+  // Map progress to the nearest index in the pre-sampled array.
+  const index = Math.round(progress * (penSamples.length - 1));
+  const point = penSamples[index];
   pen.setAttribute('cx', String(point.x));
   pen.setAttribute('cy', String(point.y));
 }

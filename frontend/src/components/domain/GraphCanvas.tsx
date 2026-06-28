@@ -26,7 +26,7 @@
  * * Forces         → the `d3Force` tweaks in the mount effect.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 
 import { GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, GRAPH_PRIMARY } from '@/lib/graph-colors';
@@ -92,7 +92,10 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | undefined>(undefined);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const reduced = useMemo(prefersReducedMotion, []);
+  // `reduced` starts from the current OS preference but updates at runtime
+  // when the user toggles reduced-motion in system settings (see the
+  // matchMedia change-listener effect below).
+  const [reduced, setReduced] = useState(prefersReducedMotion);
 
   // Stable across selection + filter changes (depends on `data` only) so the
   // simulation never restarts on a click or a chip toggle.
@@ -132,7 +135,63 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
     return () => ro.disconnect();
   }, []);
 
-  const isVisible = (kind: GraphNodeKind) => visibleKinds.has(kind);
+  // Viewport visibility, tracked in state so the single animation-control
+  // effect below can compose it with reduced-motion. CodeRabbit #725: two
+  // effects toggling `fgRef` independently let the last event win (a
+  // reduced-motion change could resume an offscreen graph, and vice-versa).
+  // Defaults to true so the graph animates until proven offscreen.
+  const [onScreen, setOnScreen] = useState(true);
+
+  /**
+   * Track whether the canvas is in the viewport. Only updates state — the
+   * combined effect below decides whether to actually pause/resume.
+   */
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(
+      (entries) => setOnScreen(entries[0].isIntersecting),
+      // root:null (viewport); threshold 0 = toggle at fully offscreen / any re-entry.
+      { threshold: 0 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  /**
+   * Track runtime changes to the OS reduced-motion preference. Only updates
+   * state; the combined effect applies it. Changing `reduced` also re-renders,
+   * updating `warmupTicks`/`cooldownTicks` on `<ForceGraph2D>` for subsequent
+   * data changes.
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handleChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
+
+  /**
+   * Single source of truth for the force-graph animation: run it only when the
+   * canvas is on-screen AND reduced-motion is off. Composing both conditions
+   * here — rather than toggling `fgRef` from each listener — stops them from
+   * fighting (a reduced-motion change can't resume an offscreen graph).
+   *
+   * Risk: if the simulation hasn't settled when paused (scrolled away early),
+   * the layout freezes mid-computation and resumes from there on return; the
+   * first zoom-to-fit (`onEngineStop`) fires only once the engine finally stops.
+   */
+  useEffect(() => {
+    const shouldAnimate = onScreen && !reduced;
+    if (shouldAnimate) {
+      fgRef.current?.resumeAnimation();
+    } else {
+      fgRef.current?.pauseAnimation();
+    }
+  }, [onScreen, reduced]);
+
+  const isVisible = useCallback((kind: GraphNodeKind) => visibleKinds.has(kind), [visibleKinds]);
   const resolve = (end: string | FGNode): FGNode | undefined =>
     typeof end === 'object' ? end : graphData.byId.get(end);
 
