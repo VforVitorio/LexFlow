@@ -3034,6 +3034,21 @@
   .landing-root .lf-prev-chat-source { opacity: 1; transform: none; transition: none; }
 }
 
+/* ChatPreview — mobile reflow: single column, thread only */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-chat {
+    grid-template-columns: 1fr;
+  }
+  .landing-root .lf-prev-chat-rail,
+  .landing-root .lf-prev-chat-sources {
+    display: none;
+  }
+  .landing-root .lf-prev-chat-main {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 /* ---------- DashboardPreview --------------------------------------------- */
 .landing-root .lf-prev-dash { padding: 14px; }
 .landing-root .lf-prev-dash-head {
