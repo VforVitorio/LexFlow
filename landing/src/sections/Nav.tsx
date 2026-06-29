@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LandingBrandMark } from '../mocks/LandingBrandMark';
-import { GH_URL, IconArrow, IconGitHub, IconMoon, IconSun } from '../icons';
+import { GH_URL, IconArrow, IconClose, IconGitHub, IconMenu, IconMoon, IconSun } from '../icons';
 import { useUi } from '@/lib/theme';
 import { SUPPORTED_LANGS, type Lang } from '@/i18n';
 
@@ -48,6 +48,9 @@ export function Nav() {
   const [active, setActive] = useState<NavSection | null>(null);
   const [rect, setRect] = useState<UnderlineRect>(HIDDEN);
   const [scrolled, setScrolled] = useState(false);
+  // #716 — mobile menu. The centre links + EN/ES seg + "Para devs" link are
+  // display:none ≤720px; a hamburger reveals them in a slide-down panel.
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -88,6 +91,21 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Close the mobile menu on Escape or once the viewport grows past the
+  // mobile breakpoint. Listeners only live while the menu is open.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    const onResize = () => { if (window.innerWidth > 720) close(); };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [menuOpen]);
+
   // Re-measure the underline on resize so it never drifts off the link
   // (fonts loading late, viewport rotation, etc.).
   useEffect(() => {
@@ -118,19 +136,20 @@ export function Nav() {
               key={id}
               href={`#${id}`}
               ref={(el) => { linkRefs.current[id] = el; }}
-              aria-current={active === id ? 'true' : undefined}
+              aria-current={active === id ? 'page' : undefined}
               className={active === id ? 'active' : undefined}
             >
               {t(`nav.${NAV_LABEL_KEY[id]}`)}
             </a>
           ))}
-          {/* The moving underline. One span shared across every link; we
-              animate its left + width instead of toggling a border per item. */}
+          {/* The moving underline. One span shared across every link; it has a
+              fixed 100px base width and we animate transform (translateX +
+              scaleX) only, so the slide runs on the compositor — never layout.
+              See .nav-underline in landing.css. */}
           <span
             className="nav-underline"
             style={{
-              transform: `translateX(${rect.left}px)`,
-              width: rect.width,
+              transform: `translateX(${rect.left}px) scaleX(${rect.width / 100})`,
               opacity: rect.opacity,
             }}
             aria-hidden="true"
@@ -139,8 +158,8 @@ export function Nav() {
         <div className="nav-spacer" />
         <div className="nav-actions">
           <div className="seg" role="group" aria-label="Language">
-            <button type="button" className={currentLang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
-            <button type="button" className={currentLang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>
+            <button type="button" aria-pressed={currentLang === 'en'} className={currentLang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
+            <button type="button" aria-pressed={currentLang === 'es'} className={currentLang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>
           </div>
           <button
             type="button"
@@ -150,7 +169,7 @@ export function Nav() {
           >
             {theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
-          <a className="icon-btn" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub">
+          <a className="icon-btn nav-gh" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub">
             <IconGitHub />
           </a>
           {/* #186 — "Para devs" sidekick. Lives in the actions row (not in
@@ -170,6 +189,59 @@ export function Nav() {
             target="_blank"
             rel="noreferrer"
             style={{ marginLeft: 4 }}
+          >
+            {t('nav.cta')}
+            <IconArrow />
+          </a>
+          {/* Hamburger — only rendered ≤720px (CSS). Toggles the slide-down. */}
+          <button
+            type="button"
+            className="icon-btn nav-burger"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={menuOpen}
+            aria-controls="nav-mobile-panel"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? <IconClose /> : <IconMenu />}
+          </button>
+        </div>
+      </div>
+      {/* Mobile slide-down menu (#716). Restores the centre links, EN/ES seg
+          and "Para devs" link for touch. Compositor-safe (transform+opacity);
+          `visibility` keeps the links out of the tab order when closed. */}
+      <div id="nav-mobile-panel" className="nav-mobile" data-open={menuOpen || undefined}>
+        <div className="lf-container">
+          <nav className="nav-mobile-links" aria-label={currentLang === 'es' ? 'Secciones' : 'Sections'}>
+            {NAV_SECTIONS.map((id) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                aria-current={active === id ? 'page' : undefined}
+                className={active === id ? 'active' : undefined}
+                onClick={() => setMenuOpen(false)}
+              >
+                {t(`nav.${NAV_LABEL_KEY[id]}`)}
+              </a>
+            ))}
+            <a href="#para-devs" onClick={() => setMenuOpen(false)}>
+              {t('nav.forDevs')}
+            </a>
+          </nav>
+          <div className="nav-mobile-row">
+            <div className="seg" role="group" aria-label="Language">
+              <button type="button" aria-pressed={currentLang === 'en'} className={currentLang === 'en' ? 'active' : ''} onClick={() => { setLang('en'); setMenuOpen(false); }}>EN</button>
+              <button type="button" aria-pressed={currentLang === 'es'} className={currentLang === 'es' ? 'active' : ''} onClick={() => { setLang('es'); setMenuOpen(false); }}>ES</button>
+            </div>
+            <a className="icon-btn" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub" onClick={() => setMenuOpen(false)}>
+              <IconGitHub />
+            </a>
+          </div>
+          <a
+            className="btn btn-primary nav-mobile-cta"
+            href={GH_URL}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => setMenuOpen(false)}
           >
             {t('nav.cta')}
             <IconArrow />
