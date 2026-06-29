@@ -972,45 +972,6 @@
   50% { opacity: 1; transform: scale(1.1); }
 }
 
-/* ─── Hero graph node animations ─── */
-.landing-root .lf-graph-node-halo {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: lf-node-breath 4s ease-in-out infinite;
-}
-.landing-root .lf-graph-node-halo.d1 { animation-delay: 0.7s; }
-.landing-root .lf-graph-node-halo.d2 { animation-delay: 1.4s; }
-.landing-root .lf-graph-node-halo.d3 { animation-delay: 2.1s; }
-.landing-root .lf-graph-node-halo.d4 { animation-delay: 2.8s; }
-
-@keyframes lf-node-breath {
-  0%, 100% { opacity: 0.10; transform: scale(0.92); }
-  50%      { opacity: 0.28; transform: scale(1.15); }
-}
-
-.landing-root .lf-graph-edge {
-  stroke-dasharray: 120;
-  stroke-dashoffset: 0;
-  animation: lf-edge-flow 6s linear infinite;
-}
-.landing-root .lf-graph-edge.d1 { animation-delay: -1s; }
-.landing-root .lf-graph-edge.d2 { animation-delay: -2s; }
-.landing-root .lf-graph-edge.d3 { animation-delay: -3s; }
-.landing-root .lf-graph-edge.d4 { animation-delay: -4s; }
-.landing-root .lf-graph-edge.d5 { animation-delay: -5s; }
-
-@keyframes lf-edge-flow {
-  0%   { stroke-dashoffset: 240; }
-  100% { stroke-dashoffset: 0; }
-}
-
-.landing-root .lf-float { animation: lf-float-in 600ms cubic-bezier(.2,.7,.3,1) both; }
-.landing-root .lf-float-br { animation-delay: 200ms; }
-@keyframes lf-float-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 @media (max-width: 720px) {
   .landing-root .phase { grid-template-columns: 1fr; gap: 8px; padding: 16px 20px; }
   .landing-root .phase-num { font-size: 11px; }
@@ -1034,7 +995,9 @@
   transform: translateX(-50%);
   width: 600px; height: 600px;
   background: radial-gradient(circle, hsl(var(--violet-500) / 0.18), transparent 60%);
-  filter: blur(40px);
+  /* #716 — a 40px blur on a 600×600 layer is an expensive paint. The radial
+     gradient is already soft, so 20px reads identically at far less cost. */
+  filter: blur(20px);
   pointer-events: none;
 }
 [data-theme='dark'] .landing-root .cta-block::before {
@@ -1152,41 +1115,6 @@
 /* ─── Mockup styles (was mocks.css) ─── */
 
 /* Hero floating chips */
-.landing-root .lf-float {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: hsl(var(--surface));
-  border: 1px solid hsl(var(--border));
-  border-radius: 12px;
-  box-shadow: 0 8px 24px -8px hsl(232 30% 10% / 0.18);
-  font-size: 12px;
-  z-index: 2;
-}
-[data-theme='dark'] .landing-root .lf-float {
-  background: hsl(var(--surface) / 0.95);
-  backdrop-filter: blur(6px);
-}
-.landing-root .lf-float-tl { top: 6%; left: -8%; }
-.landing-root .lf-float-br { bottom: 8%; right: -4%; }
-.landing-root .lf-float-dot {
-  width: 8px; height: 8px; border-radius: 999px;
-  box-shadow: 0 0 12px currentColor;
-}
-.landing-root .lf-float-k { font-weight: 600; color: hsl(var(--fg)); font-size: 13px; }
-.landing-root .lf-float-v { font-size: 11px; color: hsl(var(--muted-fg)); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
-
-@media (max-width: 1100px) {
-  .landing-root .lf-float-tl { left: -2%; }
-  .landing-root .lf-float-br { right: -2%; }
-}
-@media (max-width: 720px) {
-  .landing-root .lf-float-tl,
-  .landing-root .lf-float-br { display: none; }
-}
-
 /* Generic mock container */
 .landing-root .lf-mock {
   position: absolute;
@@ -1222,23 +1150,6 @@
   color: hsl(var(--muted-fg));
   font-family: 'JetBrains Mono', monospace;
 }
-.landing-root .lf-mock-legend {
-  position: absolute;
-  bottom: 10px; left: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  font-size: 10.5px;
-  color: hsl(var(--muted-fg));
-  background: hsl(var(--surface) / 0.85);
-  backdrop-filter: blur(4px);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid hsl(var(--border));
-  z-index: 2;
-}
-.landing-root .lf-mock-legend span { display: inline-flex; align-items: center; gap: 5px; }
-.landing-root .lf-mock-legend i { width: 7px; height: 7px; border-radius: 999px; display: inline-block; }
 
 /* ─── Chat mock ─── */
 .landing-root .lf-mock-chat { padding: 0; background: hsl(var(--surface)); }
@@ -1264,6 +1175,8 @@
 .landing-root .lf-model-chip code { font-size: 11px; }
 .landing-root .lf-dot { width: 6px; height: 6px; border-radius: 999px; }
 .landing-root .lf-dot-g { background: hsl(152, 60%, 50%); box-shadow: 0 0 8px hsl(152, 60%, 50%); }
+.landing-root .lf-dot-v { background: hsl(var(--violet-400)); box-shadow: 0 0 8px hsl(var(--violet-400)); }
+.landing-root .lf-dot-b { background: hsl(var(--blue-500)); box-shadow: 0 0 8px hsl(var(--blue-500)); }
 .landing-root .lf-chat-meta { font-size: 11px; color: hsl(var(--muted-fg)); font-family: 'JetBrains Mono', monospace; }
 
 .landing-root .lf-chat-body {
@@ -1864,23 +1777,107 @@
   /* unmistakable on light theme.                                           */
   bottom: -4px;
   height: 3px;
+  /* Fixed 100px reference width: Nav.tsx writes transform: scaleX(width/100). */
+  /* Animating transform (not width) keeps the slide on the compositor — no    */
+  /* per-frame layout. 100px ≈ typical link width so scaleX stays near 1 and   */
+  /* the pill's border-radius barely distorts. */
+  width: 100px;
+  transform-origin: left center;
   border-radius: 999px;
   background: hsl(var(--violet-500));
   box-shadow: 0 0 10px hsl(var(--violet-500) / 0.7);
   transition:
     transform var(--dur-quick) var(--ease-out),
-    width var(--dur-quick) var(--ease-out),
     opacity var(--dur-quick) var(--ease-out);
   pointer-events: none;
   /* Default transform so the span doesn't visually jump on first measure. */
-  transform: translateX(0);
+  transform: translateX(0) scaleX(0);
 }
-.landing-root .nav-links a[aria-current='true'],
+.landing-root .nav-links a[aria-current='location'],
 .landing-root .nav-links a.active {
   color: hsl(var(--fg));
 }
 @media (prefers-reduced-motion: reduce) {
   .landing-root .nav-links .nav-underline { transition: opacity var(--dur-micro) var(--ease-out); }
+}
+
+/* -------------------------------------------------------------------------- */
+/* #716 — mobile slide-down menu                                              */
+/* -------------------------------------------------------------------------- */
+/* Hidden entirely on desktop. The burger + panel only matter ≤720px, where   */
+/* the centre nav-links, EN/ES seg and "Para devs" link are display:none.     */
+.landing-root .nav-burger { display: none; }
+.landing-root .nav-mobile { display: none; }
+
+@media (max-width: 720px) {
+  .landing-root .nav-burger { display: inline-flex; }
+
+  .landing-root .nav-mobile {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: 8px 0 16px;
+    background: hsl(var(--bg));
+    border-bottom: 1px solid hsl(var(--border));
+    box-shadow: 0 14px 28px -18px hsl(232 40% 5% / 0.5);
+    /* Compositor-safe: animate transform + opacity; toggle visibility so the
+       closed links leave the tab order without a `hidden` attr (which would
+       kill the transition). */
+    transform: translateY(-8px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      transform var(--dur-quick) var(--ease-out),
+      opacity var(--dur-quick) var(--ease-out),
+      visibility var(--dur-quick) step-end;
+  }
+  .landing-root .nav-mobile[data-open] {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition:
+      transform var(--dur-quick) var(--ease-out),
+      opacity var(--dur-quick) var(--ease-out),
+      visibility 0s;
+  }
+  .landing-root .nav-mobile-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .landing-root .nav-mobile-links a {
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    color: hsl(var(--muted-fg));
+  }
+  .landing-root .nav-mobile-links a:hover,
+  .landing-root .nav-mobile-links a.active {
+    background: hsl(var(--surface));
+    color: hsl(var(--fg));
+  }
+  .landing-root .nav-mobile-row {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .landing-root .nav-mobile-cta {
+    margin-top: 12px;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .nav-mobile,
+  .landing-root .nav-mobile[data-open] {
+    transition: visibility var(--dur-quick) step-end;
+  }
+  .landing-root .nav-mobile[data-open] { transition: visibility 0s; }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -2004,25 +2001,6 @@
 .landing-root .hiw-static-card p { font-size: 14px; line-height: 1.55; }
 
 /* -------------------------------------------------------------------------- */
-/* Hero graph — floating card tweaks for the new hover-driven tooltip         */
-/* -------------------------------------------------------------------------- */
-/* `.lf-float` defines the chrome; this class adds the smooth in/out fade so   */
-/* swapping between nodes re-keys the card without a hard pop.                 */
-
-.landing-root .lf-graph-card {
-  animation: lf-graph-card-in 320ms var(--ease-out, cubic-bezier(0.2, 0, 0, 1)) both;
-  pointer-events: none;
-  z-index: 3;
-}
-@keyframes lf-graph-card-in {
-  from { opacity: 0; transform: translate(-50%, calc(-100% + 6px)); }
-  to   { opacity: 1; transform: translate(-50%, -100%);             }
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-root .lf-graph-card { animation: none; }
-}
-
-/* -------------------------------------------------------------------------- */
 /* Hero typography — gentle colour bump on the lead headline + eyebrows       */
 /* -------------------------------------------------------------------------- */
 /* The previous lead colour was almost flat fg. Now it carries the indigo→fg   */
@@ -2052,7 +2030,11 @@
   .landing-root .nav-links { display: none; }
   .landing-root .nav-actions { gap: 4px; }
   .landing-root .nav-actions .seg { display: none; }
-  .landing-root .nav-actions .btn-primary { padding: 0 12px; font-size: 13px; }
+  /* #716 — declutter the mobile bar to brand + theme + burger. The CTA,
+     GitHub link and EN/ES seg move into the slide-down panel so nothing
+     overflows the 56px bar or overlaps the hamburger. */
+  .landing-root .nav-actions .btn-primary,
+  .landing-root .nav-actions .nav-gh { display: none; }
 
   /* Hero: shrink the eyebrow and tighten the meta row so the H1 keeps      */
   /* breathing room. Hide the secondary CTA's label, keep the icon.         */
@@ -2197,14 +2179,13 @@
   background: hsl(var(--surface));
   transition: border-color 0.15s ease;
 }
-.landing-root .faq-item--open {
+.landing-root .faq-item[open] {
   border-color: hsl(var(--violet-500) / 0.5);
 }
-[data-theme='light'] .landing-root .faq-item--open {
+[data-theme='light'] .landing-root .faq-item[open] {
   border-color: hsl(var(--violet-600) / 0.4);
 }
 .landing-root .faq-question {
-  all: unset;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2215,7 +2196,10 @@
   color: hsl(var(--fg));
   cursor: pointer;
   box-sizing: border-box;
+  /* Drop the native disclosure triangle — the +/− chevron replaces it. */
+  list-style: none;
 }
+.landing-root .faq-question::-webkit-details-marker { display: none; }
 .landing-root .faq-question:focus-visible {
   outline: 2px solid hsl(var(--violet-500));
   outline-offset: -2px;
@@ -2228,6 +2212,8 @@
   line-height: 1;
   color: hsl(var(--muted-fg));
 }
+.landing-root .faq-chevron::before { content: '+'; }
+.landing-root .faq-item[open] .faq-chevron::before { content: '−'; }
 .landing-root .faq-answer {
   margin: 0;
   padding: 0 20px 16px;
@@ -3123,6 +3109,8 @@
 .landing-root .lf-prev-graph-node:focus { outline: none; }
 .landing-root .lf-prev-graph-tooltip {
   position: absolute;
+  left: 0;
+  top: 0;
   pointer-events: none;
   padding: 8px 12px;
   background: hsl(var(--surface-2));
@@ -3132,7 +3120,9 @@
   font-size: 12px;
   min-width: 180px;
   max-width: 240px;
-  transition: left var(--dur-quick) var(--ease-out), top var(--dur-quick) var(--ease-out);
+  /* GraphPreview writes transform: translate(x,y); animate transform, not */
+  /* left/top, so the tooltip snap between nodes stays on the compositor.  */
+  transition: transform var(--dur-quick) var(--ease-out);
 }
 .landing-root .lf-prev-graph-tooltip-label {
   font-family: 'Space Grotesk', sans-serif;

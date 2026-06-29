@@ -54,8 +54,8 @@ export function Hero() {
         </div>
         <div className="hero-meta">
           <span><span className="lf-dot lf-dot-g" /> {t('hero.meta1')}</span>
-          <span><span className="lf-dot" style={{ background: 'hsl(252, 95%, 76%)', boxShadow: '0 0 8px hsl(252, 95%, 76%)' }} /> {t('hero.meta2')}</span>
-          <span><span className="lf-dot" style={{ background: 'hsl(217, 91%, 60%)', boxShadow: '0 0 8px hsl(217, 91%, 60%)' }} /> {t('hero.meta3')}</span>
+          <span><span className="lf-dot lf-dot-v" /> {t('hero.meta2')}</span>
+          <span><span className="lf-dot lf-dot-b" /> {t('hero.meta3')}</span>
         </div>
       </div>
     </section>
