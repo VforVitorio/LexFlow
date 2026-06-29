@@ -39,7 +39,7 @@ export function Authors() {
                 <img
                   className="author-avatar"
                   src={`https://avatars.githubusercontent.com/${a.login}`}
-                  alt={`Avatar de ${a.name}`}
+                  alt={a.name}
                   loading="lazy"
                   width={88}
                   height={88}
