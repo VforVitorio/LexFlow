@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -9,9 +8,11 @@ import { useTranslation } from 'react-i18next';
  * definitional so AI search engines (ChatGPT, Perplexity, Google AI Overviews)
  * can quote or summarise individual answers accurately.
  *
- * All copy lives in i18n under `landing.faq` — no hard-coded strings here.
- * Renders as a `<details>` / `<summary>` accordion so the full answer text is
- * always in the DOM (good for crawlers) while keeping the UI compact.
+ * Renders as native <details>/<summary> elements: the answer text is always in
+ * the DOM (good for crawlers and the accessibility tree), the disclosure state
+ * lives in the browser (no JS, keyboard- and AT-native), and collapsed content
+ * is hidden the standard way instead of via a stripped-from-the-a11y-tree
+ * `hidden` attribute. All copy lives in i18n under `landing.faq`.
  */
 
 interface FaqItem {
@@ -22,11 +23,6 @@ interface FaqItem {
 export function FAQ() {
   const { t } = useTranslation('landing');
   const items = t('faq.items', { returnObjects: true }) as unknown as FaqItem[];
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  function toggle(index: number) {
-    setOpenIndex(openIndex === index ? null : index);
-  }
 
   return (
     <section id="faq" className="tight">
@@ -37,35 +33,17 @@ export function FAQ() {
         </div>
         <h2 className="section-title">{t('faq.title')}</h2>
 
-        <dl className="faq-list">
-          {items.map((item, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div key={index} className={`faq-item${isOpen ? ' faq-item--open' : ''}`}>
-                <dt>
-                  <button
-                    className="faq-question"
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-answer-${index}`}
-                    onClick={() => toggle(index)}
-                  >
-                    <span>{item.q}</span>
-                    <span className="faq-chevron" aria-hidden="true">
-                      {isOpen ? '−' : '+'}
-                    </span>
-                  </button>
-                </dt>
-                <dd
-                  id={`faq-answer-${index}`}
-                  className="faq-answer"
-                  hidden={!isOpen}
-                >
-                  {item.a}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
+        <div className="faq-list">
+          {items.map((item, index) => (
+            <details key={index} className="faq-item">
+              <summary className="faq-question">
+                <span>{item.q}</span>
+                <span className="faq-chevron" aria-hidden="true" />
+              </summary>
+              <div className="faq-answer">{item.a}</div>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   );

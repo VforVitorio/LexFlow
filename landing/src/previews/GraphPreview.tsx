@@ -6,7 +6,8 @@
  * metadata, and a dimmed-background story for the rest of the corpus.
  *
  * --- WHERE TO CHANGE IF X CHANGES ---
- * Pattern reference: landing/src/mocks/HeroGraph.tsx (the small version)
+ * Pattern:           hover-driven neighbour highlight + floating card (the
+ *                    smaller HeroGraph mock was retired in #716; see git log)
  * SPA target:        frontend/src/pages/GraphPage.tsx
  *                    frontend/src/components/domain/GraphCanvas.tsx
  * Styles:            landing/src/landing.css   .lf-prev-graph-*
@@ -141,10 +142,8 @@ export function GraphPreview({ lang }: Props) {
             <g
               key={n.id}
               onMouseEnter={() => setFocusId(n.id)}
-              onFocus={() => setFocusId(n.id)}
               className="lf-prev-graph-node"
               style={{ opacity: dim ? 0.32 : 1 }}
-              tabIndex={0}
             >
               {isFocus && (
                 <circle
@@ -166,8 +165,7 @@ export function GraphPreview({ lang }: Props) {
       <div
         className="lf-prev-graph-tooltip"
         style={{
-          left: clamp(focusedNode.x + 28, 12, 540),
-          top:  clamp(focusedNode.y - 24, 12, 380),
+          transform: `translate(${clamp(focusedNode.x + 28, 12, 540)}px, ${clamp(focusedNode.y - 24, 12, 380)}px)`,
         }}
       >
         <div className="lf-prev-graph-tooltip-label">{focusedNode.label[lang] ?? focusedNode.label.en}</div>
