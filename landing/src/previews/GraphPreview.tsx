@@ -141,7 +141,16 @@ export function GraphPreview({ lang }: Props) {
   const nodePx = offsetX + focusedNode.x * scale;
   const nodePy = offsetY + focusedNode.y * scale;
   const flipLeft = nodePx + 14 + TOOLTIP_W > box.w;
-  const tipX = flipLeft ? nodePx - 14 : nodePx + 14;
+  // Clamp so the tooltip never exits the card on either horizontal edge.
+  // Right-of-node: ensure left edge stays >= 8px inside the card.
+  // Left-of-node: the tooltip is pulled left via translateX(-100%), so
+  //   its right edge lands at tipX - 14; clamp so it doesn't push past the
+  //   right edge (max = box.w - 8) and the translateX(-100%) pull never
+  //   causes the left edge to go negative (min = TOOLTIP_W + 8).
+  const tipXRaw = flipLeft ? nodePx - 14 : nodePx + 14;
+  const tipX = flipLeft
+    ? clamp(tipXRaw, TOOLTIP_W + 8, box.w - 8)
+    : clamp(tipXRaw, 8, box.w - TOOLTIP_W - 8);
   const tipY = clamp(nodePy - 60, 8, box.h - 60);
   const tipTransform = `translate(${tipX}px, ${tipY}px)${flipLeft ? ' translateX(-100%)' : ''}`;
 

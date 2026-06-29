@@ -474,20 +474,6 @@
 .landing-root .hero-centered .hero-cta { justify-content: center; }
 .landing-root .hero-centered .hero-meta { justify-content: center; }
 
-.landing-root .hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 10px 5px 6px;
-  background: hsl(var(--surface));
-  border: 1px solid hsl(var(--border));
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 500;
-  color: hsl(var(--muted-fg));
-  margin-bottom: 24px;
-}
-
 /* Long horizontal eyebrow above the hero H1 — f1stratlab-style status line. */
 /* One uppercase mono line, bullet-separated, with a pulsing dot on the left. */
 .landing-root .hero-eyebrow {
@@ -520,35 +506,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .landing-root .hero-eyebrow .pulse-dot { animation: none; }
-}
-.landing-root .hero-badge .pill {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: hsl(var(--amber-500) / 0.15);
-  color: hsl(var(--amber-500));
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-[data-theme='dark'] .landing-root .hero-badge .pill { color: hsl(38 95% 72%); }
-
-/* #154 — pulsing 6px dot embedded in the status pill. Breathes opacity     */
-/* 1 → 0.4 → 1 every 1.8 s. Pure currentColor so it inherits the pill's    */
-/* amber tint and adapts to dark mode automatically.                        */
-.landing-root .hero-badge .pill .pulse-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: 0 0 8px currentColor;
-  margin-right: 6px;
-  vertical-align: middle;
-  animation: lf-pulse-dot 1.8s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .landing-root .hero-badge .pill .pulse-dot { animation: none; }
 }
 
 .landing-root .hero h1 {
@@ -1112,335 +1069,11 @@
 .landing-root .terminal-body .num { color: hsl(var(--amber-500)); }
 .landing-root .terminal-body .str { color: hsl(var(--success)); }
 
-/* ─── Mockup styles (was mocks.css) ─── */
-
-/* Hero floating chips */
-/* Generic mock container */
-.landing-root .lf-mock {
-  position: absolute;
-  inset: 16px;
-  background: hsl(var(--surface-2));
-  border-radius: 10px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* ─── Graph canvas mock ─── */
-.landing-root .lf-mock-graph {
-  background:
-    radial-gradient(circle at 30% 40%, hsl(var(--violet-500) / 0.08), transparent 60%),
-    hsl(var(--surface-2));
-  padding: 16px;
-}
-.landing-root .lf-mock-tools {
-  position: absolute;
-  top: 12px; right: 12px;
-  display: flex;
-  gap: 4px;
-  z-index: 2;
-}
-.landing-root .lf-mock-tool {
-  width: 24px; height: 24px;
-  display: flex; align-items: center; justify-content: center;
-  background: hsl(var(--surface));
-  border: 1px solid hsl(var(--border));
-  border-radius: 6px;
-  font-size: 13px;
-  color: hsl(var(--muted-fg));
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* ─── Chat mock ─── */
-.landing-root .lf-mock-chat { padding: 0; background: hsl(var(--surface)); }
-.landing-root .lf-chat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-bottom: 1px solid hsl(var(--border));
-  background: hsl(var(--surface-2));
-}
-.landing-root .lf-model-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 10px;
-  background: hsl(var(--bg));
-  border: 1px solid hsl(var(--border));
-  border-radius: 999px;
-  font-size: 11.5px;
-  color: hsl(var(--fg));
-}
-.landing-root .lf-model-chip code { font-size: 11px; }
+/* Hero meta status dots (live — used by .hero-meta in Hero.tsx). */
 .landing-root .lf-dot { width: 6px; height: 6px; border-radius: 999px; }
 .landing-root .lf-dot-g { background: hsl(152, 60%, 50%); box-shadow: 0 0 8px hsl(152, 60%, 50%); }
 .landing-root .lf-dot-v { background: hsl(var(--violet-400)); box-shadow: 0 0 8px hsl(var(--violet-400)); }
 .landing-root .lf-dot-b { background: hsl(var(--blue-500)); box-shadow: 0 0 8px hsl(var(--blue-500)); }
-.landing-root .lf-chat-meta { font-size: 11px; color: hsl(var(--muted-fg)); font-family: 'JetBrains Mono', monospace; }
-
-.landing-root .lf-chat-body {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
-.landing-root .lf-msg {
-  padding: 10px 12px;
-  border-radius: 10px;
-  font-size: 12.5px;
-  line-height: 1.5;
-}
-.landing-root .lf-msg-user {
-  background: hsl(var(--violet-500) / 0.10);
-  border: 1px solid hsl(var(--violet-500) / 0.2);
-  align-self: flex-end;
-  max-width: 78%;
-}
-[data-theme='dark'] .landing-root .lf-msg-user {
-  background: hsl(var(--violet-400) / 0.14);
-  border-color: hsl(var(--violet-400) / 0.25);
-}
-.landing-root .lf-msg-asst {
-  background: hsl(var(--bg));
-  border: 1px solid hsl(var(--border));
-  max-width: 92%;
-}
-.landing-root .lf-msg-role {
-  font-size: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: hsl(var(--muted-fg));
-  margin-bottom: 6px;
-}
-.landing-root .lf-msg-text { color: hsl(var(--fg)); }
-.landing-root .lf-tool-call {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding: 4px 8px;
-  background: hsl(var(--surface-2));
-  border: 1px solid hsl(var(--border));
-  border-radius: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  color: hsl(var(--muted-fg));
-  max-width: 100%;
-  overflow: hidden;
-}
-.landing-root .lf-tool-call code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.landing-root .lf-tool-icon { color: hsl(var(--violet-500)); }
-[data-theme='dark'] .landing-root .lf-tool-icon { color: hsl(var(--violet-300)); }
-
-.landing-root .lf-cite {
-  margin-top: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px 4px 8px;
-  background: hsl(var(--amber-500) / 0.12);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: hsl(var(--amber-500));
-  font-family: 'JetBrains Mono', monospace;
-}
-[data-theme='dark'] .landing-root .lf-cite { color: hsl(38 95% 72%); background: hsl(36 95% 60% / 0.16); }
-.landing-root .lf-cite-icon { font-size: 13px; font-weight: 700; }
-
-/* ─── Dashboard mock ─── */
-.landing-root .lf-mock-dash { padding: 18px; background: hsl(var(--surface)); }
-.landing-root .lf-dash-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 18px;
-}
-.landing-root .lf-dash-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  color: hsl(var(--fg));
-}
-.landing-root .lf-dash-sub {
-  font-size: 11px;
-  color: hsl(var(--muted-fg));
-  margin-top: 2px;
-  font-family: 'JetBrains Mono', monospace;
-}
-.landing-root .lf-dash-kpi { text-align: right; }
-.landing-root .lf-dash-kpi-v {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-  color: hsl(var(--fg));
-  line-height: 1;
-}
-.landing-root .lf-dash-kpi-l {
-  font-size: 11px;
-  color: hsl(var(--muted-fg));
-  margin-top: 4px;
-}
-.landing-root .lf-dash-kpi-d {
-  font-size: 11px;
-  color: hsl(var(--success));
-  margin-top: 2px;
-  font-weight: 600;
-}
-
-.landing-root .lf-bars {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 8px;
-  align-items: end;
-  height: 130px;
-}
-.landing-root .lf-bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; }
-.landing-root .lf-bar {
-  width: 100%;
-  border-radius: 4px 4px 0 0;
-  min-height: 8px;
-}
-.landing-root .lf-bar-label {
-  font-size: 10px;
-  color: hsl(var(--muted-fg));
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* ─── API mock ─── */
-.landing-root .lf-mock-api { background: hsl(var(--bg)); }
-.landing-root .lf-api-tabs {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-bottom: 1px solid hsl(var(--border));
-  background: hsl(var(--surface));
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
-}
-.landing-root .lf-api-tab {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-  color: hsl(var(--success));
-  background: hsl(var(--success) / 0.14);
-  letter-spacing: 0.04em;
-}
-.landing-root .lf-api-path {
-  flex: 1;
-  color: hsl(var(--fg));
-  font-size: 11px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.landing-root .lf-api-status {
-  font-size: 10.5px;
-  color: hsl(var(--muted-fg));
-}
-.landing-root .lf-api-body {
-  padding: 16px 18px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11.5px;
-  line-height: 1.7;
-  color: hsl(var(--fg));
-  overflow: auto;
-}
-.landing-root .lf-api-body pre { white-space: pre-wrap; word-break: break-word; }
-
-/* Copy button on API mockup */
-.landing-root .lf-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 9px;
-  background: hsl(var(--bg));
-  border: 1px solid hsl(var(--border));
-  border-radius: 6px;
-  color: hsl(var(--muted-fg));
-  font-family: 'JetBrains Mono', monospace;
-  transition: color 120ms, border-color 120ms, background 120ms;
-}
-.landing-root .lf-copy-btn:hover {
-  color: hsl(var(--fg));
-  border-color: hsl(var(--border-strong));
-  background: hsl(var(--surface-2));
-}
-
-/* Clickable endpoint list (API feature) */
-.landing-root .lf-endpoints {
-  margin: 22px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.landing-root .lf-endpoint {
-  display: grid;
-  grid-template-columns: 52px 1fr;
-  grid-template-rows: auto auto;
-  align-items: center;
-  gap: 4px 12px;
-  padding: 10px 12px;
-  background: transparent;
-  border: 1px solid hsl(var(--border));
-  border-radius: 10px;
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 120ms, background 120ms, transform 120ms;
-}
-.landing-root .lf-endpoint:hover {
-  border-color: hsl(var(--border-strong));
-  background: hsl(var(--surface-2));
-}
-.landing-root .lf-endpoint.active {
-  border-color: hsl(var(--violet-500) / 0.5);
-  background: hsl(var(--violet-500) / 0.06);
-  box-shadow: 0 0 0 3px hsl(var(--violet-500) / 0.10);
-}
-[data-theme='dark'] .landing-root .lf-endpoint.active {
-  border-color: hsl(var(--violet-400) / 0.55);
-  background: hsl(var(--violet-400) / 0.10);
-  box-shadow: 0 0 0 3px hsl(var(--violet-400) / 0.10);
-}
-.landing-root .lf-endpoint-method {
-  grid-row: 1;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: hsl(var(--success));
-  background: hsl(var(--success) / 0.14);
-  padding: 3px 8px;
-  border-radius: 4px;
-  text-align: center;
-}
-.landing-root .lf-endpoint-path {
-  grid-row: 1;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  color: hsl(var(--fg));
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.landing-root .lf-endpoint-label {
-  grid-row: 2;
-  grid-column: 2;
-  font-size: 12px;
-  color: hsl(var(--muted-fg));
-}
-.landing-root .lf-endpoint.active .lf-endpoint-label {
-  color: hsl(var(--violet-500));
-}
-[data-theme='dark'] .landing-root .lf-endpoint.active .lf-endpoint-label {
-  color: hsl(var(--violet-300));
-}
 
 /* ─── Powered by strip ─── */
 .landing-root .powered-by {
@@ -2006,9 +1639,6 @@
 /* The previous lead colour was almost flat fg. Now it carries the indigo→fg   */
 /* vertical gradient already shipped, but the eyebrow and metadata picks up a  */
 /* tinted text colour so the first-fold has actual brand colour anchoring.    */
-
-.landing-root .hero-badge .pill { color: hsl(var(--violet-300, 252 95% 76%)); }
-[data-theme='light'] .landing-root .hero-badge .pill { color: hsl(var(--violet-600, 252 70% 50%)); }
 
 .landing-root .section-eyebrow .label-caps { color: hsl(var(--violet-300, 252 95% 76%)); }
 [data-theme='light'] .landing-root .section-eyebrow .label-caps { color: hsl(var(--violet-600, 252 70% 50%)); }
@@ -3095,6 +2725,26 @@
 .landing-root .lf-prev-dash-chart-meta  { font-size: 10.5px; color: hsl(var(--muted-fg)); }
 .landing-root .lf-prev-dash-bars { width: 100%; height: 160px; display: block; }
 
+/* DashboardPreview — mobile reflow (≤ 480 px / ~390 px phones).
+ * Desktop layout (3-col KPI grid, side-by-side header row) is unchanged.
+ * Changes: actions row wraps below tabs, KPI grid stays 1-col (already set
+ * at 720 px), reduced padding, slightly smaller KPI value text. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-dash { padding: 10px; }
+  /* Let the header stack: title + tabs on one line, actions on the next. */
+  .landing-root .lf-prev-dash-head { gap: 6px; }
+  .landing-root .lf-prev-dash-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  /* Keep KPI value legible but compact inside the narrower card. */
+  .landing-root .lf-prev-dash-kpi-value { font-size: 18px; }
+  .landing-root .lf-prev-dash-kpi { padding: 8px 10px; }
+  /* Chart: slightly shorter to leave room for the stacked header rows. */
+  .landing-root .lf-prev-dash-bars { height: 120px; }
+}
+
 /* ---------- GraphPreview ------------------------------------------------- */
 .landing-root .lf-prev-graph {
   background: linear-gradient(180deg, hsl(var(--surface)) 0%, hsl(var(--bg)) 100%);
@@ -3180,6 +2830,38 @@
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
+  }
+}
+
+/* ChatPreview — mobile reflow: single column, thread only.
+ * Placed AFTER the 720px previews block so that at ≤480px (where both
+ * media queries match) this single-column grid wins on source order —
+ * otherwise the 720px rule's 96px/140px tracks stay reserved and the
+ * thread column gets ~140px, wrapping bubbles one word per line. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-chat {
+    grid-template-columns: 1fr;
+  }
+  .landing-root .lf-prev-chat-rail,
+  .landing-root .lf-prev-chat-sources {
+    display: none;
+  }
+  .landing-root .lf-prev-chat-main {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* At ~390px the graph card is narrow enough that the tooltip needs a smaller
+ * min-width and must wrap long law titles rather than overflow the card edge.
+ * The JS-side clamp in GraphPreview.tsx keeps the translate() origin inside
+ * the card; this rule ensures the tooltip box itself stays contained. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-graph-tooltip {
+    min-width: 0;
+    max-width: 160px;
+    white-space: normal;
+    word-break: break-word;
   }
 }
 
