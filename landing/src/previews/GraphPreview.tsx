@@ -6,7 +6,8 @@
  * metadata, and a dimmed-background story for the rest of the corpus.
  *
  * --- WHERE TO CHANGE IF X CHANGES ---
- * Pattern reference: landing/src/mocks/HeroGraph.tsx (the small version)
+ * Pattern:           hover-driven neighbour highlight + floating card (the
+ *                    smaller HeroGraph mock was retired in #716; see git log)
  * SPA target:        frontend/src/pages/GraphPage.tsx
  *                    frontend/src/components/domain/GraphCanvas.tsx
  * Styles:            landing/src/landing.css   .lf-prev-graph-*
@@ -19,9 +20,13 @@
  *   rango, and degree.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Lang } from '@/i18n';
 import { PreviewChrome } from './PreviewChrome';
+
+const VIEW_W = 760;
+const VIEW_H = 480;
+const TOOLTIP_W = 200;
 
 const TITLE: Record<Lang, string> = { es: 'Grafo · LexFlow', en: 'Graph · LexFlow' };
 
@@ -112,10 +117,38 @@ export function GraphPreview({ lang }: Props) {
   const focusedNode = NODES.find((n) => n.id === focusId)!;
   const degree = EDGES.reduce((n, e) => n + (e.a === focusId || e.b === focusId ? 1 : 0), 0);
 
+  // The card renders narrower than the 760×480 viewBox, so the tooltip can't
+  // be placed with raw viewBox coordinates — it would detach from the node and
+  // clip the right edge. Measure the body and map viewBox → rendered px
+  // (accounting for the SVG's xMidYMid-meet letterboxing), then flip the
+  // tooltip to the node's left when it would overflow.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState({ w: VIEW_W, h: VIEW_H });
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width && height) setBox({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const scale = Math.min(box.w / VIEW_W, box.h / VIEW_H);
+  const offsetX = (box.w - VIEW_W * scale) / 2;
+  const offsetY = (box.h - VIEW_H * scale) / 2;
+  const nodePx = offsetX + focusedNode.x * scale;
+  const nodePy = offsetY + focusedNode.y * scale;
+  const flipLeft = nodePx + 14 + TOOLTIP_W > box.w;
+  const tipX = flipLeft ? nodePx - 14 : nodePx + 14;
+  const tipY = clamp(nodePy - 60, 8, box.h - 60);
+  const tipTransform = `translate(${tipX}px, ${tipY}px)${flipLeft ? ' translateX(-100%)' : ''}`;
+
   return (
     <div className="lf-prev" aria-hidden="true">
       <PreviewChrome title={TITLE[lang] ?? TITLE.en} />
-      <div className="lf-prev-body lf-prev-graph">
+      <div className="lf-prev-body lf-prev-graph" ref={bodyRef}>
       <svg viewBox="0 0 760 480" className="lf-prev-graph-svg">
         {/* Edges first so nodes paint over them */}
         {EDGES.map((e, i) => {
@@ -141,10 +174,8 @@ export function GraphPreview({ lang }: Props) {
             <g
               key={n.id}
               onMouseEnter={() => setFocusId(n.id)}
-              onFocus={() => setFocusId(n.id)}
               className="lf-prev-graph-node"
               style={{ opacity: dim ? 0.32 : 1 }}
-              tabIndex={0}
             >
               {isFocus && (
                 <circle
@@ -165,10 +196,7 @@ export function GraphPreview({ lang }: Props) {
       </svg>
       <div
         className="lf-prev-graph-tooltip"
-        style={{
-          left: clamp(focusedNode.x + 28, 12, 540),
-          top:  clamp(focusedNode.y - 24, 12, 380),
-        }}
+        style={{ transform: tipTransform }}
       >
         <div className="lf-prev-graph-tooltip-label">{focusedNode.label[lang] ?? focusedNode.label.en}</div>
         <div className="lf-prev-graph-tooltip-meta">{focusedNode.rango} · {degree} {t.degree}</div>
