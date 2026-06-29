@@ -67,7 +67,7 @@
 .landing-root ::selection { background: hsl(var(--violet-500) / 0.3); }
 
 .landing-root :focus-visible {
-  outline: 2px solid hsl(var(--violet-500));
+  outline: 2px solid hsl(var(--violet-600));
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -3106,7 +3106,6 @@
   display: block;
 }
 .landing-root .lf-prev-graph-node { cursor: crosshair; transition: opacity var(--dur-micro) var(--ease-out); }
-.landing-root .lf-prev-graph-node:focus { outline: none; }
 .landing-root .lf-prev-graph-tooltip {
   position: absolute;
   left: 0;
