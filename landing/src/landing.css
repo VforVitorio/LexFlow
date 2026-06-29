@@ -2807,6 +2807,32 @@
   .landing-root .lf-prev-graph-tooltip { font-size: 11px; min-width: 140px; }
 }
 
+/* SearchPreview — narrow mobile reflow (~390px): stack the filter rail above
+ * the results so the title column has the full width and can wrap instead of
+ * truncating. Must come AFTER the 720px block so the cascade wins. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-search {
+    grid-template-columns: 1fr;
+  }
+  .landing-root .lf-prev-search-rail {
+    border-right: none;
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 8px 12px;
+    /* Show the two filter sections side-by-side to save vertical height. */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
+  .landing-root .lf-prev-search-rail-label { width: 100%; margin-bottom: 4px; }
+  .landing-root .lf-prev-search-rail-section { margin-top: 4px; }
+  /* Title is free to wrap; remove the single-line truncation. */
+  .landing-root .lf-prev-search-row-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
 /* ChatPreview — mobile reflow: single column, thread only.
  * Placed AFTER the 720px previews block so that at ≤480px (where both
  * media queries match) this single-column grid wins on source order —
