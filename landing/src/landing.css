@@ -2807,6 +2807,19 @@
   .landing-root .lf-prev-graph-tooltip { font-size: 11px; min-width: 140px; }
 }
 
+/* At ~390px the graph card is narrow enough that the tooltip needs a smaller
+ * min-width and must wrap long law titles rather than overflow the card edge.
+ * The JS-side clamp in GraphPreview.tsx keeps the translate() origin inside
+ * the card; this rule ensures the tooltip box itself stays contained. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-graph-tooltip {
+    min-width: 0;
+    max-width: 160px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
 /* ========================================================================== */
 /* Cozy animation layer (additive, gated on prefers-reduced-motion + hover)   */
 /* ========================================================================== */
