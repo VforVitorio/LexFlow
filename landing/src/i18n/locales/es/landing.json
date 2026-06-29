@@ -9,7 +9,7 @@
     "cta": "Probar LexFlow"
   },
   "hero": {
-    "status": "pre-alpha",
+    "status": "alpha",
     "badge": "Open source · Apache 2.0",
     "title1": "La ley española,",
     "title2": "navegable como un grafo.",
@@ -127,7 +127,7 @@
         "Alertas configurables por sector",
         "Exportación a CSV de cualquier filtro"
       ],
-      "stack": ["Plotly", "Figuras como JSON"]
+      "stack": ["Recharts", "shadcn/ui charts"]
     }
   ],
   "userFlow": {
@@ -197,7 +197,7 @@
       ["Validación", "Pydantic v2"],
       ["Motor de grafo", "NetworkX"],
       ["Chat y herramientas", "FastMCP · Ollama · OpenAI · Anthropic · Google"],
-      ["Paneles", "Plotly (figuras como JSON)"],
+      ["Analítica", "Series y agregados legislativos"],
       ["Tests", "pytest + pytest-asyncio"],
       ["Empaquetado", "uv · PyInstaller"]
     ]
@@ -207,11 +207,12 @@
     "meta": "React 18 · TypeScript estricto",
     "rows": [
       ["Bundler", "Vite"],
-      ["Routing", "React Router v6 (basado en componentes)"],
+      ["Routing", "React Router v7 (basado en componentes)"],
       ["Estado de servidor", "TanStack Query"],
       ["Estado de cliente", "Zustand"],
       ["Estilos", "Tailwind CSS + shadcn/ui"],
-      ["Visualización de grafo", "react-flow"],
+      ["Gráficos", "Recharts · shadcn/ui charts"],
+      ["Visualización de grafo", "React Flow · react-force-graph"],
       ["Tests", "Vitest + Playwright"]
     ]
   },
@@ -226,7 +227,7 @@
     { "name": "API base", "desc": "Parser de legalize-es, endpoints REST y búsqueda full-text.", "status": "done" },
     { "name": "Grafo de conocimiento", "desc": "Modelo en NetworkX, PageRank, clustering y endpoints de navegación.", "status": "done" },
     { "name": "Chat legal", "desc": "Cinco proveedores de LLM, servidor FastMCP de herramientas e historial.", "status": "done" },
-    { "name": "Paneles", "desc": "Paneles de Plotly de compliance y analítica con filtros interactivos.", "status": "done" },
+    { "name": "Paneles", "desc": "Paneles de compliance y analítica con filtros interactivos.", "status": "done" },
     { "name": "Frontend en React", "desc": "Layout, explorador de leyes, canvas del grafo, chat y paneles.", "status": "progress" },
     { "name": "Distribución standalone", "desc": "Binarios con PyInstaller: .exe · .dmg · .AppImage. Docker ya está hecho.", "status": "progress" },
     { "name": "Búsqueda semántica y RAG", "desc": "Embeddings, índice vectorial y chat aumentado por recuperación.", "status": "planned" }
@@ -283,7 +284,7 @@
   "downloads": {
     "eyebrow": "Descargas",
     "title": "Descárgalo para tu sistema.",
-    "subtitle": "App de escritorio en pre-alpha — todavía no hay binarios firmados, pero las próximas releases aterrizarán aquí.",
+    "subtitle": "App de escritorio en alpha — todavía no hay binarios firmados, pero las próximas releases aterrizarán aquí.",
     "cta": "Ver releases",
     "detectedCta": "Recomendado para ti",
     "fallbackPre": "¿Quieres una versión específica?",
@@ -317,7 +318,7 @@
     "projectLinks": ["GitHub", "Issues", "Cómo contribuir", "Código de conducta"],
     "resources": "Recursos",
     "resourcesLinks": ["legalize-es", "Documentación de la API", "CLAUDE.md", "Licencia"],
-    "legal": "Apache 2.0 · pre-alpha · Construido en abierto · 2026",
+    "legal": "Apache 2.0 · alpha · Construido en abierto · 2026",
     "themeLabel": "Tema",
     "langLabel": "Idioma"
   }

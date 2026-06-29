@@ -9,7 +9,7 @@
     "cta": "Try LexFlow"
   },
   "hero": {
-    "status": "pre-alpha",
+    "status": "alpha",
     "badge": "Open source · Apache 2.0",
     "title1": "Spanish law,",
     "title2": "walked like a graph.",
@@ -127,7 +127,7 @@
         "Configurable sector-scoped alerts",
         "CSV export of any filtered slice"
       ],
-      "stack": ["Plotly", "Figures as JSON"]
+      "stack": ["Recharts", "shadcn/ui charts"]
     }
   ],
   "userFlow": {
@@ -197,7 +197,7 @@
       ["Validation", "Pydantic v2"],
       ["Graph engine", "NetworkX"],
       ["Chat & tools", "FastMCP · Ollama · OpenAI · Anthropic · Google"],
-      ["Dashboards", "Plotly (figures as JSON)"],
+      ["Analytics", "Legislative series & aggregates"],
       ["Tests", "pytest + pytest-asyncio"],
       ["Packaging", "uv · PyInstaller"]
     ]
@@ -207,11 +207,12 @@
     "meta": "React 18 · TypeScript strict",
     "rows": [
       ["Bundler", "Vite"],
-      ["Routing", "React Router v6 (component-based)"],
+      ["Routing", "React Router v7 (component-based)"],
       ["Server state", "TanStack Query"],
       ["Client state", "Zustand"],
       ["Styling", "Tailwind CSS + shadcn/ui"],
-      ["Graph viz", "react-flow"],
+      ["Charts", "Recharts · shadcn/ui charts"],
+      ["Graph viz", "React Flow · react-force-graph"],
       ["Tests", "Vitest + Playwright"]
     ]
   },
@@ -226,7 +227,7 @@
     { "name": "Core API", "desc": "legalize-es parser, REST endpoints, full-text search.", "status": "done" },
     { "name": "Knowledge graph", "desc": "NetworkX model, PageRank, clustering, navigation endpoints.", "status": "done" },
     { "name": "Legal chat", "desc": "Five LLM providers, FastMCP tool server, conversation history.", "status": "done" },
-    { "name": "Dashboards", "desc": "Compliance + analytics Plotly panels with interactive filters.", "status": "done" },
+    { "name": "Dashboards", "desc": "Compliance + analytics panels with interactive filters.", "status": "done" },
     { "name": "React frontend", "desc": "Layout, law explorer, graph canvas, chat UI, dashboards.", "status": "progress" },
     { "name": "Standalone distribution", "desc": "PyInstaller binaries: .exe · .dmg · .AppImage. Docker already done.", "status": "progress" },
     { "name": "Semantic search & RAG", "desc": "Embeddings, vector index, retrieval-augmented chat.", "status": "planned" }
@@ -283,7 +284,7 @@
   "downloads": {
     "eyebrow": "Downloads",
     "title": "Download it for your platform.",
-    "subtitle": "Desktop app is pre-alpha — no signed binaries yet, but upcoming releases will land here.",
+    "subtitle": "Desktop app is in alpha — no signed binaries yet, but upcoming releases will land here.",
     "cta": "View releases",
     "detectedCta": "Recommended for you",
     "fallbackPre": "Need a specific version?",
@@ -317,7 +318,7 @@
     "projectLinks": ["GitHub", "Issues", "Contributing", "Code of conduct"],
     "resources": "Resources",
     "resourcesLinks": ["legalize-es", "API docs", "CLAUDE.md", "License"],
-    "legal": "Apache 2.0 · pre-alpha · Built in the open · 2026",
+    "legal": "Apache 2.0 · alpha · Built in the open · 2026",
     "themeLabel": "Theme",
     "langLabel": "Language"
   }
