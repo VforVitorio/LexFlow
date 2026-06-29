@@ -97,7 +97,7 @@ export function Downloads() {
           })}
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem', opacity: 0.7 }}>
+        <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem' }}>
           {t('downloads.fallbackPre')}{' '}
           <a href={RELEASES_URL} target="_blank" rel="noreferrer">
             {t('downloads.fallbackLink')}
