@@ -136,7 +136,7 @@ export function Nav() {
               key={id}
               href={`#${id}`}
               ref={(el) => { linkRefs.current[id] = el; }}
-              aria-current={active === id ? 'location' : undefined}
+              aria-current={active === id ? 'page' : undefined}
               className={active === id ? 'active' : undefined}
             >
               {t(`nav.${NAV_LABEL_KEY[id]}`)}
@@ -158,8 +158,8 @@ export function Nav() {
         <div className="nav-spacer" />
         <div className="nav-actions">
           <div className="seg" role="group" aria-label="Language">
-            <button type="button" className={currentLang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
-            <button type="button" className={currentLang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>
+            <button type="button" aria-pressed={currentLang === 'en'} className={currentLang === 'en' ? 'active' : ''} onClick={() => setLang('en')}>EN</button>
+            <button type="button" aria-pressed={currentLang === 'es'} className={currentLang === 'es' ? 'active' : ''} onClick={() => setLang('es')}>ES</button>
           </div>
           <button
             type="button"
@@ -216,7 +216,7 @@ export function Nav() {
               <a
                 key={id}
                 href={`#${id}`}
-                aria-current={active === id ? 'location' : undefined}
+                aria-current={active === id ? 'page' : undefined}
                 className={active === id ? 'active' : undefined}
                 onClick={() => setMenuOpen(false)}
               >
@@ -229,8 +229,8 @@ export function Nav() {
           </nav>
           <div className="nav-mobile-row">
             <div className="seg" role="group" aria-label="Language">
-              <button type="button" className={currentLang === 'en' ? 'active' : ''} onClick={() => { setLang('en'); setMenuOpen(false); }}>EN</button>
-              <button type="button" className={currentLang === 'es' ? 'active' : ''} onClick={() => { setLang('es'); setMenuOpen(false); }}>ES</button>
+              <button type="button" aria-pressed={currentLang === 'en'} className={currentLang === 'en' ? 'active' : ''} onClick={() => { setLang('en'); setMenuOpen(false); }}>EN</button>
+              <button type="button" aria-pressed={currentLang === 'es'} className={currentLang === 'es' ? 'active' : ''} onClick={() => { setLang('es'); setMenuOpen(false); }}>ES</button>
             </div>
             <a className="icon-btn" href={GH_URL} target="_blank" rel="noreferrer" aria-label="GitHub" onClick={() => setMenuOpen(false)}>
               <IconGitHub />
