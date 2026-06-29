@@ -2725,6 +2725,26 @@
 .landing-root .lf-prev-dash-chart-meta  { font-size: 10.5px; color: hsl(var(--muted-fg)); }
 .landing-root .lf-prev-dash-bars { width: 100%; height: 160px; display: block; }
 
+/* DashboardPreview — mobile reflow (≤ 480 px / ~390 px phones).
+ * Desktop layout (3-col KPI grid, side-by-side header row) is unchanged.
+ * Changes: actions row wraps below tabs, KPI grid stays 1-col (already set
+ * at 720 px), reduced padding, slightly smaller KPI value text. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-dash { padding: 10px; }
+  /* Let the header stack: title + tabs on one line, actions on the next. */
+  .landing-root .lf-prev-dash-head { gap: 6px; }
+  .landing-root .lf-prev-dash-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  /* Keep KPI value legible but compact inside the narrower card. */
+  .landing-root .lf-prev-dash-kpi-value { font-size: 18px; }
+  .landing-root .lf-prev-dash-kpi { padding: 8px 10px; }
+  /* Chart: slightly shorter to leave room for the stacked header rows. */
+  .landing-root .lf-prev-dash-bars { height: 120px; }
+}
+
 /* ---------- GraphPreview ------------------------------------------------- */
 .landing-root .lf-prev-graph {
   background: linear-gradient(180deg, hsl(var(--surface)) 0%, hsl(var(--bg)) 100%);
