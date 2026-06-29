@@ -81,10 +81,27 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
 }
 
-:focus-visible {
-  outline: 2px solid hsl(232 72% 52%);
+/* WCAG 2.4.1 skip-link. Lives outside `.landing-root` (direct child of
+ * <body> in index.html), so it carries its own styles. Inverted fg/bg
+ * guarantees contrast in both themes; off-screen until focused. */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 10000;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: hsl(var(--fg));
+  color: hsl(var(--bg));
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  transform: translateY(-150%);
+  transition: transform 160ms ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid hsl(var(--violet-600));
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
 /* Reduced-motion safety net. Individual components also check

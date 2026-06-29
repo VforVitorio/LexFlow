@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.68.0](https://github.com/VforVitorio/LexFlow/compare/v0.67.0...v0.68.0) (2026-06-29)
+
+
+### Features
+
+* **landing:** compositor-safe motion + accessibility ([#716](https://github.com/VforVitorio/LexFlow/issues/716)) ([4bdf136](https://github.com/VforVitorio/LexFlow/commit/4bdf1362da09f7244dab1c442c7454297cea8849))
+* **landing:** compositor-safe motion + accessibility ([#716](https://github.com/VforVitorio/LexFlow/issues/716)) ([7df0c7a](https://github.com/VforVitorio/LexFlow/commit/7df0c7af2a9ee68d5c43581583259419ccb3507e))
+
+
+### Bug Fixes
+
+* **a11y:** accessible dialogs, names and focus management ([1eeb4f8](https://github.com/VforVitorio/LexFlow/commit/1eeb4f83d6ce1be5cbc73381bdab26ee76d3424e)), closes [#714](https://github.com/VforVitorio/LexFlow/issues/714)
+* **a11y:** accessible dialogs, names and focus management ([#714](https://github.com/VforVitorio/LexFlow/issues/714)) ([25e3207](https://github.com/VforVitorio/LexFlow/commit/25e3207760f4332e59650a1a333d89f4a71bf4b8))
+* **graph,chat:** address CodeRabbit review on [#713](https://github.com/VforVitorio/LexFlow/issues/713) ([57aafa5](https://github.com/VforVitorio/LexFlow/commit/57aafa57417dc385eacb03045f272110dd27ea09))
+* **landing:** a11y quick wins + drop prod sourcemap ([591b7d0](https://github.com/VforVitorio/LexFlow/commit/591b7d05fa3ca47ed6c7ff353b8c58af148fd275))
+* **landing:** a11y quick wins + drop prod sourcemap ([52c9337](https://github.com/VforVitorio/LexFlow/commit/52c9337a07cb80aea89c7e968d415e2f03a1adfc))
+* **landing:** correct stack facts, graph tooltip positioning, maturity wording ([4d847d9](https://github.com/VforVitorio/LexFlow/commit/4d847d99a852977abf7069a5c0c1b31f888cd020))
+* **landing:** correct stack facts, graph tooltip, maturity wording ([9a40e69](https://github.com/VforVitorio/LexFlow/commit/9a40e691ffe614ec73e82ad5b633c11253459ac2))
+
+
+### Performance
+
+* **app:** query staleTime + motion/blur/scroll runtime cuts ([f5d2d2c](https://github.com/VforVitorio/LexFlow/commit/f5d2d2c170a83dcbf5bae76efa80a89155609088)), closes [#713](https://github.com/VforVitorio/LexFlow/issues/713)
+* **app:** query staleTime + motion/blur/scroll runtime cuts ([#713](https://github.com/VforVitorio/LexFlow/issues/713)) ([4643956](https://github.com/VforVitorio/LexFlow/commit/464395669ff08e7852dfaf6b5ed6da5d2e24f032))
+
+
+### Documentation
+
+* **landing:** fix Spanish bio grammar (add verb in NTT DATA clause) ([e1d42ed](https://github.com/VforVitorio/LexFlow/commit/e1d42ed29753b1f2b9fd9ecf65174d20dc16988a))
+* **landing:** normalize bilingual author bio to canonical wording ([11f629c](https://github.com/VforVitorio/LexFlow/commit/11f629c1126447534548a7dc18888a7e0e09ab4d))
+* **landing:** normalize bilingual author bio to canonical wording ([3a15c67](https://github.com/VforVitorio/LexFlow/commit/3a15c677524a974a7e1bc489e3868c85efbba66c))
+
 ## [0.67.0](https://github.com/VforVitorio/LexFlow/compare/v0.66.0...v0.67.0) (2026-06-27)
 
 
