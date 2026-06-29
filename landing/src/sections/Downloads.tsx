@@ -66,7 +66,7 @@ export function Downloads() {
           <span className="dot" />
           <span className="label-caps">{t('downloads.eyebrow')}</span>
         </div>
-        <h2 className="section-title-accent" style={{ textAlign: 'center' }}>
+        <h2 className="section-title section-title-accent" style={{ textAlign: 'center', marginInline: 'auto' }}>
           {t('downloads.title')}
         </h2>
         <p style={{ textAlign: 'center', maxWidth: '40rem', margin: '0.5rem auto 1.5rem' }}>
@@ -97,7 +97,7 @@ export function Downloads() {
           })}
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem', opacity: 0.7 }}>
+        <p style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.85rem' }}>
           {t('downloads.fallbackPre')}{' '}
           <a href={RELEASES_URL} target="_blank" rel="noreferrer">
             {t('downloads.fallbackLink')}

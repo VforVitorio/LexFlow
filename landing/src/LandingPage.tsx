@@ -63,7 +63,7 @@ export function LandingPage() {
   return (
     <div className="landing-root">
       <Nav />
-      <main>
+      <main id="main-content">
         <Hero />
         <RevealSection><StatBar /></RevealSection>
         {/* Brief explainer of what the product actually is, before we
