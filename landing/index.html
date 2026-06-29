@@ -146,6 +146,10 @@
     </script>
   </head>
   <body>
+    <!-- WCAG 2.4.1 skip-link. First focusable element; targets #main-content
+         rendered by LandingPage. Static here (pre-React) so it works before
+         hydration; Spanish label matches the page default lang. -->
+    <a href="#main-content" class="skip-link">Saltar al contenido</a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <!--
