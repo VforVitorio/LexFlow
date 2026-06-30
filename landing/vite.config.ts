@@ -23,6 +23,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    target: 'es2020',
+    // #739 — modern baseline (top-level await, class fields, etc.) so Vite
+    // ships less transpiled/polyfilled output.
+    target: 'es2022',
+    rollupOptions: {
+      output: {
+        // #739 — split the stable React runtime out of the app entry so it
+        // caches independently across deploys. Function form (not an object)
+        // because Vite 8's rolldown bundler only accepts the function shape.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
+            return 'react-vendor';
+          }
+          return 'vendor';
+        },
+      },
+    },
   },
 });

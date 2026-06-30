@@ -141,7 +141,7 @@ function BarChart() {
               opacity={recent ? 0.92 : 0.78}
             />
             <text x={x + barW / 2} y={h - pad + 12} textAnchor="middle"
-              fontSize="10" fill="hsl(var(--muted-fg))" fontFamily='"JetBrains Mono", monospace'>
+              fontSize="10" fill="hsl(var(--muted-fg))" fontFamily='ui-monospace, SFMono-Regular, Menlo, monospace'>
               {BAR_LABELS[i]}
             </text>
           </g>
