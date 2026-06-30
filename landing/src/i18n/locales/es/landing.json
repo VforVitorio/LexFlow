@@ -11,9 +11,9 @@
   "hero": {
     "status": "alpha",
     "badge": "Open source · Apache 2.0",
-    "title1": "La ley española,",
-    "title2": "navegable como un grafo.",
-    "sub": "Plataforma open source para explorar la legislación española de verdad. Un grafo de conocimiento conecta cada referencia cruzada, un chat con IA cita el BOE real y los paneles enseñan cómo cambian las normas con el tiempo.",
+    "title1": "Toda la legislación española,",
+    "title2": "por fin fácil de consultar.",
+    "sub": "Plataforma open source para explorar la legislación española de verdad. Un grafo de conocimiento conecta cada referencia cruzada, un chat con IA cita el Boletín Oficial del Estado (BOE) y los paneles enseñan cómo cambian las normas con el tiempo.",
     "ctaPrimary": "Probar LexFlow",
     "ctaSecondary": "Ver en GitHub",
     "meta1": "Python 3.12 · FastAPI",
@@ -21,10 +21,10 @@
     "meta3": "Local-first · Binario standalone"
   },
   "stats": [
-    { "value": "4", "unit": "", "label": "Capas que comparten datos — API, grafo, chat y paneles" },
-    { "value": "5", "unit": "", "label": "Proveedores de LLM soportados mediante herramientas MCP" },
-    { "value": "~12", "unit": "K", "label": "Leyes españolas indexadas desde el corpus legalize-es" },
-    { "value": "100", "unit": "%", "label": "Código abierto bajo licencia Apache 2.0" }
+    { "value": "~12", "unit": "K", "label": "Leyes españolas, buscables al instante" },
+    { "value": "5", "unit": "", "label": "Modelos de IA a elegir, con citas reales" },
+    { "value": "0", "unit": "", "label": "Datos que salen de tu equipo — todo local" },
+    { "value": "100", "unit": "%", "label": "Gratis y open source, licencia Apache 2.0" }
   ],
   "whatIs": {
     "eyebrow": "Vale, ¿pero qué es esto?",
@@ -271,7 +271,7 @@
         "login": "VforVitorio",
         "name": "Víctor",
         "role": "Co-autor",
-        "bio": "Junior AI Engineer en NTT DATA España (A Coruña), trabajando en distintas áreas de IA, desde investigación en visión por computador hasta el comportamiento de los LLMs, soluciones de IA agéntica y herramientas como servidores Model Context Protocol (MCP). Graduado en Ingeniería de Sistemas Inteligentes (UIE) con 9,0/10 y 4 Matrículas de Honor; TFG con Matrícula de Honor, propuesto para conversión en artículo de investigación. Ahora cursando el Máster Universitario en Investigación en Inteligencia Artificial (AEPIA / UIMP) compaginándolo con su trabajo a tiempo completo. Construye IA para la Fórmula 1, desde el modelado de telemetría hasta el razonamiento multi-agente. Arquitecto de LexFlow: diseñó y desarrolló el parser de legalize-es, el grafo en NetworkX, la integración MCP y el frontend en React."
+        "bio": "Junior AI Engineer en NTT DATA España y máster en Investigación en IA (AEPIA / UIMP). Trabaja en IA agéntica, LLMs y servidores MCP, y construye IA para la Fórmula 1. Arquitecto de LexFlow: diseñó el parser de legalize-es, el grafo en NetworkX, la integración MCP y el frontend en React."
       },
       {
         "login": "Santisoutoo",
@@ -317,7 +317,7 @@
     "project": "Proyecto",
     "projectLinks": ["GitHub", "Issues", "Cómo contribuir", "Código de conducta"],
     "resources": "Recursos",
-    "resourcesLinks": ["legalize-es", "Documentación de la API", "CLAUDE.md", "Licencia"],
+    "resourcesLinks": ["legalize-es", "Documentación de la API", "Licencia"],
     "legal": "Apache 2.0 · alpha · Construido en abierto · 2026",
     "themeLabel": "Tema",
     "langLabel": "Idioma"
