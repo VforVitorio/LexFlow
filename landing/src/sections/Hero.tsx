@@ -43,7 +43,11 @@ export function Hero() {
         </h1>
         <p className="hero-sub">{t('hero.sub')}</p>
         <div className="hero-cta">
-          <a className="btn btn-primary btn-lg" href={GH_URL} target="_blank" rel="noreferrer">
+          {/* #738 — primary CTA scrolls to the in-page #downloads section
+              (honest "try it" funnel: pick your OS) instead of dropping a
+              non-dev visitor straight onto the GitHub repo. GitHub stays one
+              click away via the secondary button. */}
+          <a className="btn btn-primary btn-lg" href="#downloads">
             {t('hero.ctaPrimary')}
             <IconArrow />
           </a>

@@ -11,9 +11,9 @@
   "hero": {
     "status": "alpha",
     "badge": "Open source · Apache 2.0",
-    "title1": "Spanish law,",
-    "title2": "walked like a graph.",
-    "sub": "Open-source platform to actually explore Spanish legislation. A knowledge graph wires every cross-reference together, an AI chat cites the real BOE, and dashboards show how the law evolves over time.",
+    "title1": "All of Spanish law,",
+    "title2": "finally easy to navigate.",
+    "sub": "Open-source platform to actually explore Spanish legislation. A knowledge graph wires every cross-reference together, an AI chat cites the BOE — Spain's official state gazette — and dashboards show how the law evolves over time.",
     "ctaPrimary": "Try LexFlow",
     "ctaSecondary": "View on GitHub",
     "meta1": "Python 3.12 · FastAPI",
@@ -21,10 +21,10 @@
     "meta3": "Local-first · Standalone binary"
   },
   "stats": [
-    { "value": "4", "unit": "", "label": "Integrated layers sharing data — API, graph, chat & dashboards" },
-    { "value": "5", "unit": "", "label": "LLM providers supported through MCP tools" },
-    { "value": "~12", "unit": "K", "label": "Spanish laws indexed from the legalize-es corpus" },
-    { "value": "100", "unit": "%", "label": "Open source under the Apache 2.0 license" }
+    { "value": "~12", "unit": "K", "label": "Spanish laws, searchable in an instant" },
+    { "value": "5", "unit": "", "label": "AI models to choose from, with real citations" },
+    { "value": "0", "unit": "", "label": "Data that leaves your team — all local" },
+    { "value": "100", "unit": "%", "label": "Free and open source, Apache 2.0 license" }
   ],
   "whatIs": {
     "eyebrow": "OK, but what is this?",
@@ -133,7 +133,7 @@
   "userFlow": {
     "eyebrow": "How you use it",
     "title": "Three steps. No Python, no Docker.",
-    "sub": "LexFlow downloads, opens and that's it. The user flow is the same across every operating system.",
+    "sub": "Download it, open it, done. The user flow is the same on every operating system.",
     "steps": [
       {
         "num": "01",
@@ -265,13 +265,13 @@
   "authors": {
     "eyebrow": "Behind the project",
     "title": "The people who build it.",
-    "sub": "LexFlow is the open-source work of two people. If the direction of the project interests you — or you'd like to contribute — their GitHub profiles are where the code lives.",
+    "sub": "LexFlow is the open-source work of two people. If the project's direction interests you — or you'd like to contribute — GitHub is where it all happens.",
     "list": [
       {
         "login": "VforVitorio",
         "name": "Víctor",
         "role": "Co-author",
-        "bio": "Junior AI Engineer at NTT DATA Spain (A Coruña), working across many areas of AI, from computer vision research to research into LLM behavior, agentic AI solutions and tooling such as Model Context Protocol (MCP) servers. BSc in Intelligent Systems Engineering from UIE, graduated with a 9.0/10 average and 4 Distinctions (Matrícula de Honor); thesis awarded Distinction (Matrícula de Honor) and recommended for conversion into a research paper. Now pursuing a Master's Degree in Artificial Intelligence Research (AEPIA / UIMP) alongside his full-time role. Building AI for Formula 1, from telemetry modelling to multi-agent reasoning. LexFlow's architect: designed and built the legalize-es parser, the NetworkX graph, the MCP integration and the React frontend."
+        "bio": "Junior AI Engineer at NTT DATA Spain and a Master's student in AI Research (AEPIA / UIMP). Works on agentic AI, LLMs and MCP servers, and builds AI for Formula 1. LexFlow's architect: built the legalize-es parser, the NetworkX graph, the MCP integration and the React frontend."
       },
       {
         "login": "Santisoutoo",
@@ -317,7 +317,7 @@
     "project": "Project",
     "projectLinks": ["GitHub", "Issues", "Contributing", "Code of conduct"],
     "resources": "Resources",
-    "resourcesLinks": ["legalize-es", "API docs", "CLAUDE.md", "License"],
+    "resourcesLinks": ["legalize-es", "API docs", "License"],
     "legal": "Apache 2.0 · alpha · Built in the open · 2026",
     "themeLabel": "Theme",
     "langLabel": "Language"

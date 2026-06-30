@@ -14,9 +14,10 @@ export function CTA() {
           <h2 className="section-title section-title-accent" style={{ marginInline: 'auto' }}>{t('ctaTitle')}</h2>
           <p>{t('ctaSub')}</p>
           <div className="cta-actions">
-            {/* Marketing landing must never link into the SPA mock — both
-                CTAs go to the GitHub repo. See Nav.tsx for the same idiom. */}
-            <a className="btn btn-primary btn-lg" href={GH_URL} target="_blank" rel="noreferrer">
+            {/* #738 — primary CTA scrolls to the in-page #downloads section;
+                the secondary opens the GitHub repo. Neither links into the
+                SPA mock. See Hero.tsx / Nav.tsx for the same idiom. */}
+            <a className="btn btn-primary btn-lg" href="#downloads">
               {t('ctaPrimary')}
               <IconArrow />
             </a>
