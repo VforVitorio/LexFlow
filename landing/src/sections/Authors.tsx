@@ -29,7 +29,7 @@ export function Authors() {
           <span className="dot" />
           <span className="label-caps">{t('authors.eyebrow')}</span>
         </div>
-        <h2 className="section-title section-title-warm">{t('authors.title')}</h2>
+        <h2 className="section-title section-title">{t('authors.title')}</h2>
         <p className="section-sub">{t('authors.sub')}</p>
 
         <div className="authors-grid">
