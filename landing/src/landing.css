@@ -60,7 +60,7 @@
 .landing-root button { font-family: inherit; cursor: pointer; }
 .landing-root code,
 .landing-root pre {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875em;
 }
 
@@ -86,7 +86,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: hsl(var(--muted-fg));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* ─── Nav ─── */
@@ -482,7 +482,7 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 28px;
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -697,7 +697,7 @@
   border-radius: 8px;
   background: hsl(var(--violet-500) / 0.12);
   color: hsl(var(--violet-500));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
   font-weight: 700;
   margin-bottom: 16px;
@@ -838,7 +838,7 @@
 .landing-root .stack-col .stack-meta {
   font-size: 13px;
   color: hsl(var(--muted-fg));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   margin-bottom: 20px;
 }
 .landing-root .stack-row {
@@ -875,7 +875,7 @@
 }
 .landing-root .phase:first-child { border-top: 0; }
 .landing-root .phase-num {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13px;
   color: hsl(var(--muted-fg));
   font-weight: 600;
@@ -1003,7 +1003,7 @@
 }
 .landing-root .footer-col h5 {
   font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1035,7 +1035,7 @@
   gap: 16px;
   font-size: 12.5px;
   color: hsl(var(--muted-fg));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* ─── Code block (terminal-y) ─── */
@@ -1045,7 +1045,7 @@
   border: 1px solid hsl(var(--border));
   border-radius: 12px;
   overflow: hidden;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13px;
   line-height: 1.7;
 }
@@ -1091,7 +1091,7 @@
   .landing-root .powered-by-row { grid-template-columns: 1fr; gap: 24px; }
 }
 .landing-root .powered-by-title {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1331,7 +1331,7 @@
   padding: 9px 14px;
   background: hsl(var(--bg) / 0.6);
   border-bottom: 1px solid hsl(var(--border));
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
   color: hsl(var(--muted-fg));
 }
@@ -1378,7 +1378,7 @@
 }
 .landing-root .lf-term-body {
   padding: 18px 20px 20px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 13.5px;
   line-height: 1.65;
   color: hsl(var(--fg) / 0.92);
@@ -2025,7 +2025,7 @@
   margin: 0 0 14px;
 }
 .landing-root .user-flow-bullet {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2049,7 +2049,7 @@
   gap: 6px;
 }
 .landing-root .feature-stack-chips li {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2064,7 +2064,7 @@
 /* #186 — Nav "For devs" sidekick link                                        */
 /* -------------------------------------------------------------------------- */
 .landing-root .nav-devs-link {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -2100,7 +2100,7 @@
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -2247,7 +2247,7 @@
   background: hsl(var(--surface));
   color: hsl(var(--muted-fg));
   font-size: 12px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   transition:
     color var(--dur-micro) var(--ease-out),
     border-color var(--dur-micro) var(--ease-out),
@@ -2324,7 +2324,7 @@
 .landing-root .lf-prev-search-bar-icon { color: hsl(var(--muted-fg)); }
 .landing-root .lf-prev-search-bar-text {
   color: hsl(var(--violet-400));
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 12px;
 }
 [data-theme='light'] .landing-root .lf-prev-search-bar-text { color: hsl(var(--violet-600)); }
@@ -2359,7 +2359,7 @@
   transform: translateX(2px);
 }
 .landing-root .lf-prev-search-row-id {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
   font-weight: 600;
   color: hsl(var(--violet-400));
@@ -2388,7 +2388,7 @@
 }
 .landing-root .lf-prev-search-row-rango,
 .landing-root .lf-prev-search-row-refs {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 .landing-root .lf-prev-badge {
   padding: 2px 7px;
@@ -2490,7 +2490,7 @@
 .landing-root .lf-prev-chat-model {
   grid-row: 1 / span 2;
   grid-column: 2;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 999px;
@@ -2526,7 +2526,7 @@
 }
 .landing-root .lf-prev-chat-cite {
   display: inline-block;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 9.5px;
   padding: 1px 5px;
   margin-left: 2px;
@@ -2554,7 +2554,7 @@
   font-size: 12px;
 }
 .landing-root .lf-prev-chat-kbd {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10.5px;
   padding: 2px 6px;
   border-radius: 4px;
@@ -2579,14 +2579,14 @@
   margin-bottom: 4px;
 }
 .landing-root .lf-prev-chat-source-law {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
   color: hsl(var(--violet-400));
   font-size: 10.5px;
 }
 [data-theme='light'] .landing-root .lf-prev-chat-source-law { color: hsl(var(--violet-600)); }
 .landing-root .lf-prev-chat-source-art {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10px;
   color: hsl(var(--muted-fg));
 }
@@ -2711,7 +2711,7 @@
   letter-spacing: -0.01em;
 }
 .landing-root .lf-prev-dash-kpi-delta {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
 }
 .landing-root .lf-prev-delta-success { color: hsl(var(--success)); }
@@ -2781,7 +2781,7 @@
   margin-bottom: 2px;
 }
 .landing-root .lf-prev-graph-tooltip-meta {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10px;
   color: hsl(var(--muted-fg));
 }
@@ -2789,7 +2789,7 @@
   position: absolute;
   bottom: 10px;
   right: 12px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;

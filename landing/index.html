@@ -37,12 +37,12 @@
       name="twitter:description"
       content="Explora la legislación española: grafo de conocimiento, chat con IA que cita el BOE, analítica y API REST sobre 12.000+ leyes. Open source, local-first."
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- #739 — self-hosted fonts (was render-blocking Google Fonts). @font-face
+         lives in src/index.css; preload only the two above-the-fold weights
+         (Inter 400 body + Space Grotesk 600 hero H1). Vite prepends the build
+         `base` to these /fonts/ paths. -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-grotesk-600.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Structured data for AI search + rich results (#671). Static in <head>
          so crawlers read it without executing the SPA's JS. -->
