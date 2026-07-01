@@ -1,0 +1,439 @@
+/* #742 — ordered slice of the former landing.css monolith. Rules stay in
+   ORIGINAL source order; landing.css @imports the slices in order so the
+   cascade is byte-identical. Do NOT reorder rules across slices. */
+.landing-root .hero {
+  position: relative;
+  padding: 120px 0 96px;
+  overflow: hidden;
+}
+
+/* #150 — Halo + masked grid backdrop. Two pointer-events-none layers      */
+/* behind the hero copy. The halo is a soft radial gradient anchored to    */
+/* the top centre. The grid is a 64×64 lattice masked with a radial        */
+/* gradient so it only appears in the centre and dissolves to the edges —  */
+/* hints at "data / structure" without any image asset.                     */
+.landing-root .hero-halo,
+.landing-root .hero-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.landing-root .hero-halo {
+  background: radial-gradient(ellipse 120% 80% at 50% 0%,
+    hsl(var(--violet-500) / 0.22),
+    transparent 70%);
+}
+[data-theme='light'] .landing-root .hero-halo {
+  background: radial-gradient(ellipse 120% 80% at 50% 0%,
+    hsl(var(--violet-500) / 0.12),
+    transparent 70%);
+}
+.landing-root .hero-grid-lines {
+  background-image:
+    linear-gradient(to right,  hsl(var(--fg) / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--fg) / 0.05) 1px, transparent 1px);
+  background-size: 64px 64px, 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 25%, transparent 78%);
+          mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 25%, transparent 78%);
+}
+.landing-root .hero > .lf-container { position: relative; z-index: 1; }
+
+/* Single centred column — f1stratlab idiom. The previous two-column grid
+ * with a sidekick mockup competed with the H1 for attention and mixed law
+ * metadata with stack labels in the same hover-card. The cleaner layout
+ * lets the gradient-clipped headline and the long horizontal eyebrow carry
+ * the first fold on their own. */
+.landing-root .hero-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 920px;
+  margin: 0 auto;
+}
+.landing-root .hero-centered .hero-eyebrow { justify-content: center; }
+.landing-root .hero-centered .hero-sub { margin-left: auto; margin-right: auto; }
+.landing-root .hero-centered .hero-cta { justify-content: center; }
+.landing-root .hero-centered .hero-meta { justify-content: center; }
+
+/* Long horizontal eyebrow above the hero H1 — f1stratlab-style status line. */
+/* One uppercase mono line, bullet-separated, with a pulsing dot on the left. */
+.landing-root .hero-eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--violet-400));
+}
+[data-theme='light'] .landing-root .hero-eyebrow { color: hsl(var(--violet-600)); }
+.landing-root .hero-eyebrow .pulse-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  margin-right: 4px;
+  animation: lf-pulse-dot 1.8s ease-in-out infinite;
+}
+.landing-root .hero-eyebrow-sep {
+  opacity: 0.55;
+  font-weight: 400;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .hero-eyebrow .pulse-dot { animation: none; }
+}
+
+.landing-root .hero h1 {
+  font-size: clamp(44px, 7.6vw, 96px);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  margin: 0;
+}
+/* #150 — first half of the H1 also gradient-clipped. On dark mode it is a */
+/* vertical white-to-lilac fade; on light mode an indigo-to-slate fade.    */
+/* Together with the `.accent` second line, the headline reads as one      */
+/* continuous beam of light rather than two flat colours.                  */
+.landing-root .hero h1 .lead {
+  background: linear-gradient(180deg, hsl(var(--fg)) 0%, hsl(var(--fg) / 0.78) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme='light'] .landing-root .hero h1 .lead {
+  background: linear-gradient(180deg, hsl(var(--fg)) 0%, hsl(232 35% 22%) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.landing-root .hero h1 .accent {
+  background: linear-gradient(102deg,
+    hsl(252, 100%, 82%) 0%,
+    hsl(232, 100%, 78%) 35%,
+    hsl(210, 100%, 72%) 65%,
+    hsl(190, 95%, 70%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lf-hero-shimmer 9s ease-in-out infinite;
+}
+@keyframes lf-hero-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+[data-theme='light'] .landing-root .hero h1 .accent {
+  background: linear-gradient(102deg,
+    hsl(252, 80%, 55%) 0%,
+    hsl(232, 85%, 52%) 40%,
+    hsl(210, 90%, 50%) 70%,
+    hsl(190, 85%, 45%) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lf-hero-shimmer 9s ease-in-out infinite;
+}
+.landing-root .hero-sub {
+  margin-top: 24px;
+  font-size: 18px;
+  line-height: 1.5;
+  max-width: 540px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .hero-cta {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.landing-root .hero-meta {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 14px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ─── Stat bar ─── */
+
+.landing-root .stat-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
+}
+.landing-root .stat {
+  padding: 32px 32px;
+  border-right: 1px solid hsl(var(--border));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.landing-root .stat:last-child { border-right: 0; }
+.landing-root .stat-icon {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: hsl(var(--violet-500) / 0.10);
+  color: hsl(var(--violet-500));
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+[data-theme='dark'] .landing-root .stat-icon {
+  background: hsl(var(--violet-400) / 0.14);
+  color: hsl(var(--violet-300));
+}
+.landing-root .stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: hsl(var(--fg));
+  line-height: 1;
+}
+.landing-root .stat-value .unit { font-size: 22px; color: hsl(var(--muted-fg)); margin-left: 2px; }
+.landing-root .stat-label {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: hsl(var(--muted-fg));
+  max-width: 22ch;
+}
+@media (max-width: 760px) {
+  .landing-root .stat-bar { grid-template-columns: repeat(2, 1fr); }
+  .landing-root .stat:nth-child(2) { border-right: 0; }
+  .landing-root .stat:nth-child(1),
+  .landing-root .stat:nth-child(2) { border-bottom: 1px solid hsl(var(--border)); }
+}
+
+/* ─── Feature blocks ─── */
+
+.landing-root .features {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin-top: 56px;
+}
+.landing-root .feature {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 48px;
+  align-items: center;
+  padding: 40px;
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  /* #155 — resting card has a soft drop + an inset highlight at the top so */
+  /* it reads as a slightly lifted surface.                                  */
+  box-shadow:
+    0 2px 10px hsl(232 30% 10% / 0.05),
+    inset 0 1px 0 hsl(var(--fg) / 0.04);
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out),
+    box-shadow var(--dur-micro) var(--ease-out);
+}
+/* #155 — hover: brighten the surface, deepen the border, swap to a 40px   */
+/* drop. All on the same single easing curve so the card feels like the   */
+/* same product as the buttons (#153).                                      */
+.landing-root .feature:hover {
+  border-color: hsl(var(--border-strong));
+  background-color: hsl(var(--surface-2) / 0.55);
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 40px -8px hsl(232 30% 10% / 0.15),
+    inset 0 1px 0 hsl(var(--fg) / 0.06);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .feature { transition: none; }
+  .landing-root .feature:hover { transform: none; }
+}
+.landing-root .feature.reverse { grid-template-columns: 1.15fr 1fr; }
+.landing-root .feature.reverse .feature-copy { order: 2; }
+.landing-root .feature.reverse .feature-art { order: 1; }
+@media (max-width: 900px) {
+  .landing-root .feature,
+  .landing-root .feature.reverse { grid-template-columns: 1fr; padding: 28px; gap: 32px; }
+  .landing-root .feature.reverse .feature-copy { order: 1; }
+  .landing-root .feature.reverse .feature-art { order: 2; }
+}
+
+.landing-root .feature-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: hsl(var(--violet-500) / 0.12);
+  color: hsl(var(--violet-500));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+[data-theme='dark'] .landing-root .feature-num { background: hsl(var(--violet-400) / 0.18); color: hsl(var(--violet-300)); }
+
+.landing-root .feature h3 {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.landing-root .feature p {
+  margin-top: 14px;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 460px;
+}
+.landing-root .feature-bullets {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+.landing-root .feature-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: hsl(var(--fg));
+}
+.landing-root .feature-bullets li::before {
+  content: '';
+  display: block;
+  width: 5px; height: 5px;
+  border-radius: 999px;
+  background: hsl(var(--violet-500));
+  margin-top: 9px;
+  flex-shrink: 0;
+}
+
+.landing-root .feature-art {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* Inline "go to surface" link under the feature copy */
+.landing-root .feature-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--violet-500));
+  transition: color 120ms, gap 120ms;
+}
+.landing-root .feature-link:hover { color: hsl(var(--violet-600)); gap: 10px; }
+[data-theme='dark'] .landing-root .feature-link { color: hsl(var(--violet-300)); }
+[data-theme='dark'] .landing-root .feature-link:hover { color: hsl(var(--violet-400)); }
+
+/* Make the entire mock art surface a button when wired to a route */
+.landing-root .feature-art-link {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 120ms, transform 120ms, box-shadow 120ms;
+}
+.landing-root .feature-art-link:hover {
+  border-color: hsl(var(--violet-500) / 0.55);
+  box-shadow: 0 12px 32px -16px hsl(var(--violet-500) / 0.45);
+  transform: translateY(-2px);
+}
+
+/* Same chrome as `.feature-art-link` but without the hover treatment —     */
+/* these wrappers are illustrative and do NOT navigate (see PR #149). The  */
+/* wrap MUST share the aspect-ratio / background / border so the mockups   */
+/* render as cards; without these the SVG/canvas inside collapses and the  */
+/* left half of every feature card looks empty.                            */
+.landing-root .feature-art-wrap {
+  display: block;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* ─── Built on ─── */
+
+.landing-root .built-on {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  padding: 48px;
+  background: linear-gradient(135deg, hsl(var(--violet-500) / 0.08), hsl(var(--blue-500) / 0.06));
+  border: 1px solid hsl(var(--border));
+  border-radius: 24px;
+}
+[data-theme='dark'] .landing-root .built-on {
+  background: linear-gradient(135deg, hsl(var(--violet-400) / 0.10), hsl(var(--blue-500) / 0.08));
+}
+@media (max-width: 860px) {
+  .landing-root .built-on { grid-template-columns: 1fr; padding: 32px; }
+}
+
+/* ─── Tech stack ─── */
+
+.landing-root .stack-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 48px;
+}
+@media (max-width: 760px) { .landing-root .stack-grid { grid-template-columns: 1fr; } }
+
+.landing-root .stack-col {
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  padding: 28px;
+}
+.landing-root .stack-col h4 {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+.landing-root .stack-col .stack-meta {
+  font-size: 14px;
+  color: hsl(var(--muted-fg));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin-bottom: 20px;
+}
+.landing-root .stack-row {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  font-size: 14px;
+  border-top: 1px solid hsl(var(--border));
+}
+.landing-root .stack-row:first-of-type { border-top: 0; }
+.landing-root .stack-row .k { color: hsl(var(--muted-fg)); }
+.landing-root .stack-row .v { color: hsl(var(--fg)); font-weight: 500; }
+
+/* ─── Roadmap ─── */

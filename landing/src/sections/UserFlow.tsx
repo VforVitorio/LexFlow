@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 /**
  * #183 — "Cómo lo usas" / "How you use it".
@@ -27,11 +28,8 @@ export function UserFlow() {
   return (
     <section id="how-you-use" className="tight">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('userFlow.eyebrow')}</span>
-        </div>
-        <h2 className="section-title section-title">{t('userFlow.title')}</h2>
+        <SectionEyebrow label={t('userFlow.eyebrow')} />
+        <h2 className="section-title">{t('userFlow.title')}</h2>
         <p className="section-sub">{t('userFlow.sub')}</p>
         <ol className="user-flow-grid">
           {steps.map((s) => (

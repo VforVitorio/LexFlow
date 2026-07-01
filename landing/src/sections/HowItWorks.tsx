@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 /**
  * #157 — "How it works" narrative.
@@ -22,10 +23,7 @@ export function HowItWorks() {
   return (
     <section id="how" className="hiw-section hiw-static">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('howItWorks.eyebrow')}</span>
-        </div>
+        <SectionEyebrow label={t('howItWorks.eyebrow')} />
         <h2 className="section-title">{t('howItWorks.title')}</h2>
         <p className="section-sub">{t('howItWorks.sub')}</p>
         <div className="hiw-static-grid">

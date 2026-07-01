@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { TerminalBlock, type TerminalLine } from '../components/TerminalBlock';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 export function BuiltOn() {
   const { t } = useTranslation('landing');
@@ -10,10 +11,7 @@ export function BuiltOn() {
       <div className="lf-container">
         <div className="built-on">
           <div>
-            <div className="section-eyebrow">
-              <span className="dot" />
-              <span className="label-caps">{t('builtOnEyebrow')}</span>
-            </div>
+            <SectionEyebrow label={t('builtOnEyebrow')} />
             <h2 style={{ fontSize: 32, letterSpacing: '-0.025em', lineHeight: 1.1, textWrap: 'balance' }}>{t('builtOnTitle')}</h2>
             <p style={{ marginTop: 14, fontSize: 15, lineHeight: 1.6 }}>{t('builtOnBody')}</p>
             <a

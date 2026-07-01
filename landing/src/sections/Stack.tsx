@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 interface StackCol {
   name: string;
@@ -14,10 +15,7 @@ export function Stack() {
   return (
     <section id="stack">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('stackEyebrow')}</span>
-        </div>
+        <SectionEyebrow label={t('stackEyebrow')} />
         <h2 className="section-title">{t('stackTitle')}</h2>
         <p className="section-sub">{t('stackSub')}</p>
         <div className="stack-grid">

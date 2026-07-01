@@ -1,5 +1,6 @@
-import { type ReactNode, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SectionEyebrow } from '../components/SectionEyebrow';
+import { renderBold } from '../lib/render-bold';
 
 /**
  * "Vale, pero ¿qué es esto?" — short explainer between Hero and Personas.
@@ -21,14 +22,6 @@ import { useTranslation } from 'react-i18next';
 
 interface StatItem { value: string; label: string; }
 
-function renderBold(str: string): ReactNode[] {
-  return str.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
-    p.startsWith('**')
-      ? <strong key={i}>{p.slice(2, -2)}</strong>
-      : <Fragment key={i}>{p}</Fragment>
-  );
-}
-
 export function WhatIs() {
   const { t } = useTranslation('landing');
   const stats = t('whatIs.stats', { returnObjects: true }) as unknown as StatItem[];
@@ -36,10 +29,7 @@ export function WhatIs() {
   return (
     <section id="what-is" className="tight what-is">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('whatIs.eyebrow')}</span>
-        </div>
+        <SectionEyebrow label={t('whatIs.eyebrow')} />
         <h2 className="section-title section-title-accent what-is-title">{t('whatIs.title')}</h2>
         {/* Definitional anchor: a single complete sentence AI engines can cite. */}
         <p className="what-is-anchor">{t('whatIs.anchor')}</p>

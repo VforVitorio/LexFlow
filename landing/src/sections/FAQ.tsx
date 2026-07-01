@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 /**
  * FAQ section — structured Q&A for AI citability (GEO) and user orientation.
@@ -27,10 +28,7 @@ export function FAQ() {
   return (
     <section id="faq" className="tight">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('faq.eyebrow')}</span>
-        </div>
+        <SectionEyebrow label={t('faq.eyebrow')} />
         <h2 className="section-title">{t('faq.title')}</h2>
 
         <div className="faq-list">
