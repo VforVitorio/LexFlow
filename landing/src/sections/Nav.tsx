@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LandingBrandMark } from '../mocks/LandingBrandMark';
 import { GH_URL, IconArrow, IconClose, IconGitHub, IconMenu, IconMoon, IconSun } from '../icons';
-import { useUi } from '@/lib/theme';
-import { SUPPORTED_LANGS, type Lang } from '@/i18n';
+import { useTheme, toggleTheme } from '@/lib/theme';
+import { SUPPORTED_LANGS, ensureLang, type Lang } from '@/i18n';
 
 // #186 — Top-nav reorientation. "Stack" was a dev-detail wormhole next to
 // the main product tabs, so it's gone from the centre row (it still lives
@@ -26,15 +26,17 @@ const HIDDEN: UnderlineRect = { left: 0, width: 0, opacity: 0 };
 
 export function Nav() {
   const { t, i18n } = useTranslation('landing');
-  const theme = useUi((s) => s.theme);
-  const toggleTheme = useUi((s) => s.toggleTheme);
+  const theme = useTheme();
 
   const currentLang = (SUPPORTED_LANGS.includes(i18n.resolvedLanguage as Lang)
     ? (i18n.resolvedLanguage as Lang)
     : 'es');
 
+  // EN ships as a separate async chunk (#740); load it before switching so the
+  // translations are present when react-i18next re-renders.
   const setLang = (l: Lang) => {
-    if (l !== currentLang) void i18n.changeLanguage(l);
+    if (l === currentLang) return;
+    void ensureLang(l).then(() => i18n.changeLanguage(l));
   };
 
   // #151 — scroll-spy moving underline. IntersectionObserver picks the

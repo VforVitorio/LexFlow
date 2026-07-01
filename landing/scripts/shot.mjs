@@ -16,7 +16,7 @@ const BASE = process.argv[2] ?? 'http://localhost:5174/';
 const OUT = process.argv[3] ?? './shots';
 const ONLY = process.argv[4]; // optional single theme
 const THEMES = ONLY ? [ONLY] : ['light', 'dark'];
-const THEME_KEY = 'lexflow.landing.theme'; // zustand-persist blob, not a raw value
+const THEME_KEY = 'lexflow.landing.theme'; // bare 'light'|'dark' string (#740 dropped zustand-persist)
 
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
@@ -40,7 +40,7 @@ for (const theme of THEMES) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.addInitScript(([k, t]) => {
-    try { localStorage.setItem(k, JSON.stringify({ state: { theme: t }, version: 0 })); } catch {}
+    try { localStorage.setItem(k, t); } catch {}
   }, [THEME_KEY, theme]);
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.waitForTimeout(1000);
@@ -61,7 +61,7 @@ for (const theme of THEMES) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   await page.addInitScript(([k]) => {
-    try { localStorage.setItem(k, JSON.stringify({ state: { theme: 'dark' }, version: 0 })); } catch {}
+    try { localStorage.setItem(k, 'dark'); } catch {}
   }, [THEME_KEY]);
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
@@ -74,7 +74,7 @@ for (const theme of THEMES) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });
   const page = await ctx.newPage();
   await page.addInitScript((k) => {
-    try { localStorage.setItem(k, JSON.stringify({ state: { theme: 'dark' }, version: 0 })); } catch {}
+    try { localStorage.setItem(k, 'dark'); } catch {}
   }, THEME_KEY);
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);
