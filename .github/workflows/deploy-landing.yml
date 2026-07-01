@@ -17,6 +17,10 @@ on:
     paths:
       - "landing/**"
       - ".github/workflows/deploy-landing.yml"
+  # Re-deploy on a new release so the version chip (baked at build time, #740)
+  # refreshes without needing an unrelated landing commit.
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -53,9 +57,21 @@ jobs:
       - name: Install Chromium (prerender)
         run: npx playwright install --with-deps chromium
 
+      # #740 — bake the latest release tag into the bundle so the hero version
+      # chip needs no runtime fetch to api.github.com. Empty when the repo has
+      # no releases yet; the chip then falls back to its "pre-alpha" status.
+      - name: Resolve latest release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view -R "$GITHUB_REPOSITORY" --json tagName -q .tagName 2>/dev/null || true)
+          echo "VITE_LATEST_TAG=${tag}" >> "$GITHUB_ENV"
+          echo "Latest release tag: ${tag:-<none>}"
+
       - name: Build landing (with /LexFlow/ base)
         env:
           VITE_BASE_PATH: /LexFlow/
+          VITE_LATEST_TAG: ${{ env.VITE_LATEST_TAG }}
         run: npm run build
 
       # #162 — substitute Cloudflare Web Analytics beacon token. The HTML

@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { GH_URL, IconArrow, IconGitHub } from '../icons';
-import { useLatestRelease } from '../hooks/useLatestRelease';
 
 /**
  * Hero — single centred column, f1stratlab-style.
@@ -15,10 +14,10 @@ import { useLatestRelease } from '../hooks/useLatestRelease';
  */
 export function Hero() {
   const { t } = useTranslation('landing');
-  // Pulled once at session start; tag drives the long horizontal eyebrow's
-  // version chip and falls back to the translated status while loading.
-  const { tag } = useLatestRelease();
-  const statusLabel = tag ?? t('hero.status');
+  // Release tag is baked at build time by deploy-landing.yml (#740), so there's
+  // no runtime fetch to api.github.com. Falls back to the translated status
+  // string in local/dev builds where VITE_LATEST_TAG is unset.
+  const statusLabel = import.meta.env.VITE_LATEST_TAG?.trim() || t('hero.status');
   return (
     <section className="hero" id="top">
       {/* #150 — backdrop layers. pointer-events:none so content above stays
