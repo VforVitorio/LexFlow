@@ -47,7 +47,7 @@ jobs:
           branch="$(printf '%s' "$PRS_JSON" | jq -r '.[0].headBranchName')"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.pr.outputs.branch }}
           # Same token release-please used so the push back is
@@ -87,7 +87,7 @@ jobs:
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
