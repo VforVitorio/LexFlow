@@ -296,9 +296,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: landing/package-lock.json
 
+      # Vite 8's rolldown ships per-platform native bindings whose nested
+      # @emnapi optional deps aren't fully captured by a lockfile generated on
+      # a different OS, so strict `npm ci` fails on the Linux runner. The
+      # landing is a static marketing site, so we trade `ci`'s frozen-install
+      # guarantee for `install` here (the SPA above keeps `npm ci`). See #739.
       - name: Install dependencies
         if: steps.changes.outputs.landing == 'true'
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       # The build prerenders the landing with headless Chromium (#689); the
       # browser binary must be present for `npm run build` to succeed.

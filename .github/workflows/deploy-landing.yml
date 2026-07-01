@@ -46,8 +46,10 @@ jobs:
           cache: "npm"
           cache-dependency-path: landing/package-lock.json
 
+      # See ci.yml landing-build: rolldown's per-platform optional deps break
+      # strict `npm ci` when the lockfile is generated on another OS. #739.
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       # The build prerenders the landing with headless Chromium (#689).
       - name: Install Chromium (prerender)
