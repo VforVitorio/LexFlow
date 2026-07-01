@@ -14,6 +14,10 @@ import type { PropsWithChildren } from 'react';
  * Initial render is always `.reveal` (server + client agree) so hydration over
  * the prerendered markup never mismatches; the effect runs client-side only.
  *
+ * The hidden state is CSS-gated behind `html.js` (see index.css + main.tsx), so
+ * a run where the bundle never boots — disabled JS, load error, failed
+ * hydration — keeps every wrapped section visible instead of blanking the page.
+ *
  * Usage: <RevealSection><MyHeavySection /></RevealSection>
  */
 export function RevealSection({ children }: PropsWithChildren) {

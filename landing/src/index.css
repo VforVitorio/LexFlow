@@ -12,28 +12,28 @@
  * fallback immediately and swaps when the face arrives.
  * JetBrains Mono was dropped entirely — mono text uses the system stack. */
 @font-face {
-  font-family: 'Inter';
+  font-family: Inter;
   font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: url('/fonts/inter-400.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: Inter;
   font-style: normal;
   font-weight: 500;
   font-display: swap;
   src: url('/fonts/inter-500.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: Inter;
   font-style: normal;
   font-weight: 600;
   font-display: swap;
   src: url('/fonts/inter-600.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'Inter';
+  font-family: Inter;
   font-style: normal;
   font-weight: 700;
   font-display: swap;
@@ -183,15 +183,26 @@ h1, h2, h3, h4 {
  * `.is-visible` via IntersectionObserver when the block scrolls into view;
  * reduced-motion users get `.is-visible` set immediately, and the safety
  * net above collapses the transition to ~0ms. Same curve/duration as the
- * old framer-motion tween (opacity + 24px rise, once per load). */
+ * old framer-motion tween (opacity + 24px rise, once per load).
+ *
+ * Reveal blocks are VISIBLE by default so the pre-rendered / no-JS HTML — and
+ * any run where the client bundle never boots (disabled JS, load error, failed
+ * hydration) — still shows the whole page body. The hidden-then-animate state
+ * only engages once the client marks `<html class="js">` (main.tsx). The
+ * prerender strips that class (scripts/prerender.mjs) so the shipped static
+ * HTML stays in this visible baseline regardless of what the effects did. */
 .reveal {
+  opacity: 1;
+  transform: none;
+}
+html.js .reveal {
   opacity: 0;
   transform: translateY(24px);
   transition:
     opacity 0.9s cubic-bezier(0.2, 0, 0, 1),
     transform 0.9s cubic-bezier(0.2, 0, 0, 1);
 }
-.reveal.is-visible {
+html.js .reveal.is-visible {
   opacity: 1;
   transform: none;
 }

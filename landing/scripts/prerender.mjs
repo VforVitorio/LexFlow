@@ -34,7 +34,13 @@ try {
   // is present — which is all we need for the static snapshot.
   await page.waitForSelector('#root > *', { state: 'attached', timeout: 20000 });
   await page.waitForTimeout(500);
-  const html = '<!doctype html>\n' + (await page.evaluate(() => document.documentElement.outerHTML));
+  const html = '<!doctype html>\n' + (await page.evaluate(() => {
+    // Ship the visible baseline: drop the runtime `js` marker main.tsx added so
+    // the static HTML renders the page body without JS (index.css gates the
+    // hidden `.reveal` state behind `html.js`). The real client re-adds it.
+    document.documentElement.classList.remove('js');
+    return document.documentElement.outerHTML;
+  }));
   writeFileSync('dist/index.html', html, 'utf8');
   copyFileSync('dist/index.html', 'dist/404.html');
   console.log(`Prerendered dist/index.html (${html.length} bytes) + dist/404.html`);
