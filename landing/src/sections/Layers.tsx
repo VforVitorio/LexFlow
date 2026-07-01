@@ -1,20 +1,13 @@
-import { type ReactNode, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
+import { renderBold } from '../lib/render-bold';
 import type { Lang } from '@/i18n';
 import { ApiFeature, type LayerCopy } from '../mocks/ApiFeature';
 import { GraphPreview } from '../previews/GraphPreview';
 import { ChatPreview } from '../previews/ChatPreview';
 import { DashboardPreview } from '../previews/DashboardPreview';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 interface Props { lang: Lang; }
-
-function renderBold(str: string): ReactNode[] {
-  return str.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
-    p.startsWith('**')
-      ? <strong key={i} style={{ color: 'hsl(var(--fg))', fontWeight: 600 }}>{p.slice(2, -2)}</strong>
-      : <Fragment key={i}>{p}</Fragment>
-  );
-}
 
 /**
  * Each card pairs a problem statement (from i18n) with a landing-native
@@ -39,11 +32,8 @@ export function Layers({ lang }: Props) {
   return (
     <section id="layers">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('layersEyebrow')}</span>
-        </div>
-        <h2 className="section-title section-title">{t('layersTitle')}</h2>
+        <SectionEyebrow label={t('layersEyebrow')} />
+        <h2 className="section-title">{t('layersTitle')}</h2>
         <p className="section-sub">{renderBold(t('layersSub'))}</p>
         <div className="features">
           {layers.map((l, i) => {

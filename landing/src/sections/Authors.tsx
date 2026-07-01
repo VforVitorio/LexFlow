@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { IconGitHub } from '../icons';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 /**
  * "Meet the authors" section — VforVitorio + Santisoutoo.
@@ -25,11 +26,8 @@ export function Authors() {
   return (
     <section id="authors" className="tight">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('authors.eyebrow')}</span>
-        </div>
-        <h2 className="section-title section-title">{t('authors.title')}</h2>
+        <SectionEyebrow label={t('authors.eyebrow')} />
+        <h2 className="section-title">{t('authors.title')}</h2>
         <p className="section-sub">{t('authors.sub')}</p>
 
         <div className="authors-grid">

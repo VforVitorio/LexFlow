@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 type Status = 'done' | 'progress' | 'planned';
 interface Phase { name: string; desc: string; status: Status; }
@@ -15,10 +16,7 @@ export function Roadmap() {
   return (
     <section id="roadmap">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('roadmapEyebrow')}</span>
-        </div>
+        <SectionEyebrow label={t('roadmapEyebrow')} />
         <h2 className="section-title">{t('roadmapTitle')}</h2>
         <p className="section-sub">{t('roadmapSub')}</p>
         <div className="roadmap">

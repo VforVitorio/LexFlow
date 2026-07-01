@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { GH_URL, IconArrow, IconGitHub } from '../icons';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 export function CTA() {
   const { t } = useTranslation('landing');
@@ -7,11 +8,8 @@ export function CTA() {
     <section className="tight">
       <div className="lf-container">
         <div className="cta-block">
-          <div className="section-eyebrow" style={{ justifyContent: 'center' }}>
-            <span className="dot" />
-            <span className="label-caps">{t('ctaEyebrow')}</span>
-          </div>
-          <h2 className="section-title section-title" style={{ marginInline: 'auto' }}>{t('ctaTitle')}</h2>
+          <SectionEyebrow label={t('ctaEyebrow')} center />
+          <h2 className="section-title" style={{ marginInline: 'auto' }}>{t('ctaTitle')}</h2>
           <p>{t('ctaSub')}</p>
           <div className="cta-actions">
             {/* #738 — primary CTA scrolls to the in-page #downloads section;

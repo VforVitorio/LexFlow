@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconArrow } from '../icons';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 /**
  * Landing-page downloads section (#129).
@@ -62,11 +63,8 @@ export function Downloads() {
   return (
     <section id="downloads" className="tight">
       <div className="lf-container">
-        <div className="section-eyebrow" style={{ justifyContent: 'center' }}>
-          <span className="dot" />
-          <span className="label-caps">{t('downloads.eyebrow')}</span>
-        </div>
-        <h2 className="section-title section-title" style={{ textAlign: 'center', marginInline: 'auto' }}>
+        <SectionEyebrow label={t('downloads.eyebrow')} center />
+        <h2 className="section-title" style={{ textAlign: 'center', marginInline: 'auto' }}>
           {t('downloads.title')}
         </h2>
         <p style={{ textAlign: 'center', maxWidth: '40rem', margin: '0.5rem auto 1.5rem' }}>

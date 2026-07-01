@@ -1,0 +1,1190 @@
+/* #742 — ordered slice of the former landing.css monolith. Rules stay in
+   ORIGINAL source order; landing.css @imports the slices in order so the
+   cascade is byte-identical. Do NOT reorder rules across slices. */
+/* FAQ section                                                                  */
+/* -------------------------------------------------------------------------- */
+.landing-root .faq-list {
+  margin: 28px 0 0;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.landing-root .faq-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  background: hsl(var(--surface));
+  transition: border-color 0.15s ease;
+}
+.landing-root .faq-item[open] {
+  border-color: hsl(var(--violet-500) / 0.5);
+}
+[data-theme='light'] .landing-root .faq-item[open] {
+  border-color: hsl(var(--violet-600) / 0.4);
+}
+.landing-root .faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: hsl(var(--fg));
+  cursor: pointer;
+  box-sizing: border-box;
+  /* Drop the native disclosure triangle — the +/− chevron replaces it. */
+  list-style: none;
+}
+.landing-root .faq-question::-webkit-details-marker { display: none; }
+.landing-root .faq-question:focus-visible {
+  outline: 2px solid hsl(var(--violet-500));
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+.landing-root .faq-chevron {
+  flex-shrink: 0;
+  margin-left: 12px;
+  font-size: 20px;
+  line-height: 1;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .faq-chevron::before { content: '+'; }
+.landing-root .faq-item[open] .faq-chevron::before { content: '−'; }
+.landing-root .faq-answer {
+  margin: 0;
+  padding: 0 20px 16px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: hsl(var(--muted-fg));
+}
+
+/* -------------------------------------------------------------------------- */
+/* DevContrib banner — sits at the top of the .para-devs zone                 */
+/* -------------------------------------------------------------------------- */
+.landing-root .dev-contrib { padding: 24px 0 8px; }
+.landing-root .dev-contrib-card {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 20px;
+  padding: 22px 24px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  border-left: 3px solid hsl(var(--violet-500));
+}
+@media (max-width: 640px) {
+  .landing-root .dev-contrib-card { grid-template-columns: 1fr; gap: 14px; }
+}
+.landing-root .dev-contrib-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: hsl(var(--violet-500) / 0.15);
+  color: hsl(var(--violet-300));
+  display: grid;
+  place-items: center;
+}
+[data-theme='light'] .landing-root .dev-contrib-icon { color: hsl(var(--violet-600)); }
+.landing-root .dev-contrib-title {
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: hsl(var(--fg));
+}
+.landing-root .dev-contrib-body {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .dev-contrib-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.landing-root .dev-contrib-bullets li {
+  position: relative;
+  padding-left: 18px;
+  font-size: 14px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .dev-contrib-bullets li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: hsl(var(--violet-400));
+  font-weight: 700;
+}
+[data-theme='light'] .landing-root .dev-contrib-bullets li::before { color: hsl(var(--violet-600)); }
+
+/* The DevContrib lives inside `.para-devs`. The wrapper's `.para-devs section
+ * { padding: 56px 0 }` rule would push the banner too low — tighten it. */
+.landing-root .para-devs .dev-contrib { padding: 32px 0 16px; }
+
+/* -------------------------------------------------------------------------- */
+/* #181 — Personas grid                                                       */
+/* -------------------------------------------------------------------------- */
+.landing-root .personas-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-top: 32px;
+}
+@media (max-width: 1100px) { .landing-root .personas-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .landing-root .personas-grid { grid-template-columns: 1fr; } }
+
+.landing-root .persona-card {
+  position: relative;
+  padding: 28px 22px 24px;
+  border-radius: 16px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.landing-root .persona-card:hover {
+  border-color: hsl(var(--border-strong));
+  transform: translateY(-2px);
+}
+.landing-root .persona-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 16px;
+  background: hsl(var(--violet-500) / 0.15);
+  color: hsl(var(--violet-300));
+  position: relative;
+}
+[data-theme='light'] .landing-root .persona-icon-wrap {
+  background: hsl(var(--violet-500) / 0.10);
+  color: hsl(var(--violet-600));
+}
+.landing-root .persona-icon-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  background: radial-gradient(closest-side, hsl(var(--violet-500) / 0.22), transparent 70%);
+  z-index: -1;
+  filter: blur(4px);
+}
+.landing-root .persona-icon { display: grid; place-items: center; }
+.landing-root .persona-who {
+  font-size: 16px;
+  margin: 0 0 8px;
+  color: hsl(var(--fg));
+}
+.landing-root .persona-pain {
+  font-size: 14px;
+  line-height: 1.55;
+  color: hsl(var(--muted-fg));
+  margin: 0;
+  max-width: 28ch;
+}
+
+/* -------------------------------------------------------------------------- */
+/* #183 — UserFlow grid (3 steps)                                             */
+/* -------------------------------------------------------------------------- */
+.landing-root .user-flow-grid {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 880px) { .landing-root .user-flow-grid { grid-template-columns: 1fr; } }
+
+.landing-root .user-flow-step {
+  position: relative;
+  padding: 28px 26px;
+  border-radius: 18px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    background-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+}
+.landing-root .user-flow-step:hover {
+  border-color: hsl(var(--border-strong));
+  transform: translateY(-2px);
+}
+.landing-root .user-flow-step h3 {
+  font-size: 20px;
+  margin: 14px 0 6px;
+}
+.landing-root .user-flow-step p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: hsl(var(--muted-fg));
+  margin: 0 0 14px;
+}
+.landing-root .user-flow-bullet {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--violet-400));
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: hsl(var(--violet-500) / 0.12);
+  display: inline-block;
+}
+[data-theme='light'] .landing-root .user-flow-bullet { color: hsl(var(--violet-600)); background: hsl(var(--violet-500) / 0.10); }
+
+/* -------------------------------------------------------------------------- */
+/* #182 — Feature stack chips (small pills at the bottom of each card)        */
+/* -------------------------------------------------------------------------- */
+.landing-root .feature-stack-chips {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.landing-root .feature-stack-chips li {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-fg));
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+
+/* -------------------------------------------------------------------------- */
+/* #186 — Nav "For devs" sidekick link                                        */
+/* -------------------------------------------------------------------------- */
+.landing-root .nav-devs-link {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-fg));
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: color var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out);
+}
+.landing-root .nav-devs-link:hover {
+  color: hsl(var(--fg));
+  background: hsl(var(--surface));
+}
+@media (max-width: 720px) { .landing-root .nav-devs-link { display: none; } }
+
+/* -------------------------------------------------------------------------- */
+/* #184 — "Para devs" zone wrapper                                            */
+/* -------------------------------------------------------------------------- */
+/* Pulls down the visual hierarchy of stack/howitworks/builton/poweredby/    */
+/* roadmap so the dev-tone sections read as secondary. Smaller H2s, fainter  */
+/* eyebrows, reduced section padding and a subtle top border so a visitor    */
+/* knows they've crossed into "optional context".                            */
+
+.landing-root .para-devs {
+  position: relative;
+  margin-top: 64px;
+  padding-top: 48px;
+  border-top: 1px dashed hsl(var(--border));
+}
+.landing-root .para-devs::before {
+  content: 'Para devs';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-fg));
+  background: hsl(var(--bg));
+  padding: 0 12px;
+}
+:lang(en) .landing-root .para-devs::before { content: 'For devs'; }
+
+.landing-root .para-devs section { padding: 56px 0; }
+.landing-root .para-devs h2,
+.landing-root .para-devs .section-title { font-size: clamp(22px, 3vw, 28px); }
+.landing-root .para-devs .section-sub { font-size: 16px; max-width: 720px; }
+.landing-root .para-devs .section-eyebrow .label-caps,
+.landing-root .para-devs .section-eyebrow .dot { opacity: 0.7; }
+/* Quiet the hero-grade halo backgrounds that any of these sections may have
+ * inherited from their original full-weight layout. */
+.landing-root .para-devs .hero-halo,
+.landing-root .para-devs .hero-grid-lines { display: none; }
+
+/* ========================================================================== */
+/* #185 — Landing-native SPA previews                                         */
+/* ========================================================================== */
+/* Replace the old hand-drawn mockups (Graph/Chat/Dashboard/Api) with         */
+/* preview components that visually mirror the SPA pages using the landing's */
+/* design tokens. Shared chrome lives under `.lf-prev`; each preview adds its */
+/* own scoped tree.                                                            */
+
+.landing-root .lf-prev {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  border-radius: 14px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  overflow: hidden;
+  font-size: 12px;
+  color: hsl(var(--fg));
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 10px 32px -16px hsl(232 40% 4% / 0.55),
+    0 1px 0 hsl(var(--fg) / 0.04) inset;
+}
+[data-theme='light'] .landing-root .lf-prev {
+  box-shadow:
+    0 12px 32px -18px hsl(232 30% 30% / 0.22),
+    0 1px 0 hsl(var(--fg) / 0.04) inset;
+}
+
+/* macOS-style title bar shared by every preview. Traffic-light dots on
+ * the left, a centred tab pill carrying the preview's name. Sits as the
+ * first child inside .lf-prev; the body grows below it. */
+.landing-root .lf-prev-chrome {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, hsl(var(--surface-2)) 0%, hsl(var(--surface)) 100%);
+  border-bottom: 1px solid hsl(var(--border));
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.landing-root .lf-prev-traffic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.landing-root .lf-prev-traffic-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  display: inline-block;
+  box-shadow: 0 0 0 0.5px hsl(0 0% 0% / 0.15) inset;
+}
+.landing-root .lf-prev-traffic-dot.is-close { background: hsl(355 75% 60%); }
+.landing-root .lf-prev-traffic-dot.is-min   { background: hsl(40 92% 56%); }
+.landing-root .lf-prev-traffic-dot.is-max   { background: hsl(140 56% 50%); }
+.landing-root .lf-prev-tab {
+  justify-self: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: hsl(var(--muted-fg));
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Body inside a chromed preview. Fills the remaining height. Each feature
+ * (search/chat/dash/graph) sets its own grid + padding via a sibling class. */
+.landing-root .lf-prev-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Generic card surface used inside previews (KPI tiles, source cards, etc.) */
+.landing-root .lf-prev-card {
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+/* Small pills used in dashboard action row + assorted previews */
+.landing-root .lf-prev-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  color: hsl(var(--muted-fg));
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+}
+
+/* ---------- Tag chips used by ApiFeature ---------------------------------- */
+.landing-root .lf-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 18px;
+}
+.landing-root .lf-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  color: hsl(var(--muted-fg));
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  transition:
+    color var(--dur-micro) var(--ease-out),
+    border-color var(--dur-micro) var(--ease-out),
+    background var(--dur-micro) var(--ease-out);
+  cursor: pointer;
+}
+.landing-root .lf-tag:hover { color: hsl(var(--fg)); }
+.landing-root .lf-tag.active {
+  color: hsl(var(--violet-300));
+  border-color: hsl(var(--violet-500) / 0.55);
+  background: hsl(var(--violet-500) / 0.12);
+}
+[data-theme='light'] .landing-root .lf-tag.active { color: hsl(var(--violet-600)); }
+.landing-root .lf-tag-hash { opacity: 0.5; }
+.landing-root .lf-tag-count {
+  font-size: 10px;
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
+/* ---------- SearchPreview ------------------------------------------------- */
+.landing-root .lf-prev-search {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+}
+.landing-root .lf-prev-search-rail {
+  border-right: 1px solid hsl(var(--border));
+  background: hsl(var(--bg));
+  padding: 12px 12px 14px;
+  font-size: 12px;
+}
+.landing-root .lf-prev-search-rail-label { margin-bottom: 8px; }
+.landing-root .lf-prev-search-rail-section { margin-top: 12px; }
+.landing-root .lf-prev-search-rail-group {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-fg));
+  margin-bottom: 6px;
+}
+.landing-root .lf-prev-search-rail-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: hsl(var(--fg));
+  font-size: 12px;
+  padding: 3px 0;
+}
+.landing-root .lf-prev-check {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid hsl(var(--border-strong));
+  display: inline-block;
+}
+.landing-root .lf-prev-check.on {
+  background: hsl(var(--violet-500));
+  border-color: hsl(var(--violet-500));
+  box-shadow: inset 0 0 0 2px hsl(var(--bg));
+}
+
+.landing-root .lf-prev-search-main { padding: 12px 14px 14px; }
+.landing-root .lf-prev-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.landing-root .lf-prev-search-bar-icon { color: hsl(var(--muted-fg)); }
+.landing-root .lf-prev-search-bar-text {
+  color: hsl(var(--violet-400));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+[data-theme='light'] .landing-root .lf-prev-search-bar-text { color: hsl(var(--violet-600)); }
+
+.landing-root .lf-prev-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.landing-root .lf-prev-search-row {
+  display: grid;
+  /* Narrower ID column (was 84 px) so the title gets more room. The body
+   * column is `minmax(0, 1fr)` so the inner overflow-hidden actually
+   * clamps to the parent grid cell. */
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: hsl(var(--bg));
+  border: 1px solid hsl(var(--border));
+  transition:
+    border-color var(--dur-micro) var(--ease-out),
+    transform var(--dur-micro) var(--ease-out);
+  /* Don't let a long single tag chip force the row wider than the parent. */
+  overflow: hidden;
+}
+.landing-root .lf-prev-search-row:hover {
+  border-color: hsl(var(--border-strong));
+  transform: translateX(2px);
+}
+.landing-root .lf-prev-search-row-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--violet-400));
+  letter-spacing: 0.02em;
+  align-self: start;
+  padding-top: 1px;
+}
+[data-theme='light'] .landing-root .lf-prev-search-row-id { color: hsl(var(--violet-600)); }
+.landing-root .lf-prev-search-row-body { min-width: 0; }
+.landing-root .lf-prev-search-row-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(var(--fg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landing-root .lf-prev-search-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 4px;
+  font-size: 10px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .lf-prev-search-row-rango,
+.landing-root .lf-prev-search-row-refs {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.landing-root .lf-prev-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.landing-root .lf-prev-badge-success { background: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
+.landing-root .lf-prev-badge-warn    { background: hsl(var(--amber-500) / 0.15); color: hsl(var(--amber-500)); }
+.landing-root .lf-prev-badge-muted   { background: hsl(var(--muted-fg) / 0.15); color: hsl(var(--muted-fg)); }
+
+.landing-root .lf-prev-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  color: hsl(var(--muted-fg));
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  transition: color var(--dur-micro) var(--ease-out), background var(--dur-micro) var(--ease-out);
+}
+.landing-root .lf-prev-tag.active {
+  color: hsl(var(--violet-300));
+  background: hsl(var(--violet-500) / 0.18);
+  border-color: hsl(var(--violet-500) / 0.4);
+}
+[data-theme='light'] .landing-root .lf-prev-tag.active { color: hsl(var(--violet-600)); }
+
+.landing-root .lf-prev-search-empty {
+  padding: 24px;
+  text-align: center;
+  color: hsl(var(--muted-fg));
+  font-size: 12px;
+}
+
+/* ---------- ChatPreview --------------------------------------------------- */
+.landing-root .lf-prev-chat {
+  display: grid;
+  grid-template-columns: 120px 1fr 160px;
+}
+.landing-root .lf-prev-chat-rail {
+  background: hsl(var(--bg));
+  border-right: 1px solid hsl(var(--border));
+  padding: 10px;
+  font-size: 12px;
+  overflow: hidden;
+}
+.landing-root .lf-prev-chat-new {
+  width: 100%;
+  padding: 6px;
+  background: hsl(var(--violet-500) / 0.18);
+  border: 1px solid hsl(var(--violet-500) / 0.4);
+  border-radius: 6px;
+  color: hsl(var(--violet-300));
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+[data-theme='light'] .landing-root .lf-prev-chat-new { color: hsl(var(--violet-600)); }
+.landing-root .lf-prev-chat-rail-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-fg));
+  margin: 8px 0 4px;
+}
+.landing-root .lf-prev-chat-rail-item {
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: hsl(var(--fg));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.landing-root .lf-prev-chat-rail-item.active {
+  background: hsl(var(--violet-500) / 0.18);
+  color: hsl(var(--violet-300));
+  font-weight: 600;
+}
+[data-theme='light'] .landing-root .lf-prev-chat-rail-item.active { color: hsl(var(--violet-600)); }
+
+.landing-root .lf-prev-chat-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.landing-root .lf-prev-chat-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+.landing-root .lf-prev-chat-title { font-size: 14px; font-weight: 600; }
+.landing-root .lf-prev-chat-meta { font-size: 10px; color: hsl(var(--muted-fg)); margin-top: 2px; }
+.landing-root .lf-prev-chat-model {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-fg));
+}
+
+.landing-root .lf-prev-chat-thread {
+  flex: 1;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.landing-root .lf-prev-chat-msg {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 90%;
+}
+.landing-root .lf-prev-chat-msg-user {
+  background: hsl(var(--primary-soft));
+  align-self: flex-end;
+  color: hsl(var(--fg));
+}
+[data-theme='dark'] .landing-root .lf-prev-chat-msg-user { color: hsl(var(--violet-300)); }
+.landing-root .lf-prev-chat-msg-assistant {
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--fg));
+}
+.landing-root .lf-prev-chat-cite {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  padding: 1px 5px;
+  margin-left: 2px;
+  border-radius: 6px;
+  background: hsl(var(--violet-500) / 0.18);
+  color: hsl(var(--violet-300));
+  font-weight: 600;
+  cursor: pointer;
+  vertical-align: super;
+  transition: background var(--dur-micro) var(--ease-out);
+}
+[data-theme='light'] .landing-root .lf-prev-chat-cite { color: hsl(var(--violet-600)); }
+
+.landing-root .lf-prev-chat-composer {
+  border-top: 1px solid hsl(var(--border));
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: hsl(var(--bg));
+}
+.landing-root .lf-prev-chat-placeholder {
+  flex: 1;
+  color: hsl(var(--muted-fg));
+  font-size: 12px;
+}
+.landing-root .lf-prev-chat-kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-fg));
+}
+
+.landing-root .lf-prev-chat-sources {
+  border-left: 1px solid hsl(var(--border));
+  background: hsl(var(--bg));
+  padding: 10px 12px;
+  font-size: 12px;
+  overflow: hidden;
+}
+.landing-root .lf-prev-chat-sources-label { margin-bottom: 8px; }
+.landing-root .lf-prev-chat-source { padding: 8px 10px; margin-bottom: 6px; font-size: 12px; }
+.landing-root .lf-prev-chat-source-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.landing-root .lf-prev-chat-source-law {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  color: hsl(var(--violet-400));
+  font-size: 10px;
+}
+[data-theme='light'] .landing-root .lf-prev-chat-source-law { color: hsl(var(--violet-600)); }
+.landing-root .lf-prev-chat-source-art {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .lf-prev-chat-source-text {
+  margin: 0;
+  color: hsl(var(--muted-fg));
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+/* Hover-link the inline citation with its source card. Same trick the SPA
+ * uses on ChatMessage / CitationCard — pure CSS, no JS state. */
+.landing-root .lf-prev-chat-cite:hover,
+.landing-root .lf-prev-chat-cite:hover ~ * .lf-prev-chat-source { background: hsl(var(--violet-500) / 0.22); }
+
+/* Typewriter loop chrome — bubble entry, caret, thinking dots, source
+ * card reveal. Drives ChatPreview's #185 follow-up animation. */
+.landing-root .lf-prev-chat-msg-in {
+  animation: lf-chat-msg-in 320ms var(--ease-out) both;
+}
+@keyframes lf-chat-msg-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.landing-root .lf-prev-chat-caret {
+  display: inline-block;
+  width: 2px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  color: hsl(var(--violet-400));
+  animation: lf-chat-caret 1s steps(1) infinite;
+}
+[data-theme='light'] .landing-root .lf-prev-chat-caret { color: hsl(var(--violet-600)); }
+@keyframes lf-chat-caret {
+  50% { opacity: 0; }
+}
+.landing-root .lf-prev-chat-msg-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  align-self: flex-start;
+}
+.landing-root .lf-prev-chat-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: hsl(var(--muted-fg));
+  display: inline-block;
+  opacity: 0.4;
+  animation: lf-chat-dot 1.1s ease-in-out infinite;
+}
+.landing-root .lf-prev-chat-dot:nth-child(2) { animation-delay: 160ms; }
+.landing-root .lf-prev-chat-dot:nth-child(3) { animation-delay: 320ms; }
+@keyframes lf-chat-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40%           { opacity: 0.9; transform: translateY(-2px); }
+}
+
+/* Source cards start dim and brighten the moment their cite marker is
+ * typed out. Soft transition so the rail doesn't feel like a slot machine. */
+.landing-root .lf-prev-chat-source {
+  opacity: 0.45;
+  transform: translateX(2px);
+  transition: opacity 320ms var(--ease-out), transform 320ms var(--ease-out), background 200ms var(--ease-out);
+}
+.landing-root .lf-prev-chat-source.is-revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .lf-prev-chat-msg-in { animation: none; }
+  .landing-root .lf-prev-chat-caret  { animation: none; opacity: 0; }
+  .landing-root .lf-prev-chat-dot    { animation: none; opacity: 0.6; }
+  .landing-root .lf-prev-chat-source { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- DashboardPreview --------------------------------------------- */
+.landing-root .lf-prev-dash { padding: 14px; }
+.landing-root .lf-prev-dash-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.landing-root .lf-prev-dash-h1 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; }
+.landing-root .lf-prev-dash-tabs {
+  display: inline-flex;
+  background: hsl(var(--surface-2));
+  border-radius: 6px;
+  border: 1px solid hsl(var(--border));
+  padding: 2px;
+}
+.landing-root .lf-prev-dash-tab {
+  padding: 3px 9px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: hsl(var(--muted-fg));
+  cursor: pointer;
+}
+.landing-root .lf-prev-dash-tab.active {
+  background: hsl(var(--surface));
+  color: hsl(var(--fg));
+  box-shadow: 0 1px 2px hsl(232 30% 10% / 0.06);
+}
+.landing-root .lf-prev-dash-actions { margin-left: auto; display: flex; gap: 6px; }
+
+.landing-root .lf-prev-dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.landing-root .lf-prev-dash-kpi { padding: 10px 12px; }
+.landing-root .lf-prev-dash-kpi-title { font-size: 12px; color: hsl(var(--muted-fg)); }
+.landing-root .lf-prev-dash-kpi-row { display: flex; align-items: baseline; gap: 6px; margin-top: 2px; }
+.landing-root .lf-prev-dash-kpi-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.landing-root .lf-prev-dash-kpi-delta {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.landing-root .lf-prev-delta-success { color: hsl(var(--success)); }
+.landing-root .lf-prev-delta-danger  { color: hsl(354 70% 55%); }
+.landing-root .lf-prev-delta-muted   { color: hsl(var(--muted-fg)); }
+.landing-root .lf-prev-spark { width: 100%; height: 30px; margin-top: 6px; display: block; }
+
+.landing-root .lf-prev-dash-chart { padding: 12px; }
+.landing-root .lf-prev-dash-chart-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+.landing-root .lf-prev-dash-chart-title { font-size: 12px; font-weight: 600; }
+.landing-root .lf-prev-dash-chart-meta  { font-size: 10px; color: hsl(var(--muted-fg)); }
+.landing-root .lf-prev-dash-bars { width: 100%; height: 160px; display: block; }
+
+/* DashboardPreview — mobile reflow (≤ 480 px / ~390 px phones).
+ * Desktop layout (3-col KPI grid, side-by-side header row) is unchanged.
+ * Changes: actions row wraps below tabs, KPI grid stays 1-col (already set
+ * at 720 px), reduced padding, slightly smaller KPI value text. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-dash { padding: 10px; }
+  /* Let the header stack: title + tabs on one line, actions on the next. */
+  .landing-root .lf-prev-dash-head { gap: 6px; }
+  .landing-root .lf-prev-dash-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  /* Keep KPI value legible but compact inside the narrower card. */
+  .landing-root .lf-prev-dash-kpi-value { font-size: 18px; }
+  .landing-root .lf-prev-dash-kpi { padding: 8px 10px; }
+  /* Chart: slightly shorter to leave room for the stacked header rows. */
+  .landing-root .lf-prev-dash-bars { height: 120px; }
+}
+
+/* ---------- GraphPreview ------------------------------------------------- */
+.landing-root .lf-prev-graph {
+  background: linear-gradient(180deg, hsl(var(--surface)) 0%, hsl(var(--bg)) 100%);
+  min-height: 480px;
+}
+.landing-root .lf-prev-graph-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.landing-root .lf-prev-graph-node { cursor: crosshair; transition: opacity var(--dur-micro) var(--ease-out); }
+.landing-root .lf-prev-graph-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  padding: 8px 12px;
+  background: hsl(var(--surface-2));
+  border: 1px solid hsl(var(--border-strong));
+  border-radius: 8px;
+  box-shadow: 0 8px 24px hsl(232 40% 5% / 0.32);
+  font-size: 12px;
+  min-width: 180px;
+  max-width: 240px;
+  /* GraphPreview writes transform: translate(x,y); animate transform, not */
+  /* left/top, so the tooltip snap between nodes stays on the compositor.  */
+  transition: transform var(--dur-quick) var(--ease-out);
+}
+.landing-root .lf-prev-graph-tooltip-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  color: hsl(var(--fg));
+  margin-bottom: 2px;
+}
+.landing-root .lf-prev-graph-tooltip-meta {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .lf-prev-graph-hint {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-fg));
+}
+
+/* On mobile the previews lose a column or compress padding. The host card
+ * already constrains them via .feature-art / .feature-art-wrap min-widths. */
+@media (max-width: 720px) {
+  .landing-root .lf-prev { min-height: 320px; font-size: 12px; }
+  .landing-root .lf-prev-search { grid-template-columns: 110px 1fr; }
+  .landing-root .lf-prev-chat   { grid-template-columns: 96px 1fr 140px; }
+  .landing-root .lf-prev-dash-grid { grid-template-columns: 1fr; }
+  .landing-root .lf-prev-graph { min-height: 360px; }
+  .landing-root .lf-prev-graph-tooltip { font-size: 12px; min-width: 140px; }
+}
+
+/* SearchPreview — narrow mobile reflow (~390px): stack the filter rail above
+ * the results so the title column has the full width and can wrap instead of
+ * truncating. Must come AFTER the 720px block so the cascade wins. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-search {
+    grid-template-columns: 1fr;
+  }
+  .landing-root .lf-prev-search-rail {
+    border-right: none;
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 8px 12px;
+    /* Show the two filter sections side-by-side to save vertical height. */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
+  .landing-root .lf-prev-search-rail-label { width: 100%; margin-bottom: 4px; }
+  .landing-root .lf-prev-search-rail-section { margin-top: 4px; }
+  /* Title is free to wrap; remove the single-line truncation. */
+  .landing-root .lf-prev-search-row-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* ChatPreview — mobile reflow: single column, thread only.
+ * Placed AFTER the 720px previews block so that at ≤480px (where both
+ * media queries match) this single-column grid wins on source order —
+ * otherwise the 720px rule's 96px/140px tracks stay reserved and the
+ * thread column gets ~140px, wrapping bubbles one word per line. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-chat {
+    grid-template-columns: 1fr;
+  }
+  .landing-root .lf-prev-chat-rail,
+  .landing-root .lf-prev-chat-sources {
+    display: none;
+  }
+  .landing-root .lf-prev-chat-main {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* At ~390px the graph card is narrow enough that the tooltip needs a smaller
+ * min-width and must wrap long law titles rather than overflow the card edge.
+ * The JS-side clamp in GraphPreview.tsx keeps the translate() origin inside
+ * the card; this rule ensures the tooltip box itself stays contained. */
+@media (max-width: 480px) {
+  .landing-root .lf-prev-graph-tooltip {
+    min-width: 0;
+    max-width: 160px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+/* ========================================================================== */
+/* Cozy animation layer (additive, gated on prefers-reduced-motion + hover)   */
+/* ========================================================================== */
+/* New patterns layered on top of the existing motion stack — NOT replacing  */
+/* anything already shipped. Sources catalogued in                            */
+/* docs/_review/landing-f1stratlab-animations-2026-05-23.md and the cozy-web */
+/* research run.                                                              */
+
+/* --- Spotlight card (Linear / Vercel / Notion-Cron idiom) ---------------- */
+/* Faint radial gradient tracks the mouse inside a card while the cursor is  */
+/* over it. Driven by `--mx` and `--my` CSS variables that the consumer JSX  */
+/* writes on each `mousemove`. Nothing runs without a hover gesture, so no   */
+/* re-render storms; just plain CSS variable updates.                         */
+@media (hover: hover) and (pointer: fine) {
+  .landing-root .spotlight-card { position: relative; isolation: isolate; }
+  .landing-root .spotlight-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(220px circle at var(--mx, -200px) var(--my, -200px),
+                hsl(var(--violet-300) / 0.10),
+                transparent 60%);
+    opacity: 0;
+    transition: opacity 400ms var(--ease-out);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .landing-root .spotlight-card:hover::before { opacity: 1; }
+  /* The card's own content sits above the spotlight overlay. */
+  .landing-root .spotlight-card > * { position: relative; z-index: 2; }
+}
+[data-theme='light'] .landing-root .spotlight-card::before {
+  background: radial-gradient(220px circle at var(--mx, -200px) var(--my, -200px),
+              hsl(var(--violet-600) / 0.10),
+              transparent 60%);
+}
+
+/* --- Ambient grain over the hero halo (Tailwind / Linear / Vercel idiom) - */
+/* SVG turbulence at 3-4% opacity. Zero JS, ~600 bytes inline, kills banding */
+/* on long gradients and adds a filmic finish. Static — no animation, so    */
+/* prefers-reduced-motion is irrelevant. */
+.landing-root .hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+[data-theme='light'] .landing-root .hero::after { opacity: 0.04; mix-blend-mode: multiply; }
+
+/* ---- Downloads section (#129) ---- */
+.landing-root .downloads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  max-width: 56rem;
+  margin: 0 auto;
+}
+
+.landing-root .download-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.15rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--surface));
+  color: hsl(var(--fg));
+  text-decoration: none;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.landing-root .download-card:hover {
+  border-color: hsl(var(--indigo-500, 235 85% 60%));
+  transform: translateY(-1px);
+}
+
+.landing-root .download-card--primary {
+  border-color: hsl(var(--indigo-500, 235 85% 60%));
+  background: hsl(var(--primary-soft, 235 85% 95%));
+}
+
+.landing-root .download-card__os {
+  font-family: var(--font-display, inherit);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.landing-root .download-card__arch {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.landing-root .download-card__cta {
+  margin-top: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: hsl(var(--indigo-700, 235 75% 38%));
+}
+
+[data-theme='dark'] .landing-root .download-card--primary {
+  background: hsl(235 35% 18%);
+}
+[data-theme='dark'] .landing-root .download-card__cta {
+  color: hsl(235 80% 78%);
+}
+
+

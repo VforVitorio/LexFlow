@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { PERSONA_ICONS } from '../icons';
+import { SectionEyebrow } from '../components/SectionEyebrow';
 
 /**
  * #181 — "Para quién es esto" / "Who this is for".
@@ -27,11 +28,8 @@ export function Personas() {
   return (
     <section id="personas" className="tight">
       <div className="lf-container">
-        <div className="section-eyebrow">
-          <span className="dot" />
-          <span className="label-caps">{t('personas.eyebrow')}</span>
-        </div>
-        <h2 className="section-title section-title">{t('personas.title')}</h2>
+        <SectionEyebrow label={t('personas.eyebrow')} />
+        <h2 className="section-title">{t('personas.title')}</h2>
         <p className="section-sub">{t('personas.sub')}</p>
         <div className="personas-grid">
           {items.map((p) => (

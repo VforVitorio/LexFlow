@@ -1,0 +1,152 @@
+/* #742 — ordered slice of the former landing.css monolith. Rules stay in
+   ORIGINAL source order; landing.css @imports the slices in order so the
+   cascade is byte-identical. Do NOT reorder rules across slices. */
+/* Mobile responsive sweep (≤ 720 px tablets, ≤ 480 px phones)               */
+/* -------------------------------------------------------------------------- */
+/* Targets the gaps left by the per-component @media blocks above. Touching   */
+/* the nav, hero, container padding, and the heavier sections so the landing  */
+/* looks shipped — not "desktop site shrunk".                                 */
+
+@media (max-width: 720px) {
+  .landing-root .lf-container { padding: 0 18px; }
+
+  /* Nav: hide the centre section links on phones; brand + actions only.    */
+  /* The page anchors still work (the user can scroll to them), they just   */
+  /* don't take 60% of the bar on a 375 px screen.                          */
+  .landing-root .nav-inner { height: 56px; gap: 12px; }
+  .landing-root .nav-links { display: none; }
+  .landing-root .nav-actions { gap: 4px; }
+  .landing-root .nav-actions .seg { display: none; }
+  /* #716 — declutter the mobile bar to brand + theme + burger. The CTA,
+     GitHub link and EN/ES seg move into the slide-down panel so nothing
+     overflows the 56px bar or overlaps the hamburger. */
+  .landing-root .nav-actions .btn-primary,
+  .landing-root .nav-actions .nav-gh { display: none; }
+
+  /* Hero: shrink the eyebrow and tighten the meta row so the H1 keeps      */
+  /* breathing room. Hide the secondary CTA's label, keep the icon.         */
+  .landing-root .hero { padding: 56px 0 72px; }
+  .landing-root .hero-eyebrow {
+    font-size: 10px;
+    gap: 8px;
+    letter-spacing: 0.12em;
+  }
+  .landing-root .hero h1 { font-size: clamp(34px, 9vw, 44px); }
+  .landing-root .hero-sub { font-size: 16px; margin-top: 18px; }
+  .landing-root .hero-cta { flex-wrap: wrap; gap: 10px; }
+  .landing-root .hero-cta .btn-lg { flex: 1 1 auto; justify-content: center; }
+  .landing-root .hero-meta { gap: 14px; flex-wrap: wrap; }
+  .landing-root .hero-meta span { font-size: 12px; }
+
+  /* Section headings + container rhythm. Drops the giant H2 on phones.     */
+  .landing-root h2,
+  .landing-root .section-title { font-size: clamp(26px, 6.4vw, 34px); }
+  .landing-root section { padding: 64px 0; }
+  .landing-root section.tight { padding: 48px 0; }
+
+  /* Mockups must never spill outside the viewport. Layers already drops to */
+  /* one column at 900 px; this caps the SVG widths for the residual cases.*/
+  .landing-root .feature-art,
+  .landing-root .feature-art-wrap { width: 100%; }
+  .landing-root .feature-art svg,
+  .landing-root .feature-art img { max-width: 100%; height: auto; }
+
+  /* Authors grid → single column on phones. */
+  .landing-root .authors-grid { grid-template-columns: 1fr; }
+
+  /* Footer: stack columns. */
+  .landing-root .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+
+@media (max-width: 480px) {
+  /* On true-phone sizes, drop the eyebrow's middle descriptor to keep one  */
+  /* clean line. The leftmost dot + LEXFLOW + version still anchor it.     */
+  .landing-root .hero-eyebrow .hero-eyebrow-sep:nth-of-type(2),
+  .landing-root .hero-eyebrow span:nth-of-type(3) { display: none; }
+
+  /* Buttons: full width and stacked. */
+  .landing-root .hero-cta { flex-direction: column; align-items: stretch; }
+  .landing-root .hero-cta .btn-lg { width: 100%; }
+}
+
+/* -------------------------------------------------------------------------- */
+/* "¿Qué es esto?" explainer — sits between Hero and Personas                 */
+/* -------------------------------------------------------------------------- */
+.landing-root .what-is { /* left-aligned to match every other section */ }
+.landing-root .what-is .section-eyebrow {
+  /* Slightly louder eyebrow than the default — this section is the page's
+   * elevator pitch and the dot+label deserves to read at a glance. */
+  font-size: 14px;
+}
+.landing-root .what-is .section-eyebrow .label-caps { font-size: 12px; }
+.landing-root .what-is-title {
+  /* Bigger than the default .section-title so it carries weight as the
+   * page's "OK, what is this?" anchor. Roughly halfway between section
+   * and hero scale. */
+  font-size: clamp(36px, 5.6vw, 60px);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin-top: 12px;
+}
+.landing-root .what-is-body {
+  max-width: 720px;
+  margin: 22px 0 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: hsl(var(--muted-fg));
+}
+.landing-root .what-is-body p { margin: 0 0 14px; }
+.landing-root .what-is-body strong { color: hsl(var(--fg)); font-weight: 600; }
+.landing-root .what-is-stats {
+  list-style: none;
+  padding: 0;
+  margin: 32px 0 0;
+  max-width: 720px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 600px) { .landing-root .what-is-stats { grid-template-columns: 1fr; } }
+.landing-root .what-is-stats li {
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--surface));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.landing-root .what-is-stat-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: hsl(var(--violet-300));
+}
+[data-theme='light'] .landing-root .what-is-stat-value { color: hsl(var(--violet-600)); }
+.landing-root .what-is-stat-label {
+  font-size: 12px;
+  color: hsl(var(--muted-fg));
+  letter-spacing: 0.02em;
+}
+/* Definitional anchor: one complete sentence an AI search engine can quote.  */
+/* Sits between the section title and the editorial paragraphs; distinguished */
+/* by a left border in the accent colour and a slightly larger size.          */
+.landing-root .what-is-anchor {
+  max-width: 720px;
+  margin: 20px 0 0;
+  padding: 14px 18px;
+  border-left: 3px solid hsl(var(--violet-500));
+  border-radius: 0 10px 10px 0;
+  background: hsl(var(--violet-500) / 0.06);
+  font-size: 16px;
+  line-height: 1.6;
+  color: hsl(var(--muted-fg));
+}
+[data-theme='light'] .landing-root .what-is-anchor {
+  background: hsl(var(--violet-600) / 0.06);
+  border-left-color: hsl(var(--violet-600));
+}
+
+/* -------------------------------------------------------------------------- */
