@@ -11,7 +11,7 @@ export function CTA() {
             <span className="dot" />
             <span className="label-caps">{t('ctaEyebrow')}</span>
           </div>
-          <h2 className="section-title section-title-accent" style={{ marginInline: 'auto' }}>{t('ctaTitle')}</h2>
+          <h2 className="section-title section-title" style={{ marginInline: 'auto' }}>{t('ctaTitle')}</h2>
           <p>{t('ctaSub')}</p>
           <div className="cta-actions">
             {/* #738 — primary CTA scrolls to the in-page #downloads section;

@@ -31,7 +31,7 @@ export function Personas() {
           <span className="dot" />
           <span className="label-caps">{t('personas.eyebrow')}</span>
         </div>
-        <h2 className="section-title section-title-accent">{t('personas.title')}</h2>
+        <h2 className="section-title section-title">{t('personas.title')}</h2>
         <p className="section-sub">{t('personas.sub')}</p>
         <div className="personas-grid">
           {items.map((p) => (
