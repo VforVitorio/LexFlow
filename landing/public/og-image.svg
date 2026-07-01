@@ -93,7 +93,7 @@
     x="1120"
     y="578"
     text-anchor="end"
-    font-family="'JetBrains Mono', 'Courier New', monospace"
+    font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
     font-size="16"
     fill="#4f5de0"
     opacity="0.8"

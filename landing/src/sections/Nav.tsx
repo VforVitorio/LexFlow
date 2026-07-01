@@ -180,16 +180,14 @@ export function Nav() {
           <a className="nav-devs-link" href="#para-devs">
             {t('nav.forDevs')}
           </a>
-          {/* The marketing landing is a separate static site from the SPA
-              (see main.tsx VITE_BUILD_TARGET). The primary nav CTA points
-              to the GitHub repo so visitors who click it land on install
-              instructions, releases and source — never on a stubbed SPA
-              page running on mock data. */}
+          {/* #738 — primary nav CTA scrolls to the in-page #downloads
+              section (pick your OS) rather than the GitHub repo, so a
+              non-dev visitor lands on a friendly funnel, not raw source.
+              GitHub stays reachable via the icon link to the left. The
+              landing never links into the stubbed SPA mock. */}
           <a
             className="btn btn-primary"
-            href={GH_URL}
-            target="_blank"
-            rel="noreferrer"
+            href="#downloads"
             style={{ marginLeft: 4 }}
           >
             {t('nav.cta')}
@@ -240,9 +238,7 @@ export function Nav() {
           </div>
           <a
             className="btn btn-primary nav-mobile-cta"
-            href={GH_URL}
-            target="_blank"
-            rel="noreferrer"
+            href="#downloads"
             onClick={() => setMenuOpen(false)}
           >
             {t('nav.cta')}

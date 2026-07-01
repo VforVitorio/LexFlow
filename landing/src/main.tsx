@@ -25,6 +25,13 @@ const app = (
   </React.StrictMode>
 );
 
+// Mark that the client bundle actually booted, which unlocks the scroll-reveal
+// animation (index.css gates `.reveal` behind `html.js`). Doing it here — not in
+// a blocking <head> script — means a run where the bundle never executes leaves
+// the reveal blocks in their visible baseline instead of hidden. The prerender
+// strips this class so the shipped static HTML ships visible.
+document.documentElement.classList.add('js');
+
 const rootEl = document.getElementById('root')!;
 
 if (rootEl.childElementCount > 0) {
