@@ -142,6 +142,17 @@ describe('transformLaw', () => {
     const law = transformLaw({ ...lawSummary, publication_date: null });
     expect(law.publicada).toBe('');
   });
+
+  it('passes the official topic tags through (#671)', () => {
+    const law = transformLaw({ ...lawSummary, tags: ['proteccion-de-datos', 'administracion'] });
+    expect(law.tags).toEqual(['proteccion-de-datos', 'administracion']);
+  });
+
+  it('defaults tags to an empty array when the summary omits them', () => {
+    // Older/partial summaries may not carry tags; the chip surfaces must
+    // still get a defined array so they render nothing rather than crash.
+    expect(transformLaw(lawSummary).tags).toEqual([]);
+  });
 });
 
 // ─── parseUnifiedDiffLines (via transformDiff) ───────────────────────────
@@ -243,6 +254,12 @@ describe('listLawsQuery', () => {
     const q = listLawsQuery({ yearFrom: 2018, yearTo: 2024 });
     expect(q.year_from).toBe(2018);
     expect(q.year_to).toBe(2024);
+  });
+
+  it('sends the tag set for server-side AND-filtering (#671)', () => {
+    // qs() serialises the array as repeated ?tags=a&tags=b downstream.
+    expect(listLawsQuery({ tags: ['vivienda', 'andalucia'] }).tags).toEqual(['vivienda', 'andalucia']);
+    expect(listLawsQuery({}).tags).toBeUndefined();
   });
 
   it('sends every active filter together — none is dropped when combined', () => {

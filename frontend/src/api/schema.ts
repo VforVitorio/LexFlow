@@ -1496,6 +1496,11 @@ export interface components {
             scope: components["schemas"]["Scope"];
             /** Jurisdiction */
             jurisdiction: string | null;
+            /**
+             * Tags
+             * @description Normalised official topic tags.
+             */
+            tags?: string[];
         };
         /**
          * LawVersion

@@ -47,6 +47,7 @@ def _run_search(
     jurisdiction: str | None = None,
     year_from: int | None = None,
     year_to: int | None = None,
+    tags: list[str] | None = None,
 ) -> SearchResponse:
     """Shared search execution for both the canonical + deprecated routes."""
     return registry.search_text(
@@ -59,6 +60,7 @@ def _run_search(
         jurisdiction=jurisdiction,
         year_from=year_from,
         year_to=year_to,
+        tags=tags,
     )
 
 
@@ -78,10 +80,11 @@ def search_laws(
     jurisdiction: str | None = Query(None, description="Filter by jurisdiction code (e.g. es-md)"),
     year_from: int | None = Query(None, ge=0, description="Earliest publication year (inclusive)"),
     year_to: int | None = Query(None, ge=0, description="Latest publication year (inclusive)"),
+    tags: list[str] | None = Query(None, description="AND-filter by official topic tag slug (repeatable)"),
 ) -> SearchResponse:
     """Search across all laws and articles for the given query string, with the
     same facet filters as ``/laws`` so search can be narrowed by
-    community/rank/status/year (#671)."""
+    community/rank/status/year/tag (#671)."""
     return _run_search(
         q,
         page,
@@ -93,6 +96,7 @@ def search_laws(
         jurisdiction=jurisdiction,
         year_from=year_from,
         year_to=year_to,
+        tags=tags,
     )
 
 

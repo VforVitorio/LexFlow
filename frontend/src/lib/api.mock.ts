@@ -201,15 +201,19 @@ export const mockApi: ApiClient = {
     },
   },
   search: {
-    async universal(q) {
+    async universal(q, facets) {
       await delay(120);
       const ql = q.toLowerCase().trim();
 
       // `#tag` (or starts with #) → return all laws that carry that tag.
       // Multiple #tags AND together; free-text after #tags also narrows by text.
       const tokens = ql.split(/\s+/).filter(Boolean);
-      const tagTokens = tokens.filter((t) => t.startsWith('#')).map((t) => t.slice(1));
+      const inlineTags = tokens.filter((t) => t.startsWith('#')).map((t) => t.slice(1));
       const textTokens = tokens.filter((t) => !t.startsWith('#'));
+      // Live callers pass their `#tag` selection via `facets.tags` (already
+      // stripped from `q`); mock-direct callers may still inline `#tag` in the
+      // query. Union both so both paths filter identically (#671).
+      const tagTokens = [...new Set([...inlineTags, ...(facets?.tags ?? [])])];
       const tagged = tagTokens.length > 0;
 
       const lawsMatching = LAWS.filter((l) => {

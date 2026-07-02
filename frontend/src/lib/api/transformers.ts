@@ -139,6 +139,10 @@ export function transformLaw(raw: BackendLawSummary): Law {
     publicada: raw.publication_date ?? '',
     ambito: SCOPE_MAP[raw.scope] ?? 'Estatal',
     articulos: raw.article_count,
+    // #671 — official topic tags (BOE `subjects`). The list endpoint now
+    // surfaces them so `#tag` search, tag chips and the tag filter work live
+    // (before this they were dropped and only the mock carried tags).
+    tags: raw.tags ?? [],
     // The list endpoint does not surface these — fill via the detail endpoint
     // when the user opens a law. Counts are advisory in the Explorer header.
     referencias: 0,
@@ -162,6 +166,9 @@ export function transformLawDetail(raw: BackendLawDetail): LawDetail {
     articulos: raw.article_count,
     referencias: (raw.references ?? []).length,
     versiones: 0,
+    // #671 — official topic tags carried on the detail metadata; drives the
+    // law-header tag chips in live mode.
+    tags: m.tags ?? [],
     hierarchy,
     articles,
   };
@@ -305,5 +312,9 @@ export function listLawsQuery(params: ListLawsParams): Record<string, unknown> {
     // `jurisdiction` param accepts the NUTS-1 code as-is (e.g. `'es-md'`).
     // Omitted when undefined so the backend returns all jurisdictions.
     jurisdiction: params.jurisdiction,
+    // #671 — official topic tags, AND-filtered server-side (`qs` serialises
+    // the array as repeated `?tags=a&tags=b`). Makes tag browse corpus-wide
+    // instead of page-scoped; the client fallback then re-ANDs harmlessly.
+    tags: params.tags,
   };
 }

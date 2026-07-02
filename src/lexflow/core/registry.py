@@ -160,6 +160,7 @@ class LawRegistry:
         jurisdiction: str | None = None,
         year_from: int | None = None,
         year_to: int | None = None,
+        tags: list[str] | None = None,
     ) -> PaginatedResponse[LawSummary]:
         """Return a paginated, optionally filtered list of law summaries.
 
@@ -176,6 +177,7 @@ class LawRegistry:
             jurisdiction=jurisdiction,
             year_from=year_from,
             year_to=year_to,
+            tags=tags,
         )
         return paginate_summaries(filtered, page=page, page_size=page_size)
 
@@ -191,13 +193,14 @@ class LawRegistry:
         jurisdiction: str | None = None,
         year_from: int | None = None,
         year_to: int | None = None,
+        tags: list[str] | None = None,
     ) -> SearchResponse:
         """Full-text search across all laws, optionally facet-filtered (#671).
 
         Builds the search index lazily on first call from all cached laws and
         metadata. The facet filters mirror :meth:`list_laws` so the Explorer can
-        search the whole corpus AND narrow by community/rank/status/year with a
-        single, consistent contract.
+        search the whole corpus AND narrow by community/rank/status/year/tag with
+        a single, consistent contract.
         """
         if not self._search_index.is_built:
             self._build_search_index()
@@ -208,6 +211,7 @@ class LawRegistry:
             jurisdiction=jurisdiction,
             year_from=year_from,
             year_to=year_to,
+            tags=tags,
         )
         return self._search_index.search(query, page=page, page_size=page_size, law_filter=law_filter)
 
@@ -220,6 +224,7 @@ class LawRegistry:
         jurisdiction: str | None,
         year_from: int | None,
         year_to: int | None,
+        tags: list[str] | None = None,
     ) -> Callable[[str], bool] | None:
         """Build a ``law_id`` predicate from facet filters, or ``None`` if none set.
 
@@ -227,7 +232,7 @@ class LawRegistry:
         the ``/laws`` list endpoint. Returns ``None`` when no facet is active so
         plain search pays no extra cost.
         """
-        if not any([rank, status, scope, jurisdiction, year_from, year_to]):
+        if not any([rank, status, scope, jurisdiction, year_from, year_to, tags]):
             return None
         filtered = apply_law_filters(
             self._build_summaries(),
@@ -237,6 +242,7 @@ class LawRegistry:
             jurisdiction=jurisdiction,
             year_from=year_from,
             year_to=year_to,
+            tags=tags,
         )
         allowed = {summary.identifier for summary in filtered}
         return allowed.__contains__
@@ -407,6 +413,7 @@ class LawRegistry:
                     article_count=article_count,
                     scope=meta.scope,
                     jurisdiction=meta.jurisdiction.value if meta.jurisdiction else None,
+                    tags=meta.tags,
                 )
             )
         self._summaries = summaries

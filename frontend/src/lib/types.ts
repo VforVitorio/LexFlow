@@ -426,6 +426,12 @@ export interface SearchFacets {
   year_from?: number;
   /** Inclusive end of publication year range. */
   year_to?: number;
+  /**
+   * Official topic tags to AND-filter by (#671). Serialised as repeated
+   * `?tags=a&tags=b`. Unlike the single-value facets above, tags is a set
+   * because the Explorer accumulates chip + inline `#tag` selections.
+   */
+  tags?: string[];
   /** Result page (1-based). */
   page?: number;
   /** Hits per page. */

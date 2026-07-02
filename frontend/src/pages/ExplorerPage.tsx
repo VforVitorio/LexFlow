@@ -106,8 +106,12 @@ export function ExplorerPage() {
       jurisdiction,
       year_from: Number.isFinite(from) ? from : undefined,
       year_to: Number.isFinite(to) ? to : undefined,
+      // #671 — official `#tag` filter now flows to the corpus-wide search
+      // endpoint (chip + inline `#tag`, AND-matched). Before this the tags
+      // were parsed but silently dropped before the request.
+      tags: allTags.size ? [...allTags] : undefined,
     };
-  }, [rango, status, ambito, jurisdiction, yearFrom, yearTo]);
+  }, [rango, status, ambito, jurisdiction, yearFrom, yearTo, allTags]);
 
   // ── Browse mode (no query) ────────────────────────────────────────────
   const { data: browseData, isLoading: browseLoading } = useLawsList(params, {
