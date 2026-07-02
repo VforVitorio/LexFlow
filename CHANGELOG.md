@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.69.0](https://github.com/VforVitorio/LexFlow/compare/v0.68.0...v0.69.0) (2026-07-01)
+
+
+### Features
+
+* **landing:** outcome-first hero, CTA-&gt;downloads, value-led stats ([9bfbdb6](https://github.com/VforVitorio/LexFlow/commit/9bfbdb66d3fb0c662efd91979663ed9397458d44))
+* **landing:** outcome-first hero, CTA-&gt;downloads, value-led stats ([6abf1d9](https://github.com/VforVitorio/LexFlow/commit/6abf1d9efdf6f889c56f03f495e3db7485ffbc3a))
+
+
+### Bug Fixes
+
+* **landing:** clamp GraphPreview tooltip within card on mobile ([b1e850c](https://github.com/VforVitorio/LexFlow/commit/b1e850c6d3c8f52659062b06fae8e7f72b95a7fd))
+* **landing:** clamp GraphPreview tooltip within card on mobile ([da89171](https://github.com/VforVitorio/LexFlow/commit/da89171edad697aca01cbdaf0613ada4df14b834)), closes [#749](https://github.com/VforVitorio/LexFlow/issues/749)
+* **landing:** keep reveal sections visible without JS; finish font cleanups ([eaf5a2b](https://github.com/VforVitorio/LexFlow/commit/eaf5a2b191beb61ed5daf1a4de8a5648c7eab0aa))
+* **landing:** move ChatPreview mobile rule after 720px block so single-column wins ([2859ee2](https://github.com/VforVitorio/LexFlow/commit/2859ee2af026362daebfbb15dd35bf3faec7c130))
+* **landing:** reflow ChatPreview to one column on mobile ([b706e6f](https://github.com/VforVitorio/LexFlow/commit/b706e6fe2a87db96c302658c6e8ef79f3d463957))
+* **landing:** reflow ChatPreview to one column on mobile ([9d48b70](https://github.com/VforVitorio/LexFlow/commit/9d48b70e51f4f146ced780f6bc5ff3908e8b4b41)), closes [#748](https://github.com/VforVitorio/LexFlow/issues/748)
+* **landing:** reflow DashboardPreview on mobile ([8de72d9](https://github.com/VforVitorio/LexFlow/commit/8de72d9fd8091f5964b32099a6b18e4196671e0c))
+* **landing:** reflow DashboardPreview on mobile ([7304b55](https://github.com/VforVitorio/LexFlow/commit/7304b554d983f7af5902814101edd9d8cf30d121)), closes [#751](https://github.com/VforVitorio/LexFlow/issues/751)
+* **landing:** reflow SearchPreview filters/results on mobile ([eb8d0be](https://github.com/VforVitorio/LexFlow/commit/eb8d0be0b42110116d6ed4eddbe4a1fd8610d445))
+* **landing:** reflow SearchPreview filters/results on mobile ([2f615c8](https://github.com/VforVitorio/LexFlow/commit/2f615c84c6dd69a7291e111f151033d94444870a)), closes [#750](https://github.com/VforVitorio/LexFlow/issues/750)
+* **landing:** sync package-lock with rolldown wasm [@emnapi](https://github.com/emnapi) deps ([9f0e5c9](https://github.com/VforVitorio/LexFlow/commit/9f0e5c98d33ffd82375bbe78c6c877c80ce33bb5))
+* **landing:** use 'Víctor Vega' as author name in JSON-LD ([a41e484](https://github.com/VforVitorio/LexFlow/commit/a41e484b6d1357f2d4c47f25c676977121ccc1c2))
+* **landing:** use 'Víctor Vega' as author name in JSON-LD ([799c46e](https://github.com/VforVitorio/LexFlow/commit/799c46eee00c0bb0a5da67a01b094515e79b0469))
+
+
+### Performance
+
+* **landing:** drop react-query + zustand, lazy-load locale ([10916ee](https://github.com/VforVitorio/LexFlow/commit/10916eefa9fa97e629d03d3741d381727ab75d36))
+* **landing:** drop react-query + zustand, lazy-load locale ([8e35cd7](https://github.com/VforVitorio/LexFlow/commit/8e35cd7a2cde97009ca3470a8af5139fba42b9ea))
+* **landing:** self-host fonts, drop framer-motion, split chunks ([3f9502a](https://github.com/VforVitorio/LexFlow/commit/3f9502ac8496ad72c996b52d2a4dcb9db16a32fe))
+* **landing:** self-host fonts, drop framer-motion, split chunks ([00176b5](https://github.com/VforVitorio/LexFlow/commit/00176b5daa0f6d5fc34b798111afab26efffc5c1))
+
+
+### Refactoring
+
+* **landing:** purge dead mock + hero-badge CSS ([42d91a8](https://github.com/VforVitorio/LexFlow/commit/42d91a838b360bd60215ea77e60ce527625e8589))
+* **landing:** purge dead mock + hero-badge CSS ([b9fafb0](https://github.com/VforVitorio/LexFlow/commit/b9fafb085df41911968eebb38f6f9bfcfd72dae9))
+* **landing:** single gradient accent, 5-stop type scale, drop CTA blur ([fcd9657](https://github.com/VforVitorio/LexFlow/commit/fcd96571e2eb2fe0f5e103c5023e13d86aad39cb))
+* **landing:** single gradient accent, 5-stop type scale, drop CTA blur ([feceb2d](https://github.com/VforVitorio/LexFlow/commit/feceb2d112a75b831f486b67d4dc2a15039a10e3))
+* **landing:** split landing.css into ordered slices, extract SectionEyebrow + renderBold ([f5803e6](https://github.com/VforVitorio/LexFlow/commit/f5803e6d637fbb39306136c6049362b9a93d9b28))
+* **landing:** split landing.css into ordered slices, extract SectionEyebrow + renderBold ([24e362a](https://github.com/VforVitorio/LexFlow/commit/24e362ad48a413739076c15917dd26e2757cd438))
+
 ## [0.68.0](https://github.com/VforVitorio/LexFlow/compare/v0.67.0...v0.68.0) (2026-06-29)
 
 
