@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+title: LexFlow
+message: >-
+  If you use LexFlow in your research or work, please cite it
+  using the metadata from this file.
+type: software
+authors:
+  - given-names: Víctor
+    family-names: Vega Sobral
+    alias: VforVitorio
+abstract: >-
+  Open-source platform to explore, analyse and query Spanish
+  legislation. It turns the legalize-es corpus (laws in Markdown,
+  versioned with Git) into an interactive product with a REST API,
+  a knowledge graph, a legal chatbot and analytics dashboards.
+repository-code: 'https://github.com/VforVitorio/LexFlow'
+url: 'https://github.com/VforVitorio/LexFlow'
+license: Apache-2.0
+keywords:
+  - legal-tech
+  - spanish-legislation
+  - legislation
+  - knowledge-graph
+  - legal-nlp
+  - fastapi
+  - react
