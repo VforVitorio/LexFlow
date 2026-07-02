@@ -9,7 +9,7 @@
 
 import type {
   ApiClient, ChatChunk, ChatMessage, DiffResult, GraphData, ListLawsParams,
-  Paginated, Law,
+  Paginated, Law, UserTag, UserTagCount,
 } from './types';
 import {
   LAWS, LAW_DETAIL, ARTICLES, VERSIONS, DIFF_BY_LAW, GRAPH, CHAT_THREADS,
@@ -61,6 +61,68 @@ function filterLaws(params: ListLawsParams = {}): Law[] {
   }
   return out;
 }
+
+// ─── User tags (#670) ───────────────────────────────────────────────────
+// Keyed by lawId. Seeded empty — a fresh mock session starts with no
+// custom tags, same as a fresh backend install would.
+const userTagStore: Record<string, { tag: string; label: string }[]> = {};
+
+/**
+ * Kebab-case ASCII slug — mirrors the backend's `normalize_tag`
+ * (`src/lexflow/core/parser.py`): strip accents, lowercase, collapse any
+ * non-alphanumeric run to a single hyphen, trim leading/trailing hyphens.
+ */
+const slug = (s: string) =>
+  s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+const mockUserTagsApi: ApiClient['userTags'] = {
+  async forLaw(lawId) {
+    await delay(60);
+    return (userTagStore[lawId] ?? []).slice();
+  },
+  async add(lawId, label): Promise<UserTag> {
+    await delay(80);
+    const tag = slug(label);
+    // Mirror the backend's 422 (`_normalize_or_422`): a label with no
+    // alphanumeric content yields an empty slug and must be rejected, so
+    // mock-mode UI exercises the same validation path as the real backend.
+    if (!tag) throw new Error('Tag is empty after normalisation');
+    const laws = userTagStore[lawId] ?? (userTagStore[lawId] = []);
+    const existing = laws.find((t) => t.tag === tag);
+    if (existing) return existing;
+    const created = { tag, label };
+    laws.push(created);
+    return created;
+  },
+  async remove(lawId, tag) {
+    await delay(60);
+    const laws = userTagStore[lawId];
+    if (!laws) return;
+    userTagStore[lawId] = laws.filter((t) => t.tag !== tag);
+  },
+  async vocab(): Promise<UserTagCount[]> {
+    await delay(60);
+    const labelByTag = new Map<string, string>();
+    const lawsByTag = new Map<string, Set<string>>();
+    for (const [lawId, tags] of Object.entries(userTagStore)) {
+      for (const t of tags) {
+        if (!labelByTag.has(t.tag)) labelByTag.set(t.tag, t.label);
+        const laws = lawsByTag.get(t.tag) ?? new Set<string>();
+        laws.add(lawId);
+        lawsByTag.set(t.tag, laws);
+      }
+    }
+    return [...labelByTag.entries()]
+      .map(([tag, label]) => ({ tag, label, count: lawsByTag.get(tag)?.size ?? 0 }))
+      .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+  },
+  async lawsFor(tag) {
+    await delay(60);
+    return Object.entries(userTagStore)
+      .filter(([, tags]) => tags.some((t) => t.tag === tag))
+      .map(([lawId]) => lawId);
+  },
+};
 
 export const mockApi: ApiClient = {
   laws: {
@@ -119,6 +181,7 @@ export const mockApi: ApiClient = {
         .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
     },
   },
+  userTags: mockUserTagsApi,
   graph: {
     async forLaw(_id, _depth): Promise<GraphData> {
       await delay(200);

@@ -20,10 +20,22 @@ export interface ClientFilterSort {
   /** Active tags (chip-driven + inline `#tag`), matched AND. */
   allTags: Set<string>;
   sort: LawSort;
+  /**
+   * Ids of laws carrying the currently active custom user tag (#670), from
+   * `useUserTagLaws`. `null`/`undefined` means no user-tag filter is
+   * active — a no-op. An (even empty) `Set` means the filter IS active:
+   * rows are narrowed to ids present in the set, alongside the other
+   * filters, before sort. User tags are a page-scoped, browse-mode-only
+   * facet — they never reach `searchFacets`/the corpus search endpoint.
+   */
+  userTagLawIds?: Set<string> | null;
 }
 
 /** Narrow + sort `items` for display. `relevance` preserves server order. */
-export function applyClientFilterSort(items: Law[], { plainQ, allTags, sort }: ClientFilterSort): Law[] {
+export function applyClientFilterSort(
+  items: Law[],
+  { plainQ, allTags, sort, userTagLawIds }: ClientFilterSort,
+): Law[] {
   let rows = items;
 
   if (plainQ) {
@@ -41,6 +53,9 @@ export function applyClientFilterSort(items: Law[], { plainQ, allTags, sort }: C
       const lawTags = new Set((l.tags ?? []).map((tag) => tag.toLowerCase()));
       return [...allTags].every((tag) => lawTags.has(tag.toLowerCase()));
     });
+  }
+  if (userTagLawIds) {
+    rows = rows.filter((l) => userTagLawIds.has(l.id));
   }
 
   if (sort === 'relevance') return rows;

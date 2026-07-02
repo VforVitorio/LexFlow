@@ -30,6 +30,8 @@
   },
   "lawHeader": {
     "save": "Save",
+    "addUserTag": "tag",
+    "addUserTagPlaceholder": "new tag",
     "share": "Share",
     "export": "Export",
     "version": "Version",
@@ -537,6 +539,7 @@
     "countOf": "of",
     "countUnit": "laws",
     "clearFilters": "Clear filters",
+    "removeUserTagFilter": "remove tag filter",
     "howToSearch": "How to search",
     "searchHelp": {
       "title": "How to search the Explorer",
@@ -567,7 +570,8 @@
       "rango": "Legal rank",
       "ambito": "Territorial scope",
       "year": "Year",
-      "tags": "Tags"
+      "tags": "Tags",
+      "userTags": "My tags"
     },
     "tagsHintPre": "Click to toggle · type",
     "tagsHintPost": "in the search box"

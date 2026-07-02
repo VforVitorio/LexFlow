@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, BookOpenText, FileText, Moon, Network, MessagesSquare, BarChart3, Download, Hash } from 'lucide-react';
 import { Kbd } from '@/components/ui';
 import { useUi } from '@/lib/store';
-import { useSearch, useTags } from '@/lib/queries';
+import { useSearch, useTags, useUserTagVocab } from '@/lib/queries';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { cn } from '@/lib/utils';
 import { HighlightedSnippet } from '@/components/domain/HighlightedSnippet';
@@ -11,7 +11,7 @@ import { STATIC_COMMANDS, filterCommands } from './command-palette/commands';
 
 interface PaletteItem {
   id: string;
-  group: 'Tags' | 'Leyes' | 'Artículos' | 'Comandos';
+  group: 'Tags' | 'Mis tags' | 'Leyes' | 'Artículos' | 'Comandos';
   icon: React.ReactNode;
   title: string;
   /** Plain text or rich node (e.g. `<HighlightedSnippet>` for search hits). */
@@ -55,6 +55,9 @@ export function CommandPalette() {
 
   const { data: searchData } = useSearch(q);
   const { data: vocab = [] } = useTags();
+  // #670 — custom user-tag vocabulary, surfaced as its own "Mis tags"
+  // group so it never blends with the official BOE `vocab` above.
+  const { data: userTagVocab = [] } = useUserTagVocab();
 
   // Build the palette item list inside a single memo so the keydown
   // effect below doesn't re-subscribe on every render
@@ -68,6 +71,14 @@ export function CommandPalette() {
     const tagSuggestions = tagQuery !== null
       ? vocab.filter(({ tag }) => tag.toLowerCase().includes(tagQuery)).slice(0, 6)
       : (q.trim() === '' ? vocab.slice(0, 5) : []);
+    // Mirror the official-tag scoping (#670): filter user tags by the `#`
+    // fragment (matching slug OR label) and cap, so typing a query narrows
+    // them and a large vocabulary never renders unbounded rows.
+    const userTagSuggestions = tagQuery !== null
+      ? userTagVocab
+          .filter(({ tag, label }) => tag.toLowerCase().includes(tagQuery) || label.toLowerCase().includes(tagQuery))
+          .slice(0, 6)
+      : (q.trim() === '' ? userTagVocab.slice(0, 5) : []);
 
     // Icon and run-callback map, keyed by CommandId — kept here because they
     // capture React context (navigate, toggleTheme, setPaletteOpen) and
@@ -97,6 +108,14 @@ export function CommandPalette() {
         subtitle: `${count} ${count === 1 ? 'norma' : 'normas'} con este tag`,
         run: () => { navigate(`/explorer?tags=${encodeURIComponent(tag)}`); setPaletteOpen(false); },
       })),
+      ...userTagSuggestions.map<PaletteItem>(({ tag, label, count }) => ({
+        id: `user-tag-${tag}`,
+        group: 'Mis tags',
+        icon: <Hash className="size-3.5" />,
+        title: label,
+        subtitle: `${count} ${count === 1 ? 'norma' : 'normas'} con este tag`,
+        run: () => { navigate(`/explorer?userTag=${encodeURIComponent(tag)}`); setPaletteOpen(false); },
+      })),
       ...(searchData?.hits ?? []).map<PaletteItem>((h) => ({
         id: h.id,
         group: h.kind === 'law' ? 'Leyes' : 'Artículos',
@@ -119,7 +138,7 @@ export function CommandPalette() {
       })),
       ...commands,
     ];
-  }, [q, vocab, searchData, navigate, toggleTheme, setPaletteOpen]);
+  }, [q, vocab, userTagVocab, searchData, navigate, toggleTheme, setPaletteOpen]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -136,7 +155,7 @@ export function CommandPalette() {
   if (!paletteOpen) return null;
 
   // group items
-  const groups: PaletteItem['group'][] = ['Tags', 'Leyes', 'Artículos', 'Comandos'];
+  const groups: PaletteItem['group'][] = ['Tags', 'Mis tags', 'Leyes', 'Artículos', 'Comandos'];
 
   return (
     <div
@@ -190,6 +209,7 @@ export function CommandPalette() {
                       <span className={cn(
                         'inline-flex size-6 items-center justify-center rounded',
                         it.group === 'Tags' && 'bg-amber-soft text-amber-700 dark:text-amber-300',
+                        it.group === 'Mis tags' && 'bg-amber-soft text-amber-700 dark:text-amber-200',
                         it.group === 'Leyes' && 'bg-primary-soft text-indigo-700',
                         it.group === 'Artículos' && 'bg-amber-soft text-amber-700',
                         it.group === 'Comandos' && 'bg-[hsl(266_65%_92%/.6)] text-[hsl(266_50%_40%)] dark:bg-[hsl(266_30%_22%)] dark:text-[hsl(266_60%_80%)]',

@@ -10,7 +10,7 @@ import { ErrorState } from '@/components/domain/ErrorState';
 import { Skeleton, SkeletonLines } from '@/components/domain/Skeleton';
 import { Badge, Button, Chip, Tabs } from '@/components/ui';
 import { RightRail } from '@/components/shell/RightRail';
-import { useGraph, useLaw, useVersions } from '@/lib/queries';
+import { useAddUserTag, useGraph, useLaw, useRemoveUserTag, useUserTags, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { formatDate } from '@/lib/utils';
 import type { Article, ArticleRef, GraphData, GraphNodeKind, LawDetail } from '@/lib/types';
@@ -30,6 +30,12 @@ export function LawDetailPage() {
 
   const { data: law, isLoading, error, refetch } = useLaw(lawId);
   const { data: versions = [] } = useVersions(lawId);
+  // #670 — custom user tags on this law. Keyed off the route param (like
+  // `useVersions`/`useGraph` above), not `law.id`, so the hook can be
+  // called before the `!law` early-return without an unsafe `law.id` access.
+  const { data: userTags = [] } = useUserTags(lawId);
+  const addUserTagMut = useAddUserTag();
+  const removeUserTagMut = useRemoveUserTag();
   // Hoisted here (rather than inside LawDetailGraphTab) so the related-laws
   // panel in the right rail is populated on every tab, not just 'grafo'.
   // TanStack Query deduplicates the request — LawDetailGraphTab uses the same
@@ -78,6 +84,9 @@ export function LawDetailPage() {
           law={law}
           versionsCount={versions.length}
           onTagClick={(t) => navigate(`/explorer?tags=${encodeURIComponent(t)}`)}
+          userTags={userTags}
+          onAddUserTag={(label) => addUserTagMut.mutate({ lawId: law.id, label })}
+          onRemoveUserTag={(tag) => removeUserTagMut.mutate({ lawId: law.id, tag })}
         />
 
         <div className="border-b border-border px-5 md:px-8">
