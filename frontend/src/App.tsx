@@ -98,6 +98,9 @@ const OnboardingPage = lazy(() => import('@/pages/OnboardingPage').then((m) => (
 // Milestone 14 — document editor (TipTap). Lazy-loaded because the TipTap
 // + ProseMirror bundle is non-trivial and the editor is an opt-in surface.
 const EditorPage = lazy(() => import('@/pages/EditorPage').then((m) => ({ default: m.EditorPage })));
+// #671 gap C — browse-by-autonomous-community directory. Lazy like every
+// other route; it's a secondary entry point, not part of the hot path.
+const CommunitiesPage = lazy(() => import('@/pages/CommunitiesPage').then((m) => ({ default: m.CommunitiesPage })));
 
 function PageFallback() {
   return (
@@ -139,6 +142,7 @@ export function App() {
         <Route element={<AppShell />}>
           <Route path="home" element={<HomePage />} />
           <Route path="explorer" element={<ExplorerPage />} />
+          <Route path="communities" element={<CommunitiesPage />} />
           <Route path="laws/:lawId" element={<LawDetailPage />} />
           <Route path="laws/:lawId/diff" element={<DiffPage />} />
           <Route path="graph" element={<GraphPage />} />

@@ -181,6 +181,21 @@ export const mockApi: ApiClient = {
         .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
     },
   },
+  departments: {
+    // #671 gap B — the mock seed laws (`mock-data.ts`) don't carry a
+    // `department` field, so there's nothing real to aggregate. Return a
+    // small static vocabulary so the Explorer's department filter renders
+    // chips in mock mode; it won't actually narrow `filterLaws` below
+    // (same known gap as `jurisdiction`, which mock browse mode also
+    // doesn't filter on client-side).
+    async list() {
+      await delay(60);
+      return [
+        { department: 'Ministerio de Justicia', count: 3 },
+        { department: 'Ministerio de Hacienda', count: 2 },
+      ];
+    },
+  },
   userTags: mockUserTagsApi,
   graph: {
     async forLaw(_id, _depth): Promise<GraphData> {

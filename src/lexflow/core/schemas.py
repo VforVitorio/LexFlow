@@ -73,6 +73,11 @@ class LawSummary(BaseModel):
     # renders tag chips and the `#tag` filter works without a detail fetch.
     # Custom user tags (#670) are a separate user-local layer — never here.
     tags: list[str] = Field(default_factory=list, description="Normalised official topic tags.")
+    # #671 gap B — issuing department/ministerio (BOE `department` field).
+    # Surfaced on summaries so the Explorer's department facet can filter
+    # and render the active chip without a detail fetch. Unlike `tags`, this
+    # is a single free-text value straight from BOE metadata — no slugging.
+    department: str | None = Field(default=None, description="Issuing department / ministerio, when known.")
 
 
 class LawDetail(BaseModel):
@@ -214,6 +219,18 @@ class TagCount(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Departments (#671 gap B)
+# ---------------------------------------------------------------------------
+
+
+class DepartmentCount(BaseModel):
+    """An issuing department (ministerio) and how many laws it issued."""
+
+    department: str = Field(..., description="Issuing department / ministerio name.")
+    count: int = Field(..., ge=0, description="Number of laws attributed to it.")
+
+
+# ---------------------------------------------------------------------------
 # Errors
 # ---------------------------------------------------------------------------
 
@@ -328,6 +345,12 @@ class TagsResponse(BaseModel):
     """Wrapper for ``GET /api/v1/tags`` (Sprint 6 api-6)."""
 
     items: list[TagCount]
+
+
+class DepartmentsResponse(BaseModel):
+    """Wrapper for ``GET /api/v1/departments`` (#671 gap B)."""
+
+    items: list[DepartmentCount]
 
 
 # ---------------------------------------------------------------------------

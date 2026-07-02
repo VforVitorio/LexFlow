@@ -316,5 +316,8 @@ export function listLawsQuery(params: ListLawsParams): Record<string, unknown> {
     // the array as repeated `?tags=a&tags=b`). Makes tag browse corpus-wide
     // instead of page-scoped; the client fallback then re-ANDs harmlessly.
     tags: params.tags,
+    // #671 gap B — issuing department (ministerio), exact match. Passed
+    // straight through, same shape as `jurisdiction`.
+    department: params.department,
   };
 }

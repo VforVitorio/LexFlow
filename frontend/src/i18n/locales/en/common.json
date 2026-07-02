@@ -7,12 +7,18 @@
     "dashboards": "Dashboards",
     "settings": "Settings",
     "editor": "Editor",
+    "communities": "Communities",
     "main": "Main navigation",
     "collapse": "Collapse",
     "expand": "Expand",
     "recent": "Recent",
     "resize": "Resize sidebar width",
     "resizePanel": "Resize panel width"
+  },
+  "communities": {
+    "title": "Autonomous communities",
+    "subtitle": "Browse legislation by territorial scope: national law or each autonomous community.",
+    "openFor": "See {{name}} laws in the Explorer"
   },
   "shell": {
     "searchPlaceholder": "Search laws, articles…",

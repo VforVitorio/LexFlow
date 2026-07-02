@@ -62,6 +62,7 @@ def apply_law_filters(
     year_from: int | None = None,
     year_to: int | None = None,
     tags: list[str] | None = None,
+    department: str | None = None,
 ) -> list[LawSummary]:
     """Apply optional filters to a list of law summaries.
 
@@ -79,6 +80,12 @@ def apply_law_filters(
     input (``"Protección"``) matches the stored vocabulary (``proteccion``);
     empty-after-normalisation tags are dropped rather than excluding
     everything.
+
+    ``department`` filters by exact issuing-department match (#671 gap B) —
+    a law is kept only if its ``department`` equals the requested value.
+    Unlike ``tags`` there's no slug normalisation: department names come
+    straight from BOE metadata and the vocabulary endpoint returns the exact
+    strings the frontend must send back.
     """
     # #671: normalise the requested tags once, up front — not per summary.
     required_tags = {slug for t in (tags or []) if (slug := normalize_tag(t))}
@@ -95,6 +102,7 @@ def apply_law_filters(
         and year_from is None
         and year_to is None
         and not required_tags
+        and department is None
     )
     if no_filters:
         return summaries
@@ -107,6 +115,8 @@ def apply_law_filters(
         if scope is not None and summary.scope != scope:
             return False
         if jurisdiction is not None and summary.jurisdiction != jurisdiction:
+            return False
+        if department is not None and summary.department != department:
             return False
         if year_from is not None or year_to is not None:
             published = summary.publication_date
