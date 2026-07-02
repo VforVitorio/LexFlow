@@ -19,17 +19,10 @@
  *   aggregate endpoint (e.g. `GET /api/v1/laws/counts-by-jurisdiction`)
  *   over fanning out from the client.
  *
- * KNOWN GAP — flag for whoever owns `ExplorerPage.tsx`: as of this
- * writing, `ExplorerPage`'s mount effect seeds `jurisdiction` state from
- * `?tags=`, `?q=` and `?userTag=` in the URL, but NOT from `?jurisdiction=`.
- * That means the deep link this page builds
- * (`/explorer?jurisdiction=<code>`) navigates correctly but does NOT
- * pre-select the community filter once the Explorer mounts — the URL param
- * is set, nothing reads it. Fixing that is a small addition to the same
- * `useEffect` that already seeds `tags`/`q`/`userTag` in `ExplorerPage.tsx`
- * (read `searchParams.get('jurisdiction')`, cast to `JurisdictionCode`,
- * call `setJurisdiction`). Out of scope here — `ExplorerPage.tsx` is owned
- * by another workstream.
+ * The `/explorer?jurisdiction=<code>` deep link is consumed by
+ * `ExplorerPage`'s mount effect, which seeds the `jurisdiction` filter from
+ * the URL (alongside `?tags=`/`?q=`/`?userTag=`/`?department=`), so the card
+ * lands on the Explorer already scoped to that community (#770).
  */
 
 import { useNavigate } from 'react-router-dom';
@@ -68,7 +61,12 @@ export function CommunitiesPage() {
         className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
       >
         {COMMUNITIES.map(({ code, name }) => (
-          <CommunityCard key={code} code={code} name={name} onSelect={goToJurisdiction} />
+          // `role="list"` children must be `role="listitem"`; the card itself
+          // is the `role="button"` click target, so wrap it to keep both the
+          // list semantics ("N items") and the button semantics intact.
+          <div role="listitem" key={code}>
+            <CommunityCard code={code} name={name} onSelect={goToJurisdiction} />
+          </div>
         ))}
       </div>
     </div>

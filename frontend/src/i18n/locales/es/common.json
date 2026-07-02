@@ -15,6 +15,11 @@
     "resize": "Ajustar ancho de la barra lateral",
     "resizePanel": "Ajustar ancho del panel"
   },
+  "communities": {
+    "title": "Comunidades autónomas",
+    "subtitle": "Explora la legislación por ámbito territorial: normativa estatal o de cada comunidad autónoma.",
+    "openFor": "Ver leyes de {{name}} en el Explorador"
+  },
   "shell": {
     "searchPlaceholder": "Buscar leyes, artículos…",
     "toggleTheme": "Cambiar tema",

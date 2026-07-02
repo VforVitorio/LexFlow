@@ -57,8 +57,7 @@ export function ExplorerPage() {
     const urlUserTag = searchParams.get('userTag');
     if (urlUserTag) setActiveUserTag(urlUserTag);
     // #671 gap B — deep link for the department facet (`?department=...`),
-    // mirrors `jurisdiction`'s absence of a URL param today by following the
-    // same read-once-on-mount convention as `tags`/`userTag` above.
+    // read once on mount like `tags`/`userTag`/`jurisdiction` here.
     const urlDepartment = searchParams.get('department');
     if (urlDepartment) setActiveDepartment(urlDepartment);
     // #770 — deep link for the community facet (`?jurisdiction=es-XX`), used by

@@ -15,6 +15,11 @@
     "resize": "Resize sidebar width",
     "resizePanel": "Resize panel width"
   },
+  "communities": {
+    "title": "Autonomous communities",
+    "subtitle": "Browse legislation by territorial scope: national law or each autonomous community.",
+    "openFor": "See {{name}} laws in the Explorer"
+  },
   "shell": {
     "searchPlaceholder": "Search laws, articles…",
     "toggleTheme": "Toggle theme",
