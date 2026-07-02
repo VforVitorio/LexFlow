@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.71.0](https://github.com/VforVitorio/LexFlow/compare/v0.70.0...v0.71.0) (2026-07-02)
+
+
+### Features
+
+* **search:** department facet, short-name search, browse-by-community ([1d343f8](https://github.com/VforVitorio/LexFlow/commit/1d343f8dcff72cbf77cad97141e952b89fa194b1))
+* **search:** department facet, short-name search, browse-by-community ([1a59b31](https://github.com/VforVitorio/LexFlow/commit/1a59b31a2de166b050699bf35faac4cd6fb5305d)), closes [#770](https://github.com/VforVitorio/LexFlow/issues/770) [#773](https://github.com/VforVitorio/LexFlow/issues/773)
+
+
+### Documentation
+
+* concise, human README ([019c96f](https://github.com/VforVitorio/LexFlow/commit/019c96fcd8bea24c630df90b48c1ea85cbb12ca4))
+* rewrite README to be concise and human ([d6e95a7](https://github.com/VforVitorio/LexFlow/commit/d6e95a7d8821532ea804fffcf712aedadf2746c7)), closes [#779](https://github.com/VforVitorio/LexFlow/issues/779)
+
 ## [0.70.0](https://github.com/VforVitorio/LexFlow/compare/v0.69.0...v0.70.0) (2026-07-02)
 
 
