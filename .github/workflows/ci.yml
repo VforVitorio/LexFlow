@@ -99,7 +99,7 @@ jobs:
       - name: Cache legalize-es submodule checkout
         if: steps.changes.outputs.backend == 'true'
         id: legalize-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: data/legalize-es
           key: legalize-es-${{ runner.os }}-${{ steps.legalize-sha.outputs.sha }}
@@ -200,7 +200,7 @@ jobs:
       # the cache invalidates whenever the analysed surface actually moves.
       - name: Cache mypy
         if: steps.changes.outputs.backend == 'true'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .mypy_cache
           key: mypy-${{ runner.os }}-${{ hashFiles('pyproject.toml', 'src/lexflow/**') }}
