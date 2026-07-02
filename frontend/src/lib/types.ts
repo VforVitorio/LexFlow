@@ -535,6 +535,25 @@ export interface DashboardData {
   };
 }
 
+// ─── User tags ───────────────────────────────────────────────────────────
+
+/**
+ * A custom tag a user attached to a law (#670). Distinct from the corpus
+ * `tags` vocabulary (`Law.tags`), which is read-only and derived from BOE
+ * frontmatter — user tags are freeform labels stored per-user, per-law.
+ */
+export interface UserTag {
+  /** Kebab-case ASCII slug — mirrors the backend's `normalize_tag`. */
+  tag: string;
+  /** Display label as the user typed it. */
+  label: string;
+}
+
+/** A user tag with its usage count across laws — powers the tag vocabulary view. */
+export interface UserTagCount extends UserTag {
+  count: number;
+}
+
 // ─── Common ──────────────────────────────────────────────────────────────
 
 export interface Paginated<T> {
@@ -596,6 +615,24 @@ export interface ApiClient {
   /** Tag vocabulary across the corpus, with usage counts. */
   tags: {
     list(): Promise<Array<{ tag: string; count: number }>>;
+  };
+  /**
+   * Custom user tags on laws (#670). Unlike `tags` above (read-only,
+   * corpus-derived), this is user-owned CRUD: attach/detach a freeform
+   * label on a law, browse the user's tag vocabulary, and find every law
+   * carrying a given tag.
+   */
+  userTags: {
+    /** Tags the current user has attached to `lawId`. */
+    forLaw(lawId: string): Promise<UserTag[]>;
+    /** Attach a new tag (by display label) to `lawId`; returns the created tag. */
+    add(lawId: string, label: string): Promise<UserTag>;
+    /** Detach `tag` (the slug, not the label) from `lawId`. */
+    remove(lawId: string, tag: string): Promise<void>;
+    /** The user's full tag vocabulary, with per-tag law counts. */
+    vocab(): Promise<UserTagCount[]>;
+    /** Every law id carrying `tag`. */
+    lawsFor(tag: string): Promise<string[]>;
   };
   graph: {
     forLaw(id: string, depth?: number): Promise<GraphData>;

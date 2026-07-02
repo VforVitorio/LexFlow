@@ -14,7 +14,7 @@ import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, InstalledModel, SyncStatus, DashboardData, ListLawsParams,
   SearchResults, SemanticSearchResults, HybridSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
-  GraphGlobalFilters, GraphGlobalResult, SearchFacets,
+  GraphGlobalFilters, GraphGlobalResult, SearchFacets, UserTag, UserTagCount,
 } from './types';
 
 export const qk = {
@@ -27,6 +27,9 @@ export const qk = {
   },
   articles:    (lawId: string, num: string) => ['articles', lawId, num] as const,
   tags:        () => ['tags'] as const,
+  userTags:    (lawId: string) => ['userTags', lawId] as const,
+  userTagVocab: () => ['userTags', 'vocab'] as const,
+  userTagLaws: (tag: string) => ['userTags', 'laws', tag] as const,
   graph:       (id: string, depth?: number) => ['graph', id, depth ?? 2] as const,
   /** Search key includes facets so different filter combinations coexist in cache. */
   search:      (q: string, facets?: SearchFacets) => ['search', q, facets ?? {}] as const,
@@ -90,6 +93,63 @@ export function useTags() {
     queryKey: qk.tags(),
     queryFn: () => api.tags.list(),
     staleTime: 5 * 60_000,
+  });
+}
+
+// ─── User tags (#670) ───────────────────────────────────────────────────
+// Custom, user-owned tags on laws — distinct from the corpus `tags` above.
+// CRUD goes through mutations that invalidate the affected queries so the
+// law header, the tag vocabulary, and any "laws with this tag" view stay
+// in sync without a manual refetch.
+
+/** Tags the current user attached to `lawId`. */
+export function useUserTags(lawId: string | undefined) {
+  return useQuery<UserTag[]>({
+    queryKey: qk.userTags(lawId || ''),
+    queryFn: () => api.userTags.forLaw(lawId!),
+    enabled: !!lawId,
+  });
+}
+
+/** The user's full tag vocabulary, with per-tag law counts. */
+export function useUserTagVocab() {
+  return useQuery<UserTagCount[]>({
+    queryKey: qk.userTagVocab(),
+    queryFn: () => api.userTags.vocab(),
+  });
+}
+
+/** Every law id carrying `tag`. `tag` is nullable so callers can gate on "no tag selected yet". */
+export function useUserTagLaws(tag: string | null) {
+  return useQuery<string[]>({
+    queryKey: qk.userTagLaws(tag ?? ''),
+    queryFn: () => api.userTags.lawsFor(tag!),
+    enabled: tag != null,
+  });
+}
+
+/** Attach a tag to a law; refreshes that law's tags + the vocabulary. */
+export function useAddUserTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lawId, label }: { lawId: string; label: string }) => api.userTags.add(lawId, label),
+    onSuccess: (_data, { lawId }) => {
+      void qc.invalidateQueries({ queryKey: qk.userTags(lawId) });
+      void qc.invalidateQueries({ queryKey: qk.userTagVocab() });
+    },
+  });
+}
+
+/** Detach a tag from a law; refreshes that law's tags, the vocabulary, and that tag's law list. */
+export function useRemoveUserTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ lawId, tag }: { lawId: string; tag: string }) => api.userTags.remove(lawId, tag),
+    onSuccess: (_data, { lawId, tag }) => {
+      void qc.invalidateQueries({ queryKey: qk.userTags(lawId) });
+      void qc.invalidateQueries({ queryKey: qk.userTagVocab() });
+      void qc.invalidateQueries({ queryKey: qk.userTagLaws(tag) });
+    },
   });
 }
 

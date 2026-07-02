@@ -1,8 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bookmark, Share2, Download, ChevronDown, Hash } from 'lucide-react';
+import { Bookmark, Share2, Download, ChevronDown, Hash, Plus, X } from 'lucide-react';
 import { Badge, Button } from '@/components/ui';
 import { formatDate, statusLabel } from '@/lib/utils';
-import type { Law } from '@/lib/types';
+import type { Law, UserTag } from '@/lib/types';
 
 export interface LawHeaderProps {
   law: Law;
@@ -17,9 +18,29 @@ export interface LawHeaderProps {
    * the parent passes the loaded length; falls back to `law.versiones`.
    */
   versionsCount?: number;
+  /**
+   * Custom user tags on this law (#670) — freeform labels the user attaches
+   * locally, distinct from the official BOE-derived `law.tags` above. The
+   * "Mis tags" row only renders when both `onAddUserTag` and
+   * `onRemoveUserTag` are supplied, so callers that don't wire user tags
+   * (tests, previews) see the header unchanged.
+   */
+  userTags?: UserTag[];
+  onAddUserTag?: (label: string) => void;
+  onRemoveUserTag?: (tag: string) => void;
 }
 
-export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick, versionsCount }: LawHeaderProps) {
+export function LawHeader({
+  law,
+  onExport,
+  onShare,
+  onBookmark,
+  onTagClick,
+  versionsCount,
+  userTags,
+  onAddUserTag,
+  onRemoveUserTag,
+}: LawHeaderProps) {
   const { t } = useTranslation();
   const tone =
     law.status === 'vigente' ? 'success' :
@@ -71,7 +92,90 @@ export function LawHeader({ law, onExport, onShare, onBookmark, onTagClick, vers
           ))}
         </div>
       )}
+
+      {onAddUserTag && onRemoveUserTag && (
+        <UserTagsRow userTags={userTags ?? []} onAddUserTag={onAddUserTag} onRemoveUserTag={onRemoveUserTag} />
+      )}
     </header>
+  );
+}
+
+/**
+ * "Mis tags" row (#670) — custom, freeform labels attached to a law
+ * locally, kept visually distinct (amber) from the official BOE tags
+ * above so the two vocabularies never blend.
+ *
+ * The "add tag" control reuses ChatPage's inline-rename interaction
+ * (`editingId`/`commitRename` in `pages/ChatPage.tsx`): a trigger button
+ * swaps for a focused text input, Enter commits, Escape/blur cancels.
+ */
+function UserTagsRow({
+  userTags,
+  onAddUserTag,
+  onRemoveUserTag,
+}: {
+  userTags: UserTag[];
+  onAddUserTag: (label: string) => void;
+  onRemoveUserTag: (tag: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [adding, setAdding] = useState(false);
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (adding) inputRef.current?.focus();
+  }, [adding]);
+
+  const commit = () => {
+    const trimmed = value.trim();
+    setAdding(false);
+    setValue('');
+    if (trimmed) onAddUserTag(trimmed);
+  };
+
+  return (
+    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+      {userTags.map((ut) => (
+        <span
+          key={ut.tag}
+          className="inline-flex items-center gap-1 rounded-full bg-amber-soft px-2 py-px font-mono text-[11px] text-amber-700 dark:text-amber-200"
+        >
+          {ut.label}
+          <button
+            type="button"
+            onClick={() => onRemoveUserTag(ut.tag)}
+            aria-label={t('lawHeader.removeUserTag', 'Quitar "{{label}}"', { label: ut.label })}
+            className="rounded-full p-0.5 hover:bg-amber-500/30"
+          >
+            <X className="size-2.5" />
+          </button>
+        </span>
+      ))}
+      {adding ? (
+        <input
+          ref={inputRef}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            if (e.key === 'Escape') setAdding(false);
+          }}
+          placeholder={t('lawHeader.addUserTagPlaceholder', 'nueva etiqueta')}
+          className="w-32 rounded-full border border-amber-500/60 bg-surface px-2 py-px font-mono text-[11px] outline-none focus:ring-2 focus:ring-amber-500/50"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => { setValue(''); setAdding(true); }}
+          className="inline-flex items-center gap-0.5 rounded-full border border-dashed border-border-strong px-2 py-px font-mono text-[11px] text-muted transition-colors hover:border-amber-500/60 hover:text-amber-700 dark:hover:text-amber-200"
+        >
+          <Plus className="size-2.5" />
+          {t('lawHeader.addUserTag', 'tag')}
+        </button>
+      )}
+    </div>
   );
 }
 

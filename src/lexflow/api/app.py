@@ -26,6 +26,7 @@ from lexflow.api.routers import (
     system,
     tags,
     telemetry,
+    user_tags,
     versions,
 )
 from lexflow.api.routers.graph import router as graph_router
@@ -131,6 +132,11 @@ register_error_handlers(app)
 # greedily match "search" as a law id and 404 before search ever runs (#102).
 app.include_router(search.router, prefix="/api/v1")
 app.include_router(laws.router, prefix="/api/v1")
+# User (custom) tags — personal taxonomy stored in the local SQLite store
+# (#670). `/laws/{id}/user-tags` is 3-segment so it never collides with the
+# 2-segment `/laws/{law_id}` detail route. Importing this router pulls in the
+# `UserTag` model, so the lifespan `init_db()` create_all builds its table.
+app.include_router(user_tags.router, prefix="/api/v1")
 app.include_router(articles.router, prefix="/api/v1")
 app.include_router(versions.router, prefix="/api/v1")
 app.include_router(graph_router, prefix="/api/v1")

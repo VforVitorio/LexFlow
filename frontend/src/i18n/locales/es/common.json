@@ -30,6 +30,8 @@
   },
   "lawHeader": {
     "save": "Guardar",
+    "addUserTag": "tag",
+    "addUserTagPlaceholder": "nueva etiqueta",
     "share": "Compartir",
     "export": "Exportar",
     "version": "Versión",
@@ -537,6 +539,7 @@
     "countOf": "de",
     "countUnit": "normas",
     "clearFilters": "Limpiar filtros",
+    "removeUserTagFilter": "quitar filtro de tag",
     "howToSearch": "Cómo buscar",
     "searchHelp": {
       "title": "Cómo buscar en el Explorador",
@@ -567,7 +570,8 @@
       "rango": "Rango normativo",
       "ambito": "Ámbito territorial",
       "year": "Año",
-      "tags": "Tags"
+      "tags": "Tags",
+      "userTags": "Mis tags"
     },
     "tagsHintPre": "Click para alternar · escribe",
     "tagsHintPost": "en el buscador"

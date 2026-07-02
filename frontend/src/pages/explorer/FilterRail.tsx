@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Hash } from 'lucide-react';
 import { Checkbox, Input } from '@/components/ui';
 import { cn, statusLabel } from '@/lib/utils';
-import type { Ambito, JurisdictionCode, LawStatus, RangoNormativo } from '@/lib/types';
+import type { Ambito, JurisdictionCode, LawStatus, RangoNormativo, UserTagCount } from '@/lib/types';
 import { COMMUNITIES } from '@/lib/types';
 
 const STATUSES: LawStatus[] = ['vigente', 'modificada', 'derogada'];
@@ -61,6 +61,16 @@ interface FilterRailProps {
   setTags: (next: Set<string>) => void;
   /** Live tag vocabulary from `/api/v1/tags` (top-N shown). */
   vocab: Array<{ tag: string; count: number }>;
+  /**
+   * Custom user-tag vocabulary (#670) — freeform labels users attach to
+   * laws locally, distinct from the official BOE-derived `vocab` above.
+   * Unlike the tag cloud this facet is SINGLE-select: picking a tag
+   * narrows to laws bearing it, picking the active one again clears it.
+   * Renders nothing when empty/omitted.
+   */
+  userTagVocab?: UserTagCount[];
+  activeUserTag?: string | null;
+  onSelectUserTag?: (tag: string | null) => void;
   /** Publication-year range (inclusive), as raw input strings (#563). */
   yearFrom: string;
   setYearFrom: (v: string) => void;
@@ -90,6 +100,9 @@ export function FilterRail({
   allTags,
   setTags,
   vocab,
+  userTagVocab,
+  activeUserTag,
+  onSelectUserTag,
   yearFrom,
   setYearFrom,
   yearTo,
@@ -110,6 +123,9 @@ export function FilterRail({
       allTags={allTags}
       setTags={setTags}
       vocab={vocab}
+      userTagVocab={userTagVocab}
+      activeUserTag={activeUserTag}
+      onSelectUserTag={onSelectUserTag}
       yearFrom={yearFrom}
       setYearFrom={setYearFrom}
       yearTo={yearTo}
@@ -141,6 +157,9 @@ function FilterRailBody({
   allTags,
   setTags,
   vocab,
+  userTagVocab,
+  activeUserTag,
+  onSelectUserTag,
   yearFrom,
   setYearFrom,
   yearTo,
@@ -264,6 +283,35 @@ function FilterRailBody({
           })}
         </div>
       </FilterGroup>
+
+      {/* Custom user tags (#670) — single-select, kept in its own group so
+          it never visually blends with the official tag cloud above. */}
+      {userTagVocab && userTagVocab.length > 0 && (
+        <FilterGroup title={t('explorer.groups.userTags', 'Mis tags')}>
+          <div className="flex flex-wrap gap-1.5">
+            {userTagVocab.map(({ tag, label, count }) => {
+              const active = activeUserTag === tag;
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => onSelectUserTag?.(active ? null : tag)}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-px text-[11.5px] font-medium transition-colors',
+                    active
+                      ? 'border-transparent bg-amber-500 text-white'
+                      : 'border-border-strong bg-surface text-fg hover:bg-surface-2',
+                  )}
+                  aria-pressed={active}
+                >
+                  {label}
+                  <span className={cn('font-mono text-[10px]', active ? 'text-white/70' : 'text-muted')}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </FilterGroup>
+      )}
     </>
   );
 }

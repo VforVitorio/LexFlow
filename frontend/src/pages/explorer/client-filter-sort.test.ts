@@ -52,4 +52,20 @@ describe('applyClientFilterSort', () => {
     expect(applyClientFilterSort(base, { ...relevance, sort: 'title' }).map((l) => l.id)).toEqual(['b', 'c', 'a']);
     expect(applyClientFilterSort(base, relevance).map((l) => l.id)).toEqual(['a', 'b', 'c']);
   });
+
+  it('filters by userTagLawIds membership (#670); null/undefined is a no-op', () => {
+    // Only laws whose id is in the set survive.
+    expect(
+      applyClientFilterSort(base, { ...relevance, userTagLawIds: new Set(['a', 'c']) }).map((l) => l.id),
+    ).toEqual(['a', 'c']);
+    // An active-but-empty set (tag with no laws) narrows to nothing.
+    expect(applyClientFilterSort(base, { ...relevance, userTagLawIds: new Set() }).map((l) => l.id)).toEqual([]);
+    // No active user-tag filter (null or omitted) leaves rows untouched.
+    expect(applyClientFilterSort(base, { ...relevance, userTagLawIds: null }).map((l) => l.id)).toEqual(['a', 'b', 'c']);
+    expect(applyClientFilterSort(base, relevance).map((l) => l.id)).toEqual(['a', 'b', 'c']);
+    // Composes with the other filters (AND).
+    expect(
+      applyClientFilterSort(base, { ...relevance, plainQ: 'ley', userTagLawIds: new Set(['a']) }).map((l) => l.id),
+    ).toEqual(['a']);
+  });
 });

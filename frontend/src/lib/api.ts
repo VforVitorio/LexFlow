@@ -32,6 +32,7 @@ import { liveSearchApi } from './api/search';
 import { liveSyncApi } from './api/sync';
 import { liveSystemApi } from './api/system';
 import { liveTagsApi } from './api/tags';
+import { liveUserTagsApi } from './api/user-tags';
 
 // Re-exports for back-compat: existing call sites import these from
 // `@/lib/api` directly. The implementations live in `./api/http.ts`.
@@ -42,6 +43,7 @@ const liveApi: ApiClient = {
   laws: liveLawsApi,
   articles: liveArticlesApi,
   tags: liveTagsApi,
+  userTags: liveUserTagsApi,
   graph: liveGraphApi,
   search: liveSearchApi,
   chat: liveChatApi,

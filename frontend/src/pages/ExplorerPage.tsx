@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { FilterRail } from '@/pages/explorer/FilterRail';
 import { applyClientFilterSort, type LawSort } from '@/pages/explorer/client-filter-sort';
-import { useLawsList, useTags, useSearch } from '@/lib/queries';
+import { useLawsList, useTags, useSearch, useUserTagVocab, useUserTagLaws } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
 import { RANK_MAP, STATUS_MAP, SCOPE_MAP } from '@/lib/api/transformers';
@@ -30,6 +30,9 @@ export function ExplorerPage() {
   const [yearTo, setYearTo] = useState('');
   // Single-select: one community at a time (or undefined = all).
   const [jurisdiction, setJurisdiction] = useState<JurisdictionCode | undefined>(undefined);
+  // #670 — single-select custom user-tag filter, browse-mode only (does NOT
+  // reach `searchFacets`/the corpus search endpoint — see `params`/`searchFacets` below).
+  const [activeUserTag, setActiveUserTag] = useState<string | null>(null);
   const [sort, setSort] = useState<LawSort>('relevance');
   // Toggled by the empty-state "How to search" button (#476). Surfaces an
   // inline help panel explaining the search syntax instead of a no-op.
@@ -45,6 +48,11 @@ export function ExplorerPage() {
     // link) actually run a query instead of being decorative (#577).
     const urlQ = searchParams.get('q');
     if (urlQ) setQ(urlQ);
+    // #670 — deep link for the custom user-tag filter (CommandPalette's
+    // "Mis tags" group navigates to `/explorer?userTag=<slug>`). Mirrors
+    // `tags`/`q` above: read once on mount, subsequent UI clicks own the state.
+    const urlUserTag = searchParams.get('userTag');
+    if (urlUserTag) setActiveUserTag(urlUserTag);
     // run once on mount; subsequent UI clicks own the state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -118,11 +126,23 @@ export function ExplorerPage() {
     enabled: !isSearchMode,
   });
   const items = useMemo(() => browseData?.items ?? [], [browseData]);
+
+  // #670 — custom user-tag vocabulary + the ids of laws carrying the
+  // currently active one. Browse-mode-only facet: it narrows `displayed`
+  // via `applyClientFilterSort` below, never `searchFacets` (search mode
+  // ignores it — v1 scope).
+  const { data: userTagVocab = [] } = useUserTagVocab();
+  const { data: userTagLawIdsData } = useUserTagLaws(activeUserTag);
+  const userTagLawIds = useMemo(
+    () => (activeUserTag ? new Set(userTagLawIdsData ?? []) : null),
+    [activeUserTag, userTagLawIdsData],
+  );
+
   // Page-scoped search/sort/tag fallback (#475) — narrows + sorts the loaded
   // page only. Logic + rationale live in `explorer/client-filter-sort.ts`.
   const displayed = useMemo(
-    () => applyClientFilterSort(items, { plainQ, allTags, sort }),
-    [items, plainQ, allTags, sort],
+    () => applyClientFilterSort(items, { plainQ, allTags, sort, userTagLawIds }),
+    [items, plainQ, allTags, sort, userTagLawIds],
   );
 
   // ── Search mode (query ≥ 2 chars) ─────────────────────────────────────
@@ -178,6 +198,9 @@ export function ExplorerPage() {
         allTags={allTags}
         setTags={setTags}
         vocab={vocab}
+        userTagVocab={userTagVocab}
+        activeUserTag={activeUserTag}
+        onSelectUserTag={setActiveUserTag}
         yearFrom={yearFrom}
         setYearFrom={setYearFrom}
         yearTo={yearTo}
@@ -220,6 +243,9 @@ export function ExplorerPage() {
                 allTags={allTags}
                 setTags={setTags}
                 vocab={vocab}
+                userTagVocab={userTagVocab}
+                activeUserTag={activeUserTag}
+                onSelectUserTag={setActiveUserTag}
                 yearFrom={yearFrom}
                 setYearFrom={setYearFrom}
                 yearTo={yearTo}
@@ -323,6 +349,23 @@ export function ExplorerPage() {
                 {t}
               </Chip>
             ))}
+            {activeUserTag && (
+              // Custom user-tag filter (#670) — rendered outside the shared
+              // `Chip` component (which only styles an indigo `active` tone)
+              // so it stays visually distinct amber, matching the LawHeader
+              // / FilterRail / CommandPalette user-tag treatment.
+              <span className="inline-flex h-7 items-center gap-1.5 rounded-full border border-transparent bg-amber-500 pl-2.5 pr-1 text-[12.5px] font-medium text-white">
+                {userTagVocab.find((v) => v.tag === activeUserTag)?.label ?? activeUserTag}
+                <button
+                  type="button"
+                  aria-label={t('explorer.removeUserTagFilter', 'quitar filtro de tag')}
+                  onClick={() => setActiveUserTag(null)}
+                  className="ml-1 flex rounded p-0.5 opacity-70 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+                >
+                  <X className="size-3" />
+                </button>
+              </span>
+            )}
           </div>
         </div>
 
@@ -335,7 +378,7 @@ export function ExplorerPage() {
                 <EmptyState
                   title={t('explorer.empty.title')}
                   description={t('explorer.empty.description')}
-                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); } }}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); setActiveUserTag(null); } }}
                   secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
                 />
                 {showSearchHelp && (
@@ -411,7 +454,7 @@ export function ExplorerPage() {
                 <EmptyState
                   title={t('explorer.empty.title')}
                   description={t('explorer.empty.description')}
-                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); } }}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); setActiveUserTag(null); } }}
                   secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
                 />
                 {showSearchHelp && (
