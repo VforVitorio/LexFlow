@@ -23,6 +23,7 @@ from __future__ import annotations
 
 from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.models import Article, Law
+from lexflow.core.parser import normalize_tag
 from lexflow.core.schemas import LawSummary, PaginatedResponse
 
 
@@ -60,6 +61,7 @@ def apply_law_filters(
     jurisdiction: str | None,
     year_from: int | None = None,
     year_to: int | None = None,
+    tags: list[str] | None = None,
 ) -> list[LawSummary]:
     """Apply optional filters to a list of law summaries.
 
@@ -70,7 +72,17 @@ def apply_law_filters(
     ``year_from`` / ``year_to`` filter on the publication year (inclusive,
     #563). A law with no ``publication_date`` is excluded whenever either
     year bound is active — it can't satisfy a date range.
+
+    ``tags`` filters by official topic tag (#671) with AND semantics — a
+    law is kept only if it carries *every* requested tag. Incoming tags are
+    normalised to kebab slugs (``normalize_tag``) so accented / free-spelled
+    input (``"Protección"``) matches the stored vocabulary (``proteccion``);
+    empty-after-normalisation tags are dropped rather than excluding
+    everything.
     """
+    # #671: normalise the requested tags once, up front — not per summary.
+    required_tags = {slug for t in (tags or []) if (slug := normalize_tag(t))}
+
     # Audit #409 perf: previously this function ran one full list
     # comprehension per active filter, allocating throw-away lists for
     # each pass. We now build a single predicate that ANDs every
@@ -82,6 +94,7 @@ def apply_law_filters(
         and jurisdiction is None
         and year_from is None
         and year_to is None
+        and not required_tags
     )
     if no_filters:
         return summaries
@@ -103,7 +116,9 @@ def apply_law_filters(
                 return False
             if year_to is not None and published.year > year_to:
                 return False
-        return True
+        # Empty ``required_tags`` is vacuously a subset → keeps the law, so no
+        # tag filter costs nothing. Non-empty → AND: every requested tag present.
+        return required_tags.issubset(summary.tags)
 
     return [s for s in summaries if keep(s)]
 

@@ -68,6 +68,11 @@ class LawSummary(BaseModel):
     article_count: int
     scope: Scope
     jurisdiction: str | None
+    # #671 — official topic tags (BOE `subjects` etc.), normalised to
+    # kebab-case slugs by the parser. Surfaced on summaries so the Explorer
+    # renders tag chips and the `#tag` filter works without a detail fetch.
+    # Custom user tags (#670) are a separate user-local layer — never here.
+    tags: list[str] = Field(default_factory=list, description="Normalised official topic tags.")
 
 
 class LawDetail(BaseModel):

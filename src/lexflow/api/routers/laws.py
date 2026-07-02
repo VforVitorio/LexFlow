@@ -35,6 +35,7 @@ def list_laws(
     jurisdiction: str | None = Query(None, description="Filter by jurisdiction code (e.g. es-md)"),
     year_from: int | None = Query(None, ge=0, description="Earliest publication year (inclusive)"),
     year_to: int | None = Query(None, ge=0, description="Latest publication year (inclusive)"),
+    tags: list[str] | None = Query(None, description="AND-filter by official topic tag slug (repeatable)"),
 ) -> PaginatedResponse[LawSummary]:
     """Return a paginated list of laws.  All filters are optional."""
     return registry.list_laws(
@@ -46,6 +47,7 @@ def list_laws(
         jurisdiction=jurisdiction,
         year_from=year_from,
         year_to=year_to,
+        tags=tags,
     )
 
 
