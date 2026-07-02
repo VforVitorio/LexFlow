@@ -432,6 +432,11 @@ export interface SearchFacets {
    * because the Explorer accumulates chip + inline `#tag` selections.
    */
   tags?: string[];
+  /**
+   * Issuing department (ministerio), exact match (#671 gap B). Single-value
+   * like `jurisdiction` — the backend accepts one department at a time.
+   */
+  department?: string;
   /** Result page (1-based). */
   page?: number;
   /** Hits per page. */
@@ -554,6 +559,18 @@ export interface UserTagCount extends UserTag {
   count: number;
 }
 
+// ─── Departments ─────────────────────────────────────────────────────────
+
+/**
+ * An issuing department (ministerio) and how many laws it issued (#671 gap B).
+ * Read-only, corpus-derived — mirrors `{tag, count}` from `useTags`, but the
+ * value is a free-text BOE field, never slugged.
+ */
+export interface DepartmentCount {
+  department: string;
+  count: number;
+}
+
 // ─── Common ──────────────────────────────────────────────────────────────
 
 export interface Paginated<T> {
@@ -583,6 +600,12 @@ export interface ListLawsParams {
    * Single-select: the backend accepts one code at a time.
    */
   jurisdiction?: JurisdictionCode;
+  /**
+   * Issuing department (ministerio) filter (#671 gap B). Omit to return all
+   * departments. Maps directly to the backend `department` query param,
+   * exact match. Single-select, same shape as `jurisdiction`.
+   */
+  department?: string;
   sort?: 'relevance' | 'date' | 'refs' | 'title';
   cursor?: string | null;
   limit?: number;
@@ -615,6 +638,10 @@ export interface ApiClient {
   /** Tag vocabulary across the corpus, with usage counts. */
   tags: {
     list(): Promise<Array<{ tag: string; count: number }>>;
+  };
+  /** Issuing-department (ministerio) vocabulary across the corpus (#671 gap B). */
+  departments: {
+    list(): Promise<DepartmentCount[]>;
   };
   /**
    * Custom user tags on laws (#670). Unlike `tags` above (read-only,

@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { Hash } from 'lucide-react';
 import { Checkbox, Input } from '@/components/ui';
 import { cn, statusLabel } from '@/lib/utils';
-import type { Ambito, JurisdictionCode, LawStatus, RangoNormativo, UserTagCount } from '@/lib/types';
+import type { Ambito, DepartmentCount, JurisdictionCode, LawStatus, RangoNormativo, UserTagCount } from '@/lib/types';
 import { COMMUNITIES } from '@/lib/types';
 
 const STATUSES: LawStatus[] = ['vigente', 'modificada', 'derogada'];
@@ -83,6 +83,15 @@ interface FilterRailProps {
   jurisdiction: JurisdictionCode | undefined;
   setJurisdiction: (code: JurisdictionCode | undefined) => void;
   /**
+   * Issuing department (ministerio) filter (#671 gap B) — single-select,
+   * same pattern as `jurisdiction`/`setJurisdiction`. `departments` is the
+   * live vocabulary from `GET /api/v1/departments`; the group renders
+   * nothing when it's empty/omitted.
+   */
+  departments?: DepartmentCount[];
+  activeDepartment?: string;
+  onSelectDepartment?: (department: string | undefined) => void;
+  /**
    * When `true`, the rail renders as a plain `<section>` without the
    * fixed-width / hidden-on-mobile chrome — used inside the mobile
    * filter sheet where the parent owns the dialog wrapper.
@@ -109,6 +118,9 @@ export function FilterRail({
   setYearTo,
   jurisdiction,
   setJurisdiction,
+  departments,
+  activeDepartment,
+  onSelectDepartment,
   inline = false,
 }: FilterRailProps) {
   const { t } = useTranslation();
@@ -132,6 +144,9 @@ export function FilterRail({
       setYearTo={setYearTo}
       jurisdiction={jurisdiction}
       setJurisdiction={setJurisdiction}
+      departments={departments}
+      activeDepartment={activeDepartment}
+      onSelectDepartment={onSelectDepartment}
     />
   );
   if (inline) {
@@ -166,6 +181,9 @@ function FilterRailBody({
   setYearTo,
   jurisdiction,
   setJurisdiction,
+  departments,
+  activeDepartment,
+  onSelectDepartment,
 }: Omit<FilterRailProps, 'inline'>) {
   const { t } = useTranslation();
   return (
@@ -233,6 +251,36 @@ function FilterRailBody({
           })}
         </div>
       </FilterGroup>
+
+      {/* Issuing department (ministerio) — single-select, #671 gap B. Same
+          chip-toggle pattern as Comunidad above (one value active at a
+          time); renders nothing until the corpus vocabulary loads. */}
+      {departments && departments.length > 0 && (
+        <FilterGroup title={t('explorer.groups.department', 'Ministerio')}>
+          <div className="flex flex-wrap gap-1.5">
+            {departments.map(({ department, count }) => {
+              const active = activeDepartment === department;
+              return (
+                <button
+                  key={department}
+                  type="button"
+                  onClick={() => onSelectDepartment?.(active ? undefined : department)}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full border px-2 py-px text-[11.5px] font-medium transition-colors',
+                    active
+                      ? 'border-transparent bg-indigo-600 text-white'
+                      : 'border-border-strong bg-surface text-fg hover:bg-surface-2',
+                  )}
+                  aria-pressed={active}
+                >
+                  {department}
+                  <span className={cn('font-mono text-[10px]', active ? 'text-white/70' : 'text-muted')}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </FilterGroup>
+      )}
 
       <FilterGroup title={t('explorer.groups.year')}>
         <div className="flex items-center gap-2.5">

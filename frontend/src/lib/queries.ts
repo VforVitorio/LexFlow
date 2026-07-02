@@ -14,7 +14,7 @@ import type {
   Law, LawDetail, Article, LawVersion, DiffResult, GraphData, ChatThread,
   ChatMessage, Model, InstalledModel, SyncStatus, DashboardData, ListLawsParams,
   SearchResults, SemanticSearchResults, HybridSearchResults, SystemProfile, WarmupStatus, WhatsNewStatus, HealthSnapshot, SemanticStatus,
-  GraphGlobalFilters, GraphGlobalResult, SearchFacets, UserTag, UserTagCount,
+  GraphGlobalFilters, GraphGlobalResult, SearchFacets, UserTag, UserTagCount, DepartmentCount,
 } from './types';
 
 export const qk = {
@@ -27,6 +27,7 @@ export const qk = {
   },
   articles:    (lawId: string, num: string) => ['articles', lawId, num] as const,
   tags:        () => ['tags'] as const,
+  departments: () => ['departments'] as const,
   userTags:    (lawId: string) => ['userTags', lawId] as const,
   userTagVocab: () => ['userTags', 'vocab'] as const,
   userTagLaws: (tag: string) => ['userTags', 'laws', tag] as const,
@@ -92,6 +93,17 @@ export function useTags() {
   return useQuery<Array<{ tag: string; count: number }>>({
     queryKey: qk.tags(),
     queryFn: () => api.tags.list(),
+    staleTime: 5 * 60_000,
+  });
+}
+
+// ─── Departments (#671 gap B) ───────────────────────────────────────────
+
+/** Issuing-department (ministerio) vocabulary across the corpus. */
+export function useDepartments() {
+  return useQuery<DepartmentCount[]>({
+    queryKey: qk.departments(),
+    queryFn: () => api.departments.list(),
     staleTime: 5 * 60_000,
   });
 }

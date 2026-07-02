@@ -36,6 +36,7 @@ def list_laws(
     year_from: int | None = Query(None, ge=0, description="Earliest publication year (inclusive)"),
     year_to: int | None = Query(None, ge=0, description="Latest publication year (inclusive)"),
     tags: list[str] | None = Query(None, description="AND-filter by official topic tag slug (repeatable)"),
+    department: str | None = Query(None, description="Filter by issuing department (ministerio), exact match"),
 ) -> PaginatedResponse[LawSummary]:
     """Return a paginated list of laws.  All filters are optional."""
     return registry.list_laws(
@@ -48,6 +49,7 @@ def list_laws(
         year_from=year_from,
         year_to=year_to,
         tags=tags,
+        department=department,
     )
 
 

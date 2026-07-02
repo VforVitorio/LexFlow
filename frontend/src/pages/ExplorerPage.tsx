@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/domain/EmptyState';
 import { Skeleton } from '@/components/domain/Skeleton';
 import { FilterRail } from '@/pages/explorer/FilterRail';
 import { applyClientFilterSort, type LawSort } from '@/pages/explorer/client-filter-sort';
-import { useLawsList, useTags, useSearch, useUserTagVocab, useUserTagLaws } from '@/lib/queries';
+import { useLawsList, useTags, useDepartments, useSearch, useUserTagVocab, useUserTagLaws } from '@/lib/queries';
 import { useUi } from '@/lib/store';
 import { cn, formatDate, formatNumber, statusLabel } from '@/lib/utils';
 import { RANK_MAP, STATUS_MAP, SCOPE_MAP } from '@/lib/api/transformers';
@@ -30,6 +30,9 @@ export function ExplorerPage() {
   const [yearTo, setYearTo] = useState('');
   // Single-select: one community at a time (or undefined = all).
   const [jurisdiction, setJurisdiction] = useState<JurisdictionCode | undefined>(undefined);
+  // #671 gap B — issuing department (ministerio), single-select, same shape
+  // as `jurisdiction` above.
+  const [activeDepartment, setActiveDepartment] = useState<string | undefined>(undefined);
   // #670 — single-select custom user-tag filter, browse-mode only (does NOT
   // reach `searchFacets`/the corpus search endpoint — see `params`/`searchFacets` below).
   const [activeUserTag, setActiveUserTag] = useState<string | null>(null);
@@ -53,6 +56,20 @@ export function ExplorerPage() {
     // `tags`/`q` above: read once on mount, subsequent UI clicks own the state.
     const urlUserTag = searchParams.get('userTag');
     if (urlUserTag) setActiveUserTag(urlUserTag);
+    // #671 gap B — deep link for the department facet (`?department=...`),
+    // mirrors `jurisdiction`'s absence of a URL param today by following the
+    // same read-once-on-mount convention as `tags`/`userTag` above.
+    const urlDepartment = searchParams.get('department');
+    if (urlDepartment) setActiveDepartment(urlDepartment);
+    // #770 — deep link for the community facet (`?jurisdiction=es-XX`), used by
+    // the Browse-by-community page and the command palette. Previously this
+    // param was produced but never consumed, so those deep links navigated
+    // without pre-selecting the filter. Validate against the known codes so a
+    // junk param doesn't set an invalid jurisdiction.
+    const urlJurisdiction = searchParams.get('jurisdiction');
+    if (urlJurisdiction && COMMUNITIES.some((c) => c.code === urlJurisdiction)) {
+      setJurisdiction(urlJurisdiction as JurisdictionCode);
+    }
     // run once on mount; subsequent UI clicks own the state
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -81,9 +98,10 @@ export function ExplorerPage() {
       yearFrom: Number.isFinite(from) ? from : undefined,
       yearTo: Number.isFinite(to) ? to : undefined,
       jurisdiction,
+      department: activeDepartment,
       sort,
     };
-  }, [plainQ, status, rango, ambito, allTags, yearFrom, yearTo, jurisdiction, sort]);
+  }, [plainQ, status, rango, ambito, allTags, yearFrom, yearTo, jurisdiction, activeDepartment, sort]);
 
   /**
    * Search mode is active when the user has typed ≥ 2 non-tag characters.
@@ -118,8 +136,10 @@ export function ExplorerPage() {
       // endpoint (chip + inline `#tag`, AND-matched). Before this the tags
       // were parsed but silently dropped before the request.
       tags: allTags.size ? [...allTags] : undefined,
+      // #671 gap B — issuing department (ministerio), same shape as `jurisdiction`.
+      department: activeDepartment,
     };
-  }, [rango, status, ambito, jurisdiction, yearFrom, yearTo, allTags]);
+  }, [rango, status, ambito, jurisdiction, yearFrom, yearTo, allTags, activeDepartment]);
 
   // ── Browse mode (no query) ────────────────────────────────────────────
   const { data: browseData, isLoading: browseLoading } = useLawsList(params, {
@@ -156,6 +176,8 @@ export function ExplorerPage() {
   const isLoading = isSearchMode ? searchLoading : browseLoading;
 
   const { data: vocab = [] } = useTags();
+  // #671 gap B — issuing department (ministerio) vocabulary for the filter rail.
+  const { data: departments = [] } = useDepartments();
 
   // #566 — `#`-triggered tag autocomplete for the search box. When the
   // token under the cursor starts with `#`, suggest matching tags from the
@@ -207,6 +229,9 @@ export function ExplorerPage() {
         setYearTo={setYearTo}
         jurisdiction={jurisdiction}
         setJurisdiction={setJurisdiction}
+        departments={departments}
+        activeDepartment={activeDepartment}
+        onSelectDepartment={setActiveDepartment}
       />
 
       {/* Mobile filter sheet — same FilterRail wrapped in a slide-in panel
@@ -252,6 +277,9 @@ export function ExplorerPage() {
                 setYearTo={setYearTo}
                 jurisdiction={jurisdiction}
                 setJurisdiction={setJurisdiction}
+                departments={departments}
+                activeDepartment={activeDepartment}
+                onSelectDepartment={setActiveDepartment}
                 inline
               />
             </div>
@@ -335,6 +363,11 @@ export function ExplorerPage() {
                 {COMMUNITIES.find((c) => c.code === jurisdiction)?.name ?? jurisdiction}
               </Chip>
             )}
+            {activeDepartment && (
+              <Chip dismissable onDismiss={() => setActiveDepartment(undefined)}>
+                {activeDepartment}
+              </Chip>
+            )}
             {[...allTags].map((t) => (
               <Chip
                 key={t}
@@ -378,7 +411,7 @@ export function ExplorerPage() {
                 <EmptyState
                   title={t('explorer.empty.title')}
                   description={t('explorer.empty.description')}
-                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); setActiveUserTag(null); } }}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); setActiveUserTag(null); setActiveDepartment(undefined); } }}
                   secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
                 />
                 {showSearchHelp && (
@@ -454,7 +487,7 @@ export function ExplorerPage() {
                 <EmptyState
                   title={t('explorer.empty.title')}
                   description={t('explorer.empty.description')}
-                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); setActiveUserTag(null); } }}
+                  primaryAction={{ label: t('explorer.clearFilters'), onClick: () => { setQ(''); setStatus(new Set()); setRango(new Set()); setAmbito(new Set()); setYearFrom(''); setYearTo(''); setJurisdiction(undefined); setTags(new Set()); setActiveUserTag(null); setActiveDepartment(undefined); } }}
                   secondaryAction={{ label: t('explorer.howToSearch'), onClick: () => setShowSearchHelp((v) => !v) }}
                 />
                 {showSearchHelp && (

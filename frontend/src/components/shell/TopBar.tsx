@@ -73,6 +73,7 @@ function Breadcrumb({ path, lawId, navigate }: { path: string; lawId?: string; n
   // sub-label rather than lying.
   else if (path === '/chat') items.push({ label: t('nav.chat') });
   else if (path === '/dashboards') items.push({ label: t('nav.dashboards') });
+  else if (path === '/communities') items.push({ label: t('nav.communities', 'Comunidades') });
   else if (path === '/settings') items.push({ label: t('nav.settings') });
   else items.push({ label: path.slice(1) });
 

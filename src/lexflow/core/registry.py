@@ -16,6 +16,7 @@ from threading import Lock
 from lexflow.core.delta_sync import CorpusDiff
 from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.exceptions import DataPathError, LawNotFoundError, LexFlowError
+from lexflow.core.law_aliases import expand_alias
 from lexflow.core.metadata_parser import parse_metadata_only
 from lexflow.core.models import Law, LawMetadata
 from lexflow.core.parser import parse_law_file
@@ -161,6 +162,7 @@ class LawRegistry:
         year_from: int | None = None,
         year_to: int | None = None,
         tags: list[str] | None = None,
+        department: str | None = None,
     ) -> PaginatedResponse[LawSummary]:
         """Return a paginated, optionally filtered list of law summaries.
 
@@ -178,6 +180,7 @@ class LawRegistry:
             year_from=year_from,
             year_to=year_to,
             tags=tags,
+            department=department,
         )
         return paginate_summaries(filtered, page=page, page_size=page_size)
 
@@ -194,14 +197,22 @@ class LawRegistry:
         year_from: int | None = None,
         year_to: int | None = None,
         tags: list[str] | None = None,
+        department: str | None = None,
     ) -> SearchResponse:
         """Full-text search across all laws, optionally facet-filtered (#671).
 
         Builds the search index lazily on first call from all cached laws and
         metadata. The facet filters mirror :meth:`list_laws` so the Explorer can
-        search the whole corpus AND narrow by community/rank/status/year/tag with
-        a single, consistent contract.
+        search the whole corpus AND narrow by community/rank/status/year/tag/
+        department with a single, consistent contract.
+
+        A bare popular acronym ("LOPD", "LEC", "LGT"…) is expanded to a
+        distinctive substring of the law's real title (#671, ``law_aliases``)
+        before hitting the index — the full-text scorer does a literal
+        substring count, so acronyms match nothing on their own. Non-acronym
+        queries pass through unchanged.
         """
+        query = expand_alias(query) or query
         if not self._search_index.is_built:
             self._build_search_index()
         law_filter = self._build_facet_filter(
@@ -212,6 +223,7 @@ class LawRegistry:
             year_from=year_from,
             year_to=year_to,
             tags=tags,
+            department=department,
         )
         return self._search_index.search(query, page=page, page_size=page_size, law_filter=law_filter)
 
@@ -225,6 +237,7 @@ class LawRegistry:
         year_from: int | None,
         year_to: int | None,
         tags: list[str] | None = None,
+        department: str | None = None,
     ) -> Callable[[str], bool] | None:
         """Build a ``law_id`` predicate from facet filters, or ``None`` if none set.
 
@@ -232,7 +245,7 @@ class LawRegistry:
         the ``/laws`` list endpoint. Returns ``None`` when no facet is active so
         plain search pays no extra cost.
         """
-        if not any([rank, status, scope, jurisdiction, year_from, year_to, tags]):
+        if not any([rank, status, scope, jurisdiction, year_from, year_to, tags, department]):
             return None
         filtered = apply_law_filters(
             self._build_summaries(),
@@ -243,6 +256,7 @@ class LawRegistry:
             year_from=year_from,
             year_to=year_to,
             tags=tags,
+            department=department,
         )
         allowed = {summary.identifier for summary in filtered}
         return allowed.__contains__
@@ -258,6 +272,20 @@ class LawRegistry:
         for law_id in self._snapshot_law_ids():
             meta = self._ensure_metadata(law_id)
             counts.update(meta.tags)
+        return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+    def department_counts(self) -> list[tuple[str, int]]:
+        """Aggregate the issuing-department vocabulary across all laws (#671 gap B).
+
+        Returns ``(department, count)`` pairs sorted by count desc, then name
+        asc — mirrors :meth:`tag_counts`. Laws with no ``department`` are
+        skipped; there is no "unknown" bucket to surface as a facet.
+        """
+        counts: Counter[str] = Counter()
+        for law_id in self._snapshot_law_ids():
+            meta = self._ensure_metadata(law_id)
+            if meta.department:
+                counts[meta.department] += 1
         return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
     def preload_all_metadata(self) -> None:
@@ -414,6 +442,7 @@ class LawRegistry:
                     scope=meta.scope,
                     jurisdiction=meta.jurisdiction.value if meta.jurisdiction else None,
                     tags=meta.tags,
+                    department=meta.department,
                 )
             )
         self._summaries = summaries

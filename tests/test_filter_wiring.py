@@ -24,24 +24,53 @@ from lexflow.api.app import app
 from lexflow.api.dependencies import get_law_registry
 from lexflow.core.registry import LawRegistry
 
-# (identifier, rank, year, scope, status, jurisdiction, subjects). One law per
-# filter axis so each filter has exactly one or two matches and a clear
-# "narrowed" expectation. ``subjects`` seeds the official BOE tag taxonomy
-# (#671) — deliberately accented/mixed-case so the tests exercise the
+# (identifier, rank, year, scope, status, jurisdiction, subjects, department).
+# One law per filter axis so each filter has exactly one or two matches and a
+# clear "narrowed" expectation. ``subjects`` seeds the official BOE tag
+# taxonomy (#671) — deliberately accented/mixed-case so the tests exercise the
 # boundary normalisation ("Protección de Datos" → proteccion-de-datos).
-# Total fixture size is 5.
+# ``department`` seeds the issuing-ministerio facet (#671 gap B); two laws
+# share a department, two carry no department (``None``) so the "no facet
+# value" path is exercised too. Total fixture size is 5.
 _LAW_SPECS = [
-    ("BOE-A-2000-1", "ley", 2000, "Estatal", "in_force", "es", ["Protección de Datos", "Administración"]),
-    ("BOE-A-2018-2", "ley_organica", 2018, "Estatal", "in_force", "es", ["Protección de Datos"]),
-    ("BOE-A-2021-3", "ley", 2021, "Autonómico", "in_force", "es-md", ["Vivienda"]),
-    ("BOE-A-2015-4", "real_decreto", 2015, "Estatal", "in_force", "es", ["Administración"]),
-    ("BOE-A-2010-5", "ley", 2010, "Estatal", "repealed", "es", ["Vivienda", "Administración"]),
+    (
+        "BOE-A-2000-1",
+        "ley",
+        2000,
+        "Estatal",
+        "in_force",
+        "es",
+        ["Protección de Datos", "Administración"],
+        "Ministerio de Justicia",
+    ),
+    (
+        "BOE-A-2018-2",
+        "ley_organica",
+        2018,
+        "Estatal",
+        "in_force",
+        "es",
+        ["Protección de Datos"],
+        "Ministerio de Justicia",
+    ),
+    ("BOE-A-2021-3", "ley", 2021, "Autonómico", "in_force", "es-md", ["Vivienda"], None),
+    (
+        "BOE-A-2015-4",
+        "real_decreto",
+        2015,
+        "Estatal",
+        "in_force",
+        "es",
+        ["Administración"],
+        "Ministerio de Hacienda",
+    ),
+    ("BOE-A-2010-5", "ley", 2010, "Estatal", "repealed", "es", ["Vivienda", "Administración"], None),
 ]
 _TOTAL_LAWS = len(_LAW_SPECS)
 
 
-def _write_law(root: Path, spec: tuple[str, str, int, str, str, str, list[str]]) -> None:
-    identifier, rank, year, scope, status, jurisdiction, subjects = spec
+def _write_law(root: Path, spec: tuple[str, str, int, str, str, str, list[str], str | None]) -> None:
+    identifier, rank, year, scope, status, jurisdiction, subjects, department = spec
     subjects_yaml = ", ".join(f'"{s}"' for s in subjects)
     frontmatter = (
         f'title: "Norma {identifier}"\n'
@@ -54,6 +83,8 @@ def _write_law(root: Path, spec: tuple[str, str, int, str, str, str, list[str]])
         f'jurisdiction: "{jurisdiction}"\n'
         f"subjects: [{subjects_yaml}]\n"
     )
+    if department is not None:
+        frontmatter += f'department: "{department}"\n'
     body = f"# Norma {identifier}\n\n###### Articulo 1.\n\nTexto del articulo uno.\n"
     path = root / jurisdiction / f"{identifier}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -181,4 +212,42 @@ class TestSearchTagFilter:
 
     def test_search_tags_are_anded(self, filter_client: TestClient) -> None:
         items = _search_items(filter_client, "Norma", tags=["proteccion-de-datos", "administracion"])
+        assert {i["law_id"] for i in items} == {"BOE-A-2000-1"}
+
+
+class TestDepartmentFilter:
+    """Issuing-department (ministerio) filter + summary passthrough (#671 gap B)."""
+
+    def test_summaries_carry_department(self, filter_client: TestClient) -> None:
+        # Every summary surfaces its `department` (or None) so the Explorer
+        # can filter and render the active chip without a detail fetch.
+        by_id = {i["identifier"]: i for i in _items(filter_client)}
+        assert by_id["BOE-A-2000-1"]["department"] == "Ministerio de Justicia"
+        assert by_id["BOE-A-2018-2"]["department"] == "Ministerio de Justicia"
+        assert by_id["BOE-A-2021-3"]["department"] is None
+
+    def test_department_narrows_and_matches(self, filter_client: TestClient) -> None:
+        items = _items(filter_client, department="Ministerio de Justicia")
+        assert {i["identifier"] for i in items} == {"BOE-A-2000-1", "BOE-A-2018-2"}
+        assert len(items) < _TOTAL_LAWS
+        assert all(i["department"] == "Ministerio de Justicia" for i in items)
+
+    def test_department_combines_with_other_filter(self, filter_client: TestClient) -> None:
+        # department=Ministerio de Justicia AND rank=ley_organica → only the 2018 law.
+        items = _items(filter_client, department="Ministerio de Justicia", rank="ley_organica")
+        assert {i["identifier"] for i in items} == {"BOE-A-2018-2"}
+
+    def test_unknown_department_returns_nothing(self, filter_client: TestClient) -> None:
+        assert _items(filter_client, department="Ministerio Inexistente") == []
+
+
+class TestSearchDepartmentFilter:
+    """`/laws/search` honours the same department facet as `/laws` (#671 gap B)."""
+
+    def test_search_department_narrows(self, filter_client: TestClient) -> None:
+        items = _search_items(filter_client, "Norma", department="Ministerio de Hacienda")
+        assert {i["law_id"] for i in items} == {"BOE-A-2015-4"}
+
+    def test_search_department_combines_with_other_filter(self, filter_client: TestClient) -> None:
+        items = _search_items(filter_client, "Norma", department="Ministerio de Justicia", rank="ley")
         assert {i["law_id"] for i in items} == {"BOE-A-2000-1"}

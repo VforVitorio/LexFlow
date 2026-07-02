@@ -17,6 +17,7 @@ from lexflow.api.routers import (
     articles,
     chat_threads,
     dashboards,
+    departments,
     laws,
     mcp_servers,
     models,
@@ -146,6 +147,7 @@ app.include_router(dashboards.router, prefix="/api/v1")
 app.include_router(sync.router, prefix="/api/v1")
 app.include_router(system.router, prefix="/api/v1")
 app.include_router(tags.router, prefix="/api/v1")
+app.include_router(departments.router, prefix="/api/v1")
 app.include_router(mcp_servers.router, prefix="/api/v1")
 app.include_router(secrets.router, prefix="/api/v1")
 app.include_router(telemetry.router, prefix="/api/v1")

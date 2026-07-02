@@ -25,6 +25,7 @@ import { mockApi } from './api.mock';
 import { liveArticlesApi } from './api/articles';
 import { liveChatApi } from './api/chat';
 import { liveDashboardsApi } from './api/dashboards';
+import { liveDepartmentsApi } from './api/departments';
 import { liveGraphApi } from './api/graph';
 import { liveLawsApi } from './api/laws';
 import { liveModelsApi } from './api/models';
@@ -43,6 +44,7 @@ const liveApi: ApiClient = {
   laws: liveLawsApi,
   articles: liveArticlesApi,
   tags: liveTagsApi,
+  departments: liveDepartmentsApi,
   userTags: liveUserTagsApi,
   graph: liveGraphApi,
   search: liveSearchApi,
