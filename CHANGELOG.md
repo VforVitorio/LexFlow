@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.70.0](https://github.com/VforVitorio/LexFlow/compare/v0.69.0...v0.70.0) (2026-07-02)
+
+
+### Features
+
+* **search:** add user-created custom tags on laws ([3cbc064](https://github.com/VforVitorio/LexFlow/commit/3cbc064f0bd4a502cb90f000d3e985ab4f54a01e))
+* **search:** add user-created custom tags on laws ([#670](https://github.com/VforVitorio/LexFlow/issues/670)) ([8ff7b58](https://github.com/VforVitorio/LexFlow/commit/8ff7b58e84295ef479b1f927d0958a949b92948b))
+* **search:** filter laws and search by official BOE topic tags ([f87a5f4](https://github.com/VforVitorio/LexFlow/commit/f87a5f48ac6a432a2f0c21ef1ef7e933f1c10efb))
+* **search:** filter laws and search by official BOE topic tags ([7974253](https://github.com/VforVitorio/LexFlow/commit/79742535e7ef2037c9aff804f5d4043a64f8829a))
+
 ## [0.69.0](https://github.com/VforVitorio/LexFlow/compare/v0.68.0...v0.69.0) (2026-07-01)
 
 
