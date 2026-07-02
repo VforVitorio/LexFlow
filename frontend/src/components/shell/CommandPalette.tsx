@@ -71,6 +71,14 @@ export function CommandPalette() {
     const tagSuggestions = tagQuery !== null
       ? vocab.filter(({ tag }) => tag.toLowerCase().includes(tagQuery)).slice(0, 6)
       : (q.trim() === '' ? vocab.slice(0, 5) : []);
+    // Mirror the official-tag scoping (#670): filter user tags by the `#`
+    // fragment (matching slug OR label) and cap, so typing a query narrows
+    // them and a large vocabulary never renders unbounded rows.
+    const userTagSuggestions = tagQuery !== null
+      ? userTagVocab
+          .filter(({ tag, label }) => tag.toLowerCase().includes(tagQuery) || label.toLowerCase().includes(tagQuery))
+          .slice(0, 6)
+      : (q.trim() === '' ? userTagVocab.slice(0, 5) : []);
 
     // Icon and run-callback map, keyed by CommandId — kept here because they
     // capture React context (navigate, toggleTheme, setPaletteOpen) and
@@ -100,7 +108,7 @@ export function CommandPalette() {
         subtitle: `${count} ${count === 1 ? 'norma' : 'normas'} con este tag`,
         run: () => { navigate(`/explorer?tags=${encodeURIComponent(tag)}`); setPaletteOpen(false); },
       })),
-      ...userTagVocab.map<PaletteItem>(({ tag, label, count }) => ({
+      ...userTagSuggestions.map<PaletteItem>(({ tag, label, count }) => ({
         id: `user-tag-${tag}`,
         group: 'Mis tags',
         icon: <Hash className="size-3.5" />,

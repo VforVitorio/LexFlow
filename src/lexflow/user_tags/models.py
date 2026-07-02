@@ -32,7 +32,7 @@ def _new_id() -> str:
 
 
 def _utcnow() -> datetime:
-    """Naive timezone-aware UTC stamp. SQLite stores as ISO string."""
+    """Timezone-aware UTC stamp. SQLite stores it as an ISO string."""
     return datetime.now(UTC)
 
 

@@ -83,6 +83,10 @@ const mockUserTagsApi: ApiClient['userTags'] = {
   async add(lawId, label): Promise<UserTag> {
     await delay(80);
     const tag = slug(label);
+    // Mirror the backend's 422 (`_normalize_or_422`): a label with no
+    // alphanumeric content yields an empty slug and must be rejected, so
+    // mock-mode UI exercises the same validation path as the real backend.
+    if (!tag) throw new Error('Tag is empty after normalisation');
     const laws = userTagStore[lawId] ?? (userTagStore[lawId] = []);
     const existing = laws.find((t) => t.tag === tag);
     if (existing) return existing;

@@ -27,6 +27,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, col, select
 
 from lexflow.chat.db import get_session
@@ -137,7 +138,19 @@ def add_user_tag(
 
     tag_row = UserTag(law_id=law_id, tag=slug, label=body.label)
     session.add(tag_row)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        # TOCTOU: a concurrent POST for the same (law_id, tag) committed
+        # between the existence check above and here, tripping the unique
+        # constraint. Roll back and return the row that won the race — the
+        # documented idempotent 200, never a generic 500.
+        session.rollback()
+        winner = _find_tag(session, law_id, slug)
+        if winner is None:
+            raise
+        response.status_code = status.HTTP_200_OK
+        return UserTagRead(tag=winner.tag, label=winner.label)
     session.refresh(tag_row)
     return UserTagRead(tag=tag_row.tag, label=tag_row.label)
 
