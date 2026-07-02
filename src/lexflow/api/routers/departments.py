@@ -32,7 +32,5 @@ def list_departments(
     registry: Annotated[LawRegistry, Depends(get_law_registry)],
 ) -> DepartmentsResponse:
     """Return ``{items: [{department, count}]}`` sorted by count desc, then name asc."""
-    items = [
-        DepartmentCount(department=department, count=count) for department, count in registry.department_counts()
-    ]
+    items = [DepartmentCount(department=department, count=count) for department, count in registry.department_counts()]
     return DepartmentsResponse(items=items)
