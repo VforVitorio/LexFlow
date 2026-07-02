@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.71.1](https://github.com/VforVitorio/LexFlow/compare/v0.71.0...v0.71.1) (2026-07-02)
+
+
+### Documentation
+
+* add CITATION.cff ([13c0853](https://github.com/VforVitorio/LexFlow/commit/13c08539233168531976556b613a0fa0003032f6))
+* add CITATION.cff for GitHub 'Cite this repository' ([c1d3c73](https://github.com/VforVitorio/LexFlow/commit/c1d3c73a0d1bdb5fa2189479a322631b6900297a))
+
 ## [0.71.0](https://github.com/VforVitorio/LexFlow/compare/v0.70.0...v0.71.0) (2026-07-02)
 
 
