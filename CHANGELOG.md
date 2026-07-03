@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.71.2](https://github.com/VforVitorio/LexFlow/compare/v0.71.1...v0.71.2) (2026-07-03)
+
+
+### Bug Fixes
+
+* **frontend:** address CodeRabbit review on the deslop sprint ([4ec96f2](https://github.com/VforVitorio/LexFlow/commit/4ec96f2e960c855d5bd0fd69f022c6ca5aced580))
+* **frontend:** design deslop sprint 1 — motion, prose, dead controls, tints ([fed037e](https://github.com/VforVitorio/LexFlow/commit/fed037e8c380e375169382b953ffecc07e4511b2))
+* **frontend:** design deslop sprint 1 — revive motion + Editor prose, honest dead controls, tokenize tints ([85e339f](https://github.com/VforVitorio/LexFlow/commit/85e339fc330afa1018ca93c8a35d2e9fdf30e343)), closes [#798](https://github.com/VforVitorio/LexFlow/issues/798)
+* **frontend:** localize the version-row status badge in LawHeader ([f6cceb8](https://github.com/VforVitorio/LexFlow/commit/f6cceb8d8c0029f2c200ec738a2450f1beabe43a))
+* **frontend:** localize the version-row status badge in LawHeader ([e108575](https://github.com/VforVitorio/LexFlow/commit/e108575697ba20f3e5593610a156e4103e58bdde))
+
+
+### Refactoring
+
+* **frontend:** unify destructive/success colours onto danger/success tokens ([d564ab9](https://github.com/VforVitorio/LexFlow/commit/d564ab9fa7b6209bca2bcc4b30556a1a797038f5))
+* **frontend:** unify destructive/success colours onto danger/success tokens ([a5f81b4](https://github.com/VforVitorio/LexFlow/commit/a5f81b47f039627030e06d023ff319dfdc06c2b2))
+
 ## [0.71.1](https://github.com/VforVitorio/LexFlow/compare/v0.71.0...v0.71.1) (2026-07-02)
 
 
