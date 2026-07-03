@@ -134,14 +134,17 @@ export function GraphPage() {
           {/* Deslop sprint #798 — no `value`/`onChange` wired yet (part of a
               deeper graph-search epic). Disabled + "próximamente" so it
               doesn't read as a broken search box. */}
-          <Input
-            icon={<Search className="size-3.5" />}
-            placeholder={t('graph.searchPlaceholder')}
-            aria-label={t('graph.searchPlaceholder')}
-            className="w-72 opacity-50"
-            disabled
-            title={t('chat.comingSoon')}
-          />
+          {/* A disabled input swallows its own title tooltip like a disabled
+              button — hoist the "próximamente" hint onto a wrapper span. */}
+          <span title={t('chat.comingSoon')} className="inline-flex cursor-not-allowed [&_input]:pointer-events-none">
+            <Input
+              icon={<Search className="size-3.5" />}
+              placeholder={t('graph.searchPlaceholder')}
+              aria-label={t('graph.searchPlaceholder')}
+              className="w-72 opacity-50"
+              disabled
+            />
+          </span>
           <span className="h-6 w-px bg-border" />
           {ALL_KINDS.map((t) => (
             <Chip

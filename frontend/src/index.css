@@ -33,6 +33,11 @@
   --info-soft:       206 85% 95%; /* matches the `info` semantic color (206 80% 50%) */
   --reference-soft:  266 65% 92%; /* matches `node.reference` (266 65% 60%) */
   --amendment-soft:  195 70% 92%; /* matches `node.amendment` (195 70% 50%) */
+  /* Foreground (text) counterparts for the two tints above — one source of
+   * truth for the violet/cyan chip labels so Avatar/CommandPalette/HomePage
+   * can't drift apart (they used to hard-code 35% vs 40%). Flip with theme. */
+  --reference-soft-fg: 266 50% 40%;
+  --amendment-soft-fg: 195 70% 28%;
 
   /* Landing-page accent tokens (used by the marketing surface; safe to ignore in the app shell). */
   --violet-300: 252 100% 86%;
@@ -67,6 +72,8 @@
   --info-soft:       206 55% 17%;
   --reference-soft:  266 30% 22%;
   --amendment-soft:  195 30% 22%;
+  --reference-soft-fg: 266 60% 80%;
+  --amendment-soft-fg: 195 50% 80%;
 
   --violet-soft:   252 50% 18%;
 

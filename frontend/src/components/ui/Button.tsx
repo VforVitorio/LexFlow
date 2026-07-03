@@ -29,24 +29,41 @@ const sizes: Record<Size, string> = {
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = 'primary', size = 'md', loading, icon, iconRight, className, children, disabled, ...rest }, ref) => (
-    <button
-      ref={ref}
-      className={cn(
-        'inline-flex items-center justify-center rounded-md font-medium whitespace-nowrap transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
-        'disabled:cursor-not-allowed disabled:opacity-60',
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-      disabled={disabled || loading}
-      {...rest}
-    >
-      {loading ? <Loader2 className="size-4 animate-spin" /> : icon}
-      {children}
-      {iconRight}
-    </button>
-  )
+  ({ variant = 'primary', size = 'md', loading, icon, iconRight, className, children, disabled, title, ...rest }, ref) => {
+    const isDisabled = disabled || loading;
+    const button = (
+      <button
+        ref={ref}
+        className={cn(
+          'inline-flex items-center justify-center rounded-md font-medium whitespace-nowrap transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-bg',
+          'disabled:cursor-not-allowed disabled:opacity-60',
+          variants[variant],
+          sizes[size],
+          className,
+        )}
+        disabled={isDisabled}
+        // A native disabled button suppresses its own `title` tooltip, so the
+        // title is hoisted to the wrapper span below in that case.
+        title={isDisabled ? undefined : title}
+        {...rest}
+      >
+        {loading ? <Loader2 className="size-4 animate-spin" /> : icon}
+        {children}
+        {iconRight}
+      </button>
+    );
+    // Disabled + title (e.g. a "próximamente" control): wrap in a titled span
+    // and drop pointer events on the button so the cursor targets the span and
+    // the browser shows the tooltip. Enabled buttons render bare (no wrapper).
+    if (isDisabled && title) {
+      return (
+        <span title={title} className="inline-flex cursor-not-allowed [&>button]:pointer-events-none">
+          {button}
+        </span>
+      );
+    }
+    return button;
+  }
 );
 Button.displayName = 'Button';

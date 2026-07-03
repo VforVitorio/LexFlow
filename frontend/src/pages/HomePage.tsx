@@ -222,8 +222,8 @@ function ChangedRowIcon({ law }: { law: Law }) {
       : law.status === 'modificada'
         ? { Icon: GitCompareArrows, cls: 'bg-amber-soft text-amber-700' }
         // Deslop #798: was a copy-pasted arbitrary HSL tint; now the shared
-        // --reference-soft token (index.css), which already flips light/dark.
-        : { Icon: BookOpenText, cls: 'bg-[hsl(var(--reference-soft))] text-[hsl(266_50%_40%)] dark:text-[hsl(266_60%_80%)]' };
+        // --reference-soft(-fg) tokens (index.css), which already flip light/dark.
+        : { Icon: BookOpenText, cls: 'bg-[hsl(var(--reference-soft))] text-[hsl(var(--reference-soft-fg))]' };
   return (
     <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-lg', palette.cls)}>
       <palette.Icon className="size-4" />
@@ -263,8 +263,8 @@ function QuickTile({
   const palette: Record<typeof tone, string> = {
     indigo: 'bg-primary-soft text-indigo-700 dark:text-indigo-200',
     amber:  'bg-amber-soft text-amber-700 dark:text-amber-300',
-    violet: 'bg-[hsl(var(--reference-soft))] text-[hsl(266_50%_40%)] dark:text-[hsl(266_60%_80%)]',
-    cyan:   'bg-[hsl(var(--amendment-soft))] text-[hsl(195_70%_28%)] dark:text-[hsl(195_50%_80%)]',
+    violet: 'bg-[hsl(var(--reference-soft))] text-[hsl(var(--reference-soft-fg))]',
+    cyan:   'bg-[hsl(var(--amendment-soft))] text-[hsl(var(--amendment-soft-fg))]',
   };
   return (
     <button
