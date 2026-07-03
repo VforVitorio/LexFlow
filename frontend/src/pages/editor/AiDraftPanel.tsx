@@ -207,7 +207,7 @@ export function AiDraftPanel({ editor, onClose }: AiDraftPanelProps) {
           </Button>
         </section>
 
-        {error && <div className="rounded-lg bg-rose-50 px-3 py-2 text-[12.5px] text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">{error}</div>}
+        {error && <div className="rounded-lg bg-danger-soft px-3 py-2 text-[12.5px] text-danger">{error}</div>}
 
         {/* Streamed result. */}
         {(busy || draftText) && (

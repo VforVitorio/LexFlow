@@ -315,7 +315,7 @@ export function ChatPage() {
                   </button>
                   <button
                     aria-label={t('chat.deleteAria', { title: thread.title })}
-                    className="rounded p-1 text-muted opacity-0 hover:text-rose-600 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 group-hover:opacity-100 dark:hover:text-rose-400"
+                    className="rounded p-1 text-muted opacity-0 hover:text-danger focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 group-hover:opacity-100"
                     onClick={() => handleDelete(thread.id, thread.title)}
                   >
                     <Trash2 className="size-3" />
