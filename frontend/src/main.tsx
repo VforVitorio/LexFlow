@@ -3,6 +3,14 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Self-hosted fonts (#799) — replaces the Google Fonts CDN <link> so the
+// desktop build works offline and drops the GDPR-relevant third-party
+// request. Variable `wght` axis only (roman): matches the CDN load, which
+// requested weights but no italics, and keeps the bundle lean.
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource-variable/space-grotesk/wght.css';
+import '@fontsource-variable/jetbrains-mono/wght.css';
+
 import './index.css';
 import './lib/store'; // side-effect: sync theme attribute
 import './i18n'; // side-effect: initialize i18next before render

@@ -75,9 +75,12 @@ export default {
         'danger-soft':  'hsl(var(--danger-soft)  / <alpha-value>)',
       },
       fontFamily: {
-        display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        sans:    ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        mono:    ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        // "* Variable" is the family name @fontsource-variable registers for the
+        // self-hosted fonts (main.tsx); the plain name + system stack stay as
+        // fallbacks for the brief moment before the woff2 loads.
+        display: ['"Space Grotesk Variable"', '"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans:    ['"Inter Variable"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono:    ['"JetBrains Mono Variable"', '"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {
         // [size, { lineHeight, letterSpacing }]
