@@ -164,7 +164,7 @@ function ToolsCatalogue() {
     return <p className="mt-5 text-[13px] text-muted">{t('mcp.toolsLoading')}</p>;
   }
   if (error) {
-    return <p className="mt-5 text-[13px] text-rose-600 dark:text-rose-400">{error}</p>;
+    return <p className="mt-5 text-[13px] text-danger">{error}</p>;
   }
   if (grouped.length === 0) {
     return (

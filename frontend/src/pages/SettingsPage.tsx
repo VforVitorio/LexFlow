@@ -905,9 +905,9 @@ function UpdatesSection() {
 }
 
 function SummaryStat({ label, value, tone }: { label: string; value: number; tone: 'success' | 'info' | 'danger' }) {
-  const color = tone === 'success' ? 'text-emerald-600 dark:text-emerald-400'
+  const color = tone === 'success' ? 'text-success'
     : tone === 'info' ? 'text-indigo-600 dark:text-indigo-300'
-    : 'text-rose-600 dark:text-rose-400';
+    : 'text-danger';
   return (
     <div>
       <div className={cn('font-display text-2xl font-semibold', color)}>{value}</div>
