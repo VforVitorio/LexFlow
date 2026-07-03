@@ -68,7 +68,7 @@ export function LawHeader({
               too — a chevron on an inert element still reads as a picker
               affordance that doesn't exist. A plain badge just states
               the real status. */}
-          <Badge tone={tone}>{law.status}</Badge>
+          <Badge tone={tone}>{statusLabel(law.status)}</Badge>
         </span>
       </div>
 
