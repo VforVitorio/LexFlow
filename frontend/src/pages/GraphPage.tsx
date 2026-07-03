@@ -131,7 +131,17 @@ export function GraphPage() {
     <div className="flex h-full min-h-0">
       <div className="relative flex min-w-0 flex-1 flex-col">
         <div className="flex flex-wrap items-center gap-2.5 border-b border-border bg-bg p-4">
-          <Input icon={<Search className="size-3.5" />} placeholder={t('graph.searchPlaceholder')} className="w-72" />
+          {/* Deslop sprint #798 — no `value`/`onChange` wired yet (part of a
+              deeper graph-search epic). Disabled + "próximamente" so it
+              doesn't read as a broken search box. */}
+          <Input
+            icon={<Search className="size-3.5" />}
+            placeholder={t('graph.searchPlaceholder')}
+            aria-label={t('graph.searchPlaceholder')}
+            className="w-72 opacity-50"
+            disabled
+            title={t('chat.comingSoon')}
+          />
           <span className="h-6 w-px bg-border" />
           {ALL_KINDS.map((t) => (
             <Chip
@@ -143,9 +153,11 @@ export function GraphPage() {
               {NODE_KIND_LABELS[t]}
             </Chip>
           ))}
+          {/* Deslop sprint #798 — advanced filters + PNG export aren't
+              wired yet; honest-disable rather than a dead affordance. */}
           <span className="ml-auto flex gap-2">
-            <Button size="sm" variant="ghost" icon={<Filter className="size-3.5" />}>{t('graph.advancedFilters')}</Button>
-            <Button size="sm" variant="ghost" icon={<Download className="size-3.5" />}>PNG</Button>
+            <Button size="sm" variant="ghost" icon={<Filter className="size-3.5" />} disabled title={t('chat.comingSoon')}>{t('graph.advancedFilters')}</Button>
+            <Button size="sm" variant="ghost" icon={<Download className="size-3.5" />} disabled title={t('chat.comingSoon')}>PNG</Button>
           </span>
         </div>
 
@@ -182,10 +194,13 @@ export function GraphPage() {
             </div>
           </div>
 
-          {/* Zoom — same glass shell as the legend so they read as a pair */}
+          {/* Zoom — same glass shell as the legend so they read as a pair.
+              Deslop sprint #798: `fgRef` isn't exposed by GraphCanvasLazy,
+              so these can't actually zoom yet — honest-disable rather than
+              wiring the force-graph zoom (out of scope here). */}
           <div className="air-glass absolute bottom-4 right-4 flex flex-col gap-1 p-1">
-            <Button size="icon" variant="ghost" aria-label={t('graph.zoomIn')} icon={<Plus className="size-3.5" />} />
-            <Button size="icon" variant="ghost" aria-label={t('graph.zoomOut')} icon={<Minus className="size-3.5" />} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.zoomIn')} icon={<Plus className="size-3.5" />} disabled title={t('chat.comingSoon')} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.zoomOut')} icon={<Minus className="size-3.5" />} disabled title={t('chat.comingSoon')} />
           </div>
         </div>
       </div>
@@ -198,7 +213,8 @@ export function GraphPage() {
                 {NODE_KIND_LABELS[node.kind]}
               </Badge>
               <span className="ml-auto flex gap-1">
-                <Button size="icon-sm" variant="ghost" aria-label={t('graph.pin')} icon={<Pin className="size-3.5" />} />
+                {/* Deslop sprint #798 — "pin" isn't wired yet; honest-disable. */}
+                <Button size="icon-sm" variant="ghost" aria-label={t('graph.pin')} icon={<Pin className="size-3.5" />} disabled title={t('chat.comingSoon')} />
                 <Button size="icon-sm" variant="ghost" aria-label={t('graph.close')} onClick={() => setSelected(null)} icon={<X className="size-3.5" />} />
               </span>
             </div>

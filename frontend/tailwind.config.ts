@@ -115,7 +115,12 @@ export default {
         spin: { to: { transform: 'rotate(360deg)' } },
       },
       animation: {
-        in: 'in 120ms ease-out',
+        // `in` was a hand-rolled `.animate-in` shim (fade + 4px rise) written
+        // back when `tailwindcss-animate` wasn't wired up yet. Now that the
+        // plugin is registered below, IT owns the real `.animate-in` utility
+        // (composable with `fade-in` / `slide-in-from-*` / `zoom-in-*` /
+        // `duration-*`) — keeping this entry would define a same-named,
+        // conflicting utility class. `layout` still uses the `in` keyframe.
         layout: 'in 200ms ease-in-out',
       },
       transitionTimingFunction: {
@@ -123,5 +128,8 @@ export default {
       },
     },
   },
-  plugins: [],
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Tailwind's
+  // config loader transpiles this file to CJS; `require()` is the standard way
+  // to pull in plugins here (see shadcn/ui and the tailwindcss-animate docs).
+  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
 } satisfies Config;

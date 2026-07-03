@@ -212,7 +212,10 @@ export function CommandPalette() {
                         it.group === 'Mis tags' && 'bg-amber-soft text-amber-700 dark:text-amber-200',
                         it.group === 'Leyes' && 'bg-primary-soft text-indigo-700',
                         it.group === 'Artículos' && 'bg-amber-soft text-amber-700',
-                        it.group === 'Comandos' && 'bg-[hsl(266_65%_92%/.6)] text-[hsl(266_50%_40%)] dark:bg-[hsl(266_30%_22%)] dark:text-[hsl(266_60%_80%)]',
+                        // Deslop #798: was a copy-pasted arbitrary HSL tint; now the
+                        // shared --reference-soft token (index.css), which already
+                        // flips light/dark, so no `dark:bg-*` variant is needed.
+                        it.group === 'Comandos' && 'bg-[hsl(var(--reference-soft))] text-[hsl(266_50%_40%)] dark:text-[hsl(266_60%_80%)]',
                       )}>{it.icon}</span>
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{it.title}</div>

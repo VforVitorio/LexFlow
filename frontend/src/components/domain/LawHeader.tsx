@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bookmark, Share2, Download, ChevronDown, Hash, Plus, X } from 'lucide-react';
-import { Badge, Button } from '@/components/ui';
+import { Hash, Plus, X } from 'lucide-react';
+import { Badge } from '@/components/ui';
 import { formatDate, statusLabel } from '@/lib/utils';
 import type { Law, UserTag } from '@/lib/types';
 
 export interface LawHeaderProps {
   law: Law;
-  onExport?: () => void;
-  onShare?: () => void;
-  onBookmark?: () => void;
   /** Called when the user clicks a tag chip — typically navigates to /explorer?tags=… */
   onTagClick?: (tag: string) => void;
   /**
@@ -32,9 +29,6 @@ export interface LawHeaderProps {
 
 export function LawHeader({
   law,
-  onExport,
-  onShare,
-  onBookmark,
   onTagClick,
   versionsCount,
   userTags,
@@ -52,11 +46,10 @@ export function LawHeader({
         <span className="font-mono text-[12px] text-muted">{law.boe}</span>
         <span className="text-[12px] text-muted">·</span>
         <span className="text-[12px] text-muted">{law.rango}</span>
-        <span className="ml-auto flex gap-1.5">
-          <Button size="sm" variant="ghost" icon={<Bookmark className="size-3.5" />} onClick={onBookmark}>{t('lawHeader.save')}</Button>
-          <Button size="sm" variant="ghost" icon={<Share2 className="size-3.5" />} onClick={onShare}>{t('lawHeader.share')}</Button>
-          <Button size="sm" variant="secondary" icon={<Download className="size-3.5" />} onClick={onExport}>{t('lawHeader.export')}</Button>
-        </span>
+        {/* Deslop sprint #798 — Save/Share/Export removed: `onExport`/
+            `onShare`/`onBookmark` were optional props LawDetailPage never
+            passed, so these rendered as fully-affordanced dead buttons.
+            Re-add once a real implementation lands. */}
       </div>
       <h1 className="text-3xl font-display font-semibold tracking-tight">{law.short}</h1>
       <p className="mt-1.5 max-w-3xl text-[13.5px] text-muted">{law.title}</p>
@@ -69,12 +62,13 @@ export function LawHeader({
         <span className="ml-auto inline-flex items-center gap-2">
           <span className="label-caps">{t('lawHeader.version')}</span>
           {/* Audit #409 — the button used to read "v1.3 (vigente)" for
-              every law. We don't have a version-picker dropdown wired
-              yet (would need ``useVersions(lawId)`` + a real popover),
-              so we show the actual law status instead — at least it
-              doesn't lie. The chevron stays to telegraph the picker
-              that #428's follow-up will deliver. */}
-          <Button size="sm" variant="secondary" iconRight={<ChevronDown className="size-3.5" />}>{law.status}</Button>
+              every law. We don't have a version-picker dropdown wired yet
+              (would need ``useVersions(lawId)`` + a real popover).
+              Deslop sprint #798: dropped the chevron + `<Button>` shell
+              too — a chevron on an inert element still reads as a picker
+              affordance that doesn't exist. A plain badge just states
+              the real status. */}
+          <Badge tone={tone}>{law.status}</Badge>
         </span>
       </div>
 
