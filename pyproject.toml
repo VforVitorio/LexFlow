@@ -1,6 +1,6 @@
 [project]
 name = "lexflow"
-version = "0.71.1"
+version = "0.71.2"
 description = "Open source platform for exploring, analyzing and querying Spanish legislation — powered by FastAPI, knowledge graphs and AI."
 readme = "README.md"
 license = { text = "Apache-2.0" }
