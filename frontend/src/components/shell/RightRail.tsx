@@ -35,6 +35,7 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
         style={{ width: rightWidth }}
         className={cn(
           'relative hidden shrink-0 border-l border-border bg-surface md:block',
+          'animate-in slide-in-from-right duration-200',
           !dragging && 'transition-[width] duration-200',
         )}
       >
@@ -67,6 +68,7 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
             // visible — the panel feels like an overlay, not a takeover.
             // Top corners only (sits on the screen edge); pb adds safe-area.
             'air-glass-strong fixed inset-x-0 bottom-0 z-50 max-h-[78vh] overflow-auto rounded-b-none rounded-t-2xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] scrollbar-thin',
+            'animate-in slide-in-from-bottom duration-200',
             className,
           )}
         >

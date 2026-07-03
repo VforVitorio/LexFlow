@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Clock, SlidersHorizontal, Download, ExternalLink, TrendingUp, TrendingDown } from 'lucide-react';
+import { Clock, SlidersHorizontal, Download, TrendingUp, TrendingDown } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -58,10 +58,13 @@ export function DashboardPage() {
           { id: 'compliance', label: 'Compliance' },
           { id: 'analytics', label: 'Analytics' },
         ]} />
+        {/* Deslop sprint #798 — date-range/sector filters and CSV export
+            aren't wired to the backend yet; honest-disable instead of a
+            dead toolbar. */}
         <span className="ml-auto flex gap-2">
-          <Button size="sm" variant="secondary" icon={<Clock className="size-3.5" />}>{t('dashboards.last12Months')}</Button>
-          <Button size="sm" variant="secondary" icon={<SlidersHorizontal className="size-3.5" />}>{t('dashboards.sectorAll')}</Button>
-          <Button size="sm" variant="secondary" icon={<Download className="size-3.5" />}>CSV</Button>
+          <Button size="sm" variant="secondary" icon={<Clock className="size-3.5" />} disabled title={t('chat.comingSoon')}>{t('dashboards.last12Months')}</Button>
+          <Button size="sm" variant="secondary" icon={<SlidersHorizontal className="size-3.5" />} disabled title={t('chat.comingSoon')}>{t('dashboards.sectorAll')}</Button>
+          <Button size="sm" variant="secondary" icon={<Download className="size-3.5" />} disabled title={t('chat.comingSoon')}>CSV</Button>
         </span>
       </div>
 
@@ -74,10 +77,13 @@ export function DashboardPage() {
           </div>
 
           <Card className="p-5">
+            {/* Deslop sprint #798 — "Open in Plotly" removed: the chart is
+                rendered with Recharts, not Plotly, so the label named a
+                library this app doesn't use. Removing beats disabling a
+                control that could never be honestly wired as described. */}
             <div className="mb-1 flex items-baseline gap-2">
               <h3 className="font-display text-base font-semibold">{t('dashboards.chartTitle')}</h3>
               <span className="text-[12px] text-muted">{t('dashboards.chartSubtitle')}</span>
-              <span className="ml-auto"><Button size="sm" variant="ghost" icon={<ExternalLink className="size-3.5" />}>{t('dashboards.openInPlotly')}</Button></span>
             </div>
             <BigChart values={data.series.values} labels={data.series.labels} recentFrom={data.series.recentFrom} />
           </Card>

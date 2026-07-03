@@ -285,11 +285,27 @@ export function EditorPage() {
         className={cn(
           'min-h-[60vh] rounded-lg border border-border bg-surface p-6',
           'prose prose-neutral dark:prose-invert max-w-none',
+          // Headings inherit the app's display font + tight tracking instead
+          // of the plugin's default body font — matches every other heading
+          // in the app (`font-display ... tracking-tight`). Sizes/weights per
+          // level stay the plugin's own — that per-level cascade IS the
+          // "real heading hierarchy" a TipTap H1/H2/H3 was missing.
+          'prose-headings:font-display prose-headings:tracking-tight',
+          // Brand-aligned link color instead of the plugin's default gray/purple.
+          'prose-a:text-indigo-600 dark:prose-a:text-indigo-300',
+          // The plugin wraps inline code in literal backtick glyphs by default
+          // (`code::before/after { content: "`" }`) — wrong for a legal
+          // document, where inline code is rare and shouldn't look decorated.
+          'prose-code:before:content-none prose-code:after:content-none',
           // Legal-document typography: slightly wider prose column, comfortable line-height.
           '[&_.ProseMirror]:min-h-[50vh] [&_.ProseMirror]:outline-none',
-          // Blockquote — styled as a legal citation block.
+          // Blockquote — styled as a legal citation block. The plugin also
+          // injects decorative quote-mark glyphs on blockquote::before/after
+          // by default; killed below so the citation block doesn't look like
+          // a pull-quote.
           '[&_.ProseMirror_blockquote]:border-l-4 [&_.ProseMirror_blockquote]:border-indigo-400',
           '[&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:text-muted',
+          '[&_.ProseMirror_blockquote]:before:content-none [&_.ProseMirror_blockquote]:after:content-none',
           // Placeholder text when the editor is empty.
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted',
           '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
