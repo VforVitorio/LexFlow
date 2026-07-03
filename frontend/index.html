@@ -30,12 +30,9 @@
     <meta name="twitter:image" content="/og-image.png" />
     <meta name="description" content="Plataforma open source para explorar, analizar y consultar la legislación española como un grafo navegable." />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts are self-hosted via @fontsource-variable (see src/main.tsx) —
+         no Google Fonts CDN link, so the desktop build works offline and
+         makes no GDPR-relevant third-party request. -->
   </head>
   <body class="h-full bg-bg text-fg antialiased">
     <div id="root" class="h-full"></div>
