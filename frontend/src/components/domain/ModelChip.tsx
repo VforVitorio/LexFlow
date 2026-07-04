@@ -22,9 +22,11 @@ export function ModelChip() {
         onClick={() => setOpen((o) => !o)}
         className="inline-flex h-8 items-center gap-2 rounded-lg border border-border-strong bg-surface px-2.5 text-[13px] hover:bg-surface-2"
       >
-        <span className="font-medium">{m.label}</span>
-        <Badge tone={m.kind === 'local' ? 'success' : 'info'}>{m.kind === 'local' ? t('model.local') : t('model.cloud')}</Badge>
-        <ChevronDown className="size-3.5" />
+        <span className="max-w-[30vw] truncate font-medium sm:max-w-none">{m.label}</span>
+        <span className="hidden sm:inline-flex">
+          <Badge tone={m.kind === 'local' ? 'success' : 'info'}>{m.kind === 'local' ? t('model.local') : t('model.cloud')}</Badge>
+        </span>
+        <ChevronDown className="size-3.5 shrink-0" />
       </button>
       {open && (
         <>
