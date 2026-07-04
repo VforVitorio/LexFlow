@@ -118,7 +118,7 @@ function CommunityCard({
         <Icon className="size-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold">{name}</div>
+        <div className="font-semibold leading-snug line-clamp-2">{name}</div>
         <div className="truncate font-mono text-[11px] text-muted">{code}</div>
       </div>
       <ChevronRight className="size-3.5 shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />

@@ -36,10 +36,20 @@ interface UiState {
   leftWidth: number;
   setLeftWidth(px: number): void;
 
-  /** Right rail visible (docked panel on desktop, bottom sheet on mobile). */
+  /** Right rail visible (docked panel on desktop). */
   rightOpen: boolean;
   toggleRight(): void;
   setRight(open: boolean): void;
+
+  /**
+   * Mobile-only right panel (bottom sheet), separate from the persisted
+   * desktop `rightOpen`. Kept OUT of `partialize` so a fresh mobile visit
+   * never auto-opens the sheet over the page (it would sit behind a scrim,
+   * hiding the law/chat/graph the user came to see — #826 M3).
+   */
+  mobileRightOpen: boolean;
+  toggleMobileRight(): void;
+  setMobileRight(open: boolean): void;
 
   /** Right rail width in px when docked on desktop (drag-resizable, #594). */
   rightWidth: number;
@@ -90,6 +100,10 @@ export const useUi = create<UiState>()(
       rightOpen: true,
       toggleRight: () => set((s) => ({ rightOpen: !s.rightOpen })),
       setRight: (open) => set({ rightOpen: open }),
+
+      mobileRightOpen: false,
+      toggleMobileRight: () => set((s) => ({ mobileRightOpen: !s.mobileRightOpen })),
+      setMobileRight: (open) => set({ mobileRightOpen: open }),
 
       rightWidth: RIGHT_RAIL_DEFAULT,
       setRightWidth: (px) =>

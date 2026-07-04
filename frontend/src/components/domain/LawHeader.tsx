@@ -51,7 +51,7 @@ export function LawHeader({
             passed, so these rendered as fully-affordanced dead buttons.
             Re-add once a real implementation lands. */}
       </div>
-      <h1 className="text-3xl font-display font-semibold tracking-tight">{law.short}</h1>
+      <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">{law.short}</h1>
       <p className="mt-1.5 max-w-3xl text-[13.5px] text-muted">{law.title}</p>
 
       <div className="mt-3.5 flex flex-wrap items-center gap-6 text-[13px]">
