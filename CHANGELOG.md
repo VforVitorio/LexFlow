@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.71.3](https://github.com/VforVitorio/LexFlow/compare/v0.71.2...v0.71.3) (2026-07-04)
+
+
+### Bug Fixes
+
+* **frontend:** mobile layout foundations — sheet closed by default, responsive hero, tiles ([73433ba](https://github.com/VforVitorio/LexFlow/commit/73433ba65b1427d42d8643e4bf571c393e6424c6)), closes [#827](https://github.com/VforVitorio/LexFlow/issues/827)
+* **frontend:** mobile layout foundations (sheet closed by default, responsive hero, tiles) ([bb11a09](https://github.com/VforVitorio/LexFlow/commit/bb11a09e447fe6220b3c0a6f0effce947c15f9a6))
+
 ## [0.71.2](https://github.com/VforVitorio/LexFlow/compare/v0.71.1...v0.71.2) (2026-07-03)
 
 
