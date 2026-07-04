@@ -17,18 +17,20 @@ import { useEdgeResize } from './use-edge-resize';
  */
 export function RightRail({ children, className }: { children: React.ReactNode; className?: string }) {
   const open = useUi((s) => s.rightOpen);
-  const setRight = useUi((s) => s.setRight);
+  const mobileOpen = useUi((s) => s.mobileRightOpen);
+  const setMobileRight = useUi((s) => s.setMobileRight);
   const rightWidth = useUi((s) => s.rightWidth);
   const setRightWidth = useUi((s) => s.setRightWidth);
   const { t } = useTranslation();
   const { dragging, startDrag } = useEdgeResize('right', setRightWidth);
-  if (!open) return null;
+  if (!open && !mobileOpen) return null;
 
   return (
     <>
       {/* Desktop: docked side panel, drag-resizable on its left edge (#594).
           The aside itself doesn't scroll — an inner div does — so the resize
           separator stays pinned to the edge instead of scrolling away. */}
+      {open && (
       <aside
         role="complementary"
         aria-label="Panel contextual"
@@ -51,13 +53,17 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
           startDrag={startDrag}
         />
       </aside>
+      )}
 
-      {/* Mobile: bottom sheet + dismissible backdrop. */}
+      {/* Mobile: bottom sheet + dismissible backdrop. Driven by the separate,
+          non-persisted `mobileRightOpen` so a fresh mobile visit never opens
+          the sheet over the page behind a scrim (#826 M3). */}
+      {mobileOpen && (
       <div className="md:hidden">
         <button
           type="button"
           aria-label="Cerrar panel"
-          onClick={() => setRight(false)}
+          onClick={() => setMobileRight(false)}
           className="fixed inset-0 z-40 bg-black/40 animate-in fade-in"
         />
         <div
@@ -77,7 +83,7 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
             <button
               type="button"
               aria-label="Cerrar panel"
-              onClick={() => setRight(false)}
+              onClick={() => setMobileRight(false)}
               className="absolute right-4 rounded-md p-1 text-muted hover:bg-surface-2 hover:text-fg"
             >
               <X className="size-4" />
@@ -86,6 +92,7 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
           {children}
         </div>
       </div>
+      )}
     </>
   );
 }

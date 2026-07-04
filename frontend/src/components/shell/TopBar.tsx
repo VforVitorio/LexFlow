@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Search, Moon, Sun, SidebarOpen, SidebarClose } from 'lucide-react';
+import { ChevronRight, Search, Moon, Sun, SidebarOpen, SidebarClose, Info } from 'lucide-react';
 import { Avatar, Button, Kbd } from '@/components/ui';
 import { useUi } from '@/lib/store';
 import { useLaw } from '@/lib/queries';
@@ -12,6 +12,7 @@ export function TopBar() {
   const toggleTheme = useUi((s) => s.toggleTheme);
   const rightOpen = useUi((s) => s.rightOpen);
   const toggleRight = useUi((s) => s.toggleRight);
+  const toggleMobileRight = useUi((s) => s.toggleMobileRight);
   const setPaletteOpen = useUi((s) => s.setPaletteOpen);
   const location = useLocation();
   const navigate = useNavigate();
@@ -40,8 +41,14 @@ export function TopBar() {
       <Button size="icon" variant="ghost" aria-label={t('shell.toggleTheme')} onClick={toggleTheme} className="ml-auto md:ml-0">
         {theme === 'light' ? <Sun className="size-4" /> : <Moon className="size-4" />}
       </Button>
-      <Button size="icon" variant="ghost" aria-label={t('shell.toggleRightPanel')} onClick={toggleRight}>
+      {/* Desktop dock toggle — hidden on mobile, where the contextual panel is
+          a bottom sheet driven by the separate `mobileRightOpen` flag (#826 M3). */}
+      <Button size="icon" variant="ghost" aria-label={t('shell.toggleRightPanel')} onClick={toggleRight} className="hidden md:inline-flex">
         {rightOpen ? <SidebarClose className="size-4" /> : <SidebarOpen className="size-4" />}
+      </Button>
+      {/* Mobile: open the contextual panel as a bottom sheet (closed by default). */}
+      <Button size="icon" variant="ghost" aria-label={t('shell.toggleRightPanel')} onClick={toggleMobileRight} className="md:hidden">
+        <Info className="size-4" />
       </Button>
       <Avatar initials="LV" size={28} />
     </header>

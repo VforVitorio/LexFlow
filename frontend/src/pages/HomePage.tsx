@@ -63,7 +63,7 @@ export function HomePage() {
             stored (see #115 / #229 step 2). Plug-in seam for the
             randomised welcome pool (#248) is `lib/greeting.ts`. */}
         <header className="mb-7">
-          <h1 className="font-display text-4xl font-semibold -tracking-[0.015em]">{greeting.text}</h1>
+          <h1 className="font-display text-2xl md:text-4xl font-semibold -tracking-[0.015em]">{greeting.text}</h1>
           <p className="mt-1 text-[14.5px] text-muted">
             {t('home.syncPrefix')}{' '}
             <code className="font-mono text-[12.5px] text-indigo-600 dark:text-indigo-300">{sync?.upstream ?? 'legalize-es@main'}</code>{' '}
@@ -160,7 +160,7 @@ export function HomePage() {
 
           <section>
             <h2 className="mb-3.5 font-display text-lg font-semibold">{t('home.shortcuts')}</h2>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 gap-2.5">
               <QuickTile icon={Network} tone="indigo" title={t('home.tiles.graphTitle')} sub={t('home.tiles.graphSub')} onClick={() => navigate('/graph')} />
               <QuickTile icon={MessagesSquare} tone="amber" title={t('home.tiles.chatTitle')} sub={t('home.tiles.chatSub')} onClick={() => navigate('/chat')} />
               <QuickTile icon={GitCompareArrows} tone="violet" title={t('home.tiles.diffTitle')} sub={t('home.tiles.diffSub')} onClick={() => navigate('/laws/LO-3-2018/diff')} />
@@ -269,13 +269,15 @@ function QuickTile({
   return (
     <button
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-3.5 text-left transition-colors hover:border-border-strong hover:bg-surface-2/50"
+      className="flex items-center gap-3 rounded-lg border border-border bg-surface p-3.5 text-left transition-colors hover:border-border-strong hover:bg-surface-2/50"
     >
-      <span className={cn('mb-1.5 inline-flex size-8 items-center justify-center rounded-md', palette[tone])}>
+      <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-md', palette[tone])}>
         <I className="size-4" />
       </span>
-      <span className="text-[13.5px] font-semibold">{title}</span>
-      <span className="text-[12px] text-muted">{sub}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[13.5px] font-semibold">{title}</span>
+        <span className="block text-[12px] leading-snug text-muted line-clamp-2">{sub}</span>
+      </span>
     </button>
   );
 }
