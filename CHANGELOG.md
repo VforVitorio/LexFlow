@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.71.4](https://github.com/VforVitorio/LexFlow/compare/v0.71.3...v0.71.4) (2026-07-04)
+
+
+### Bug Fixes
+
+* **explorer:** responsive results — column gating + table-fixed + mobile card list ([9a497bd](https://github.com/VforVitorio/LexFlow/commit/9a497bdca17b9788fddf3ac0c7c17d15240202cd))
+* **explorer:** responsive results — column gating + table-fixed + mobile card list ([e20acc0](https://github.com/VforVitorio/LexFlow/commit/e20acc0cde1167139ef79c253ddb46f23449eb3e)), closes [#828](https://github.com/VforVitorio/LexFlow/issues/828)
+
 ## [0.71.3](https://github.com/VforVitorio/LexFlow/compare/v0.71.2...v0.71.3) (2026-07-04)
 
 
