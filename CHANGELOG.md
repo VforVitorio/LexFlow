@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.71.5](https://github.com/VforVitorio/LexFlow/compare/v0.71.4...v0.71.5) (2026-07-04)
+
+
+### Refactoring
+
+* **chat:** collapse to a single pane on mobile ([5650e2a](https://github.com/VforVitorio/LexFlow/commit/5650e2a8be84893e298dc87b3ad03c40aa455c9d))
+
 ## [0.71.4](https://github.com/VforVitorio/LexFlow/compare/v0.71.3...v0.71.4) (2026-07-04)
 
 
