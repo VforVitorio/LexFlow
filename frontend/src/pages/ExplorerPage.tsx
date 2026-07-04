@@ -500,15 +500,43 @@ export function ExplorerPage() {
                 )}
               </div>
             ) : (
-              <table className="w-full border-collapse text-[13.5px]">
+              <>
+              {/* Mobile (<md): compact card rows — the 7-column desktop table
+                  can't fit a phone, so below md we render a card list and the
+                  table becomes `hidden md:table` (#826 M2). */}
+              <div className="divide-y divide-border md:hidden">
+                {displayed.map((l) => (
+                  <button
+                    key={l.id}
+                    onClick={() => navigate(`/laws/${encodeURIComponent(l.id)}`)}
+                    className="flex w-full items-start gap-3 px-5 py-3 text-left transition-colors hover:bg-surface-2/50"
+                  >
+                    <span className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
+                      <BookOpenText className="size-3.5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="min-w-0 truncate font-semibold">{l.short}</span>
+                        <span className="ml-auto shrink-0">
+                          <Badge tone={l.status === 'vigente' ? 'success' : l.status === 'derogada' ? 'danger' : 'amber'}>{statusLabel(l.status)}</Badge>
+                        </span>
+                      </div>
+                      <div className="truncate text-[12px] text-muted">{l.title}</div>
+                      <div className="mt-0.5 font-mono text-[11px] text-muted">{l.rango} · {formatDate(l.publicada)}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <table className="hidden w-full table-fixed border-collapse text-[13.5px] md:table">
                 <thead className="sticky top-0 z-[1] bg-bg">
                   <tr className="border-b border-border">
-                    <Th className="w-[40%] pl-8">{t('explorer.cols.law')}</Th>
+                    <Th className="w-[40%] pl-5 md:pl-8">{t('explorer.cols.law')}</Th>
                     <Th>{t('explorer.cols.status')}</Th>
                     <Th>{t('explorer.cols.rango')}</Th>
-                    <Th>{t('explorer.cols.published')}</Th>
+                    <Th className="hidden lg:table-cell">{t('explorer.cols.published')}</Th>
                     <Th className="text-right">{t('explorer.cols.articles')}</Th>
-                    <Th className="text-right">{t('explorer.cols.refs')}</Th>
+                    <Th className="hidden text-right xl:table-cell">{t('explorer.cols.refs')}</Th>
                     <Th className="w-10" />
                   </tr>
                 </thead>
@@ -520,7 +548,7 @@ export function ExplorerPage() {
                   <tbody aria-busy>
                     {Array.from({ length: 8 }).map((_, i) => (
                       <tr key={i} className="border-b border-border" style={{ height: rowH }}>
-                        <td className="pl-8 pr-3 py-3">
+                        <td className="pl-5 md:pl-8 pr-3 py-3">
                           <div className="flex items-center gap-2.5">
                             <Skeleton className="size-7 shrink-0 rounded-md" />
                             <div className="flex w-full flex-col gap-1.5">
@@ -531,9 +559,9 @@ export function ExplorerPage() {
                         </td>
                         <td><Skeleton className="h-4 w-16 rounded-full" /></td>
                         <td><Skeleton className="h-3 w-20" /></td>
-                        <td><Skeleton className="h-3 w-16" /></td>
+                        <td className="hidden lg:table-cell"><Skeleton className="h-3 w-16" /></td>
                         <td className="text-right"><Skeleton className="ml-auto h-3 w-8" /></td>
-                        <td className="text-right"><Skeleton className="ml-auto h-3 w-10" /></td>
+                        <td className="hidden text-right xl:table-cell"><Skeleton className="ml-auto h-3 w-10" /></td>
                         <td />
                       </tr>
                     ))}
@@ -547,7 +575,7 @@ export function ExplorerPage() {
                       className="cursor-pointer border-b border-border transition-colors hover:bg-surface-2/50"
                       style={{ height: rowH }}
                     >
-                      <td className={cn('pl-8 pr-3', density === 'compact' ? 'py-2' : 'py-3')}>
+                      <td className={cn('pl-5 md:pl-8 pr-3', density === 'compact' ? 'py-2' : 'py-3')}>
                         <div className="flex min-w-0 items-center gap-2.5">
                           <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-primary-soft text-indigo-700 dark:text-indigo-200">
                             <BookOpenText className="size-3.5" />
@@ -583,14 +611,15 @@ export function ExplorerPage() {
                       </td>
                       <td><Badge tone={l.status === 'vigente' ? 'success' : l.status === 'derogada' ? 'danger' : 'amber'}>{statusLabel(l.status)}</Badge></td>
                       <td className="text-muted">{l.rango}</td>
-                      <td className="font-mono text-[12px] text-muted">{formatDate(l.publicada)}</td>
+                      <td className="hidden font-mono text-[12px] text-muted lg:table-cell">{formatDate(l.publicada)}</td>
                       <td className="pr-4 text-right font-mono">{l.articulos}</td>
-                      <td className="pr-4 text-right font-mono text-muted">{formatNumber(l.referencias)}</td>
+                      <td className="hidden pr-4 text-right font-mono text-muted xl:table-cell">{formatNumber(l.referencias)}</td>
                       <td className="pr-5"><ChevronRight className="size-3.5 text-muted" /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </>
             )
           )}
         </div>
