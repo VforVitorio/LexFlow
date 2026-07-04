@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Paperclip, BookOpenText, SlidersHorizontal, Send, Pencil, Trash2, Menu } from 'lucide-react';
 import { Button, Chip, Kbd, useConfirm } from '@/components/ui';
 import { ChatMessage } from '@/components/domain/ChatMessage';
 import { ModelChip } from '@/components/domain/ModelChip';
@@ -48,6 +48,8 @@ export function ChatPage() {
     setActiveId(id);
     navigate(`/chat/${encodeURIComponent(id)}`);
   };
+  // Mobile: the thread rail is an off-canvas drawer (docked on desktop).
+  const [threadsDrawerOpen, setThreadsDrawerOpen] = useState(false);
   const [draft, setDraft] = useState('');
   // Pre-fill the composer from a Home suggestion chip (passed via router
   // state) so a "¿Qué exige el art. 28?" chip lands on a chat with the
@@ -251,13 +253,29 @@ export function ChatPage() {
 
   return (
     <div className="flex h-full min-h-0">
-      {/* Conversation rail */}
-      <aside className="w-60 shrink-0 overflow-auto border-r border-border bg-bg p-3.5 scrollbar-thin">
+      {/* Mobile drawer backdrop (dismisses the off-canvas thread rail). */}
+      {threadsDrawerOpen && (
+        <button
+          type="button"
+          aria-label={t('chat.closeThreads', 'Cerrar conversaciones')}
+          onClick={() => setThreadsDrawerOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+        />
+      )}
+      {/* Conversation rail — docked on desktop, off-canvas drawer on mobile (#826 M4). */}
+      <aside
+        className={cn(
+          'w-72 shrink-0 overflow-auto border-r border-border bg-bg p-3.5 scrollbar-thin',
+          'fixed inset-y-0 left-0 z-50 shadow-2 transition-transform',
+          'md:relative md:z-auto md:w-60 md:translate-x-0 md:shadow-none',
+          threadsDrawerOpen ? 'translate-x-0' : '-translate-x-full',
+        )}
+      >
         <Button
           size="sm"
           icon={<Plus className="size-3.5" />}
           className="mb-3 w-full"
-          onClick={startNewThread}
+          onClick={() => { startNewThread(); setThreadsDrawerOpen(false); }}
           disabled={createThread.isPending}
         >
           {t('chat.newThread')}
@@ -297,7 +315,7 @@ export function ChatPage() {
                     />
                   ) : (
                     <button
-                      onClick={() => selectThread(thread.id)}
+                      onClick={() => { selectThread(thread.id); setThreadsDrawerOpen(false); }}
                       className={cn(
                         'min-w-0 flex-1 truncate text-left text-[13px]',
                         activeId === thread.id && 'font-semibold text-indigo-700 dark:text-indigo-200',
@@ -329,12 +347,20 @@ export function ChatPage() {
 
       {/* Thread */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b border-border px-6 py-3">
+        <header className="flex items-center gap-3 border-b border-border px-4 py-3 md:px-6">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="md:hidden"
+            aria-label={t('chat.openThreads', 'Conversaciones')}
+            onClick={() => setThreadsDrawerOpen(true)}
+            icon={<Menu className="size-4" />}
+          />
           <div className="min-w-0">
-            <div className="font-display text-[15px] font-semibold">{threadsById.get(activeId)?.title ?? t('chat.threadFallback')}</div>
-            <div className="text-[12px] text-muted">{t('chat.turns', { n: visible.length })} · {t('chat.sourcesCited', { n: sourcesCited })}</div>
+            <div className="truncate font-display text-[15px] font-semibold">{threadsById.get(activeId)?.title ?? t('chat.threadFallback')}</div>
+            <div className="truncate text-[12px] text-muted">{t('chat.turns', { n: visible.length })} · {t('chat.sourcesCited', { n: sourcesCited })}</div>
           </div>
-          <span className="ml-auto"><ModelChip /></span>
+          <span className="ml-auto shrink-0"><ModelChip /></span>
         </header>
 
         <div className="flex-1 overflow-auto py-6 scrollbar-thin">
@@ -391,11 +417,11 @@ export function ChatPage() {
             <div className="mt-1.5 flex items-center gap-1.5">
               {/* Composer feature stubs — not wired yet (tracked in #564);
                   marked "próximamente" so they don't read as broken. */}
-              <Button size="icon-sm" variant="ghost" disabled title={t('chat.comingSoon')} aria-label={t('chat.attach')} icon={<Paperclip className="size-3.5" />} />
-              <span title={t('chat.comingSoon')} className="opacity-50">
+              <Button size="icon-sm" variant="ghost" disabled title={t('chat.comingSoon')} aria-label={t('chat.attach')} icon={<Paperclip className="size-3.5" />} className="hidden sm:inline-flex" />
+              <span title={t('chat.comingSoon')} className="hidden opacity-50 sm:inline-flex">
                 <Chip icon={<BookOpenText className="size-3" />}>{t('chat.citeArticle')}</Chip>
               </span>
-              <span title={t('chat.comingSoon')} className="opacity-50">
+              <span title={t('chat.comingSoon')} className="hidden opacity-50 sm:inline-flex">
                 <Chip icon={<SlidersHorizontal className="size-3" />}>{t('chat.onlyInForce')}</Chip>
               </span>
               <span className="ml-auto flex items-center gap-2">
