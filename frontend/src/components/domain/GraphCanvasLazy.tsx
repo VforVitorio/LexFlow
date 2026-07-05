@@ -7,16 +7,16 @@
  *
  * Type-only import of the props keeps this file from pulling the runtime.
  */
-import { Suspense, lazy } from 'react';
+import { Suspense, forwardRef, lazy } from 'react';
 
-import type { GraphCanvasProps } from './GraphCanvas';
+import type { GraphCanvasHandle, GraphCanvasProps } from './GraphCanvas';
 
 const GraphCanvas = lazy(() => import('./GraphCanvas').then((m) => ({ default: m.GraphCanvas })));
 
-export function GraphCanvasLazy(props: GraphCanvasProps) {
+export const GraphCanvasLazy = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function GraphCanvasLazy(props, ref) {
   return (
     <Suspense fallback={<div className="size-full" aria-hidden />}>
-      <GraphCanvas {...props} />
+      <GraphCanvas {...props} ref={ref} />
     </Suspense>
   );
-}
+});
