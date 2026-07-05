@@ -58,6 +58,21 @@ export function SpainMap({ className }: { className?: string }) {
 
   return (
     <div className={cn('flex flex-col items-center', className)}>
+      {/* Live region ABOVE the map: the hovered/focused region's name, large
+          so it reads at a glance without the eye leaving the map (#846). */}
+      <div
+        className="mb-3 flex h-9 items-center text-center text-2xl font-semibold text-indigo-700 dark:text-indigo-300"
+        aria-live="polite"
+      >
+        {active ? (
+          active.name
+        ) : (
+          <span className="text-sm font-normal text-muted">
+            Pasa el ratón o tabula por una comunidad para seleccionarla
+          </span>
+        )}
+      </div>
+
       <svg
         viewBox={SPAIN_VIEWBOX}
         className="h-auto w-full max-w-3xl"
@@ -104,20 +119,6 @@ export function SpainMap({ className }: { className?: string }) {
           </g>
         ))}
       </svg>
-
-      {/* Live region: the hovered/focused region's name. */}
-      <div
-        className="mt-3 h-5 text-[13.5px] font-semibold text-indigo-700 dark:text-indigo-300"
-        aria-live="polite"
-      >
-        {active ? (
-          active.name
-        ) : (
-          <span className="font-normal text-muted">
-            Pasa el ratón o tabula por una comunidad para seleccionarla
-          </span>
-        )}
-      </div>
     </div>
   );
 }
