@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.75.0](https://github.com/VforVitorio/LexFlow/compare/v0.74.0...v0.75.0) (2026-07-05)
+
+
+### Features
+
+* **editor:** upload .docx/.md files as templates ([0205a21](https://github.com/VforVitorio/LexFlow/commit/0205a21759659aa6c7f41f7b91b3b020868d1407))
+* **editor:** upload .docx/.md files as templates ([20b465b](https://github.com/VforVitorio/LexFlow/commit/20b465b9d2a75ca833f4c692ce47395bb4c13888)), closes [#600](https://github.com/VforVitorio/LexFlow/issues/600)
+
 ## [0.74.0](https://github.com/VforVitorio/LexFlow/compare/v0.73.0...v0.74.0) (2026-07-05)
 
 
