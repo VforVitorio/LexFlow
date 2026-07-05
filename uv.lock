@@ -1092,7 +1092,7 @@ wheels = [
 
 [[package]]
 name = "lexflow"
-version = "0.71.5"
+version = "0.72.0"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
