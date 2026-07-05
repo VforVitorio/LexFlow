@@ -37,6 +37,7 @@ import { CitationPicker } from '@/pages/editor/CitationPicker';
 import { TemplatesDialog } from '@/pages/editor/TemplatesDialog';
 import { AiDraftPanel } from '@/pages/editor/AiDraftPanel';
 import { CommentsPanel } from '@/pages/editor/CommentsPanel';
+import { ExportMenu } from '@/pages/editor/ExportMenu';
 import { LegalCitation } from '@/pages/editor/extensions/LegalCitation';
 import { CommentMark } from '@/pages/editor/extensions/CommentMark';
 import { useCommentStore } from '@/lib/comment-store';
@@ -198,31 +199,34 @@ export function EditorPage() {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-auto p-6">
-      {/* Page header: editable title + doc id breadcrumb */}
-      <header className="flex flex-col gap-1">
-        <input
-          type="text"
-          value={title}
-          onChange={handleTitleChange}
-          readOnly={isReadOnly}
-          aria-label="Document title"
-          placeholder="Untitled document"
-          className={cn(
-            'w-full bg-transparent text-2xl font-semibold tracking-tight text-fg outline-none',
-            'placeholder:text-muted',
-            'focus:outline-none',
-            isReadOnly && 'cursor-default select-text',
-          )}
-        />
-        <span className="text-xs text-muted">
-          {docId !== DEFAULT_DOC_ID ? `ID: ${docId}` : 'Draft'}
-          {stored?.updatedAt && (
-            <>
-              {' · '}
-              Saved {new Date(stored.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-            </>
-          )}
-        </span>
+      {/* Page header: editable title + doc id breadcrumb, export on the right */}
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <input
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            readOnly={isReadOnly}
+            aria-label="Document title"
+            placeholder="Untitled document"
+            className={cn(
+              'w-full bg-transparent text-2xl font-semibold tracking-tight text-fg outline-none',
+              'placeholder:text-muted',
+              'focus:outline-none',
+              isReadOnly && 'cursor-default select-text',
+            )}
+          />
+          <span className="text-xs text-muted">
+            {docId !== DEFAULT_DOC_ID ? `ID: ${docId}` : 'Draft'}
+            {stored?.updatedAt && (
+              <>
+                {' · '}
+                Saved {new Date(stored.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </>
+            )}
+          </span>
+        </div>
+        {editor && <ExportMenu editor={editor} title={title} />}
       </header>
 
       {/* Toolbar (disabled in read-only but the toggle button stays live) */}
