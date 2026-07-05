@@ -44,6 +44,7 @@ export type JurisdictionCode =
   | 'es-ar'
   | 'es-as'
   | 'es-cb'
+  | 'es-ce'
   | 'es-cl'
   | 'es-cm'
   | 'es-cn'
@@ -53,6 +54,7 @@ export type JurisdictionCode =
   | 'es-ib'
   | 'es-mc'
   | 'es-md'
+  | 'es-ml'
   | 'es-nc'
   | 'es-pv'
   | 'es-ri'
@@ -68,6 +70,7 @@ export const COMMUNITIES: ReadonlyArray<{ code: JurisdictionCode; name: string }
   { code: 'es-ar', name: 'Aragón' },
   { code: 'es-as', name: 'Asturias' },
   { code: 'es-cb', name: 'Cantabria' },
+  { code: 'es-ce', name: 'Ceuta' },
   { code: 'es-cl', name: 'Castilla y León' },
   { code: 'es-cm', name: 'Castilla-La Mancha' },
   { code: 'es-cn', name: 'Canarias' },
@@ -77,6 +80,7 @@ export const COMMUNITIES: ReadonlyArray<{ code: JurisdictionCode; name: string }
   { code: 'es-ib', name: 'Islas Baleares' },
   { code: 'es-mc', name: 'Región de Murcia' },
   { code: 'es-md', name: 'Madrid' },
+  { code: 'es-ml', name: 'Melilla' },
   { code: 'es-nc', name: 'Navarra' },
   { code: 'es-pv', name: 'País Vasco' },
   { code: 'es-ri', name: 'La Rioja' },

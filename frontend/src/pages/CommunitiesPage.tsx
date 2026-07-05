@@ -25,17 +25,22 @@
  * lands on the Explorer already scoped to that community (#770).
  */
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Landmark, MapPin, ChevronRight } from 'lucide-react';
+import { Landmark, MapPin, ChevronRight, Map, List } from 'lucide-react';
 import { Card } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { COMMUNITIES } from '@/lib/types';
 import type { JurisdictionCode } from '@/lib/types';
+import { SpainMap } from './communities/SpainMap';
 
 export function CommunitiesPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [view, setView] = useState<'map' | 'list'>('map');
+  // National scope isn't a region on the map — surface it as its own button.
+  const national = COMMUNITIES.find((c) => !c.code.includes('-'));
 
   const goToJurisdiction = (code: JurisdictionCode) => {
     navigate(`/explorer?jurisdiction=${encodeURIComponent(code)}`);
@@ -43,32 +48,76 @@ export function CommunitiesPage() {
 
   return (
     <div className="h-full max-w-content overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
-      <header className="mb-6 max-w-2xl">
-        <h1 className="font-display text-2xl font-semibold">
-          {t('communities.title', 'Comunidades autónomas')}
-        </h1>
-        <p className="mt-1.5 text-[13.5px] text-muted">
-          {t(
-            'communities.subtitle',
-            'Explora la legislación por ámbito territorial: normativa estatal o de cada comunidad autónoma.',
-          )}
-        </p>
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-2xl">
+          <h1 className="font-display text-2xl font-semibold">
+            {t('communities.title', 'Comunidades autónomas')}
+          </h1>
+          <p className="mt-1.5 text-[13.5px] text-muted">
+            {t(
+              'communities.subtitle',
+              'Explora la legislación por ámbito territorial: normativa estatal o de cada comunidad autónoma.',
+            )}
+          </p>
+        </div>
+        {/* Map / list toggle (#846) — the map is the visual, spatial way in;
+            the card list stays as the keyboard/screen-reader fallback. */}
+        <div className="inline-flex shrink-0 rounded-lg border border-border-strong bg-surface p-0.5 text-[13px]">
+          <button
+            type="button"
+            onClick={() => setView('map')}
+            aria-pressed={view === 'map'}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 transition-colors',
+              view === 'map' ? 'bg-primary-soft font-medium text-indigo-700 dark:text-indigo-200' : 'text-muted hover:text-fg',
+            )}
+          >
+            <Map className="size-3.5" /> {t('communities.mapView', 'Mapa')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('list')}
+            aria-pressed={view === 'list'}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 transition-colors',
+              view === 'list' ? 'bg-primary-soft font-medium text-indigo-700 dark:text-indigo-200' : 'text-muted hover:text-fg',
+            )}
+          >
+            <List className="size-3.5" /> {t('communities.listView', 'Lista')}
+          </button>
+        </div>
       </header>
 
-      <div
-        role="list"
-        aria-label={t('communities.title', 'Comunidades autónomas')}
-        className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      >
-        {COMMUNITIES.map(({ code, name }) => (
-          // `role="list"` children must be `role="listitem"`; the card itself
-          // is the `role="button"` click target, so wrap it to keep both the
-          // list semantics ("N items") and the button semantics intact.
-          <div role="listitem" key={code}>
-            <CommunityCard code={code} name={name} onSelect={goToJurisdiction} />
-          </div>
-        ))}
-      </div>
+      {view === 'map' ? (
+        <div className="flex flex-col items-center gap-5">
+          {national && (
+            <button
+              type="button"
+              onClick={() => goToJurisdiction(national.code)}
+              className="inline-flex items-center gap-2 rounded-lg border border-border-strong bg-surface px-3.5 py-2 text-[13.5px] font-medium transition-colors hover:border-indigo-300 hover:bg-primary-soft"
+            >
+              <Landmark className="size-4 text-indigo-600 dark:text-indigo-300" />
+              {t('communities.national', 'Normativa estatal (todo el Estado)')}
+            </button>
+          )}
+          <SpainMap className="w-full" />
+        </div>
+      ) : (
+        <div
+          role="list"
+          aria-label={t('communities.title', 'Comunidades autónomas')}
+          className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {COMMUNITIES.map(({ code, name }) => (
+            // `role="list"` children must be `role="listitem"`; the card itself
+            // is the `role="button"` click target, so wrap it to keep both the
+            // list semantics ("N items") and the button semantics intact.
+            <div role="listitem" key={code}>
+              <CommunityCard code={code} name={name} onSelect={goToJurisdiction} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
