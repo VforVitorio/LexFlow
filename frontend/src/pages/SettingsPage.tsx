@@ -117,7 +117,7 @@ export function SettingsPage() {
 
       {/* Content. Reduced padding on mobile so 375 px stays usable;
           the desktop px-10 stays for md+. */}
-      <div className="flex-1 overflow-auto px-5 py-5 scrollbar-thin md:px-10 md:py-7">
+      <div className="max-w-[880px] flex-1 overflow-auto px-5 py-5 scrollbar-thin md:px-8 md:py-7">
         {section === 'personalization' && <PersonalizacionSection />}
         {section === 'models' && <ModelsSection />}
         {section === 'mcpServers' && <McpServersSection />}

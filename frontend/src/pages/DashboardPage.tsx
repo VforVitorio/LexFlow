@@ -51,7 +51,7 @@ export function DashboardPage() {
   const { data, isLoading } = useDashboard(preset);
 
   return (
-    <div className="h-full overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
+    <div className="h-full max-w-content overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
       <div className="mb-5 flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-2xl font-semibold">{t('dashboards.title')}</h1>
         <Tabs variant="segmented" value={preset} onChange={handleTabChange} tabs={[
