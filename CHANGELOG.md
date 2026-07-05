@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.72.0](https://github.com/VforVitorio/LexFlow/compare/v0.71.5...v0.72.0) (2026-07-05)
+
+
+### Features
+
+* **frontend:** desktop layout & spacing system for wide screens ([e43ae7f](https://github.com/VforVitorio/LexFlow/commit/e43ae7f95bfe3be3159b03aa99f4e7159bd79bc2))
+* **frontend:** desktop layout & spacing system for wide screens ([7c0f8d8](https://github.com/VforVitorio/LexFlow/commit/7c0f8d8e8b0663619945df26a9679bba7de719d0)), closes [#831](https://github.com/VforVitorio/LexFlow/issues/831)
+
+
+### Refactoring
+
+* **graph:** canvas overhaul — auto-fit, wired zoom, compact toolbar, edges-only legend ([a1e3cd8](https://github.com/VforVitorio/LexFlow/commit/a1e3cd89072e25cf53a2db5ddef820b9352d5f72))
+* **graph:** canvas overhaul — auto-fit, wired zoom, compact toolbar, edges-only legend ([4c9d883](https://github.com/VforVitorio/LexFlow/commit/4c9d88322cea6dc26596bb6d0a4cb8ba7879a8f4)), closes [#830](https://github.com/VforVitorio/LexFlow/issues/830)
+
 ## [0.71.5](https://github.com/VforVitorio/LexFlow/compare/v0.71.4...v0.71.5) (2026-07-04)
 
 
