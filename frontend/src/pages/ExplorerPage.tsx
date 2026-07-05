@@ -287,7 +287,7 @@ export function ExplorerPage() {
       )}
 
       {/* Main */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 max-w-content flex-1 flex-col">
         {/* Header */}
         <div className="border-b border-border px-5 pt-4 pb-3.5 md:px-8 md:pt-5">
           <h1 className="mb-3.5 font-display text-2xl font-semibold">{t('explorer.title')}</h1>

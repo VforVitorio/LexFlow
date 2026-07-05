@@ -106,6 +106,15 @@ export default {
         2: '0 8px 24px -8px hsl(232 30% 10% / 0.12)',
         3: '0 24px 56px -16px hsl(232 30% 10% / 0.20)',
       },
+      maxWidth: {
+        // Shared content-shell width (#831): caps page content on wide screens
+        // so it neither floats with empty gutters nor over-stretches into
+        // unreadable line lengths. `content` for dense grids/tables/pages,
+        // `measure` for prose. Applied left-anchored (no `mx-auto`) so the
+        // content's left edge lines up with the shell padding / breadcrumb.
+        content: '80rem', // 1280px
+        measure: '72ch',
+      },
       spacing: {
         // Adds half-step values used by the spec
         '0.25': '0.0625rem',

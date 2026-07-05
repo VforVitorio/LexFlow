@@ -42,7 +42,7 @@ export function CommunitiesPage() {
   };
 
   return (
-    <div className="h-full overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
+    <div className="h-full max-w-content overflow-auto px-5 md:px-8 py-6 scrollbar-thin">
       <header className="mb-6 max-w-2xl">
         <h1 className="font-display text-2xl font-semibold">
           {t('communities.title', 'Comunidades autónomas')}
