@@ -15,13 +15,14 @@
  * - Persistence → `@/lib/template-store`.
  * - Placeholder discovery / substitution → `./template-utils`.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import type { JSONContent } from '@tiptap/react';
-import { LayoutTemplate, FilePlus2, Trash2, FileText } from 'lucide-react';
+import { LayoutTemplate, FilePlus2, Upload, Trash2, FileText } from 'lucide-react';
 import { Button, Kbd } from '@/components/ui';
 import { useTemplateStore } from '@/lib/template-store';
 import { extractVariables, fillTemplate } from './template-utils';
+import { importFile, SUPPORTED_IMPORT } from './import-utils';
 import { TemplateFillForm } from './TemplateFillForm';
 
 interface TemplatesDialogProps {
@@ -33,6 +34,8 @@ export function TemplatesDialog({ editor, onClose }: TemplatesDialogProps) {
   const { templates, saveTemplate, deleteTemplate } = useTemplateStore();
   const [name, setName] = useState('');
   const [fillId, setFillId] = useState<string | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const list = Object.values(templates).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const filling = fillId ? templates[fillId] : null;
@@ -53,6 +56,24 @@ export function TemplatesDialog({ editor, onClose }: TemplatesDialogProps) {
     if (!trimmed) return;
     saveTemplate({ id: crypto.randomUUID(), name: trimmed, content: editor.getJSON() });
     setName('');
+  };
+
+  /**
+   * Import an uploaded .docx/.md file as a new template (#600). Parsed to the
+   * editor's schema so `{{variables}}` in the file are picked up by the fill
+   * flow. Resets the input so the same file can be re-selected after an error.
+   */
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImportError(null);
+    try {
+      const imported = await importFile(file, editor.schema);
+      saveTemplate({ id: crypto.randomUUID(), name: imported.name, content: imported.content });
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'No se pudo importar el archivo.');
+    }
   };
 
   const applyTemplate = (content: JSONContent, values: Record<string, string>) => {
@@ -95,30 +116,50 @@ export function TemplatesDialog({ editor, onClose }: TemplatesDialogProps) {
               <Kbd>esc</Kbd>
             </div>
 
-            {/* Save the current document as a template. */}
-            <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    saveCurrent();
-                  }
-                }}
-                aria-label="Nombre de la plantilla"
-                placeholder="Guardar documento actual como…"
-                className="flex-1 rounded-lg border border-border bg-surface px-3 py-1.5 text-[13.5px] outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-muted"
-              />
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<FilePlus2 className="size-3.5" />}
-                disabled={!name.trim()}
-                onClick={saveCurrent}
-              >
-                Guardar
-              </Button>
+            {/* Save the current document as a template, or upload one. */}
+            <div className="flex flex-col gap-2 border-b border-border px-4 py-3">
+              <div className="flex items-center gap-2">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      saveCurrent();
+                    }
+                  }}
+                  aria-label="Nombre de la plantilla"
+                  placeholder="Guardar documento actual como…"
+                  className="flex-1 rounded-lg border border-border bg-surface px-3 py-1.5 text-[13.5px] outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-muted"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<FilePlus2 className="size-3.5" />}
+                  disabled={!name.trim()}
+                  onClick={saveCurrent}
+                >
+                  Guardar
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Upload className="size-3.5" />}
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Subir un .docx o .md como plantilla"
+                >
+                  Subir
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={SUPPORTED_IMPORT}
+                  onChange={handleUpload}
+                  className="hidden"
+                  aria-hidden
+                />
+              </div>
+              {importError && <p className="text-[12px] text-danger">{importError}</p>}
             </div>
 
             {/* Library. */}
