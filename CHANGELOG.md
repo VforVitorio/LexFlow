@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.73.0](https://github.com/VforVitorio/LexFlow/compare/v0.72.0...v0.73.0) (2026-07-05)
+
+
+### Features
+
+* **communities:** interactive Spain map with hover-to-select regions ([4ed2d4c](https://github.com/VforVitorio/LexFlow/commit/4ed2d4cd850dd15782fe08d00e096eaca8d6684d))
+* **communities:** interactive Spain map with hover-to-select regions ([05aa04e](https://github.com/VforVitorio/LexFlow/commit/05aa04e4d61a48937d7e941dc36fe514d61afda5)), closes [#846](https://github.com/VforVitorio/LexFlow/issues/846)
+* **communities:** move region name above the map, larger ([94a32fd](https://github.com/VforVitorio/LexFlow/commit/94a32fdebe2cb1ed631a0a5afa8485e9ca6a9808))
+* **communities:** reframe map + Canarias inset box + Ceuta/Melilla ([cd079e8](https://github.com/VforVitorio/LexFlow/commit/cd079e8504b7bebd53452950eba4aaf4164ca163))
+* **communities:** shift Canarias inset left, add African coast for cities ([0ae1b10](https://github.com/VforVitorio/LexFlow/commit/0ae1b104f843038a1b126fd0110fc09f2cc59a01))
+
 ## [0.72.0](https://github.com/VforVitorio/LexFlow/compare/v0.71.5...v0.72.0) (2026-07-05)
 
 
