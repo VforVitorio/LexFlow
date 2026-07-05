@@ -8,6 +8,7 @@ import {
   CANARIAS_TRANSFORM,
   CANARIAS_BOX,
   CITIES,
+  AFRICA_COAST,
 } from './spain-map-data';
 
 /**
@@ -97,9 +98,20 @@ export function SpainMap({ className }: { className?: string }) {
           <path d={CANARIAS.d} className={regionClasses(CANARIAS.code)} {...interactive(CANARIAS.code, CANARIAS.name)} />
         </g>
 
-        {/* Ceuta / Melilla — dot markers with labels. */}
+        {/* North African coast — context so Ceuta/Melilla aren't floating dots. */}
+        <path d={AFRICA_COAST} className="pointer-events-none fill-surface-2 [fill-opacity:0.7]" />
+
+        {/* Ceuta / Melilla — markers on the coast, labelled above. */}
         {CITIES.map((c) => (
           <g key={c.code} className="cursor-pointer" {...interactive(c.code, c.name)}>
+            <text
+              x={c.cx}
+              y={c.cy - 3.6}
+              textAnchor="middle"
+              className="pointer-events-none fill-muted font-sans text-[7px]"
+            >
+              {c.name}
+            </text>
             <circle
               cx={c.cx}
               cy={c.cy}
@@ -109,13 +121,6 @@ export function SpainMap({ className }: { className?: string }) {
                 hovered === c.code && 'fill-primary-soft stroke-indigo-500',
               )}
             />
-            <text
-              x={c.cx + 4}
-              y={c.cy + 2.6}
-              className="pointer-events-none fill-muted font-sans text-[7px]"
-            >
-              {c.name}
-            </text>
           </g>
         ))}
       </svg>
