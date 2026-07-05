@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.74.0](https://github.com/VforVitorio/LexFlow/compare/v0.73.0...v0.74.0) (2026-07-05)
+
+
+### Features
+
+* **editor:** export document to Word (.docx) and Markdown ([ec0e10d](https://github.com/VforVitorio/LexFlow/commit/ec0e10d6783322f5d83f63044a1dd8e5e4b8de16)), closes [#861](https://github.com/VforVitorio/LexFlow/issues/861)
+
+
+### Documentation
+
+* **claude:** add lesson — run vitest, not just build, before pushing FE ([07df794](https://github.com/VforVitorio/LexFlow/commit/07df794bce5828663ea331d1442460cb34cb09ac))
+
 ## [0.73.0](https://github.com/VforVitorio/LexFlow/compare/v0.72.0...v0.73.0) (2026-07-05)
 
 
