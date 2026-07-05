@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Plus, Minus, Filter, Download, Pin, X } from 'lucide-react';
+import { Search, Plus, Minus, Filter, Download, Pin, X, Maximize2 } from 'lucide-react';
 import { Badge, Button, Chip, Input } from '@/components/ui';
 import { GraphCanvasLazy } from '@/components/domain/GraphCanvasLazy';
+import type { GraphCanvasHandle } from '@/components/domain/GraphCanvas';
 import { EmptyState } from '@/components/domain/EmptyState';
 import { ErrorState } from '@/components/domain/ErrorState';
 import { SkeletonCanvas } from '@/components/domain/Skeleton';
@@ -12,6 +13,7 @@ import { useGraph, useGraphTop, useWarmup } from '@/lib/queries';
 import { EDGE_KIND_LABELS, GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, NODE_KIND_LABELS, type GraphEdgeKind } from '@/lib/graph-colors';
 import type { GraphNodeKind } from '@/lib/types';
 import { buildNodeIndex, resolveNeighbourNodes } from './graph/neighbour-utils';
+import { cn } from '@/lib/utils';
 
 const ALL_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 const ALL_EDGE_KINDS: GraphEdgeKind[] = ['cites', 'develops', 'modifies', 'repeals'];
@@ -26,6 +28,8 @@ export function GraphPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [filters, setFilters] = useState<Set<GraphNodeKind>>(new Set(ALL_KINDS));
+  const graphRef = useRef<GraphCanvasHandle>(null);
+  const [legendOpen, setLegendOpen] = useState(false);
   // #221 — pick the seed dynamically. Hardcoding "CE-1978" 404'd because
   // the real ID is "BOE-A-1978-31229"; using the top-PageRank law also
   // keeps us honest as the corpus evolves. We pull the top 10 so the
@@ -130,13 +134,12 @@ export function GraphPage() {
   return (
     <div className="flex h-full min-h-0">
       <div className="relative flex min-w-0 flex-1 flex-col">
-        <div className="flex flex-wrap items-center gap-2.5 border-b border-border bg-bg p-4">
+        <div className="flex items-center gap-2.5 overflow-x-auto border-b border-border bg-bg px-4 py-2.5 md:flex-wrap md:overflow-visible">
           {/* Deslop sprint #798 — no `value`/`onChange` wired yet (part of a
               deeper graph-search epic). Disabled + "próximamente" so it
-              doesn't read as a broken search box. */}
-          {/* A disabled input swallows its own title tooltip like a disabled
-              button — hoist the "próximamente" hint onto a wrapper span. */}
-          <span title={t('chat.comingSoon')} className="inline-flex cursor-not-allowed [&_input]:pointer-events-none">
+              doesn't read as a broken search box. Hidden on mobile (#830) —
+              the compact toolbar keeps only the kind chips as a swipe row. */}
+          <span title={t('chat.comingSoon')} className="hidden cursor-not-allowed [&_input]:pointer-events-none md:inline-flex">
             <Input
               icon={<Search className="size-3.5" />}
               placeholder={t('graph.searchPlaceholder')}
@@ -145,7 +148,7 @@ export function GraphPage() {
               disabled
             />
           </span>
-          <span className="h-6 w-px bg-border" />
+          <span className="hidden h-6 w-px bg-border md:block" />
           {ALL_KINDS.map((t) => (
             <Chip
               key={t}
@@ -157,53 +160,62 @@ export function GraphPage() {
             </Chip>
           ))}
           {/* Deslop sprint #798 — advanced filters + PNG export aren't
-              wired yet; honest-disable rather than a dead affordance. */}
-          <span className="ml-auto flex gap-2">
+              wired yet; honest-disable. Hidden on mobile (#830) to keep the
+              toolbar to a single compact row. */}
+          <span className="ml-auto hidden gap-2 md:flex">
             <Button size="sm" variant="ghost" icon={<Filter className="size-3.5" />} disabled title={t('chat.comingSoon')}>{t('graph.advancedFilters')}</Button>
             <Button size="sm" variant="ghost" icon={<Download className="size-3.5" />} disabled title={t('chat.comingSoon')}>PNG</Button>
           </span>
         </div>
 
         <div className="relative flex-1 overflow-hidden bg-bg">
-          <GraphCanvasLazy data={graph} visibleKinds={filters} selected={selected} onSelect={setSelected} />
+          <GraphCanvasLazy ref={graphRef} data={graph} visibleKinds={filters} selected={selected} onSelect={setSelected} />
 
-          {/* Legend — frosted glass overlay (Opera Air language).
-              Two columns: nodes on top, edges below, separated by a thin
-              hairline so the user can distinguish "shape" (node) from
-              "relationship" (edge) at a glance. */}
-          <div className="air-glass absolute bottom-4 left-4 px-3.5 py-2.5">
-            <div className="label-caps mb-2">{t('graph.legend')}</div>
-            <div className="flex flex-col gap-1.5 text-[12px]">
-              {ALL_KINDS.map((kind) => (
-                <div key={kind} className="flex items-center gap-2">
-                  <span className="size-2.5 rounded-full" style={{ background: GRAPH_KIND_FILL[kind] }} />
-                  {NODE_KIND_LABELS[kind]}
-                </div>
-              ))}
-            </div>
-            <div className="my-2 h-px bg-border" aria-hidden />
-            <div className="label-caps mb-2">{t('graph.edges')}</div>
-            <div className="flex flex-col gap-1.5 text-[12px]">
-              {ALL_EDGE_KINDS.map((kind) => (
-                <div key={kind} className="flex items-center gap-2">
-                  <span
-                    className="block h-px w-5"
-                    style={{ background: GRAPH_EDGE_STROKE[kind] }}
-                    aria-hidden
-                  />
-                  {EDGE_KIND_LABELS[kind]}
-                </div>
-              ))}
+          {/* Legend (#830) — EDGES ONLY. The node-kind colours already live in
+              the toolbar chips above, so repeating them here doubled the panel
+              and covered nodes. Collapsed to a chip on mobile so it never sits
+              on top of the graph; expanded inline on desktop. */}
+          <div className="absolute bottom-4 left-4">
+            <button
+              type="button"
+              onClick={() => setLegendOpen((v) => !v)}
+              className={cn('air-glass label-caps px-3 py-2 md:hidden', legendOpen && 'hidden')}
+            >
+              {t('graph.legend')}
+            </button>
+            <div className={cn('air-glass px-3.5 py-2.5', !legendOpen && 'hidden md:block')}>
+              <div className="label-caps mb-2 flex items-center justify-between gap-4">
+                <span>{t('graph.edges')}</span>
+                <button
+                  type="button"
+                  onClick={() => setLegendOpen(false)}
+                  aria-label={t('graph.close')}
+                  className="-mr-1 rounded p-0.5 text-muted hover:text-fg md:hidden"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-1.5 text-[12px]">
+                {ALL_EDGE_KINDS.map((kind) => (
+                  <div key={kind} className="flex items-center gap-2">
+                    <span
+                      className="block h-px w-5"
+                      style={{ background: GRAPH_EDGE_STROKE[kind] }}
+                      aria-hidden
+                    />
+                    {EDGE_KIND_LABELS[kind]}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Zoom — same glass shell as the legend so they read as a pair.
-              Deslop sprint #798: `fgRef` isn't exposed by GraphCanvasLazy,
-              so these can't actually zoom yet — honest-disable rather than
-              wiring the force-graph zoom (out of scope here). */}
+          {/* Zoom + fit — wired to the GraphCanvas imperative handle (#830).
+              `fit` re-enables the auto-fit-on-resize behaviour. */}
           <div className="air-glass absolute bottom-4 right-4 flex flex-col gap-1 p-1">
-            <Button size="icon" variant="ghost" aria-label={t('graph.zoomIn')} icon={<Plus className="size-3.5" />} disabled title={t('chat.comingSoon')} />
-            <Button size="icon" variant="ghost" aria-label={t('graph.zoomOut')} icon={<Minus className="size-3.5" />} disabled title={t('chat.comingSoon')} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.zoomIn')} icon={<Plus className="size-3.5" />} onClick={() => graphRef.current?.zoomIn()} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.zoomOut')} icon={<Minus className="size-3.5" />} onClick={() => graphRef.current?.zoomOut()} />
+            <Button size="icon" variant="ghost" aria-label={t('graph.fit', 'Ajustar a la vista')} icon={<Maximize2 className="size-3.5" />} onClick={() => graphRef.current?.fit()} />
           </div>
         </div>
       </div>

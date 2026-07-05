@@ -26,7 +26,7 @@
  * * Forces         → the `d3Force` tweaks in the mount effect.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 
 import { GRAPH_EDGE_STROKE, GRAPH_KIND_FILL, GRAPH_PRIMARY } from '@/lib/graph-colors';
@@ -39,6 +39,13 @@ export interface GraphCanvasProps {
   selected: string | null;
   onSelect: (id: string) => void;
   className?: string;
+}
+
+/** Imperative controls exposed to GraphPage's zoom toolbar (#830). */
+export interface GraphCanvasHandle {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  fit: () => void;
 }
 
 /** Node shape fed to the force engine (it mutates x/y/vx/vy in place). */
@@ -88,7 +95,10 @@ function withAlpha(hsl: string, alpha: number): string {
   return hsl.replace(')', ` / ${alpha})`);
 }
 
-export function GraphCanvas({ data, visibleKinds, selected, onSelect, className }: GraphCanvasProps) {
+export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(function GraphCanvas(
+  { data, visibleKinds, selected, onSelect, className },
+  ref,
+) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | undefined>(undefined);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -123,6 +133,45 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
       return '#9aa0aa';
     }
   }, []);
+
+  // --- Auto-fit / imperative zoom (#830) ---------------------------------
+  // `zoomToFit` used to fire once, only on the first `onEngineStop`, and never
+  // re-fired — so the cluster sat tiny in a huge canvas and never re-centred on
+  // resize. Now: fit on every settle (incl. new data), refit on resize, and a
+  // `userZoomed` flag stops us yanking the view once the user takes over.
+  const hasFitRef = useRef(false);
+  const userZoomedRef = useRef(false);
+  const suppressZoomRef = useRef(false); // true during a programmatic zoom
+
+  const fitView = useCallback((ms = 400) => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    suppressZoomRef.current = true;
+    fg.zoomToFit(ms, size.w < 480 ? 24 : 72);
+    window.setTimeout(() => { suppressZoomRef.current = false; }, ms + 150);
+    hasFitRef.current = true;
+  }, [size.w]);
+
+  useImperativeHandle(ref, () => ({
+    zoomIn: () => { const fg = fgRef.current; if (fg) fg.zoom(fg.zoom() * 1.4, 250); },
+    zoomOut: () => { const fg = fgRef.current; if (fg) fg.zoom(fg.zoom() / 1.4, 250); },
+    fit: () => { userZoomedRef.current = false; fitView(400); },
+  }), [fitView]);
+
+  // A new graph (new seed / filter that changes nodes) re-enables auto-fit.
+  useEffect(() => {
+    hasFitRef.current = false;
+    userZoomedRef.current = false;
+  }, [graphData]);
+
+  // Fit ~0.6s after the data or the canvas size settles (initial load, new
+  // seed, or resize) — reliable regardless of exactly when `onEngineStop`
+  // fires — unless the user has taken over the view.
+  useEffect(() => {
+    if (size.w === 0 || size.h === 0 || userZoomedRef.current) return;
+    const id = window.setTimeout(() => fitView(400), 600);
+    return () => window.clearTimeout(id);
+  }, [graphData, size.w, size.h, fitView]);
 
   useEffect(() => {
     const el = wrapperRef.current;
@@ -208,7 +257,9 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
           // animate the settle over a bounded number of ticks.
           warmupTicks={reduced ? 150 : 0}
           cooldownTicks={reduced ? 0 : 200}
-          onEngineStop={() => fgRef.current?.zoomToFit(400, 56)}
+          d3AlphaMin={0.02}
+          onEngineStop={() => { if (!userZoomedRef.current) fitView(400); }}
+          onZoomEnd={() => { if (!suppressZoomRef.current && hasFitRef.current) userZoomedRef.current = true; }}
           enableNodeDrag={false}
           minZoom={0.4}
           maxZoom={6}
@@ -260,7 +311,8 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
               ctx.fillStyle = labelColor;
-              const label = node.label.length > 42 ? `${node.label.slice(0, 41)}…` : node.label;
+              const maxLen = size.w < 480 ? 28 : 42;
+              const label = node.label.length > maxLen ? `${node.label.slice(0, maxLen - 1)}…` : node.label;
               ctx.fillText(label, x, y + r + 2 / scale);
             }
             ctx.restore();
@@ -276,4 +328,4 @@ export function GraphCanvas({ data, visibleKinds, selected, onSelect, className 
       )}
     </div>
   );
-}
+});
