@@ -81,6 +81,16 @@ interface UiState {
    */
   telemetryConsent: boolean;
   setTelemetryConsent(value: boolean): void;
+
+  /**
+   * One-shot request to (re)launch the onboarding tour. Set by
+   * `useTutorialRelaunch` (Settings / Help) so callers don't need the
+   * `@reactour` context; consumed by `TutorialAutoLauncher`, which lives
+   * inside the lazily-mounted tour provider (#712). Transient — not persisted.
+   */
+  tourRequested: boolean;
+  requestTour(): void;
+  consumeTourRequest(): void;
 }
 
 export const useUi = create<UiState>()(
@@ -128,6 +138,10 @@ export const useUi = create<UiState>()(
 
       telemetryConsent: false,
       setTelemetryConsent: (value) => set({ telemetryConsent: value }),
+
+      tourRequested: false,
+      requestTour: () => set({ tourRequested: true }),
+      consumeTourRequest: () => set({ tourRequested: false }),
     }),
     {
       name: 'lexflow.ui',
