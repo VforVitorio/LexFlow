@@ -31,6 +31,9 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { TourProvider, useTour, type StepType } from '@reactour/tour';
 
+import { useUi } from '@/lib/store';
+import { TUTORIAL_COMPLETED_STORAGE_KEY } from './tutorial-storage';
+
 // Spotlight padding around the target rect, and the dim wash colour (#575).
 const SPOTLIGHT_PAD = 8;
 const SPOTLIGHT_DIM = 'hsl(222 30% 6% / 0.72)';
@@ -117,8 +120,6 @@ function TourSpotlight() {
     document.body,
   );
 }
-
-export const TUTORIAL_COMPLETED_STORAGE_KEY = 'lexflow.tutorial-completed';
 
 // ─── Steps ───────────────────────────────────────────────────────────────
 
@@ -211,12 +212,14 @@ function _readTutorialCompleted(): boolean {
 }
 
 /**
- * Wrap the app with this provider once (high in the tree, after the
- * router because we need `useNavigate` to land on the chat at the end).
+ * Tour provider. Mounted via `TutorialHost` as a sibling overlay of `<App/>`,
+ * inside the router (we need `useNavigate` to land on the chat at the end).
+ * It does NOT need to wrap the app: Reactour portals its surfaces to `<body>`
+ * and resolves step targets by `data-tour-id` document queries.
  *
  * The provider does NOT auto-start the tour by itself — that's
- * `TutorialAutoLauncher` (mounted alongside) so the Settings page can
- * trigger the tour without us double-binding the auto-launch.
+ * `TutorialAutoLauncher` (rendered as its child) so Settings / Help can
+ * trigger the tour via the store flag without double-binding the auto-launch.
  */
 export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const reducedMotion = _prefersReducedMotion();
@@ -338,16 +341,23 @@ function _readGate(key: string): boolean {
 }
 
 /**
- * Mount once below `TutorialProvider`. Auto-opens the tour on first
- * launch IF the welcome flow + the model wizard have already completed
- * (we don't want three modals stacking on a fresh install).
+ * Mounted inside the provider (via `TutorialHost`). Drives two open paths:
  *
- * Reads both completion flags from `localStorage` rather than threading
- * props through `WelcomeFlow` / `ModelWizardGate`, so this component
- * stays orthogonal to those gates' internal state.
+ *   1. First-launch auto-open — once, IF the welcome flow + model wizard have
+ *      already completed (we don't want three modals stacking on a fresh
+ *      install). Both completion flags are read from `localStorage` rather
+ *      than threaded through `WelcomeFlow` / `ModelWizardGate`, so this stays
+ *      orthogonal to those gates' internal state.
+ *   2. Imperative relaunch — watches the `tourRequested` store flag set by
+ *      `useTutorialRelaunch` (Settings / Help). The flag indirection lets those
+ *      callers trigger the tour without the `@reactour` context, keeping the
+ *      library out of the eager shell bundle (#712).
  */
 export function TutorialAutoLauncher() {
   const { setIsOpen } = useTour();
+  const tourRequested = useUi((s) => s.tourRequested);
+  const consumeTourRequest = useUi((s) => s.consumeTourRequest);
+
   useEffect(() => {
     if (_readTutorialCompleted()) return;
     if (!_readGate(WELCOMED_KEY) || !_readGate(WIZARD_DONE_KEY)) return;
@@ -356,7 +366,31 @@ export function TutorialAutoLauncher() {
     const timer = window.setTimeout(() => setIsOpen(true), 350);
     return () => window.clearTimeout(timer);
   }, [setIsOpen]);
+
+  useEffect(() => {
+    if (!tourRequested) return;
+    setIsOpen(true);
+    consumeTourRequest();
+  }, [tourRequested, setIsOpen, consumeTourRequest]);
+
   return null;
+}
+
+/**
+ * Self-contained tour surface for lazy mounting (#712).
+ *
+ * Renders the provider with only the auto-launcher inside. The tour's popover,
+ * spotlight and mask are portaled to `<body>` and its steps resolve
+ * `data-tour-id` targets via document queries, so the provider does NOT need to
+ * wrap the app shell — it can mount as a sibling overlay of `<App/>`. Mount it
+ * once, INSIDE the router (the provider's `beforeClose` navigates to `/chat`).
+ */
+export function TutorialHost() {
+  return (
+    <TutorialProvider>
+      <TutorialAutoLauncher />
+    </TutorialProvider>
+  );
 }
 
 // `useTutorialRelaunch` moved to `./use-tutorial-relaunch` so this file
