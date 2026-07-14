@@ -37,7 +37,7 @@ export const LAWS: Law[] = [
     tags: ['civil', 'familia', 'sucesiones', 'obligaciones', 'contratos', 'propiedad'],
   },
   {
-    id: 'LO-3-2018', boe: 'BOE-A-2018-16673',
+    id: 'BOE-A-2018-16673', boe: 'BOE-A-2018-16673',
     title: 'Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales',
     short: 'LOPDGDD',
     status: 'vigente', rango: 'Ley Orgánica',
@@ -131,7 +131,7 @@ export const LAW_DETAIL: Record<string, LawDetail> = {
     ],
     articles: [],
   },
-  'LO-3-2018': {
+  'BOE-A-2018-16673': {
     ...LAWS[2],
     hierarchy: [
       { id: 't1', kind: 'titulo', label: 'Título I', heading: 'Disposiciones generales' },
@@ -213,12 +213,12 @@ export const ARTICLES: Article[] = [
       { marker: '3', text: 'Se garantiza el secreto de las comunicaciones y, en especial, de las postales, telegráficas y telefónicas, salvo resolución judicial.', citations: [] },
       { marker: '4', text: 'La ley limitará el uso de la informática para garantizar el honor y la intimidad personal y familiar de los ciudadanos y el pleno ejercicio de sus derechos.',
         citations: [
-          { label: 'LO 3/2018', kind: 'law', target: { lawId: 'LO-3-2018' } },
+          { label: 'LO 3/2018', kind: 'law', target: { lawId: 'BOE-A-2018-16673' } },
         ],
       },
     ],
     refs: [
-      { label: 'LO 3/2018', kind: 'law', target: { lawId: 'LO-3-2018' } },
+      { label: 'LO 3/2018', kind: 'law', target: { lawId: 'BOE-A-2018-16673' } },
       { label: 'LO 1/1982', kind: 'law' },
       { label: 'LECrim art. 588', kind: 'article' },
     ],
@@ -228,7 +228,7 @@ export const ARTICLES: Article[] = [
 // ─── Versions / Diff ─────────────────────────────────────────────────────
 
 export const VERSIONS: Record<string, LawVersion[]> = {
-  'LO-3-2018': [
+  'BOE-A-2018-16673': [
     { tag: 'v1.0', date: '2018-12-06', label: 'Publicación original', kind: 'publish' },
     { tag: 'v1.1', date: '2020-09-15', label: 'RDL 28/2020 · arts. 22, 73', kind: 'amend', changedArticles: ['22', '73'] },
     { tag: 'v1.2', date: '2022-07-13', label: 'Ley 15/2022 · disp. final 4ª', kind: 'amend', changedArticles: ['28'] },
@@ -263,7 +263,7 @@ const ART_11_DIFF: ArticleDiff = {
 };
 
 export const DIFF_BY_LAW: Record<string, ArticleDiff[]> = {
-  'LO-3-2018': [ART_11_DIFF, /* others stubbed */],
+  'BOE-A-2018-16673': [ART_11_DIFF, /* others stubbed */],
 };
 
 // ─── Graph (Constitución → relations) ───────────────────────────────────
@@ -317,7 +317,7 @@ export const CHAT_MESSAGES: Record<string, ChatMessage[]> = {
       collapsed: true },
     { id: 't2', role: 'tool', createdAt: new Date().toISOString(),
       name: 'get_article',
-      args: { law: 'LO-3-2018', num: 28 },
+      args: { law: 'BOE-A-2018-16673', num: 28 },
       result: 'Devuelto art. 28 — Medidas de responsabilidad activa',
       collapsed: true },
     { id: 'a1', role: 'assistant', createdAt: new Date().toISOString(),
@@ -332,7 +332,7 @@ export const CHAT_MESSAGES: Record<string, ChatMessage[]> = {
       sources: [
         { law: 'Ley Orgánica 3/2018 (LOPDGDD)', article: 'Art. 28', date: '2018-12-06',
           snippet: 'El responsable del tratamiento adoptará todas las medidas necesarias para cumplir el principio de responsabilidad activa…',
-          target: { lawId: 'LO-3-2018', articleNum: '28' } },
+          target: { lawId: 'BOE-A-2018-16673', articleNum: '28' } },
         { law: 'RGPD (UE) 2016/679', article: 'Art. 35', date: '2016-04-27',
           snippet: 'Cuando sea probable que un tipo de tratamiento entrañe un alto riesgo para los derechos y libertades…' },
         { law: 'Constitución Española', article: 'Art. 18.4', date: '1978-12-29',
