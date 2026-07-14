@@ -32,4 +32,23 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+# Aggressive scraper that does not reliably honour opt-out — disallowed.
+User-agent: Bytespider
+Disallow: /
+
 Sitemap: https://vforvitorio.github.io/LexFlow/sitemap.xml

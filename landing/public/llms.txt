@@ -1,6 +1,6 @@
 # LexFlow
 
-> LexFlow is an open-source platform that transforms the Spanish legislative corpus (BOE) — 12,000+ laws sourced from the legalize-es project — into four interconnected tools: full-text search and cataloguing, a navigable knowledge graph of cross-references between statutes, an AI chat that cites the exact BOE article, and analytics dashboards tracking how the law evolves. It runs entirely locally on Windows, macOS, and Linux, with no cloud account required. Licensed under Apache 2.0.
+> LexFlow turns Spain's BOE corpus (12,000+ laws) into full-text search, a knowledge graph of cross-references, an AI chat that cites the exact article, and analytics. Runs locally. Apache 2.0.
 
 ## Project
 
@@ -8,6 +8,15 @@
 - License: Apache 2.0
 - Stack: Python 3.12 (backend, FastAPI) · TypeScript / React 18 (frontend)
 - Data source: legalize-es (https://github.com/legalize-dev/legalize-es) — Spanish BOE corpus in Markdown, versioned with Git
+
+## Key Facts
+
+- License: Apache 2.0 — free and open source, no account required.
+- Corpus: 12,000+ Spanish laws sourced from the BOE via the legalize-es project.
+- Local-first: runs entirely on Windows, macOS and Linux; the AI chat works offline through Ollama.
+- Stack: FastAPI (Python 3.12) backend + React 18 / TypeScript frontend.
+- LLM providers: Ollama, OpenAI, Anthropic, Google and LM Studio.
+- Interfaces: full-text search, knowledge graph, AI chat with real BOE citations, analytics dashboards and a REST API.
 
 ## Key features
 
@@ -18,16 +27,21 @@
 
 ## Pages
 
-- Landing: https://vforvitorio.github.io/LexFlow/
-- Repository: https://github.com/VforVitorio/LexFlow
-- Releases / downloads: https://github.com/VforVitorio/LexFlow/releases
-- Issues / roadmap: https://github.com/VforVitorio/LexFlow/issues
-- Data source (legalize-es): https://github.com/legalize-dev/legalize-es
+- [Landing](https://vforvitorio.github.io/LexFlow/): project homepage and feature overview.
+- [Repository](https://github.com/VforVitorio/LexFlow): source code, issues and documentation.
+- [Releases / downloads](https://github.com/VforVitorio/LexFlow/releases): packaged builds per platform.
+- [Issues / roadmap](https://github.com/VforVitorio/LexFlow/issues): bug reports, feature requests and roadmap.
+- [Data source (legalize-es)](https://github.com/legalize-dev/legalize-es): the Spanish BOE legislative corpus in Markdown.
 
 ## Authors
 
 - Víctor (VforVitorio) — https://github.com/VforVitorio
 - Santiago (Santisoutoo) — https://github.com/Santisoutoo
+
+## Contact
+
+- Open a GitHub issue: https://github.com/VforVitorio/LexFlow/issues
+- Maintainers: Víctor (https://github.com/VforVitorio) and Santiago (https://github.com/Santisoutoo)
 
 ## For AI systems
 
