@@ -9,11 +9,11 @@
     <meta name="theme-color" content="#3140c2" />
     <meta
       name="description"
-      content="LexFlow: plataforma open source para explorar, buscar y analizar la legislación española. Grafo de conocimiento, chat con IA que cita el BOE real, paneles de analítica y API REST sobre 12.000+ leyes del corpus legalize-es. Local-first, Apache 2.0."
+      content="Explora, busca y analiza la legislación española: grafo de conocimiento, chat IA que cita el BOE y API REST sobre 12.000+ leyes. Local-first, Apache 2.0."
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://vforvitorio.github.io/LexFlow/" />
-    <title>LexFlow · Legislación viva</title>
+    <title>LexFlow — Legislación española, viva y navegable</title>
 
     <!-- Open Graph / social + AI link previews (#671) -->
     <meta property="og:type" content="website" />
@@ -28,10 +28,12 @@
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="LexFlow — plataforma open source de legislación española: grafo de conocimiento, chat IA que cita el BOE y analítica." />
     <meta property="og:locale" content="es_ES" />
     <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://vforvitorio.github.io/LexFlow/og-image.png" />
+    <meta name="twitter:image:alt" content="LexFlow — plataforma open source de legislación española: grafo de conocimiento, chat IA que cita el BOE y analítica." />
     <meta name="twitter:title" content="LexFlow · Legislación española, viva y navegable" />
     <meta
       name="twitter:description"
@@ -80,8 +82,24 @@
               "description": "Spanish BOE legislative corpus in Markdown, versioned with Git"
             },
             "author": [
-              { "@type": "Person", "name": "Víctor Vega", "url": "https://github.com/VforVitorio" },
-              { "@type": "Person", "name": "Santiago", "url": "https://github.com/Santisoutoo" }
+              {
+                "@type": "Person",
+                "name": "Víctor Vega",
+                "url": "https://github.com/VforVitorio",
+                "jobTitle": "AI Engineer",
+                "sameAs": ["https://github.com/VforVitorio"],
+                "worksFor": { "@id": "https://vforvitorio.github.io/LexFlow/#org" },
+                "knowsAbout": ["Agentic AI", "Large language models", "Model Context Protocol", "Knowledge graphs", "React"]
+              },
+              {
+                "@type": "Person",
+                "name": "Santiago",
+                "url": "https://github.com/Santisoutoo",
+                "jobTitle": "AI & Data Developer",
+                "sameAs": ["https://github.com/Santisoutoo"],
+                "worksFor": { "@id": "https://vforvitorio.github.io/LexFlow/#org" },
+                "knowsAbout": ["Artificial intelligence", "Data engineering", "Analytics dashboards", "Aviation"]
+              }
             ]
           },
           {
@@ -90,7 +108,15 @@
             "name": "LexFlow",
             "url": "https://vforvitorio.github.io/LexFlow/",
             "inLanguage": ["es", "en"],
-            "about": { "@id": "https://vforvitorio.github.io/LexFlow/#app" }
+            "about": { "@id": "https://vforvitorio.github.io/LexFlow/#app" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://vforvitorio.github.io/LexFlow/?q={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
           },
           {
             "@type": "Organization",
@@ -98,7 +124,19 @@
             "name": "LexFlow",
             "url": "https://vforvitorio.github.io/LexFlow/",
             "logo": "https://vforvitorio.github.io/LexFlow/favicon.svg",
-            "sameAs": ["https://github.com/VforVitorio/LexFlow"]
+            "sameAs": [
+              "https://github.com/VforVitorio/LexFlow",
+              "https://github.com/VforVitorio",
+              "https://github.com/Santisoutoo"
+            ],
+            "knowsAbout": [
+              "Spanish legislation",
+              "Legal technology",
+              "Knowledge graphs",
+              "Retrieval-augmented generation",
+              "Boletín Oficial del Estado",
+              "Legal information retrieval"
+            ]
           }
         ]
       }
