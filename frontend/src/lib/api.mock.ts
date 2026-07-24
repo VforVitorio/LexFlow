@@ -137,7 +137,7 @@ export const mockApi: ApiClient = {
       if (detail) {
         // A seeded LAW_DETAIL may carry `articles: []` while its article
         // fixtures live in ARTICLES keyed by lawId — fall back so the "Texto"
-        // tab isn't empty for CE-1978 / LO-3-2018 (#826 D6, mock-only).
+        // tab isn't empty for CE-1978 / BOE-A-2018-16673 (#826 D6, mock-only).
         return detail.articles.length
           ? detail
           : { ...detail, articles: ARTICLES.filter((a) => a.lawId === id) };
@@ -459,7 +459,7 @@ export const mockApi: ApiClient = {
           article: 'Art. 28',
           date: '2018-12-06',
           snippet: 'El responsable del tratamiento adoptará todas las medidas necesarias para cumplir el principio de responsabilidad activa…',
-          target: { lawId: 'LO-3-2018', articleNum: '28' },
+          target: { lawId: 'BOE-A-2018-16673', articleNum: '28' },
         },
       };
       await delay(100);

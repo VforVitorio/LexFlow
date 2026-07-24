@@ -13,16 +13,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { TourProvider } from '@reactour/tour';
 import { describe, expect, it } from 'vitest';
 import { HelpDrawer } from './HelpDrawer';
 
+// No TourProvider needed: the drawer's "Repetir tutorial" action now goes
+// through the Zustand store (`useTutorialRelaunch`), not @reactour's useTour,
+// so the tour provider is no longer an ancestor of the drawer (#712).
 function renderAt(route: string) {
   return render(
     <MemoryRouter initialEntries={[route]}>
-      <TourProvider steps={[]}>
-        <HelpDrawer />
-      </TourProvider>
+      <HelpDrawer />
     </MemoryRouter>,
   );
 }
