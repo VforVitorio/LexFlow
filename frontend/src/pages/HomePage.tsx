@@ -35,7 +35,7 @@ interface ExampleChip {
 const EXAMPLE_CHIPS: ExampleChip[] = [
   { label: 'Cambios al Código Penal en 2024',    kind: 'chat',     target: '/chat' },
   { label: '¿Qué exige el art. 28 de la LOPDGDD?', kind: 'chat',  target: '/chat' },
-  { label: 'Diff entre v1.0 y v1.3 de la LOPDGDD', kind: 'diff',  target: '/laws/LO-3-2018/diff' },
+  { label: 'Diff entre v1.0 y v1.3 de la LOPDGDD', kind: 'diff',  target: '/laws/BOE-A-2018-16673/diff' },
   { label: 'Leyes autonómicas sobre vivienda',   kind: 'explorer', target: '/explorer?q=leyes+auton%C3%B3micas+vivienda' },
 ];
 
@@ -163,7 +163,7 @@ export function HomePage() {
             <div className="grid grid-cols-1 gap-2.5">
               <QuickTile icon={Network} tone="indigo" title={t('home.tiles.graphTitle')} sub={t('home.tiles.graphSub')} onClick={() => navigate('/graph')} />
               <QuickTile icon={MessagesSquare} tone="amber" title={t('home.tiles.chatTitle')} sub={t('home.tiles.chatSub')} onClick={() => navigate('/chat')} />
-              <QuickTile icon={GitCompareArrows} tone="violet" title={t('home.tiles.diffTitle')} sub={t('home.tiles.diffSub')} onClick={() => navigate('/laws/LO-3-2018/diff')} />
+              <QuickTile icon={GitCompareArrows} tone="violet" title={t('home.tiles.diffTitle')} sub={t('home.tiles.diffSub')} onClick={() => navigate('/laws/BOE-A-2018-16673/diff')} />
               <QuickTile icon={BarChart3} tone="cyan" title={t('home.tiles.dashboardsTitle')} sub={t('home.tiles.dashboardsSub')} onClick={() => navigate('/dashboards')} />
             </div>
           </section>
