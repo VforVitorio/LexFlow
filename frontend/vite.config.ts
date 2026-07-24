@@ -13,6 +13,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Pre-bundle the core runtime deps so the dev server doesn't pause to
+  // re-optimise them on first load (and they resolve to a single copy). #712.
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query', 'zustand'],
+  },
   server: {
     port: 5173,
     // FastAPI dev proxy. Set VITE_API_URL in .env to bypass and call directly.
