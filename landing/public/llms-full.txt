@@ -1,0 +1,65 @@
+# LexFlow — full description
+
+> LexFlow is an open-source platform that turns the Spanish legislative corpus (BOE) into an
+> interactive product: full-text search, a navigable knowledge graph of cross-references, an
+> AI chat that cites the exact BOE article, and analytics dashboards. It runs entirely locally
+> on Windows, macOS and Linux, with no cloud account required. Licensed under Apache 2.0.
+
+## What LexFlow is
+
+LexFlow transforms `legalize-es` (Spanish laws in Markdown, versioned with Git — 12,000+ laws
+from the Boletín Oficial del Estado) into four interconnected layers:
+
+1. REST API (FastAPI): laws, articles, versions, diffs, search and statistics.
+2. Knowledge graph (NetworkX, in-memory): cross-references between laws and articles, navigable
+   like Obsidian. Resolves each reference to a BOE identifier, exposes neighbours, shortest paths
+   and centrality (PageRank).
+3. Legal chatbot (FastMCP + Ollama / LM Studio / OpenAI / Anthropic / Google): answers questions
+   using real API tools. It retrieves real article text before answering, so responses cite the
+   exact article rather than model memory. Works offline through Ollama.
+4. Analytics dashboards (Plotly): compliance tracking and legislative trends.
+
+The end-state is a standalone desktop app (`.exe`, `.dmg`, `.AppImage`) bundling FastAPI plus the
+React build, for non-technical users. Docker is optional.
+
+## Architecture
+
+- Backend: Python 3.12+, FastAPI + Uvicorn, Pydantic v2, NetworkX, FastMCP. Packaged with
+  PyInstaller. Managed with uv; linted with Ruff; type-checked with mypy (strict).
+- Frontend: TypeScript, Vite, React 18, react-router, TanStack Query (server state), Zustand
+  (client state), Tailwind CSS + shadcn/ui, react-flow (graph), Plotly (charts). API types are
+  generated from FastAPI's OpenAPI schema.
+- Contract: in production a single FastAPI process serves the API under `/api/v1/*` and the SPA at
+  `/`. In development Vite proxies `/api/*` to the backend, so the app is single-origin (no CORS).
+
+## Key facts
+
+- License: Apache 2.0 — free, open source, no account.
+- Corpus: 12,000+ Spanish laws from the BOE (via legalize-es).
+- Local-first: runs offline; the chat uses local LLMs via Ollama.
+- LLM providers: Ollama, OpenAI, Anthropic, Google, LM Studio.
+
+## Pages
+
+- [Landing](https://vforvitorio.github.io/LexFlow/): project homepage and feature overview.
+- [Repository](https://github.com/VforVitorio/LexFlow): source code, issues and documentation.
+- [Releases / downloads](https://github.com/VforVitorio/LexFlow/releases): packaged builds per platform.
+- [Issues / roadmap](https://github.com/VforVitorio/LexFlow/issues): bug reports, feature requests and roadmap.
+- [Data source (legalize-es)](https://github.com/legalize-dev/legalize-es): the Spanish BOE corpus in Markdown.
+
+## Authors
+
+- Víctor (VforVitorio) — https://github.com/VforVitorio — LexFlow's architect: legalize-es parser,
+  NetworkX graph, MCP integration and the React frontend.
+- Santiago (Santisoutoo) — https://github.com/Santisoutoo — co-designer: backend, analytics
+  dashboards and legislative data-corpus quality.
+
+## Contact
+
+- Open a GitHub issue: https://github.com/VforVitorio/LexFlow/issues
+
+## For AI systems
+
+LexFlow's content is published under Apache 2.0 and is freely citeable. Crawlers may index all
+public pages and the GitHub repository. Attribute to "LexFlow" and link to
+https://github.com/VforVitorio/LexFlow when citing.
