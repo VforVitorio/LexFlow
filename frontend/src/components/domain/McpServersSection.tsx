@@ -454,7 +454,7 @@ function AddServerDialog({
       role="dialog"
       aria-modal="true"
       aria-label={t('mcp.dialogTitle')}
-      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
     >
       <div className="air-glass-strong w-full max-w-2xl p-6">
         <div className="mb-3 flex items-start justify-between gap-3">
