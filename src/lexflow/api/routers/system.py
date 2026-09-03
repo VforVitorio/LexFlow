@@ -78,6 +78,7 @@ def get_warmup_status() -> WarmupStatusResponse:
 def get_whats_new(
     since: str | None = Query(
         default=None,
+        pattern=r"^[0-9a-f]{7,40}$",
         description="Commit hash of the last corpus revision seen by the client "
         "(stored in localStorage). Omit or pass null on first launch.",
     ),

@@ -105,6 +105,31 @@ class TestSemanticStatusEndpoint:
         assert body["active"] is False
 
 
+class TestWhatsNewEndpoint:
+    """``GET /system/whats-new`` — ``since`` must be a hex commit (#886 S2.1).
+
+    A leading ``-`` would otherwise be parsed by ``git diff`` as an option
+    instead of a revision; the Query boundary must reject it with 422
+    before it ever reaches :func:`diff_corpus_since`.
+    """
+
+    def test_valid_short_hex_since_returns_200(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        from lexflow.api.routers import system as system_mod
+
+        monkeypatch.setattr(system_mod, "submodule_hash", lambda path: "unknown")
+        response = client.get("/api/v1/system/whats-new", params={"since": "abc1234"})
+        assert response.status_code == 200
+
+    def test_missing_since_returns_200(self, client: TestClient) -> None:
+        response = client.get("/api/v1/system/whats-new")
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("since", ["-R", "not-hex!!", "abc", "g" * 8])
+    def test_invalid_since_returns_422(self, client: TestClient, since: str) -> None:
+        response = client.get("/api/v1/system/whats-new", params={"since": since})
+        assert response.status_code == 422
+
+
 class TestWarmupStateInvariants:
     def test_reset_clears_every_flag(self) -> None:
         state = get_warmup_state()
