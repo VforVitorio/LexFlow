@@ -17,6 +17,20 @@ export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 export const API_BASE = import.meta.env.VITE_API_URL || '';
 export const API_PREFIX = '/api/v1';
 
+/**
+ * CSRF boundary contract (issue #885, S1.2 — backend counterpart in
+ * `lexflow.api.csrf_boundary`). A handful of spawn/state-triggering
+ * routes (`/sync`, `/system/semantic-install`, `GET /mcp/tools`,
+ * `POST /mcp/bundles`) never trigger a CORS preflight on their own
+ * (bodyless POST / plain GET / multipart), so we set this custom
+ * header on every request — that alone forces a preflight, which a
+ * cross-origin page can never satisfy since this app runs without
+ * `CORSMiddleware`. Centralised here (and mirrored in the raw-`fetch`
+ * SSE callers that bypass `http()`) so the two sides can't drift.
+ */
+export const CSRF_HEADER_NAME = 'X-Lexflow-Client';
+export const CSRF_HEADER_VALUE = 'spa';
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -49,7 +63,10 @@ export async function http<T>(path: string, init: RequestInit = {}): Promise<T> 
   const full = path.startsWith('http') ? path : `${API_BASE}${API_PREFIX}${path}`;
   const body = init.body;
   const isStructured = body instanceof FormData || body instanceof URLSearchParams || body instanceof Blob;
-  const baseHeaders: Record<string, string> = { Accept: 'application/json' };
+  const baseHeaders: Record<string, string> = {
+    Accept: 'application/json',
+    [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE,
+  };
   if (!isStructured) baseHeaders['Content-Type'] = 'application/json';
   const res = await fetch(full, {
     ...init,

@@ -63,6 +63,33 @@ host than the API. If that day comes, add the middleware with an
 credentials) and document the allowed origins here. Until then, the seam
 stays closed.
 
+## CSRF boundary
+
+No CORS + no auth layer means the browser's *simple request* rules are
+the only thing standing between a third-party page and a handful of
+routes that spawn subprocesses or mutate expensive state: a bodyless
+`POST`, a plain `GET`, or a `multipart/form-data` upload never
+triggers a CORS preflight. Issue #885 (S1.2) closes this with
+[`lexflow.api.csrf_boundary.CSRFBoundaryMiddleware`](../../src/lexflow/api/csrf_boundary.py),
+required on:
+
+- `POST /api/v1/sync` and `POST /api/v1/sync/run`
+- `POST /api/v1/system/semantic-install`
+- `GET /api/v1/mcp/tools`
+- `POST /api/v1/mcp/bundles`
+
+Every request to those routes must carry the header
+`X-Lexflow-Client: spa` (configurable via `LEXFLOW_CSRF_HEADER_NAME` /
+`LEXFLOW_CSRF_HEADER_VALUE`) — setting a custom header forces a CORS
+preflight, and since this app never installs `CORSMiddleware`, a
+cross-origin page can never satisfy one. The SPA sets it on every
+request in [`frontend/src/lib/api/http.ts`](../../frontend/src/lib/api/http.ts)
+(and the raw-`fetch` SSE callers that bypass `http()`). When an
+`Origin` header is present, it's additionally checked against
+`LEXFLOW_CSRF_ALLOWED_ORIGINS` (defense-in-depth; not the primary
+control). Rejections are `403` with `{"detail": {"code": "...",
+"message": "..."}}`.
+
 ## Versioning
 
 - All endpoints live under `/api/v1/`.

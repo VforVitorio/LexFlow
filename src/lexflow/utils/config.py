@@ -10,6 +10,17 @@ from pathlib import Path
 PROJECT_ROOT: Path = Path(__file__).resolve().parents[3]
 DEFAULT_DATA_PATH: Path = PROJECT_ROOT / "data" / "legalize-es"
 
+# Issue #885 (S1.2) — default Origin allow-list for the CSRF boundary.
+# Covers the dev Vite server and the single-process prod bind (both
+# localhost and 127.0.0.1, since browsers treat them as distinct
+# origins).
+_DEFAULT_CSRF_ALLOWED_ORIGINS = (
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+)
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -34,6 +45,15 @@ class Settings:
             ``[semantic]`` extra).
         LEXFLOW_RERANK_MODEL — cross-encoder model name used when the
             re-ranker is ``cross-encoder``.
+        LEXFLOW_CSRF_HEADER_NAME — name of the custom header the SPA
+            must set on state-changing / spawn-triggering routes
+            (issue #885, S1.2). Default ``X-Lexflow-Client``.
+        LEXFLOW_CSRF_HEADER_VALUE — required value of that header.
+            Default ``spa``.
+        LEXFLOW_CSRF_ALLOWED_ORIGINS — comma-separated allow-list
+            checked against the inbound ``Origin`` header when
+            present. Default covers the local dev Vite server and the
+            prod single-process bind.
     """
 
     data_path: Path
@@ -46,6 +66,9 @@ class Settings:
     embedder_model: str
     rerank_backend: str
     rerank_model: str
+    csrf_header_name: str
+    csrf_header_value: str
+    csrf_allowed_origins: tuple[str, ...]
 
 
 def _build_settings() -> Settings:
@@ -69,7 +92,17 @@ def _build_settings() -> Settings:
         rerank_backend=os.environ.get("LEXFLOW_RERANK", "none"),
         # Keep in sync with ``cross_encoder.DEFAULT_RERANK_MODEL``.
         rerank_model=os.environ.get("LEXFLOW_RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+        csrf_header_name=os.environ.get("LEXFLOW_CSRF_HEADER_NAME", "X-Lexflow-Client"),
+        csrf_header_value=os.environ.get("LEXFLOW_CSRF_HEADER_VALUE", "spa"),
+        csrf_allowed_origins=_parse_origins(os.environ.get("LEXFLOW_CSRF_ALLOWED_ORIGINS")),
     )
+
+
+def _parse_origins(raw: str | None) -> tuple[str, ...]:
+    """Parse a comma-separated origin list, falling back to the default."""
+    if not raw:
+        return _DEFAULT_CSRF_ALLOWED_ORIGINS
+    return tuple(origin.strip() for origin in raw.split(",") if origin.strip())
 
 
 @lru_cache(maxsize=1)

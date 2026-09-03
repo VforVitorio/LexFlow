@@ -86,12 +86,14 @@ class TestCreateServer:
         assert response.status_code == 201
         body = response.json()
         assert body["kind"] == "user"
-        assert body["enabled"] is True
+        # Issue #885 (S1.1) — no auto-connect: a freshly added server is
+        # persisted disabled until the user explicitly enables it.
+        assert body["enabled"] is False
 
         on_disk = json.loads(mcp_config_path.read_text(encoding="utf-8"))
         assert "test-foo" in on_disk["mcpServers"]
         assert on_disk["mcpServers"]["test-foo"]["command"] == "uvx"
-        assert on_disk["lexflow_enabled"]["test-foo"] is True
+        assert on_disk["lexflow_enabled"]["test-foo"] is False
 
     def test_refuses_builtin_name(self, client: TestClient) -> None:
         response = client.post(

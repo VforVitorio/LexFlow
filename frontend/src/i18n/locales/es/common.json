@@ -109,7 +109,11 @@
     "bundleInstalling": "Instalando…",
     "bundleInstalled": "Bundle instalado",
     "bundleFailed": "No se pudo instalar el bundle",
-    "bundleWrongExt": "El archivo debe terminar en .mcpb"
+    "bundleWrongExt": "El archivo debe terminar en .mcpb",
+    "notConnectedHint": "Añadido pero no conectado — activa para dar tu consentimiento y conectar.",
+    "consentTitle": "¿Conectar este servidor MCP?",
+    "consentMessage": "Al activar \"{{name}}\" se ejecutará este comando como subproceso: {{command}}. Hazlo solo si confías en su origen.",
+    "consentConfirm": "Activar y conectar"
   },
   "wizard": {
     "dialogAria": "Configurar modelo de IA",
