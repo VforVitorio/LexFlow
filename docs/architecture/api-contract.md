@@ -17,20 +17,20 @@ no CORS configuration is needed in dev. The router prefixes are applied in
 `/api/v1` as of release 0.58.x:
 
 ```python
-app.include_router(search.router,       prefix="/api/v1")  # MUST come before laws — see laws router note
-app.include_router(laws.router,         prefix="/api/v1")
-app.include_router(articles.router,     prefix="/api/v1")
-app.include_router(versions.router,     prefix="/api/v1")
-app.include_router(graph_router,        prefix="/api/v1")
-app.include_router(models.router,       prefix="/api/v1")
+app.include_router(search.router, prefix="/api/v1")  # MUST come before laws — see laws router note
+app.include_router(laws.router, prefix="/api/v1")
+app.include_router(articles.router, prefix="/api/v1")
+app.include_router(versions.router, prefix="/api/v1")
+app.include_router(graph_router, prefix="/api/v1")
+app.include_router(models.router, prefix="/api/v1")
 app.include_router(chat_threads.router, prefix="/api/v1")
-app.include_router(dashboards.router,   prefix="/api/v1")
-app.include_router(sync.router,         prefix="/api/v1")
-app.include_router(system.router,       prefix="/api/v1")
-app.include_router(tags.router,         prefix="/api/v1")
-app.include_router(mcp_servers.router,  prefix="/api/v1")
-app.include_router(secrets.router,      prefix="/api/v1")
-app.include_router(telemetry.router,    prefix="/api/v1")
+app.include_router(dashboards.router, prefix="/api/v1")
+app.include_router(sync.router, prefix="/api/v1")
+app.include_router(system.router, prefix="/api/v1")
+app.include_router(tags.router, prefix="/api/v1")
+app.include_router(mcp_servers.router, prefix="/api/v1")
+app.include_router(secrets.router, prefix="/api/v1")
+app.include_router(telemetry.router, prefix="/api/v1")
 ```
 
 See [api-endpoints.md](../backend/api-endpoints.md) for the per-route inventory.

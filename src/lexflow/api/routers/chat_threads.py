@@ -183,7 +183,7 @@ def _thread_read(
     session: Session,
     thread: ChatThread,
     *,
-    preview: str | None | _PreviewSentinel = _PREVIEW_LOOKUP,
+    preview: str | _PreviewSentinel | None = _PREVIEW_LOOKUP,
 ) -> ChatThreadRead:
     """Map a storage row to the API listing shape, including preview.
 

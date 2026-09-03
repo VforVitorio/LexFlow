@@ -84,14 +84,16 @@ Patrón:
 from fastmcp import Client
 from fastmcp.client.config import MCPConfig
 
-config = MCPConfig.from_dict({
-    "mcpServers": {
-        "fetch": {"command": "python", "args": ["-m", "mcp_server_fetch"]},
-        "filesystem": {"command": "npx", "args": ["@modelcontextprotocol/server-filesystem", "/path/to/scope"]},
-        "pandoc": {"command": "uvx", "args": ["mcp-pandoc"]},
-        "boe": {"command": "python", "args": ["-m", "boe_mcp"]},
+config = MCPConfig.from_dict(
+    {
+        "mcpServers": {
+            "fetch": {"command": "python", "args": ["-m", "mcp_server_fetch"]},
+            "filesystem": {"command": "npx", "args": ["@modelcontextprotocol/server-filesystem", "/path/to/scope"]},
+            "pandoc": {"command": "uvx", "args": ["mcp-pandoc"]},
+            "boe": {"command": "python", "args": ["-m", "boe_mcp"]},
+        }
     }
-})
+)
 
 async with Client(config) as client:
     tools = await client.list_tools()
