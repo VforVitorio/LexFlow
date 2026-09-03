@@ -14,6 +14,7 @@ Covers:
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 
@@ -30,7 +31,7 @@ from lexflow.chat.base import (
     ToolCallChunk,
     ToolSpec,
 )
-from lexflow.chat.streaming import _extract_citations
+from lexflow.chat.streaming import _extract_citations, _run_tool_call
 
 # ─── Unit-ish: default stream_chat_typed bridges stream_chat ────────────
 
@@ -317,6 +318,41 @@ class TestToolUseLoopE2E:
 
         assert names[-1] == "done"
         assert provider.iterations == 2
+
+    def test_dispatch_runs_off_the_event_loop(
+        self,
+        client: TestClient,
+        patch_ollama_provider,
+        mock_registry,
+        monkeypatch: MonkeyPatch,
+    ) -> None:
+        """S4.1 (#888): tool dispatch must go through ``asyncio.to_thread``.
+
+        A slow/scanning tool call must not block the event loop — spy on
+        ``asyncio.to_thread`` in :mod:`lexflow.chat.streaming` and assert it
+        is the call site that actually invokes ``_run_tool_call``.
+        """
+        calls: list[tuple[object, ...]] = []
+        real_to_thread = asyncio.to_thread
+
+        async def _spy_to_thread(func, /, *args, **kwargs):
+            calls.append((func, *args))
+            return await real_to_thread(func, *args, **kwargs)
+
+        monkeypatch.setattr("lexflow.chat.streaming.asyncio.to_thread", _spy_to_thread)
+
+        provider = _ToolUsingProvider()
+        patch_ollama_provider(lambda: provider)
+        thread_id = _create_thread(client)
+        response = client.post(
+            f"/api/v1/chat/threads/{thread_id}/send",
+            json={"message": "¿cuántas leyes?", "model": "ollama:fake"},
+        )
+        assert response.status_code == 200
+        assert len(calls) == 1
+        func, call_arg = calls[0]
+        assert func is _run_tool_call
+        assert call_arg.name == "get_stats"
 
     def test_runaway_loop_stops_at_iteration_cap(
         self,

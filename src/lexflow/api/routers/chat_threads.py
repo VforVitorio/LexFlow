@@ -13,6 +13,18 @@ Five endpoints:
 
 Persistence is SQLite via :mod:`lexflow.chat.db`.
 
+Security invariant (issue #888, S4.2): there is no ``user``/owner column on
+``ChatThread`` — every endpoint here operates over the single global table,
+same as :mod:`lexflow.user_tags.models` and :mod:`lexflow.chat.secrets`.
+This is safe ONLY because LexFlow enforces loopback-only binding by default
+(:func:`lexflow.main` / ``main.py``'s ``_resolve_bind_host``) — there is no
+concept of a second, mutually distrusting caller reaching this process.
+Multi-user / networked mode is NOT supported: adding a user-scope column
+and filtering every query by it here is the follow-up (tracked in the S4.2
+checklist) before ``LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1`` could ever be
+considered safe for shared use. See
+``docs/architecture/api-contract.md#multi-tenancy`` for the full invariant.
+
 --- WHERE TO CHANGE IF X CHANGES ---
 * Schema    →  ``lexflow.chat.schemas`` (ChatThreadRead, ChatMessageRead).
 * Storage   →  ``lexflow.chat.storage_models`` (SQLModel tables).

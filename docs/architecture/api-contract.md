@@ -192,6 +192,41 @@ Per [`CLAUDE.md` §6](../../CLAUDE.md): when auth lands, cookie-based session,
 `SameSite=Lax`, `HttpOnly`, `Secure` in prod. JWTs in localStorage are
 forbidden.
 
+## Multi-tenancy
+
+**LexFlow is single-user by design and this is an enforced invariant, not
+an aspiration.** Chat threads (`chat_threads` / `chat_messages`), personal
+law tags (`user_tags`) and cloud-provider API keys
+([`lexflow.chat.secrets`](../../src/lexflow/chat/secrets.py)) all live in one
+global table/keyring slot with **no owner/user column** — `GET
+/api/v1/chat/threads` lists every thread in the database, with no filter,
+because there is only ever meant to be one caller.
+
+This is safe today because the process itself is the trust boundary:
+[`main.py`](../../main.py)'s `_resolve_bind_host()` (issue #885, S1.3) refuses
+to bind anywhere but loopback (`127.0.0.1`) unless an operator explicitly
+sets `LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1` — and even then it logs a loud
+warning that there is no auth layer. As long as that boundary holds, "every
+thread/tag/secret is global" is equivalent to "every thread/tag/secret
+belongs to the one person who can reach this port".
+
+Consequences for contributors (issue #888, S4.2):
+
+- **Do not** add a networked / multi-caller deployment mode without first
+  adding a real user-scope column to `ChatThread` and `UserTag`, and
+  per-user namespacing to the keyring service name in `chat/secrets.py`.
+  Setting `LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1` today means every request
+  that reaches the port sees every other caller's threads, tags and stored
+  API keys.
+- **Do not** treat thread ids (`uuid4().hex`, unguessable) as an access
+  control mechanism — the listing endpoints (`GET /chat/threads`, tag
+  vocab/list endpoints) bypass that entirely by returning everything.
+- If a genuine multi-user mode is ever built, it needs: a `user_scope_id`
+  (or real auth identity) column on `ChatThread` and `UserTag` with query
+  filters on every read/write, per-scope keyring namespacing in
+  `chat/secrets.py`, and an explicit SQLite migration path for existing
+  single-user databases (`create_all()` does not alter existing tables).
+
 ## Health
 
 `GET /health` returns `{ "status": "ok", "version": "<x.y.z>" }` — the

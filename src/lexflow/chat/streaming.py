@@ -334,7 +334,12 @@ async def stream_chat_reply(
                 if not pending_calls or finish_reason == "stop":
                     break
                 for call in pending_calls:
-                    result = _run_tool_call(call)
+                    # S4.1 (#888): tool dispatch is synchronous (SQLite scans,
+                    # sometimes a cold embedding-index build) — running it
+                    # inline on the event loop would freeze every other
+                    # request/stream for the duration. Off-load to a worker
+                    # thread, same pattern as ``api/warmup.py``.
+                    result = await asyncio.to_thread(_run_tool_call, call)
                     for citation in _extract_citations(result):
                         yield format_sse(SseEvent.SOURCE, citation)
                     _record_tool_outcome(history, call, result)
