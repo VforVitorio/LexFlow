@@ -300,12 +300,34 @@ def _build_section_list(
 # exotic numberings): keep the old whole-tail behaviour rather than dropping
 # the article entirely.
 _ARTICLE_NUMBER_PATTERN = r"\d+(?:[ \t]+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))*"
+# The leading ``#{1,6}`` heading marker is REQUIRED (#824): making it
+# optional let any body line matching "Artículo N" act as an article
+# boundary, e.g. a table cell or cross-reference mid-paragraph. On
+# BOE-A-2021-21097 (340 real headings) that inflated the parse to 1,573
+# "articles" — most of them phantom, carrying a sentence fragment as
+# their whole body instead of a real article.
 _ARTICLE_RE = re.compile(
-    r"^(?:#{1,6}[ \t]+)?Art[ií]culo[ \t]+"
+    r"^#{1,6}[ \t]+Art[ií]culo[ \t]+"
     r"(?:(" + _ARTICLE_NUMBER_PATTERN + r")(?:\.[ \t]+(.+?))?\.?[ \t]*$"
     r"|(.+?)\.?\s*$)",
     re.MULTILINE | re.IGNORECASE,
 )
+
+# Plural range headings collapse a run of (usually repealed) articles into
+# one heading, e.g. ``Artículos 325 a 332. (Derogados)`` (#824). Note the
+# extra ``s`` on ``Artículos`` — that alone already keeps this pattern from
+# ever colliding with ``_ARTICLE_RE`` (which requires whitespace right
+# after ``Articulo``, not a trailing ``s``).
+_ARTICLE_RANGE_RE = re.compile(
+    r"^#{1,6}[ \t]+Art[ií]culos[ \t]+(\d+)[ \t]+a[ \t]+(\d+)\.?[ \t]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+# Any heading line, used to bound a range heading's own text block —
+# stops at the next heading of ANY kind (unlike ``_extract_article_text``,
+# which deliberately keeps reading through nested "Articulo" headings
+# because those already have their own boundary from ``_ARTICLE_RE``).
+_ANY_HEADING_LINE_RE = re.compile(r"^#{1,6}[ \t]+\S", re.MULTILINE)
 
 
 def extract_articles(body: str) -> list[Article]:
@@ -317,10 +339,7 @@ def extract_articles(body: str) -> list[Article]:
     until the next article heading or section heading.
     """
     matches = list(_ARTICLE_RE.finditer(body))
-    if not matches:
-        return []
-
-    articles: list[Article] = []
+    entries: list[tuple[int, Article]] = []
     for idx, match in enumerate(matches):
         number = (match.group(1) or match.group(3)).strip()
         raw_title = match.group(2)
@@ -329,9 +348,45 @@ def extract_articles(body: str) -> list[Article]:
         text_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(body)
         raw_text = _extract_article_text(body[text_start:text_end])
         references = extract_references(raw_text, source_article=number)
-        articles.append(_build_article(number, title, raw_text, references))
+        entries.append((match.start(), _build_article(number, title, raw_text, references)))
 
-    return articles
+    existing_numbers = {article.number for _, article in entries}
+    entries.extend(_extract_range_placeholder_articles(body, existing_numbers))
+    entries.sort(key=lambda entry: entry[0])
+    return [article for _, article in entries]
+
+
+def _extract_range_placeholder_articles(body: str, existing_numbers: set[str]) -> list[tuple[int, Article]]:
+    """Materialise placeholder articles for plural range headings (#824).
+
+    Without this, a heading like ``Artículos 325 a 332. (Derogados)`` left
+    every number in the range unreachable via :func:`find_article` — a
+    404 indistinguishable from real data loss, when the law actually says
+    exactly why the article is gone. Only numbers with no individual
+    heading of their own get a placeholder; an explicit ``Artículo 330``
+    heading elsewhere in the same body always wins and is left untouched.
+
+    Returns ``(position, article)`` pairs — the range heading's own start
+    offset, in each entry — so :func:`extract_articles` can slot the
+    placeholders back into document order instead of dumping them all at
+    the end of the flat list.
+    """
+    seen = set(existing_numbers)
+    placeholders: list[tuple[int, Article]] = []
+    for match in _ARTICLE_RANGE_RE.finditer(body):
+        low, high = int(match.group(1)), int(match.group(2))
+        text_start = match.end()
+        next_heading = _ANY_HEADING_LINE_RE.search(body, text_start)
+        text_end = next_heading.start() if next_heading else len(body)
+        raw_text = body[text_start:text_end].strip()
+        for number in range(low, high + 1):
+            number_str = str(number)
+            if number_str in seen:
+                continue
+            seen.add(number_str)
+            references = extract_references(raw_text, source_article=number_str)
+            placeholders.append((match.start(), _build_article(number_str, None, raw_text, references)))
+    return placeholders
 
 
 # Audit #409 perf: ``_extract_article_text`` runs per article body and
@@ -373,6 +428,93 @@ def _build_article(number: str, title: str | None, text: str, references: list[R
         text=text,
         references=references,
     )
+
+
+# ---------------------------------------------------------------------------
+# Ordinal operative clauses (#824) — fallback for article-less norms
+# ---------------------------------------------------------------------------
+
+# 1,857 laws (15.2% of the corpus) have zero ``Artículo`` headings; ~38% of
+# those structure their operative text as numbered ordinals instead
+# (``Primero.``, ``Segundo.``, ..., ``Único.``) — e.g. Junta Electoral
+# Central instructions. Accent variants (``Décimo``/``Decimo``) and case
+# variants (``PRIMERO``) are both tolerated; ``_canonical_ordinal_label``
+# folds them to one consistent display form for lookup stability.
+_ORDINAL_LABEL_PATTERN = (
+    r"Primer[oa]|Segund[oa]|Tercer[oa]|Cuart[oa]|Quint[oa]|Sext[oa]|"
+    r"S[eé]ptim[oa]|Octav[oa]|Noven[oa]|D[eé]cim[oa]|Und[eé]cim[oa]|"
+    r"Duod[eé]cim[oa]|[UÚ]nic[oa]"
+)
+_ORDINAL_RE = re.compile(
+    r"^#{1,6}[ \t]+(" + _ORDINAL_LABEL_PATTERN + r")(?:\.[ \t]+(.+?))?\.?[ \t]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+_ORDINAL_CANONICAL: dict[str, str] = {
+    "primero": "Primero",
+    "primera": "Primera",
+    "segundo": "Segundo",
+    "segunda": "Segunda",
+    "tercero": "Tercero",
+    "tercera": "Tercera",
+    "cuarto": "Cuarto",
+    "cuarta": "Cuarta",
+    "quinto": "Quinto",
+    "quinta": "Quinta",
+    "sexto": "Sexto",
+    "sexta": "Sexta",
+    "septimo": "Séptimo",
+    "septima": "Séptima",
+    "octavo": "Octavo",
+    "octava": "Octava",
+    "noveno": "Noveno",
+    "novena": "Novena",
+    "decimo": "Décimo",
+    "decima": "Décima",
+    "undecimo": "Undécimo",
+    "undecima": "Undécima",
+    "duodecimo": "Duodécimo",
+    "duodecima": "Duodécima",
+    "unico": "Único",
+    "unica": "Única",
+}
+
+
+def _canonical_ordinal_label(raw: str) -> str:
+    """Fold an ordinal label's accent/case variants to one display form.
+
+    ``"PRIMERO"``, ``"Primero"`` and (a corpus typo) ``"primero"`` all
+    become ``"Primero"``; falls back to ``str.capitalize()`` for any
+    label not in the table rather than dropping it.
+    """
+    decomposed = unicodedata.normalize("NFKD", raw.strip())
+    ascii_only = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    return _ORDINAL_CANONICAL.get(ascii_only.lower(), raw.strip().capitalize())
+
+
+def extract_ordinal_articles(body: str) -> list[Article]:
+    """Extract ordinal operative clauses as a fallback article list.
+
+    Only meaningful when :func:`extract_articles` finds zero real
+    ``Artículo`` headings — callers (:func:`parse_law_content`) must gate
+    on that so article-bearing norms are never touched by this fallback.
+    """
+    matches = list(_ORDINAL_RE.finditer(body))
+    if not matches:
+        return []
+
+    articles: list[Article] = []
+    for idx, match in enumerate(matches):
+        label = _canonical_ordinal_label(match.group(1))
+        raw_title = match.group(2)
+        title = raw_title.strip() if raw_title else None
+        text_start = match.end()
+        text_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(body)
+        raw_text = _extract_article_text(body[text_start:text_end])
+        references = extract_references(raw_text, source_article=label)
+        articles.append(_build_article(label, title, raw_text, references))
+
+    return articles
 
 
 # ---------------------------------------------------------------------------
@@ -659,6 +801,10 @@ def parse_law_content(content: str, file_path: str) -> Law:
     metadata = frontmatter_to_metadata(raw_fm)
     sections = extract_heading_tree(body)
     articles = extract_articles(body)
+    if not articles:
+        # #824: ~38% of the 1,857 zero-article laws use numbered ordinals
+        # (``Primero.``, ``Único.``, ...) instead of ``Artículo`` headings.
+        articles = extract_ordinal_articles(body)
     disposiciones = extract_disposiciones(body)
     all_references = _collect_all_references(articles, disposiciones)
 

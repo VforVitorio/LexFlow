@@ -92,6 +92,21 @@ class TestGetArticle:
         assert result["error"] == "article_not_found"
         assert result["article_number"] == "9999"
 
+    def test_occurrence_selects_duplicate_article(self, sample_law_dir: Path, monkeypatch: MonkeyPatch) -> None:
+        """#824: ``occurrence`` reaches the 2nd match of a duplicate article id."""
+        frontmatter = 'title: "Norma con anexos"\nidentifier: "TEST-DUP"\ncountry: "es"\nrank: "otro"\n'
+        body = "# Norma con anexos\n\n###### Articulo 2.\n\nPrimer anexo.\n\n###### Articulo 2.\n\nSegundo anexo.\n"
+        law_file = sample_law_dir / "es" / "TEST-DUP.md"
+        law_file.write_text(f"---\n{frontmatter}---\n{body}", encoding="utf-8")
+        registry = LawRegistry(sample_law_dir)
+        registry.preload_all_metadata()
+        monkeypatch.setattr(mcp_server, "get_registry", lambda: registry)
+
+        first = _unwrap(mcp_server.get_article)(law_id="TEST-DUP", article_number="2")
+        second = _unwrap(mcp_server.get_article)(law_id="TEST-DUP", article_number="2", occurrence=2)
+        assert "Primer anexo" in first["text"]
+        assert "Segundo anexo" in second["text"]
+
 
 class TestGetStats:
     def test_returns_total_laws_count(self, patched_registry: LawRegistry) -> None:

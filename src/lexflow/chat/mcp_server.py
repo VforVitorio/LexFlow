@@ -246,12 +246,15 @@ def get_law(law_id: str) -> dict:  # type: ignore[type-arg]
 
 @mcp.tool()
 @_audited("get_article")
-def get_article(law_id: str, article_number: str) -> dict:  # type: ignore[type-arg]
+def get_article(law_id: str, article_number: str, occurrence: int = 1) -> dict:  # type: ignore[type-arg]
     """Retrieve a specific article from a law.
 
     Args:
         law_id: BOE identifier of the law.
         article_number: Article number string (e.g. '1', '2 bis').
+        occurrence: 1-based selector for laws with duplicate article
+            numbers, e.g. annex statutes embedded in the same norm (#824).
+            Defaults to the first match.
 
     Returns:
         Article data, or an error dict if the law or article is not found.
@@ -262,7 +265,7 @@ def get_article(law_id: str, article_number: str) -> dict:  # type: ignore[type-
     except LawNotFoundError:
         return {"error": "not_found", "law_id": law_id}
 
-    article = find_article(law, article_number)
+    article = find_article(law, article_number, occurrence=occurrence)
     if article is None:
         return {"error": "article_not_found", "law_id": law_id, "article_number": article_number}
     return article.model_dump()
@@ -350,6 +353,14 @@ TOOL_SPECS: list[dict[str, Any]] = [
             "properties": {
                 "law_id": {"type": "string"},
                 "article_number": {"type": "string"},
+                "occurrence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": (
+                        "1-based selector for laws with duplicate article numbers "
+                        "(e.g. annex statutes embedded in the same norm). Defaults to 1."
+                    ),
+                },
             },
             "required": ["law_id", "article_number"],
         },

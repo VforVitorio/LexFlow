@@ -22,6 +22,7 @@ from lexflow.api.app import app
 from lexflow.api.dependencies import get_law_registry
 from lexflow.core.enums import ReferenceKind
 from lexflow.core.registry import LawRegistry
+from lexflow.core.services import find_article
 
 CORPUS_PATH = Path(__file__).resolve().parent.parent / "data" / "legalize-es"
 
@@ -200,3 +201,75 @@ class TestLpacDisposicionesContract:
         derogatoria = next(d for d in law.disposiciones if d.kind == "derogatoria")
         ley_30_1992_ref = next(r for r in derogatoria.references if "Ley 30/1992" in r.target_text)
         assert ley_30_1992_ref.kind == ReferenceKind.REPEALS
+
+
+# #824 Sprint 3 — article completeness: phantoms, ranges, zero-article, duplicates.
+BEPS_ID = "BOE-A-2021-21097"
+CODIGO_CIVIL_ID = "BOE-A-1889-4763"
+INSTRUCCION_ID = "BOE-A-2026-7297"
+DEMARCACION_ID = "BOE-A-2016-439"
+
+
+class TestPhantomArticlesFixed:
+    """AC: BOE-A-2021-21097 (BEPS) parses exactly 340 articles, not 1,573.
+
+    The bug (hashless "Artículo N" body mentions counted as boundaries)
+    inflated this specific law from 340 real headings to 1,573 parsed
+    articles — the single clearest real-corpus proof of the phantom bug.
+    """
+
+    def test_parses_to_exactly_340_articles(self, real_registry: LawRegistry) -> None:
+        if not real_registry.has_law(BEPS_ID):
+            pytest.skip(f"{BEPS_ID} not present in this corpus snapshot")
+        law = real_registry.get_law(BEPS_ID)
+        assert law.article_count == 340
+
+
+class TestArticleRangePlaceholders:
+    """AC: find_article(CC, '330') returns the Ley 20/2011 derogation note."""
+
+    def test_find_article_330_has_derogation_note(self, real_registry: LawRegistry) -> None:
+        if not real_registry.has_law(CODIGO_CIVIL_ID):
+            pytest.skip(f"{CODIGO_CIVIL_ID} not present in this corpus snapshot")
+        law = real_registry.get_law(CODIGO_CIVIL_ID)
+        article = find_article(law, "330")
+        assert article is not None
+        assert "Derogado" in article.text
+        assert "Ley 20/2011" in article.text
+
+
+class TestOrdinalDispositivosFixed:
+    """AC: BOE-A-2026-7297 (article-less norm) yields article_count == 4."""
+
+    def test_article_count_is_four(self, real_registry: LawRegistry) -> None:
+        if not real_registry.has_law(INSTRUCCION_ID):
+            pytest.skip(f"{INSTRUCCION_ID} not present in this corpus snapshot")
+        law = real_registry.get_law(INSTRUCCION_ID)
+        assert law.article_count == 4
+        assert law.articles[0].number == "Primero"
+
+
+class TestDuplicateArticleDisambiguation:
+    """AC: both "Autoridades competentes" articles are retrievable distinctly."""
+
+    def test_both_autoridades_competentes_articles_reachable(self, real_registry: LawRegistry) -> None:
+        if not real_registry.has_law(DEMARCACION_ID):
+            pytest.skip(f"{DEMARCACION_ID} not present in this corpus snapshot")
+        law = real_registry.get_law(DEMARCACION_ID)
+        first = find_article(law, "2", occurrence=1)
+        second = find_article(law, "2", occurrence=2)
+        assert first is not None
+        assert second is not None
+        assert first.text != second.text
+
+    def test_endpoint_occurrence_param_disambiguates(self, real_client: TestClient) -> None:
+        first = real_client.get(f"/api/v1/laws/{DEMARCACION_ID}/articles/2")
+        second = real_client.get(
+            f"/api/v1/laws/{DEMARCACION_ID}/articles/2",
+            params={"occurrence": 2},
+        )
+        if first.status_code == 404:
+            pytest.skip(f"{DEMARCACION_ID} not present in this corpus snapshot")
+        assert first.status_code == 200
+        assert second.status_code == 200
+        assert first.json()["article"]["text"] != second.json()["article"]["text"]

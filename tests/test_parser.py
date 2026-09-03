@@ -13,6 +13,7 @@ from lexflow.core.parser import (
     extract_articles,
     extract_disposiciones,
     extract_heading_tree,
+    extract_ordinal_articles,
     extract_references,
     frontmatter_to_metadata,
     parse_frontmatter,
@@ -266,6 +267,136 @@ class TestExtractArticles:
 
         assert count(tree) == len(extract_articles(body)) == 3
 
+    def test_non_heading_mention_is_not_a_boundary(self) -> None:
+        """Regression (#824): a body line reading "Artículo N" without a
+        heading marker must NOT split a new article — only a genuine
+        ``#{1,6} Artículo ...`` heading is a boundary. Real corpus proof:
+        BOE-A-2021-21097 has 340 real headings but used to parse to 1,573
+        "articles" because every inline mention counted too.
+        """
+        body = dedent("""\
+            ###### Artículo 1. Objeto.
+
+            Lo dispuesto en el Artículo 23.1 de esta Ley se aplicará también
+            a los casos previstos en Articulo 4 del reglamento.
+
+            ###### Artículo 2. Ámbito.
+
+            Segundo artículo real.
+        """)
+        articles = extract_articles(body)
+        assert len(articles) == 2
+        assert [a.number for a in articles] == ["1", "2"]
+        assert "Articulo 23.1" not in [a.number for a in articles]
+
+
+# ---------------------------------------------------------------------------
+# Plural article ranges — placeholder articles (#824)
+# ---------------------------------------------------------------------------
+
+
+class TestExtractArticleRanges:
+    def test_range_expands_to_placeholder_articles(self) -> None:
+        body = dedent("""\
+            ###### Artículos 60 a 62.
+
+            **(Derogados)**
+
+            > Se derogan por la Ley 19/2007, de 11 de julio.
+
+            ###### Artículo 63.
+
+            Texto real del articulo 63.
+        """)
+        articles = extract_articles(body)
+        numbers = [a.number for a in articles]
+        assert numbers == ["60", "61", "62", "63"]
+        placeholder = next(a for a in articles if a.number == "61")
+        assert "(Derogados)" in placeholder.text
+        assert "Ley 19/2007" in placeholder.text
+        assert placeholder.title is None
+
+    def test_range_does_not_override_explicit_singles(self) -> None:
+        """A number that ALSO has its own ``Artículo N`` heading keeps its
+        real content — the range placeholder never overwrites it (real
+        corpus pattern: Código Civil arts. 325-332).
+        """
+        body = dedent("""\
+            ###### Artículos 325 a 327.
+
+            **(Derogados)**
+
+            ###### Artículo 325.
+
+            Texto propio del articulo 325.
+
+            ###### Artículo 326.
+
+            Texto propio del articulo 326.
+        """)
+        articles = extract_articles(body)
+        numbers = [a.number for a in articles]
+        assert numbers.count("325") == 1
+        assert numbers.count("326") == 1
+        assert "327" in numbers
+        article_325 = next(a for a in articles if a.number == "325")
+        assert "Texto propio del articulo 325" in article_325.text
+
+    def test_range_placeholder_references_extracted(self) -> None:
+        body = "###### Artículos 10 a 11.\n\nDerogados por la Ley 1/2020, de 1 de enero."
+        articles = extract_articles(body)
+        placeholder = next(a for a in articles if a.number == "10")
+        assert any("Ley 1/2020" in r.target_text for r in placeholder.references)
+
+
+# ---------------------------------------------------------------------------
+# Ordinal operative clauses — fallback for article-less norms (#824)
+# ---------------------------------------------------------------------------
+
+
+class TestExtractOrdinalArticles:
+    def test_ordinal_only_document(self) -> None:
+        body = dedent("""\
+            ###### Primero. Objeto y ámbito.
+
+            Texto del primero.
+
+            ###### Segundo. Procedimiento.
+
+            Texto del segundo.
+
+            ###### Único. Publicación y efectos.
+
+            Texto del unico.
+        """)
+        articles = extract_ordinal_articles(body)
+        assert [a.number for a in articles] == ["Primero", "Segundo", "Único"]
+        assert articles[0].title == "Objeto y ámbito"
+        assert "Texto del primero" in articles[0].text
+
+    def test_accent_and_case_variants_normalise(self) -> None:
+        body = dedent("""\
+            ###### PRIMERO. Uno.
+
+            Texto uno.
+
+            ###### unico. Dos.
+
+            Texto dos.
+        """)
+        articles = extract_ordinal_articles(body)
+        assert [a.number for a in articles] == ["Primero", "Único"]
+
+    def test_empty_body_returns_no_ordinals(self) -> None:
+        assert extract_ordinal_articles("Texto sin ordinales ni articulos.") == []
+
+    def test_bare_ordinal_heading_has_no_title(self) -> None:
+        body = "###### Único.\n\nTexto sin titulo."
+        articles = extract_ordinal_articles(body)
+        assert len(articles) == 1
+        assert articles[0].number == "Único"
+        assert articles[0].title is None
+
 
 # ---------------------------------------------------------------------------
 # Disposiciones (#823)
@@ -501,4 +632,47 @@ class TestParseLawContent:
         law = parse_law_content(content, "test.md")
         assert law.metadata.identifier == "TEST-1"
         assert len(law.articles) == 1
+
+    def test_falls_back_to_ordinals_when_no_articles(self) -> None:
+        """#824: a norm with zero ``Artículo`` headings but ordinal
+        operative clauses (``Primero.``, ``Segundo.``, ...) still ends up
+        with a non-empty, queryable ``law.articles``.
+        """
+        content = dedent("""\
+            ---
+            title: "Instruccion sin articulos"
+            identifier: "TEST-2"
+            ---
+            ###### Primero. Objeto.
+
+            Texto del primero.
+
+            ###### Segundo. Ambito.
+
+            Texto del segundo.
+        """)
+        law = parse_law_content(content, "test.md")
+        assert law.article_count == 2
+        assert [a.number for a in law.articles] == ["Primero", "Segundo"]
+
+    def test_does_not_fall_back_when_articles_present(self) -> None:
+        """The ordinal fallback must never fire for article-bearing norms,
+        even if the body also happens to contain an ordinal-looking
+        heading elsewhere.
+        """
+        content = dedent("""\
+            ---
+            title: "Test"
+            identifier: "TEST-3"
+            ---
+            ##### Articulo 1.
+
+            Contenido real.
+
+            ##### Primero. No es un articulo.
+
+            Esto no deberia colarse como articulo real.
+        """)
+        law = parse_law_content(content, "test.md")
+        assert [a.number for a in law.articles] == ["1"]
         assert law.file_path == "test.md"
