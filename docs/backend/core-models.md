@@ -11,7 +11,7 @@ Source: [`src/lexflow/core/models.py`](../../src/lexflow/core/models.py),
 class Reference(BaseModel):
     target_id: str | None  # BOE id of the referenced law if resolvable
     target_text: str  # raw text as it appears in the source
-    source_article: str | None  # article number where the reference lives
+    source_article: str | None  # article number, or disposición label (e.g. "disposición derogatoria única")
 ```
 
 A cross-reference, the unit that becomes a graph edge.

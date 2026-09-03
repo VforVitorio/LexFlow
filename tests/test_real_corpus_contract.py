@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 
 from lexflow.api.app import app
 from lexflow.api.dependencies import get_law_registry
+from lexflow.core.enums import ReferenceKind
 from lexflow.core.registry import LawRegistry
 
 CORPUS_PATH = Path(__file__).resolve().parent.parent / "data" / "legalize-es"
@@ -89,6 +90,27 @@ class TestConstitutionContract:
         law = real_registry.get_law(CONSTITUTION_ID)
         assert law.sections, "Constitution should parse a non-empty section tree"
 
+    def test_parses_to_15_disposiciones_incl_one_derogatoria(self, real_registry: LawRegistry) -> None:
+        """#823 AC: 169 articles + 15 disposiciones incl. exactly 1 derogatoria."""
+        law = real_registry.get_law(CONSTITUTION_ID)
+        assert len(law.disposiciones) == 15
+        derogatorias = [d for d in law.disposiciones if d.kind == "derogatoria"]
+        assert len(derogatorias) == 1
+
+    def test_article_169_text_is_exactly_the_boe_sentence(self, real_registry: LawRegistry) -> None:
+        """#823 AC: art. 169's body must be exactly the single BOE sentence.
+
+        Before #823, ``_SECTION_BREAK_RE`` only matched heading levels 1-4,
+        so the trailing level-5/6 non-article headings after the last
+        article leaked into its body.
+        """
+        law = real_registry.get_law(CONSTITUTION_ID)
+        article_169 = next(a for a in law.articles if a.number == "169")
+        assert article_169.text == (
+            "No podrá iniciarse la reforma constitucional en tiempo de guerra "
+            "o de vigencia de alguno de los estados previstos en el artículo 116."
+        )
+
 
 class TestKnownLawsHaveContent:
     @pytest.mark.parametrize("law_id, min_articles", KNOWN_LAWS_MIN_ARTICLES)
@@ -115,3 +137,66 @@ class TestConstitutionEndpointContract:
         assert body["article_count"] == CONSTITUTION_ARTICLES
         assert len(body["articles"]) == CONSTITUTION_ARTICLES
         assert body["articles"][0]["text"].strip()
+
+
+# Ley 39/2015 — the AC law for #822. Its article headings carry titles
+# (``###### Artículo 1. Objeto de la Ley.``), which used to land whole in
+# ``number`` and break lookup by the bare number.
+LPAC_ID = "BOE-A-2015-10565"
+
+
+class TestTitledArticleContract:
+    """#822 AC: number/title split must hold on real titled headings."""
+
+    def test_first_article_number_and_title(self, real_registry: LawRegistry) -> None:
+        law = real_registry.get_law(LPAC_ID)
+        assert law.articles[0].number == "1"
+        assert law.articles[0].title == "Objeto de la Ley"
+
+    def test_article_endpoint_finds_bare_number(self, real_client: TestClient) -> None:
+        response = real_client.get(f"/api/v1/laws/{LPAC_ID}/articles/1")
+        assert response.status_code == 200
+        article = response.json()["article"]
+        assert article["number"] == "1"
+        assert article["title"] == "Objeto de la Ley"
+
+
+class TestLpacDisposicionesContract:
+    """#823 regression: Ley 39/2015's 15 derogatoria refs were mis-attributed
+    to "art. 133" because disposiciones weren't extracted separately from the
+    last article's body.
+    """
+
+    def test_disposiciones_parsed_non_empty(self, real_registry: LawRegistry) -> None:
+        law = real_registry.get_law(LPAC_ID)
+        assert len(law.disposiciones) == 22
+
+    def test_last_article_body_has_no_disposicion_derived_references(self, real_registry: LawRegistry) -> None:
+        law = real_registry.get_law(LPAC_ID)
+        article_133 = next(a for a in law.articles if a.number == "133")
+        derogatoria = next(d for d in law.disposiciones if d.kind == "derogatoria")
+        assert derogatoria.references
+        derogatoria_ref_texts = {r.target_text for r in derogatoria.references}
+        article_133_ref_texts = {r.target_text for r in article_133.references}
+        assert not derogatoria_ref_texts & article_133_ref_texts
+
+    def test_article_133_text_does_not_contain_disposicion_derogatoria(self, real_registry: LawRegistry) -> None:
+        """#823 AC: art. 133's body must not swallow the trailing disposicion."""
+        law = real_registry.get_law(LPAC_ID)
+        article_133 = next(a for a in law.articles if a.number == "133")
+        assert "disposición derogatoria única" not in article_133.text.lower()
+
+    def test_ley_30_1992_reference_attributed_to_derogatoria_not_article_133(self, real_registry: LawRegistry) -> None:
+        """#823 AC: the Ley 30/1992 reference's source is the disposición, not art. 133."""
+        law = real_registry.get_law(LPAC_ID)
+        derogatoria = next(d for d in law.disposiciones if d.kind == "derogatoria")
+        ley_30_1992_ref = next(r for r in derogatoria.references if "Ley 30/1992" in r.target_text)
+        assert ley_30_1992_ref.source_article == "disposición derogatoria única"
+        assert ley_30_1992_ref.source_article != "133"
+
+    def test_ley_30_1992_reference_classified_as_repeals(self, real_registry: LawRegistry) -> None:
+        """#823 AC: the Ley 30/1992 reference (list item "a)") must classify as repeals."""
+        law = real_registry.get_law(LPAC_ID)
+        derogatoria = next(d for d in law.disposiciones if d.kind == "derogatoria")
+        ley_30_1992_ref = next(r for r in derogatoria.references if "Ley 30/1992" in r.target_text)
+        assert ley_30_1992_ref.kind == ReferenceKind.REPEALS
