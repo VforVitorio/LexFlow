@@ -672,5 +672,18 @@
     "confirm": "Aceptar",
     "delete": "Eliminar",
     "loading": "Cargando…"
+  },
+  "appUpdate": {
+    "title": "Nueva versión disponible (v{{version}})",
+    "updateNow": "Actualizar ahora",
+    "remindLater": "Recordar más tarde",
+    "restartToApply": "Reiniciar para aplicar",
+    "downloading": "Descargando actualización…",
+    "downloadPct": "{{pct}}%",
+    "ready": "Descarga completada. Reinicia para aplicar la actualización.",
+    "restarting": "Reiniciando…",
+    "error": "No se pudo completar la actualización",
+    "retry": "Reintentar",
+    "notesHeading": "Notas de la versión"
   }
 }

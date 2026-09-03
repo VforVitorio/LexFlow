@@ -672,5 +672,18 @@
     "confirm": "Confirm",
     "delete": "Delete",
     "loading": "Loading…"
+  },
+  "appUpdate": {
+    "title": "New version available (v{{version}})",
+    "updateNow": "Update now",
+    "remindLater": "Remind me later",
+    "restartToApply": "Restart to apply",
+    "downloading": "Downloading update…",
+    "downloadPct": "{{pct}}%",
+    "ready": "Download complete. Restart to apply the update.",
+    "restarting": "Restarting…",
+    "error": "Could not complete the update",
+    "retry": "Retry",
+    "notesHeading": "Release notes"
   }
 }
