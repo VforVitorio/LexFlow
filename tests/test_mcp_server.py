@@ -60,6 +60,14 @@ class TestGetLaw:
         assert result.get("metadata", {}).get("identifier") == law_id
         assert isinstance(result.get("articles"), list)
 
+    def test_payload_omits_raw_text_and_sections(self, patched_registry: LawRegistry) -> None:
+        """#871 S1.2: raw_text/sections duplicate articles, must not ship."""
+        law_id = patched_registry.law_ids[0]
+        result = _unwrap(mcp_server.get_law)(law_id=law_id)
+        assert "raw_text" not in result
+        assert "sections" not in result
+        assert result["article_count"] == len(result["articles"])
+
     def test_unknown_id_returns_error_dict(self, patched_registry: LawRegistry) -> None:
         del patched_registry
         result = _unwrap(mcp_server.get_law)(law_id="DOES-NOT-EXIST")

@@ -44,6 +44,11 @@ class LawRegistry:
         self._metadata_cache: dict[str, LawMetadata] = {}
         self._search_index = SearchIndex()
         self._lock = Lock()
+        # Audit #871 S1.3: one lock per law id so two users opening
+        # different cold laws parse in parallel instead of serialising
+        # behind ``self._lock``. Created lazily, guarded by ``self._lock``
+        # itself — cheap (a dict insert), unlike the parse it protects.
+        self._parse_locks: dict[str, Lock] = {}
         # Audit #409 perf: cache the sorted id list and the summary list
         # so hot endpoints (``/laws`` pagination, ``/tags``, dashboards)
         # don't re-sort + re-materialise 12 k Pydantic models per
@@ -78,22 +83,46 @@ class LawRegistry:
     # Lazy parse + cache
     # ------------------------------------------------------------------
 
+    def _get_parse_lock(self, law_id: str) -> Lock:
+        """Return the per-law lock, creating it under ``self._lock`` if new.
+
+        Audit #871 S1.3: the lock dict itself needs guarding (concurrent
+        first-touches of the same new law must get the SAME lock object),
+        but that guard only covers a dict lookup/insert — never the parse
+        itself.
+        """
+        with self._lock:
+            lock = self._parse_locks.get(law_id)
+            if lock is None:
+                lock = Lock()
+                self._parse_locks[law_id] = lock
+            return lock
+
     def _ensure_parsed(self, law_id: str) -> Law:
-        """Parse a law file and store it in the cache.  Thread-safe."""
+        """Parse a law file and store it in the cache. Thread-safe.
+
+        Audit #871 S1.3: parsing runs under a PER-LAW lock, not the global
+        registry lock — two users opening different cold laws now parse
+        concurrently. Only the final cache write takes ``self._lock``,
+        and only briefly. A same-law race (two threads both missing the
+        cache) still serialises correctly: the second one blocks on the
+        per-law lock and finds the cache already warm when it wakes up.
+        """
         if law_id in self._cache:
             return self._cache[law_id]
 
-        with self._lock:
-            # Double-check after acquiring lock
+        path = self._index.get(law_id)
+        if path is None:
+            raise LawNotFoundError(law_id)
+
+        with self._get_parse_lock(law_id):
+            # Double-check after acquiring the per-law lock.
             if law_id in self._cache:
                 return self._cache[law_id]
 
-            path = self._index.get(law_id)
-            if path is None:
-                raise LawNotFoundError(law_id)
-
             law = parse_law_file(path)
-            self._cache[law_id] = law
+            with self._lock:
+                self._cache[law_id] = law
             return law
 
     def _ensure_metadata(self, law_id: str) -> LawMetadata:

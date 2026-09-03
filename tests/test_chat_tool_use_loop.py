@@ -14,10 +14,10 @@ Covers:
 
 from __future__ import annotations
 
-import asyncio
 import json
 from collections.abc import AsyncIterator
 
+import anyio.to_thread
 import pytest
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
@@ -31,7 +31,13 @@ from lexflow.chat.base import (
     ToolCallChunk,
     ToolSpec,
 )
-from lexflow.chat.streaming import _extract_citations, _run_tool_call
+from lexflow.chat.streaming import (
+    _extract_citations,
+    _persist_assistant_turn,
+    _persist_user_turn,
+    _refresh_and_load_history,
+    _run_tool_call,
+)
 
 # ─── Unit-ish: default stream_chat_typed bridges stream_chat ────────────
 
@@ -326,20 +332,18 @@ class TestToolUseLoopE2E:
         mock_registry,
         monkeypatch: MonkeyPatch,
     ) -> None:
-        """S4.1 (#888): tool dispatch must go through ``asyncio.to_thread``.
-
-        A slow/scanning tool call must not block the event loop — spy on
-        ``asyncio.to_thread`` in :mod:`lexflow.chat.streaming` and assert it
-        is the call site that actually invokes ``_run_tool_call``.
+        """S4.1 (#888) + #871 S1.1: tool dispatch AND DB persistence/history
+        must go through ``anyio.to_thread.run_sync`` — spy on it in
+        :mod:`lexflow.chat.streaming` and assert both call sites use it.
         """
         calls: list[tuple[object, ...]] = []
-        real_to_thread = asyncio.to_thread
+        real_run_sync = anyio.to_thread.run_sync
 
-        async def _spy_to_thread(func, /, *args, **kwargs):
+        async def _spy_run_sync(func, /, *args, **kwargs):
             calls.append((func, *args))
-            return await real_to_thread(func, *args, **kwargs)
+            return await real_run_sync(func, *args, **kwargs)
 
-        monkeypatch.setattr("lexflow.chat.streaming.asyncio.to_thread", _spy_to_thread)
+        monkeypatch.setattr("lexflow.chat.streaming.anyio.to_thread.run_sync", _spy_run_sync)
 
         provider = _ToolUsingProvider()
         patch_ollama_provider(lambda: provider)
@@ -349,10 +353,18 @@ class TestToolUseLoopE2E:
             json={"message": "¿cuántas leyes?", "model": "ollama:fake"},
         )
         assert response.status_code == 200
-        assert len(calls) == 1
-        func, call_arg = calls[0]
-        assert func is _run_tool_call
-        assert call_arg.name == "get_stats"
+
+        tool_calls = [call for call in calls if call[0] is _run_tool_call]
+        assert len(tool_calls) == 1
+        assert tool_calls[0][1].name == "get_stats"
+
+        # #871 S1.1: user-turn persist, refresh+history load and
+        # assistant-turn persist are ALSO offloaded — every sync DB call
+        # in the generator runs off the event loop, not just tool dispatch.
+        offloaded_funcs = {func for func, *_ in calls}
+        assert _persist_user_turn in offloaded_funcs
+        assert _refresh_and_load_history in offloaded_funcs
+        assert _persist_assistant_turn in offloaded_funcs
 
     def test_runaway_loop_stops_at_iteration_cap(
         self,
