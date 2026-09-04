@@ -268,11 +268,13 @@ def _build_section_list(
         first_sub_start = subset[i + 1][2] if (i + 1) < j else content_end
         direct_body = body[content_start:first_sub_start]
         articles = extract_articles(direct_body)
+        section_text = _extract_section_text(direct_body)
 
         sections.append(
             Section(
                 level=level,
                 heading=heading,
+                text=section_text,
                 articles=articles,
                 subsections=subsections,
             )
@@ -280,6 +282,27 @@ def _build_section_list(
         i = j
 
     return sections
+
+
+def _extract_section_text(direct_body: str) -> str:
+    """Pull a section's own prose out of its direct content slice (#825).
+
+    ``direct_body`` starts at this section's OWN heading line (e.g.
+    ``### PREÁMBULO``), which is dropped here since the heading text is
+    already carried by :attr:`Section.heading`. What remains runs to the
+    first subsection — it may also contain one or more ``Artículo``
+    headings (level 6, so they never show up in ``_HEADING_RE``'s level
+    1-5 matches and stay embedded here). Only the text BEFORE the first
+    such article heading is this section's own prose (preámbulo text, a
+    Título's intro paragraph, an anexo table); text from the first
+    article heading onward is that article's own body and already
+    surfaced via :func:`extract_articles`. Sections with no article
+    headings at all (e.g. PREÁMBULO, ANEXO) keep their whole remainder.
+    """
+    _, _, body_after_heading = direct_body.partition("\n")
+    first_article = _ARTICLE_RE.search(body_after_heading)
+    prose_end = first_article.start() if first_article else len(body_after_heading)
+    return body_after_heading[:prose_end].strip()
 
 
 # ---------------------------------------------------------------------------

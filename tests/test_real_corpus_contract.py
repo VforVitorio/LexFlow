@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 
 from lexflow.api.app import app
 from lexflow.api.dependencies import get_law_registry
+from lexflow.core.corpus_drift import compute_drift_report
 from lexflow.core.enums import ReferenceKind
 from lexflow.core.registry import LawRegistry
 from lexflow.core.services import find_article
@@ -273,3 +274,78 @@ class TestDuplicateArticleDisambiguation:
         assert first.status_code == 200
         assert second.status_code == 200
         assert first.json()["article"]["text"] != second.json()["article"]["text"]
+
+
+# #825 Sprint 4 — non-article prose (preámbulo, anexo) must be retrievable
+# via the API and indexed for search. ANEXO_ID is a real law whose entire
+# operative content is a data table with no Artículo headings at all.
+ANEXO_ID = "BOE-A-1962-14073"
+
+
+def _find_section(sections: list[dict], heading_substring: str) -> dict | None:
+    for section in sections:
+        if heading_substring in section["heading"]:
+            return section
+        found = _find_section(section["subsections"], heading_substring)
+        if found:
+            return found
+    return None
+
+
+class TestNonArticleProseContract:
+    """#825 AC: Constitución PREÁMBULO + BOE-A-1962-14073 anexo table are
+    retrievable via the API and indexed for search — not silently dropped.
+    """
+
+    def test_constitution_preambulo_retrievable_via_api(self, real_client: TestClient) -> None:
+        response = real_client.get(f"/api/v1/laws/{CONSTITUTION_ID}")
+        assert response.status_code == 200
+        preambulo = _find_section(response.json()["sections"], "PREÁMBULO")
+        assert preambulo is not None
+        assert "La Nación española" in preambulo["text"]
+
+    def test_anexo_table_retrievable_and_not_truncated(self, real_registry: LawRegistry) -> None:
+        if not real_registry.has_law(ANEXO_ID):
+            pytest.skip(f"{ANEXO_ID} not present in this corpus snapshot")
+        law = real_registry.get_law(ANEXO_ID)
+        anexo = _find_section(
+            [s.model_dump() for s in law.sections],
+            "ANEXO",
+        )
+        assert anexo is not None
+        # First and last data rows of the table must both survive — proves
+        # the whole table is kept, not just the head.
+        assert "1.111" in anexo["text"]
+        assert "2.27" in anexo["text"]
+
+    def test_search_finds_term_only_present_in_preambulo(self, real_registry: LawRegistry) -> None:
+        real_registry.get_law(CONSTITUTION_ID)
+        result = real_registry.search_text("convivencia democrática")
+        assert result.total > 0
+        assert any(r.law_id == CONSTITUTION_ID for r in result.items)
+
+    def test_search_finds_term_only_present_in_anexo_table(self, real_registry: LawRegistry) -> None:
+        if not real_registry.has_law(ANEXO_ID):
+            pytest.skip(f"{ANEXO_ID} not present in this corpus snapshot")
+        real_registry.get_law(ANEXO_ID)
+        result = real_registry.search_text("Espartizal o atochar")
+        assert result.total > 0
+        assert any(r.law_id == ANEXO_ID for r in result.items)
+
+
+class TestCorpusDriftReport:
+    """#825 AC: report shows 0 empty identifiers (post-Sprint 1) on the real
+    corpus, and correctly counts + samples the drift signals that do exist
+    (e.g. ``annulled``/``expired`` status values not yet in ``LawStatus``,
+    a separate enum-completeness gap this report surfaces but doesn't fix).
+    """
+
+    def test_empty_identifier_count_is_zero_on_real_corpus(self, real_registry: LawRegistry) -> None:
+        report = compute_drift_report(real_registry)
+        assert report.total_laws > 0
+        assert report.empty_identifier_count == 0, report.empty_identifier_sample_ids
+
+    def test_unknown_status_count_matches_sample_size_cap(self, real_registry: LawRegistry) -> None:
+        report = compute_drift_report(real_registry)
+        assert report.unknown_status_count >= len(report.unknown_status_sample_ids)
+        assert len(report.unknown_status_sample_ids) <= 10

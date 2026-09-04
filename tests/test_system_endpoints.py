@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lexflow.api.warmup import get_warmup_state, reset_warmup_state
+from lexflow.core.corpus_drift import CorpusDriftReport
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +34,7 @@ class TestSystemWarmupEndpoint:
             "search_ready": False,
             "graph_ready": False,
             "semantic_ready": False,
+            "drift_report": None,
             "error": None,
             "durations_seconds": {},
         }
@@ -188,6 +190,7 @@ class TestWarmupSemanticStage:
         monkeypatch.setattr(warmup, "load_or_preload_metadata", lambda *a, **k: None)
         monkeypatch.setattr(warmup, "load_or_build_search", lambda *a, **k: None)
         monkeypatch.setattr(warmup, "get_graph", lambda *a, **k: None)
+        monkeypatch.setattr(warmup, "compute_drift_report", lambda registry: CorpusDriftReport())
         return warmup
 
     async def test_prewarms_semantic_and_marks_ready(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -219,3 +222,40 @@ class TestWarmupSemanticStage:
         assert state.semantic_ready is False
         assert state.ready is True  # core stages unaffected
         assert state.error is None  # opt-in failure is logged, not surfaced as a global error
+
+
+class TestWarmupDriftStage:
+    """#825: the drift-report stage runs after graph and surfaces via /system/warmup."""
+
+    async def test_drift_report_populated_after_run(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        warmup = TestWarmupSemanticStage._stub_core_stages(monkeypatch)
+        monkeypatch.setattr(warmup, "ensure_semantic_index", lambda registry: None)
+        report = CorpusDriftReport(
+            total_laws=3,
+            unknown_status_count=1,
+            empty_identifier_count=0,
+            zero_article_count=0,
+            unknown_status_sample_ids=["BOE-A-2000-1"],
+        )
+        monkeypatch.setattr(warmup, "compute_drift_report", lambda registry: report)
+
+        reset_warmup_state()
+        await warmup._run_warmup()
+
+        state = warmup.get_warmup_state()
+        assert state.drift_report == report
+        assert state.ready is True
+
+    def test_drift_report_surfaced_via_warmup_endpoint(self, client: TestClient) -> None:
+        state = get_warmup_state()
+        state.drift_report = CorpusDriftReport(
+            total_laws=10,
+            unknown_status_count=0,
+            empty_identifier_count=0,
+            zero_article_count=2,
+            zero_article_sample_ids=["BOE-A-2020-1", "BOE-A-2020-2"],
+        )
+        body = client.get("/api/v1/system/warmup").json()
+        assert body["drift_report"]["total_laws"] == 10
+        assert body["drift_report"]["zero_article_count"] == 2
+        assert body["drift_report"]["zero_article_sample_ids"] == ["BOE-A-2020-1", "BOE-A-2020-2"]
