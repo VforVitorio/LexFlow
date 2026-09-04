@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validat
 
 from lexflow.core.enums import (
     ConsolidationStatus,
+    DisposicionKind,
     Jurisdiction,
     LawRank,
     LawStatus,
@@ -35,7 +36,12 @@ class Reference(BaseModel):
     )
     source_article: str | None = Field(
         None,
-        description="Article number where this reference appears.",
+        description=(
+            "Where this reference appears: an article number, or a "
+            "disposición label (e.g. 'disposición derogatoria única') "
+            "when the reference is inside a disposición rather than an "
+            "article (#823)."
+        ),
     )
     kind: ReferenceKind = Field(
         default=ReferenceKind.CITES,
@@ -121,8 +127,62 @@ class Section(BaseModel):
         ...,
         description="Section heading text.",
     )
+    text: str = Field(
+        "",
+        description=(
+            "Prose that belongs directly to this section — e.g. a "
+            "preámbulo, a section's intro paragraph, or an anexo table —  "
+            "as opposed to text that belongs to a nested article or "
+            "subsection (#825). Empty when the section has no prose of "
+            "its own (e.g. a Título whose content is only articles)."
+        ),
+    )
     articles: list[Article] = Field(default_factory=list)
     subsections: list[Section] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Disposiciones (adicional / transitoria / derogatoria / final)
+# ---------------------------------------------------------------------------
+
+
+class Disposicion(BaseModel):
+    """A closing disposition of a law (#823).
+
+    Legalize-es laws end with a block of headings — ``Disposición
+    adicional``, ``transitoria``, ``derogatoria`` and ``final`` — that sit
+    outside the article numbering. Before this model they were structurally
+    invisible: their text was swallowed into the last article's body and
+    their cross-references mis-attributed to that article (e.g. Ley
+    39/2015's derogatoria refs showing up under "art. 133").
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    heading: str = Field(
+        ...,
+        description="Full heading text as written (e.g. 'Disposición adicional primera.').",
+    )
+    kind: DisposicionKind = Field(
+        ...,
+        description="Disposition family: adicional, transitoria, derogatoria or final.",
+    )
+    number: str | None = Field(
+        None,
+        description="Ordinal as written (e.g. 'primera', 'única'). None when the heading is bare.",
+    )
+    title: str | None = Field(
+        None,
+        description="Title sentence after the ordinal, when present.",
+    )
+    text: str = Field(
+        ...,
+        description="Full text content of the disposition.",
+    )
+    references: list[Reference] = Field(
+        default_factory=list,
+        description="Cross-references found in this disposition.",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -180,9 +240,13 @@ class Law(BaseModel):
         default_factory=list,
         description="Flat list of all articles for quick access.",
     )
+    disposiciones: list[Disposicion] = Field(
+        default_factory=list,
+        description="Closing dispositions (adicional/transitoria/derogatoria/final, #823).",
+    )
     references: list[Reference] = Field(
         default_factory=list,
-        description="All cross-references found in the law.",
+        description="All cross-references found in the law (articles, then disposiciones).",
     )
     raw_text: str = Field("", description="Full markdown body without frontmatter.")
     file_path: str = Field(..., description="Relative path to the source .md file.")

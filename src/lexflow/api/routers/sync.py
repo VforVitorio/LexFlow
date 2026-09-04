@@ -36,6 +36,7 @@ from lexflow.core.search_cache import save_search_index
 from lexflow.graph.builder import apply_diff_to_graph
 from lexflow.graph.cache import save_graph
 from lexflow.search.semantic_index import reset_semantic_index
+from lexflow.search.service import reset_semantic_warmup_state
 from lexflow.utils.config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -222,4 +223,8 @@ def _fallback_rebuild() -> None:
     # rebuilds against the fresh corpus. Cheap: the index re-embed
     # finishes in ~1 s for the 12 K-article corpus.
     reset_semantic_index()
+    # #871 S1.4: clear the "background build already started" guard too —
+    # otherwise the next cold request after this reset would skip kicking
+    # a NEW build (the flag from the pre-sync build would still read True).
+    reset_semantic_warmup_state()
     logger.info("Sync fell back to full rebuild (diff unavailable or too large)")

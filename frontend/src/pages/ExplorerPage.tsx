@@ -241,7 +241,7 @@ export function ExplorerPage() {
           role="dialog"
           aria-modal="true"
           aria-label={t('explorer.filters')}
-          className="fixed inset-0 z-[40] bg-black/30 backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-backdrop bg-black/30 backdrop-blur-[2px] md:hidden"
           onClick={(e) => e.target === e.currentTarget && setFiltersOpen(false)}
         >
           <div className="absolute left-0 top-0 flex h-full w-[80vw] max-w-[320px] flex-col bg-bg shadow-2xl animate-in slide-in-from-left duration-200">
@@ -303,7 +303,7 @@ export function ExplorerPage() {
                 className="w-full"
               />
               {searchFocused && tagSuggestions && (
-                <ul className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-auto rounded-lg border border-border-strong bg-surface p-1 shadow-lg">
+                <ul className="absolute left-0 right-0 top-full z-dropdown mt-1 max-h-64 overflow-auto rounded-lg border border-border-strong bg-surface p-1 shadow-lg">
                   {tagSuggestions.map(({ tag, count }) => (
                     <li key={tag}>
                       <button
@@ -528,8 +528,9 @@ export function ExplorerPage() {
                 ))}
               </div>
 
+              <div className="hidden overflow-x-auto md:block">
               <table className="hidden w-full table-fixed border-collapse text-[13.5px] md:table">
-                <thead className="sticky top-0 z-[1] bg-bg">
+                <thead className="sticky top-0 z-sticky bg-bg">
                   <tr className="border-b border-border">
                     <Th className="w-[40%] pl-5 md:pl-8">{t('explorer.cols.law')}</Th>
                     <Th>{t('explorer.cols.status')}</Th>
@@ -619,6 +620,7 @@ export function ExplorerPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
               </>
             )
           )}

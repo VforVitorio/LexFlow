@@ -23,13 +23,8 @@
   --success-soft:  152 60% 94%;
   --danger-soft:   354 90% 96%;
 
-  /* Deslop #798: info/reference/amendment soft tints. These are NOT wired
-   * into tailwind.config.ts as color utilities (that file is owned by a
-   * parallel workstream) — consume them directly as CSS vars, e.g.
-   * `bg-[hsl(var(--info-soft))]`. If tailwind.config.ts later grows
-   * matching `info-soft`/`reference-soft`/`amendment-soft` entries (mirroring
-   * `primary-soft` etc. above), those call sites can drop the arbitrary-value
-   * brackets in favour of the plain utility class. */
+  /* Soft tints for info/reference/amendment — mirrored in tailwind.config.ts
+   * as `info-soft`, `reference-soft`, `amendment-soft` (+ `-fg` pairs). */
   --info-soft:       206 85% 95%; /* matches the `info` semantic color (206 80% 50%) */
   --reference-soft:  266 65% 92%; /* matches `node.reference` (266 65% 60%) */
   --amendment-soft:  195 70% 92%; /* matches `node.amendment` (195 70% 50%) */

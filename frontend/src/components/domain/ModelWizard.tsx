@@ -168,7 +168,7 @@ export function ModelWizard({
       role="dialog"
       aria-modal="true"
       aria-label={t('wizard.dialogAria')}
-      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
     >
       <div className="air-glass-strong w-full max-w-2xl p-7 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <WizardHeader step={step} stepCount={stepCount} onSkip={onSkip} />

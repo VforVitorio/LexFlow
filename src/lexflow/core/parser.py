@@ -19,6 +19,7 @@ import yaml
 
 from lexflow.core.enums import (
     ConsolidationStatus,
+    DisposicionKind,
     Jurisdiction,
     LawRank,
     LawStatus,
@@ -26,7 +27,7 @@ from lexflow.core.enums import (
     Scope,
 )
 from lexflow.core.exceptions import ParserError
-from lexflow.core.models import Article, Law, LawMetadata, Reference, Section
+from lexflow.core.models import Article, Disposicion, Law, LawMetadata, Reference, Section
 
 logger = logging.getLogger(__name__)
 
@@ -267,11 +268,13 @@ def _build_section_list(
         first_sub_start = subset[i + 1][2] if (i + 1) < j else content_end
         direct_body = body[content_start:first_sub_start]
         articles = extract_articles(direct_body)
+        section_text = _extract_section_text(direct_body)
 
         sections.append(
             Section(
                 level=level,
                 heading=heading,
+                text=section_text,
                 articles=articles,
                 subsections=subsections,
             )
@@ -279,6 +282,27 @@ def _build_section_list(
         i = j
 
     return sections
+
+
+def _extract_section_text(direct_body: str) -> str:
+    """Pull a section's own prose out of its direct content slice (#825).
+
+    ``direct_body`` starts at this section's OWN heading line (e.g.
+    ``### PREÁMBULO``), which is dropped here since the heading text is
+    already carried by :attr:`Section.heading`. What remains runs to the
+    first subsection — it may also contain one or more ``Artículo``
+    headings (level 6, so they never show up in ``_HEADING_RE``'s level
+    1-5 matches and stay embedded here). Only the text BEFORE the first
+    such article heading is this section's own prose (preámbulo text, a
+    Título's intro paragraph, an anexo table); text from the first
+    article heading onward is that article's own body and already
+    surfaced via :func:`extract_articles`. Sections with no article
+    headings at all (e.g. PREÁMBULO, ANEXO) keep their whole remainder.
+    """
+    _, _, body_after_heading = direct_body.partition("\n")
+    first_article = _ARTICLE_RE.search(body_after_heading)
+    prose_end = first_article.start() if first_article else len(body_after_heading)
+    return body_after_heading[:prose_end].strip()
 
 
 # ---------------------------------------------------------------------------
@@ -289,39 +313,110 @@ def _build_section_list(
 # The pattern allows ``#{1,6}`` (NOT ``#{1,5}``): the real corpus uses six
 # hashes, so capping at five silently extracted ZERO articles from every law
 # (the test fixture used five hashes, which masked it). See #561.
+#
+# The heading tail splits into number + optional title (#822): the corpus
+# format is ``Artículo 1. Objeto de la Ley.`` — capturing the whole tail as
+# the number made ``find_article(law, "1")`` miss every titled article and
+# 404'd ``/articles/1``. All separators are horizontal whitespace (``[ \t]``)
+# so the optional title group can never leak onto the following line.
+# Group 3 is a fallback for tails that don't fit ``number[. title]`` (rare
+# exotic numberings): keep the old whole-tail behaviour rather than dropping
+# the article entirely.
+_ARTICLE_NUMBER_PATTERN = r"\d+(?:[ \t]+(?:bis|ter|quater|quinquies|sexies|septies|octies|nonies|decies))*"
+# The leading ``#{1,6}`` heading marker is REQUIRED (#824): making it
+# optional let any body line matching "Artículo N" act as an article
+# boundary, e.g. a table cell or cross-reference mid-paragraph. On
+# BOE-A-2021-21097 (340 real headings) that inflated the parse to 1,573
+# "articles" — most of them phantom, carrying a sentence fragment as
+# their whole body instead of a real article.
 _ARTICLE_RE = re.compile(
-    r"^(?:#{1,6}\s+)?Art[ií]culo\s+(.+?)\.?\s*$",
+    r"^#{1,6}[ \t]+Art[ií]culo[ \t]+"
+    r"(?:(" + _ARTICLE_NUMBER_PATTERN + r")(?:\.[ \t]+(.+?))?\.?[ \t]*$"
+    r"|(.+?)\.?\s*$)",
     re.MULTILINE | re.IGNORECASE,
 )
+
+# Plural range headings collapse a run of (usually repealed) articles into
+# one heading, e.g. ``Artículos 325 a 332. (Derogados)`` (#824). Note the
+# extra ``s`` on ``Artículos`` — that alone already keeps this pattern from
+# ever colliding with ``_ARTICLE_RE`` (which requires whitespace right
+# after ``Articulo``, not a trailing ``s``).
+_ARTICLE_RANGE_RE = re.compile(
+    r"^#{1,6}[ \t]+Art[ií]culos[ \t]+(\d+)[ \t]+a[ \t]+(\d+)\.?[ \t]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+# Any heading line, used to bound a range heading's own text block —
+# stops at the next heading of ANY kind (unlike ``_extract_article_text``,
+# which deliberately keeps reading through nested "Articulo" headings
+# because those already have their own boundary from ``_ARTICLE_RE``).
+_ANY_HEADING_LINE_RE = re.compile(r"^#{1,6}[ \t]+\S", re.MULTILINE)
 
 
 def extract_articles(body: str) -> list[Article]:
     """Extract all articles from a Markdown body.
 
-    Finds ``Articulo N.`` patterns and captures text until the next
-    article heading or section heading.
+    Finds ``Articulo N.`` patterns, splitting each heading into the article
+    number and its optional title (``Artículo 1. Objeto de la Ley.`` →
+    number ``"1"``, title ``"Objeto de la Ley"`` — #822), and captures text
+    until the next article heading or section heading.
     """
     matches = list(_ARTICLE_RE.finditer(body))
-    if not matches:
-        return []
-
-    articles: list[Article] = []
+    entries: list[tuple[int, Article]] = []
     for idx, match in enumerate(matches):
-        number = match.group(1).strip()
+        number = (match.group(1) or match.group(3)).strip()
+        raw_title = match.group(2)
+        title = raw_title.strip() if raw_title else None
         text_start = match.end()
         text_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(body)
         raw_text = _extract_article_text(body[text_start:text_end])
         references = extract_references(raw_text, source_article=number)
-        articles.append(_build_article(number, raw_text, references))
+        entries.append((match.start(), _build_article(number, title, raw_text, references)))
 
-    return articles
+    existing_numbers = {article.number for _, article in entries}
+    entries.extend(_extract_range_placeholder_articles(body, existing_numbers))
+    entries.sort(key=lambda entry: entry[0])
+    return [article for _, article in entries]
+
+
+def _extract_range_placeholder_articles(body: str, existing_numbers: set[str]) -> list[tuple[int, Article]]:
+    """Materialise placeholder articles for plural range headings (#824).
+
+    Without this, a heading like ``Artículos 325 a 332. (Derogados)`` left
+    every number in the range unreachable via :func:`find_article` — a
+    404 indistinguishable from real data loss, when the law actually says
+    exactly why the article is gone. Only numbers with no individual
+    heading of their own get a placeholder; an explicit ``Artículo 330``
+    heading elsewhere in the same body always wins and is left untouched.
+
+    Returns ``(position, article)`` pairs — the range heading's own start
+    offset, in each entry — so :func:`extract_articles` can slot the
+    placeholders back into document order instead of dumping them all at
+    the end of the flat list.
+    """
+    seen = set(existing_numbers)
+    placeholders: list[tuple[int, Article]] = []
+    for match in _ARTICLE_RANGE_RE.finditer(body):
+        low, high = int(match.group(1)), int(match.group(2))
+        text_start = match.end()
+        next_heading = _ANY_HEADING_LINE_RE.search(body, text_start)
+        text_end = next_heading.start() if next_heading else len(body)
+        raw_text = body[text_start:text_end].strip()
+        for number in range(low, high + 1):
+            number_str = str(number)
+            if number_str in seen:
+                continue
+            seen.add(number_str)
+            references = extract_references(raw_text, source_article=number_str)
+            placeholders.append((match.start(), _build_article(number_str, None, raw_text, references)))
+    return placeholders
 
 
 # Audit #409 perf: ``_extract_article_text`` runs per article body and
 # compares each line against two patterns. Hoisting the regexes to
 # module scope avoids 2-5 million ``re.compile`` calls during a cold
 # parse of the 12 k-law corpus.
-_SECTION_BREAK_RE = re.compile(r"^#{1,4}\s+")
+_SECTION_BREAK_RE = re.compile(r"^#{1,6}\s+")
 _INLINE_ARTICLE_HEADING_RE = re.compile(r"^#{1,6}\s+Art[ií]culo", re.IGNORECASE)
 
 
@@ -329,22 +424,217 @@ def _extract_article_text(raw: str) -> str:
     """Clean raw text between two article headings.
 
     Strips leading/trailing whitespace and stops at the next non-article
-    heading (``##``, ``###``, ``####`` without 'Articulo').
+    heading of any level (``#`` through ``######`` without 'Articulo'),
+    including a disposicion heading (``###### Disposición adicional ...``
+    etc — #823, #823). Disposiciones use the same heading level as
+    articles (six hashes), so without this check the LAST article of a
+    law swallowed the entire disposiciones block as its own body (Ley
+    39/2015's 15 derogatoria references mis-attributed to "art. 133").
+    The explicit ``_DISPOSICION_HEADING_RE`` check below is now largely
+    redundant with the level 1-6 ``_SECTION_BREAK_RE`` but is kept for
+    clarity and as a safety net.
     """
     lines: list[str] = []
     for line in raw.split("\n"):
-        # Stop at the next section heading (but not an article heading)
-        if _SECTION_BREAK_RE.match(line) and not _INLINE_ARTICLE_HEADING_RE.match(line):
+        is_section_break = _SECTION_BREAK_RE.match(line) and not _INLINE_ARTICLE_HEADING_RE.match(line)
+        if is_section_break or _DISPOSICION_HEADING_RE.match(line):
             break
         lines.append(line)
     return "\n".join(lines).strip()
 
 
-def _build_article(number: str, text: str, references: list[Reference]) -> Article:
+def _build_article(number: str, title: str | None, text: str, references: list[Reference]) -> Article:
     """Construct an :class:`Article` instance from parsed components."""
     return Article(
         number=number,
-        title=None,
+        title=title,
+        text=text,
+        references=references,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Ordinal operative clauses (#824) — fallback for article-less norms
+# ---------------------------------------------------------------------------
+
+# 1,857 laws (15.2% of the corpus) have zero ``Artículo`` headings; ~38% of
+# those structure their operative text as numbered ordinals instead
+# (``Primero.``, ``Segundo.``, ..., ``Único.``) — e.g. Junta Electoral
+# Central instructions. Accent variants (``Décimo``/``Decimo``) and case
+# variants (``PRIMERO``) are both tolerated; ``_canonical_ordinal_label``
+# folds them to one consistent display form for lookup stability.
+_ORDINAL_LABEL_PATTERN = (
+    r"Primer[oa]|Segund[oa]|Tercer[oa]|Cuart[oa]|Quint[oa]|Sext[oa]|"
+    r"S[eé]ptim[oa]|Octav[oa]|Noven[oa]|D[eé]cim[oa]|Und[eé]cim[oa]|"
+    r"Duod[eé]cim[oa]|[UÚ]nic[oa]"
+)
+_ORDINAL_RE = re.compile(
+    r"^#{1,6}[ \t]+(" + _ORDINAL_LABEL_PATTERN + r")(?:\.[ \t]+(.+?))?\.?[ \t]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+_ORDINAL_CANONICAL: dict[str, str] = {
+    "primero": "Primero",
+    "primera": "Primera",
+    "segundo": "Segundo",
+    "segunda": "Segunda",
+    "tercero": "Tercero",
+    "tercera": "Tercera",
+    "cuarto": "Cuarto",
+    "cuarta": "Cuarta",
+    "quinto": "Quinto",
+    "quinta": "Quinta",
+    "sexto": "Sexto",
+    "sexta": "Sexta",
+    "septimo": "Séptimo",
+    "septima": "Séptima",
+    "octavo": "Octavo",
+    "octava": "Octava",
+    "noveno": "Noveno",
+    "novena": "Novena",
+    "decimo": "Décimo",
+    "decima": "Décima",
+    "undecimo": "Undécimo",
+    "undecima": "Undécima",
+    "duodecimo": "Duodécimo",
+    "duodecima": "Duodécima",
+    "unico": "Único",
+    "unica": "Única",
+}
+
+
+def _canonical_ordinal_label(raw: str) -> str:
+    """Fold an ordinal label's accent/case variants to one display form.
+
+    ``"PRIMERO"``, ``"Primero"`` and (a corpus typo) ``"primero"`` all
+    become ``"Primero"``; falls back to ``str.capitalize()`` for any
+    label not in the table rather than dropping it.
+    """
+    decomposed = unicodedata.normalize("NFKD", raw.strip())
+    ascii_only = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    return _ORDINAL_CANONICAL.get(ascii_only.lower(), raw.strip().capitalize())
+
+
+def extract_ordinal_articles(body: str) -> list[Article]:
+    """Extract ordinal operative clauses as a fallback article list.
+
+    Only meaningful when :func:`extract_articles` finds zero real
+    ``Artículo`` headings — callers (:func:`parse_law_content`) must gate
+    on that so article-bearing norms are never touched by this fallback.
+    """
+    matches = list(_ORDINAL_RE.finditer(body))
+    if not matches:
+        return []
+
+    articles: list[Article] = []
+    for idx, match in enumerate(matches):
+        label = _canonical_ordinal_label(match.group(1))
+        raw_title = match.group(2)
+        title = raw_title.strip() if raw_title else None
+        text_start = match.end()
+        text_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(body)
+        raw_text = _extract_article_text(body[text_start:text_end])
+        references = extract_references(raw_text, source_article=label)
+        articles.append(_build_article(label, title, raw_text, references))
+
+    return articles
+
+
+# ---------------------------------------------------------------------------
+# Disposicion extraction (#823)
+# ---------------------------------------------------------------------------
+
+# Disposicion headings in legalize-es are markdown level 6, same as
+# Articulo headings: ``###### Disposición adicional primera.``. The tail
+# after the kind word is free-form: bare (``Disposición derogatoria.``),
+# with only an ordinal (``Disposición adicional primera.``), or with both
+# an ordinal and a title sentence (``Disposición derogatoria única.
+# Derogación normativa.``). Group 1 captures the full heading text (sans
+# hashes) for the ``heading`` field, group 2 the kind, group 3 the tail —
+# split further by ``_split_disposicion_tail``.
+_DISPOSICION_KIND_PATTERN = r"adicional|transitoria|derogatoria|final"
+_DISPOSICION_RE = re.compile(
+    r"^#{1,6}[ \t]+(Disposici[oó]n[ \t]+(" + _DISPOSICION_KIND_PATTERN + r")(.*))$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+# Used by ``_extract_article_text`` to stop an article's body before a
+# trailing disposicion block, and to bound each disposicion's own text.
+_DISPOSICION_HEADING_RE = re.compile(
+    r"^#{1,6}[ \t]+Disposici[oó]n[ \t]+(?:" + _DISPOSICION_KIND_PATTERN + r")\b",
+    re.IGNORECASE,
+)
+
+
+def extract_disposiciones(body: str) -> list[Disposicion]:
+    """Extract all closing dispositions from a Markdown body.
+
+    Finds ``Disposición adicional|transitoria|derogatoria|final`` headings
+    and captures text until the next disposicion heading or the end of the
+    document.
+    """
+    matches = list(_DISPOSICION_RE.finditer(body))
+    if not matches:
+        return []
+
+    disposiciones: list[Disposicion] = []
+    for idx, match in enumerate(matches):
+        heading = match.group(1).strip()
+        kind = match.group(2).lower()
+        number, title = _split_disposicion_tail(match.group(3))
+        text_start = match.end()
+        text_end = matches[idx + 1].start() if idx + 1 < len(matches) else len(body)
+        raw_text = _extract_article_text(body[text_start:text_end])
+        source = _disposicion_source_label(kind, number)
+        references = extract_references(raw_text, source_article=source)
+        disposiciones.append(_build_disposicion(heading, kind, number, title, raw_text, references))
+
+    return disposiciones
+
+
+def _disposicion_source_label(kind: str, number: str | None) -> str:
+    """Build a reference ``source_article`` label for a disposición (#823).
+
+    References found inside a disposición's text were previously left
+    unattributed (``source_article=None``), which made ``Reference``
+    lookups fall back to whatever the last parsed article happened to
+    be. ``"disposición <kind> <number>"`` (e.g. ``"disposición
+    derogatoria única"``) mirrors how the law itself names the
+    disposición, so it stays legible without introducing a new field.
+    """
+    if number:
+        return f"disposición {kind} {number}"
+    return f"disposición {kind}"
+
+
+def _split_disposicion_tail(tail: str) -> tuple[str | None, str | None]:
+    """Split a disposicion heading's tail into ``(number, title)``.
+
+    *tail* is everything after the kind word, e.g. ``" primera."``,
+    ``" única. Derogación normativa."`` or ``"."`` (bare heading). The
+    ordinal sits before the first ``.``, the optional title sentence
+    after it.
+    """
+    number_part, _, title_part = tail.partition(".")
+    number = number_part.strip() or None
+    title = title_part.strip().rstrip(".").strip() or None
+    return number, title
+
+
+def _build_disposicion(
+    heading: str,
+    kind: str,
+    number: str | None,
+    title: str | None,
+    text: str,
+    references: list[Reference],
+) -> Disposicion:
+    """Construct a :class:`Disposicion` instance from parsed components."""
+    return Disposicion(
+        heading=heading,
+        kind=DisposicionKind(kind),
+        number=number,
+        title=title,
         text=text,
         references=references,
     )
@@ -408,6 +698,14 @@ def _classify_reference(context: str) -> ReferenceKind:
 
 _SENTENCE_BOUNDARIES = ".;\n"
 
+# Matches a bare list-item marker (``a)``, ``1.``, ...) preceded by one to
+# three newlines, sitting at the very end of a context window — e.g. the
+# "\n\na) " between "las siguientes disposiciones:" and "Ley 30/1992" in a
+# derogatoria list. Trimming naively on the last newline would cut the
+# marker off from the lead-in sentence that actually carries the "derog"
+# keyword, misclassifying the citation as CITES instead of REPEALS (#823).
+_TRAILING_LIST_MARKER_RE = re.compile(r"(?:\r?\n[ \t]*){1,3}(?:\d{1,2}|[a-z])[.)][ \t]*$", re.IGNORECASE)
+
 
 def _context_before(text: str, start: int) -> str:
     """Return the citation's preceding context, sentence-bounded.
@@ -418,8 +716,17 @@ def _context_before(text: str, start: int) -> str:
     classification. Example: "Se modifica la Ley 1/1990 en su artículo 3.
     Lo dispuesto en la Ley 2/1995 sigue vigente." — the second citation
     must classify as CITES, not MODIFIES.
+
+    Before trimming, a trailing bare list-item marker (``a)``, ``1.``,
+    ...) is stripped along with its leading newline(s) so the lead-in
+    sentence of an enumerated list (e.g. "Quedan derogadas expresamente
+    las siguientes disposiciones:") stays in the window instead of being
+    cut off by the newline right before the marker (#823).
     """
     raw = text[max(0, start - _CLASSIFY_CONTEXT_CHARS) : start]
+    marker_match = _TRAILING_LIST_MARKER_RE.search(raw)
+    if marker_match:
+        raw = raw[: marker_match.start()]
     last_boundary = max(raw.rfind(ch) for ch in _SENTENCE_BOUNDARIES)
     if last_boundary >= 0:
         return raw[last_boundary + 1 :]
@@ -517,21 +824,29 @@ def parse_law_content(content: str, file_path: str) -> Law:
     metadata = frontmatter_to_metadata(raw_fm)
     sections = extract_heading_tree(body)
     articles = extract_articles(body)
-    all_references = _collect_all_references(articles)
+    if not articles:
+        # #824: ~38% of the 1,857 zero-article laws use numbered ordinals
+        # (``Primero.``, ``Único.``, ...) instead of ``Artículo`` headings.
+        articles = extract_ordinal_articles(body)
+    disposiciones = extract_disposiciones(body)
+    all_references = _collect_all_references(articles, disposiciones)
 
     return Law(
         metadata=metadata,
         sections=sections,
         articles=articles,
+        disposiciones=disposiciones,
         references=all_references,
         raw_text=body,
         file_path=file_path,
     )
 
 
-def _collect_all_references(articles: list[Article]) -> list[Reference]:
-    """Flatten references from all articles into a single list."""
+def _collect_all_references(articles: list[Article], disposiciones: list[Disposicion]) -> list[Reference]:
+    """Flatten references from all articles, then all disposiciones (#823)."""
     refs: list[Reference] = []
     for article in articles:
         refs.extend(article.references)
+    for disposicion in disposiciones:
+        refs.extend(disposicion.references)
     return refs

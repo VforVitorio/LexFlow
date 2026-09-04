@@ -11,6 +11,11 @@ duplicating it (see the insert-or-return logic in
 Persistence reuses the chat-thread SQLite database
 (:mod:`lexflow.chat.db`) — this module does not open its own engine.
 
+Security invariant (issue #888, S4.2): this table has no owner/user scope,
+same as :mod:`lexflow.chat.storage_models`. Safe only under the
+loopback-only bind enforced by ``main.py``'s ``_resolve_bind_host``
+(issue #885, S1.3) — see ``docs/architecture/api-contract.md#multi-tenancy``.
+
 --- WHERE TO CHANGE IF X CHANGES ---
 * Multi-user support      → add a ``user_id`` column and widen the
                              unique constraint to
