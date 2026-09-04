@@ -73,6 +73,19 @@ export default {
         'amber-soft':   'hsl(var(--amber-soft)   / <alpha-value>)',
         'success-soft': 'hsl(var(--success-soft) / <alpha-value>)',
         'danger-soft':  'hsl(var(--danger-soft)  / <alpha-value>)',
+        'info-soft':          'hsl(var(--info-soft)          / <alpha-value>)',
+        'reference-soft':     'hsl(var(--reference-soft)     / <alpha-value>)',
+        'reference-soft-fg': 'hsl(var(--reference-soft-fg) / <alpha-value>)',
+        'amendment-soft':     'hsl(var(--amendment-soft)     / <alpha-value>)',
+        'amendment-soft-fg': 'hsl(var(--amendment-soft-fg) / <alpha-value>)',
+      },
+      zIndex: {
+        sticky: '1',
+        dropdown: '30',
+        backdrop: '40',
+        overlay: '50',
+        modal: '55',
+        confirm: '60',
       },
       fontFamily: {
         // "* Variable" is the family name @fontsource-variable registers for the

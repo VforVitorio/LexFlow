@@ -21,9 +21,19 @@ The packaging story has two stages — Docker today, native binaries planned.
 - Volume `lexflow-data:/app/data/legalize-es` (the corpus submodule lives
   here so a `docker compose up` followed by `docker compose down` does not
   lose the cloned data).
-- Env: `LEXFLOW_HOST=0.0.0.0`, `LEXFLOW_PORT=8000`, `LEXFLOW_LOG_LEVEL`.
+- Env: `LEXFLOW_HOST=0.0.0.0`, `LEXFLOW_PORT=8000`, `LEXFLOW_LOG_LEVEL`,
+  `LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1`.
 - Healthcheck: `urllib.request.urlopen('http://localhost:8000/health')`
   every 30 s (see [observability.md](./observability.md) for the endpoint).
+
+> **Loopback bind guard (issue #885, S1.3).** `main.py` refuses to bind
+> off-loopback unless `LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1` is set —
+> Docker's `0.0.0.0` bind is required for the container's own network
+> namespace, but LexFlow still has no auth layer behind it. The actual
+> host-exposure boundary is the `ports:` mapping in
+> [`docker-compose.yml`](../../docker-compose.yml); never publish that
+> port on an untrusted network without a real auth layer / reverse proxy
+> in front.
 
 Docker is the **server-side** option. Anyone hosting LexFlow for a team
 should use it. End users should not need to install Docker.

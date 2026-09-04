@@ -73,6 +73,10 @@ LABELS=(
   "area: docs|0075ca|Documentation only"
   "area: tests|bfd4f2|Tests only"
   "area: data|fef2c0|legalize-es submodule / data files"
+  "agent-pr|8250df|PR opened by the autonomous agent loop"
+  "agent:wip|8250df|Issue currently claimed by an agent-loop run"
+  "agent:failed|d4c5f9|Last agent-loop attempt failed; retry allowed"
+  "agent:blocked|6f42c1|Two agent-loop attempts failed; needs a human"
 )
 
 echo "==> Ensuring labels exist on ${REPO}"

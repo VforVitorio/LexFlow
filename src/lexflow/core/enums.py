@@ -77,6 +77,21 @@ class ReferenceKind(StrEnum):
     DEVELOPS = "develops"
 
 
+class DisposicionKind(StrEnum):
+    """Category of a closing disposition (#823).
+
+    Matches the four heading families legalize-es uses for the block of
+    dispositions that follows a law's articles: additional, transitional,
+    repealing (singular in practice — most laws have exactly one) and
+    final.
+    """
+
+    ADICIONAL = "adicional"
+    TRANSITORIA = "transitoria"
+    DEROGATORIA = "derogatoria"
+    FINAL = "final"
+
+
 class Jurisdiction(StrEnum):
     """Jurisdiction codes for Spanish autonomous communities.
 

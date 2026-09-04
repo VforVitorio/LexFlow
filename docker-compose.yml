@@ -20,6 +20,14 @@ services:
       - LEXFLOW_HOST=0.0.0.0
       - LEXFLOW_PORT=8000
       - LEXFLOW_LOG_LEVEL=${LEXFLOW_LOG_LEVEL:-info}
+      # Issue #885 (S1.3): main.py refuses a non-loopback bind unless this
+      # is set. Binding 0.0.0.0 *inside* the container is fine here — the
+      # actual host exposure boundary is the `ports:` mapping above, not
+      # this bind address — but the app can't tell the difference between
+      # "inside a container" and "on the LAN", so it needs the explicit
+      # opt-in either way. There is still NO auth layer: don't publish
+      # this port on anything but a trusted host/network.
+      - LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]

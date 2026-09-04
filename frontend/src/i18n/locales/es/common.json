@@ -109,7 +109,11 @@
     "bundleInstalling": "Instalando…",
     "bundleInstalled": "Bundle instalado",
     "bundleFailed": "No se pudo instalar el bundle",
-    "bundleWrongExt": "El archivo debe terminar en .mcpb"
+    "bundleWrongExt": "El archivo debe terminar en .mcpb",
+    "notConnectedHint": "Añadido pero no conectado — activa para dar tu consentimiento y conectar.",
+    "consentTitle": "¿Conectar este servidor MCP?",
+    "consentMessage": "Al activar \"{{name}}\" se ejecutará este comando como subproceso: {{command}}. Hazlo solo si confías en su origen.",
+    "consentConfirm": "Activar y conectar"
   },
   "wizard": {
     "dialogAria": "Configurar modelo de IA",
@@ -668,5 +672,18 @@
     "confirm": "Aceptar",
     "delete": "Eliminar",
     "loading": "Cargando…"
+  },
+  "appUpdate": {
+    "title": "Nueva versión disponible (v{{version}})",
+    "updateNow": "Actualizar ahora",
+    "remindLater": "Recordar más tarde",
+    "restartToApply": "Reiniciar para aplicar",
+    "downloading": "Descargando actualización…",
+    "downloadPct": "{{pct}}%",
+    "ready": "Descarga completada. Reinicia para aplicar la actualización.",
+    "restarting": "Reiniciando…",
+    "error": "No se pudo completar la actualización",
+    "retry": "Reintentar",
+    "notesHeading": "Notas de la versión"
   }
 }

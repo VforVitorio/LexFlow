@@ -13,6 +13,8 @@ fixture ships. Deterministic embeddings → deterministic rankings.
 from __future__ import annotations
 
 import math
+import threading
+import time
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,6 +24,7 @@ from lexflow.api.dependencies import get_search_index
 from lexflow.core.registry import LawRegistry
 from lexflow.search.embeddings import DEFAULT_DIMENSION, HashEmbedder
 from lexflow.search.semantic_index import SemanticIndex
+from lexflow.search.service import ensure_semantic_index, reset_semantic_warmup_state
 
 # ─── Embedder ──────────────────────────────────────────────────────────
 
@@ -139,9 +142,21 @@ def _isolated_index():
     from lexflow.search.semantic_index import reset_semantic_index
 
     reset_semantic_index()
+    reset_semantic_warmup_state()
     yield
     reset_semantic_index()
+    reset_semantic_warmup_state()
     app.dependency_overrides.pop(get_search_index, None)
+
+
+@pytest.fixture()
+def _warm_index(mock_registry: LawRegistry, _isolated_index: None) -> None:
+    """Pre-build the index so endpoint tests exercise the query path, not
+    the cold-start 503 (#871 S1.4 — covered separately by
+    ``TestSemanticSearchWarmup``).
+    """
+    del _isolated_index
+    ensure_semantic_index(mock_registry)
 
 
 class TestSemanticSearchEndpoint:
@@ -149,7 +164,7 @@ class TestSemanticSearchEndpoint:
         self,
         client: TestClient,
         mock_registry: LawRegistry,
-        _isolated_index,
+        _warm_index: None,
     ) -> None:
         response = client.get("/api/v1/laws/search/semantic", params={"q": "civil"})
         assert response.status_code == 200
@@ -161,7 +176,7 @@ class TestSemanticSearchEndpoint:
         self,
         client: TestClient,
         mock_registry: LawRegistry,
-        _isolated_index,
+        _warm_index: None,
     ) -> None:
         body = client.get(
             "/api/v1/laws/search/semantic",
@@ -169,7 +184,7 @@ class TestSemanticSearchEndpoint:
         ).json()
         assert len(body["items"]) <= 1
 
-    def test_too_short_query_rejected(self, client: TestClient, _isolated_index) -> None:
+    def test_too_short_query_rejected(self, client: TestClient, mock_registry: LawRegistry, _warm_index: None) -> None:
         response = client.get("/api/v1/laws/search/semantic", params={"q": "x"})
         assert response.status_code == 422
 
@@ -177,7 +192,7 @@ class TestSemanticSearchEndpoint:
         self,
         client: TestClient,
         mock_registry: LawRegistry,
-        _isolated_index,
+        _warm_index: None,
     ) -> None:
         response = client.get(
             "/api/v1/laws/search/semantic",
@@ -189,9 +204,72 @@ class TestSemanticSearchEndpoint:
         self,
         client: TestClient,
         mock_registry: LawRegistry,
-        _isolated_index,
+        _warm_index: None,
     ) -> None:
         body = client.get("/api/v1/laws/search/semantic", params={"q": "law"}).json()
         for hit in body["items"]:
             assert set(hit.keys()) >= {"law_id", "article_number", "snippet", "score"}
             assert -1.0 <= hit["score"] <= 1.0
+
+
+class TestSemanticSearchWarmup:
+    """Cold-start 503 contract for ``Depends(get_search_index)`` (#871 S1.4)."""
+
+    def test_cold_index_returns_503_and_kicks_background_build(
+        self,
+        client: TestClient,
+        mock_registry: LawRegistry,
+        _isolated_index: None,
+    ) -> None:
+        del mock_registry
+        response = client.get("/api/v1/laws/search/semantic", params={"q": "civil"})
+        assert response.status_code == 503
+        assert response.json()["code"] == "semantic_warming"
+
+        from lexflow.search.semantic_index import get_semantic_index
+
+        for _ in range(50):
+            if get_semantic_index().is_built:
+                break
+            time.sleep(0.05)
+        assert get_semantic_index().is_built
+
+    def test_repeated_cold_requests_do_not_duplicate_builders(
+        self,
+        client: TestClient,
+        mock_registry: LawRegistry,
+        _isolated_index: None,
+    ) -> None:
+        """Two near-simultaneous cold requests must share ONE background
+        build, never spawn a second thread. The fixture corpus embeds fast
+        enough that the second request can legitimately land AFTER the
+        build finishes (200) — that race is fine; only a second builder
+        thread would be the bug.
+        """
+        del mock_registry
+        client.get("/api/v1/laws/search/semantic", params={"q": "civil"})
+        client.get("/api/v1/laws/search/semantic", params={"q": "penal"})
+
+        warmup_threads = [t for t in threading.enumerate() if t.name == "semantic-index-warmup"]
+        assert len(warmup_threads) <= 1
+
+    def test_after_build_completes_returns_200(
+        self,
+        client: TestClient,
+        mock_registry: LawRegistry,
+        _isolated_index: None,
+    ) -> None:
+        from lexflow.search.semantic_index import get_semantic_index
+
+        # Kick + wait for the background build the same way a real client
+        # would after seeing the first 503.
+        assert client.get("/api/v1/laws/search/semantic", params={"q": "civil"}).status_code == 503
+        for _ in range(50):
+            if get_semantic_index().is_built:
+                break
+            time.sleep(0.05)
+        assert get_semantic_index().is_built
+
+        response = client.get("/api/v1/laws/search/semantic", params={"q": "civil"})
+        assert response.status_code == 200
+        assert response.json()["query"] == "civil"

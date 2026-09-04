@@ -50,7 +50,7 @@ export function AppShell() {
         type="button"
         aria-label="Buscar (paleta de comandos)"
         onClick={() => setPaletteOpen(true)}
-        className="fixed bottom-[68px] right-4 z-30 flex size-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 md:hidden"
+        className="fixed bottom-[68px] right-4 z-dropdown flex size-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-2 hover:bg-indigo-500 md:hidden"
       >
         <Search className="size-5" />
       </button>

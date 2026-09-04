@@ -60,6 +60,7 @@ def get_warmup_status() -> WarmupStatusResponse:
         search_ready=state.search_ready,
         graph_ready=state.graph_ready,
         semantic_ready=state.semantic_ready,
+        drift_report=state.drift_report,
         error=state.error,
         durations_seconds=state.durations_seconds,
     )
@@ -78,6 +79,7 @@ def get_warmup_status() -> WarmupStatusResponse:
 def get_whats_new(
     since: str | None = Query(
         default=None,
+        pattern=r"^[0-9a-f]{7,40}$",
         description="Commit hash of the last corpus revision seen by the client "
         "(stored in localStorage). Omit or pass null on first launch.",
     ),

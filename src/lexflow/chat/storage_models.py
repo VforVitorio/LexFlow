@@ -18,6 +18,12 @@ class-body evaluation time and chokes on PEP-563 deferred strings; the
 plain-runtime annotations below let it wire ``ChatThread.messages`` to
 ``ChatMessage`` without surprises.
 
+Security invariant (issue #888, S4.2): ``ChatThread`` has no owner/user
+column — it is a single global table, safe only under the loopback-only
+bind enforced by ``main.py``'s ``_resolve_bind_host`` (issue #885, S1.3).
+Adding multi-user scope here is the documented follow-up before any
+networked deployment; see ``docs/architecture/api-contract.md#multi-tenancy``.
+
 --- WHERE TO CHANGE IF X CHANGES ---
 * New message kind / field    → update payload conventions in
                                 ``lexflow.chat.schemas`` and the

@@ -327,15 +327,21 @@ a built-in or existing user entry.
 
 Body: `McpServerCreateRequest`. Returns 201 + `McpServerView`.
 
+Security (#885, S1.1) — the new entry is persisted with `enabled: false`.
+Adding or importing a server never auto-connects it; the command is
+only ever spawned once the user explicitly flips it on in Settings
+(the SPA shows a consent dialog on that first enable).
+
 ### `PATCH /api/v1/mcp/servers/{name}`
 
-Toggle the `enabled` flag on a user server.
+Toggle the `enabled` flag on a user server. This is the only path
+that can trigger the first subprocess spawn for a newly added server.
 
 ### `DELETE /api/v1/mcp/servers/{name}`
 
 Idempotent delete. 409 when targeting a built-in.
 
-### `GET /api/v1/mcp/tools`  *(#121 / #364)*
+### `GET /api/v1/mcp/tools`  *(#121 / #364)*  — CSRF-boundary protected *(#885)*
 
 Merged tool catalogue across every enabled external MCP server.
 In-process built-in tools (`search_law`, `get_law`, `get_article`,
@@ -345,13 +351,22 @@ agentic loop. A server that fails to connect is silently skipped.
 Response: `McpToolListResponse` — `{ items: [{ server_name, name,
 qualified_name, description }, ...] }`.
 
-### `POST /api/v1/mcp/bundles`  *(#123 / #365)*
+Requires the `X-Lexflow-Client: spa` header (see
+[api-contract.md](../architecture/api-contract.md#csrf-boundary)) — a
+bare `GET` never triggers a CORS preflight, so this endpoint would
+otherwise be a blind cross-origin trigger for every enabled server's
+subprocess spawn.
+
+### `POST /api/v1/mcp/bundles`  *(#123 / #365)*  — CSRF-boundary protected *(#885)*
 
 Install a `.mcpb` bundle (Anthropic Desktop Extensions). Multipart
 upload with a single `file` field. 50 MB upload cap; per-member 25 MB
 cap; zip-slip rejected. 409 on name collision.
 
-Returns 201 + `McpServerView`.
+Returns 201 + `McpServerView` with `enabled: false` (same no-auto-connect
+rule as `POST /mcp/servers`). Requires the `X-Lexflow-Client: spa`
+header — multipart uploads are a CORS "simple request" and never
+trigger a preflight on their own.
 
 ## Secrets — [`routers/secrets.py`](../../src/lexflow/api/routers/secrets.py)  *(#120 / #362)*
 
