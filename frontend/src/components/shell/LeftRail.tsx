@@ -28,9 +28,6 @@ export function LeftRail() {
       className={cn(
         // Hidden on mobile — the BottomTabBar takes over below `md`.
         'relative hidden shrink-0 flex-col border-r border-border bg-surface overflow-hidden md:flex',
-        // Animate width on collapse/expand, but never while dragging — the
-        // transition would lag a frame behind the pointer.
-        !dragging && 'transition-[width] duration-200',
         !expanded && 'w-[60px]',
       )}
     >

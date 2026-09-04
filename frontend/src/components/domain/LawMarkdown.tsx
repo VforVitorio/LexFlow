@@ -49,7 +49,12 @@ const COMPONENTS: Components = {
   th: ({ children }) => <th className="border border-border px-2 py-1 text-left font-semibold">{children}</th>,
   td: ({ children }) => <td className="border border-border px-2 py-1 align-top">{children}</td>,
   a: ({ children, href }) => (
-    <a href={href} target="_blank" rel="noreferrer" className="text-indigo-600 underline dark:text-indigo-300">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-indigo-600 underline dark:text-indigo-300"
+    >
       {children}
     </a>
   ),

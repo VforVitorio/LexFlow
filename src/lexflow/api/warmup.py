@@ -12,8 +12,13 @@ Splits startup work into three tiers so the server can accept requests
 
   1. Full metadata preload (10-30 s on 12 K laws).
   2. In-memory search index build (10-30 s, depends on metadata).
-  3. Graph build/load (sub-second if cache hits; 30-90 s cold).
-  4. Semantic index build/load (opt-in; cache-hydrate when warm, else a
+  3. Graph build/load (sub-second if cache hits; 30-90 s cold; also
+     fully parses every law as a side effect).
+  4. Corpus drift report (#825) — unknown-enum, empty-identifier and
+     zero-article counts. Cheap on a cold start (reuses the cache the
+     graph stage just populated); forces its own per-law parse on a
+     warm-cache-hit graph, where the cache stayed empty.
+  5. Semantic index build/load (opt-in; cache-hydrate when warm, else a
      full embed pass — minutes for the real model on first run, #548).
      Best-effort: a missing/failed embedder is logged and skipped, never
      fails the core warm-up.
@@ -47,6 +52,7 @@ import time
 from dataclasses import dataclass, field
 
 from lexflow.api.dependencies import get_graph, get_law_registry
+from lexflow.core.corpus_drift import CorpusDriftReport, compute_drift_report
 from lexflow.core.exceptions import LexFlowError
 from lexflow.core.metadata_cache import load_or_preload_metadata
 from lexflow.core.search_cache import load_or_build_search
@@ -72,6 +78,7 @@ class WarmupState:
     search_ready: bool = False
     graph_ready: bool = False
     semantic_ready: bool = False
+    drift_report: CorpusDriftReport | None = None
     error: str | None = None
     started_at: float | None = None
     completed_at: float | None = None
@@ -152,7 +159,21 @@ async def _run_warmup() -> None:
         _mark("graph", started=stage_started)
         logger.info("Warmup: graph stage complete (%.2fs)", time.monotonic() - stage_started)
 
-        # Stage 4 — semantic index (opt-in). Pre-build so the first
+        # Stage 4 — corpus drift report (#825). Runs AFTER the graph stage
+        # so that, on a cold start, ``get_graph`` has already parsed every
+        # law into the registry cache and ``zero_article_count`` here is a
+        # cache lookup instead of forcing its own full-corpus parse. On a
+        # warm-cache-hit graph (loaded from ``graph_cache.json``, cache
+        # untouched), ``compute_drift_report`` still forces the parses it
+        # needs itself — never gated on ``is_parsed`` (#825 review).
+        stage_started = time.monotonic()
+        drift_report = await asyncio.to_thread(compute_drift_report, registry)
+        with _state_lock:
+            _state.drift_report = drift_report
+        _mark("drift", started=stage_started)
+        logger.info("Warmup: drift report stage complete (%.2fs)", time.monotonic() - stage_started)
+
+        # Stage 5 — semantic index (opt-in). Pre-build so the first
         # semantic/hybrid query doesn't trigger a multi-minute cold embed
         # pass (#548). Best-effort and isolated in its own try/except: the
         # [semantic] extra may be absent or the model may fail to load, and

@@ -8,8 +8,8 @@ const avatarTones: Record<Tone, string> = {
   // Deslop #798: violet/cyan tints were copy-pasted arbitrary HSL values —
   // now sourced from the shared --reference-soft/--amendment-soft(-fg) tokens
   // (index.css), which already flip light/dark, so no `dark:` variant needed.
-  violet: 'bg-[hsl(var(--reference-soft))] text-[hsl(var(--reference-soft-fg))]',
-  cyan:   'bg-[hsl(var(--amendment-soft))] text-[hsl(var(--amendment-soft-fg))]',
+  violet: 'bg-reference-soft text-reference-soft-fg',
+  cyan:   'bg-amendment-soft text-amendment-soft-fg',
 };
 
 export function Avatar({

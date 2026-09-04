@@ -72,7 +72,7 @@ export function HomePage() {
         </header>
 
         {/* Search hero */}
-        <section className="mb-7 rounded-xl border border-border bg-gradient-to-b from-surface to-bg p-5">
+        <section className="mb-7 rounded-xl border border-border bg-surface p-5">
           <button
             onClick={() => setPaletteOpen(true)}
             className="flex h-11 w-full items-center gap-2.5 rounded-lg border border-border-strong bg-bg px-3.5 text-left"
@@ -223,7 +223,7 @@ function ChangedRowIcon({ law }: { law: Law }) {
         ? { Icon: GitCompareArrows, cls: 'bg-amber-soft text-amber-700' }
         // Deslop #798: was a copy-pasted arbitrary HSL tint; now the shared
         // --reference-soft(-fg) tokens (index.css), which already flip light/dark.
-        : { Icon: BookOpenText, cls: 'bg-[hsl(var(--reference-soft))] text-[hsl(var(--reference-soft-fg))]' };
+        : { Icon: BookOpenText, cls: 'bg-reference-soft text-reference-soft-fg' };
   return (
     <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-lg', palette.cls)}>
       <palette.Icon className="size-4" />
@@ -263,8 +263,8 @@ function QuickTile({
   const palette: Record<typeof tone, string> = {
     indigo: 'bg-primary-soft text-indigo-700 dark:text-indigo-200',
     amber:  'bg-amber-soft text-amber-700 dark:text-amber-300',
-    violet: 'bg-[hsl(var(--reference-soft))] text-[hsl(var(--reference-soft-fg))]',
-    cyan:   'bg-[hsl(var(--amendment-soft))] text-[hsl(var(--amendment-soft-fg))]',
+    violet: 'bg-reference-soft text-reference-soft-fg',
+    cyan:   'bg-amendment-soft text-amendment-soft-fg',
   };
   return (
     <button

@@ -138,7 +138,10 @@ class ChatProvider(ABC):
     def stream_chat(self, messages, model) -> AsyncIterator[str]: ...
     # Default impl bridges stream_chat → StreamChunk union.
     async def stream_chat_typed(
-        self, messages, model, tools=None,
+        self,
+        messages,
+        model,
+        tools=None,
     ) -> AsyncIterator[StreamChunk]: ...
 ```
 

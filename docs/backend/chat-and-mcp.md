@@ -8,8 +8,9 @@ Source: [`src/lexflow/chat/`](../../src/lexflow/chat/). Depends on the
 
 ```python
 class ChatMessage(BaseModel):
-    role: str           # 'user' | 'assistant' | 'system'
+    role: str  # 'user' | 'assistant' | 'system'
     content: str
+
 
 class ChatProvider(ABC):
     @abstractmethod
@@ -21,6 +22,7 @@ class ChatProvider(ABC):
         messages: list[ChatMessage],
         model: str,
     ) -> AsyncIterator[str]: ...
+
 
 class ChatProviderError(Exception): ...
 ```
