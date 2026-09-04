@@ -18,7 +18,7 @@ from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.exceptions import DataPathError, LawNotFoundError, LexFlowError
 from lexflow.core.law_aliases import expand_alias
 from lexflow.core.metadata_parser import parse_metadata_only
-from lexflow.core.models import Law, LawMetadata
+from lexflow.core.models import Law, LawMetadata, Section
 from lexflow.core.parser import parse_law_file
 from lexflow.core.schemas import LawSummary, PaginatedResponse, SearchResponse
 from lexflow.core.search import SearchIndex
@@ -178,6 +178,14 @@ class LawRegistry:
     def has_law(self, law_id: str) -> bool:
         """Whether *law_id* is currently in the index."""
         return law_id in self._index
+
+    def is_parsed(self, law_id: str) -> bool:
+        """Whether *law_id* has already been fully parsed and cached."""
+        return law_id in self._cache
+
+    def law_file_path(self, law_id: str) -> Path | None:
+        """The source ``.md`` path for *law_id*, or ``None`` if unindexed."""
+        return self._index.get(law_id)
 
     def list_laws(
         self,
@@ -485,7 +493,13 @@ class LawRegistry:
         logger.info("Search index built: %d entries", self._search_index.entry_count)
 
     def _index_law_for_search(self, law_id: str) -> None:
-        """Add one law's searchable entries (title + any parsed articles)."""
+        """Add one law's searchable entries (title, articles, non-article prose).
+
+        Non-article prose — preámbulos, section intros, anexo tables (#825) —
+        was invisible to search because only ``law.articles`` was indexed;
+        a query term that only occurred in a Constitución preámbulo or an
+        anexo table returned zero hits even though the text was parsed.
+        """
         meta = self._ensure_metadata(law_id)
         # Law-level entry (title is the primary searchable text).
         self._search_index.add_entry(
@@ -494,16 +508,38 @@ class LawRegistry:
             article_number=None,
             text=meta.title,
         )
-        # Article-level entries only if the law has been fully parsed.
-        if law_id in self._cache:
-            law = self._cache[law_id]
-            for article in law.articles:
+        # Body-level entries only if the law has been fully parsed.
+        if law_id not in self._cache:
+            return
+        law = self._cache[law_id]
+        for article in law.articles:
+            self._search_index.add_entry(
+                law_id=meta.identifier,
+                law_title=meta.title,
+                article_number=article.number,
+                text=article.text,
+            )
+        self._index_section_prose(meta.identifier, meta.title, law.sections)
+        for disposicion in law.disposiciones:
+            if disposicion.text.strip():
                 self._search_index.add_entry(
                     law_id=meta.identifier,
                     law_title=meta.title,
-                    article_number=article.number,
-                    text=article.text,
+                    article_number=disposicion.heading,
+                    text=disposicion.text,
                 )
+
+    def _index_section_prose(self, law_id: str, law_title: str, sections: list[Section]) -> None:
+        """Recursively add each section's own prose as a search entry (#825)."""
+        for section in sections:
+            if section.text.strip():
+                self._search_index.add_entry(
+                    law_id=law_id,
+                    law_title=law_title,
+                    article_number=section.heading,
+                    text=section.text,
+                )
+            self._index_section_prose(law_id, law_title, section.subsections)
 
 
 @lru_cache(maxsize=1)

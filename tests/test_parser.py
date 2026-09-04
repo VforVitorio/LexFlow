@@ -120,6 +120,68 @@ class TestExtractHeadingTree:
         assert extract_heading_tree("Just plain text\nNo headings here") == []
 
 
+class TestSectionText:
+    """#825: ``Section.text`` carries a section's own prose (preámbulo,
+    section intro, anexo), separate from its nested articles/subsections.
+    """
+
+    def test_section_with_no_articles_keeps_full_prose(self) -> None:
+        body = dedent("""\
+            ### PREAMBULO
+
+            Primer parrafo del preambulo.
+
+            Segundo parrafo.
+        """)
+        sections = extract_heading_tree(body)
+        assert sections[0].heading == "PREAMBULO"
+        assert "Primer parrafo del preambulo." in sections[0].text
+        assert "Segundo parrafo." in sections[0].text
+        assert sections[0].articles == []
+
+    def test_section_text_excludes_heading_line(self) -> None:
+        body = dedent("""\
+            ### ANEXO. Tabla
+
+            | a | b |
+            | --- | --- |
+            | 1 | 2 |
+        """)
+        sections = extract_heading_tree(body)
+        assert "ANEXO" not in sections[0].text
+        assert "| a | b |" in sections[0].text
+
+    def test_section_intro_before_first_article_is_kept(self) -> None:
+        body = dedent("""\
+            ## TITULO I. Intro
+
+            Este titulo regula lo siguiente.
+
+            ###### Articulo 1.
+
+            Cuerpo del articulo uno.
+        """)
+        sections = extract_heading_tree(body)
+        assert sections[0].text == "Este titulo regula lo siguiente."
+        assert len(sections[0].articles) == 1
+
+    def test_section_with_only_articles_has_empty_text(self) -> None:
+        body = dedent("""\
+            ## TITULO PRELIMINAR
+
+            ###### Articulo 1.
+
+            Cuerpo uno.
+
+            ###### Articulo 2.
+
+            Cuerpo dos.
+        """)
+        sections = extract_heading_tree(body)
+        assert sections[0].text == ""
+        assert len(sections[0].articles) == 2
+
+
 # ---------------------------------------------------------------------------
 # Articles
 # ---------------------------------------------------------------------------

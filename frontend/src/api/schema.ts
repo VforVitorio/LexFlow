@@ -1160,6 +1160,42 @@ export interface components {
          */
         ConsolidationStatus: "Finalizado" | "En curso" | "unknown";
         /**
+         * CorpusDriftReport
+         * @description Snapshot of known data-fidelity drift signals across the corpus.
+         *
+         *     ``*_sample_ids`` are capped at 10 — enough for an
+         *     operator to jump straight to an offending law without inflating the
+         *     warm-up payload when a regression affects thousands of laws at once.
+         */
+        CorpusDriftReport: {
+            /**
+             * Total Laws
+             * @default 0
+             */
+            total_laws: number;
+            /**
+             * Unknown Status Count
+             * @default 0
+             */
+            unknown_status_count: number;
+            /**
+             * Empty Identifier Count
+             * @default 0
+             */
+            empty_identifier_count: number;
+            /**
+             * Zero Article Count
+             * @default 0
+             */
+            zero_article_count: number;
+            /** Unknown Status Sample Ids */
+            unknown_status_sample_ids?: string[];
+            /** Empty Identifier Sample Ids */
+            empty_identifier_sample_ids?: string[];
+            /** Zero Article Sample Ids */
+            zero_article_sample_ids?: string[];
+        };
+        /**
          * DashboardPayload
          * @description Full response of ``GET /api/v1/dashboards/{preset}``.
          */
@@ -1938,6 +1974,12 @@ export interface components {
              * @description Section heading text.
              */
             heading: string;
+            /**
+             * Text
+             * @description Prose that belongs directly to this section — e.g. a preámbulo, a section's intro paragraph, or an anexo table —  as opposed to text that belongs to a nested article or subsection (#825). Empty when the section has no prose of its own (e.g. a Título whose content is only articles).
+             * @default
+             */
+            text: string;
             /** Articles */
             articles?: components["schemas"]["Article"][];
             /** Subsections */
@@ -2146,6 +2188,10 @@ export interface components {
              * @description Knowledge graph loaded/rebuilt.
              */
             graph_ready: boolean;
+            /**
+             * @description Corpus data-fidelity drift snapshot (#825): unknown enum values, empty identifiers, zero-article laws. `None` until the drift stage of warm-up completes.
+             */
+            drift_report?: components["schemas"]["CorpusDriftReport"] | null;
             /**
              * Error
              * @description Last warm-up error message, if any stage failed (the other stages can still report ready).
