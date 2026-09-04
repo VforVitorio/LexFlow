@@ -93,7 +93,7 @@ export function CitationPicker({ editor, onClose }: CitationPickerProps) {
       role="dialog"
       aria-modal="true"
       aria-label="Insertar cita legal"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] bg-black/35 backdrop-blur-[2px] animate-in"
+      className="fixed inset-0 z-overlay flex items-start justify-center pt-[12vh] bg-black/35 backdrop-blur-[2px] animate-in"
       onClick={onClose}
     >
       <div onClick={(e) => e.stopPropagation()} className="air-glass-strong w-[580px] max-w-[92vw] overflow-hidden">

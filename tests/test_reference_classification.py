@@ -91,3 +91,31 @@ class TestRegression:
         # because the deroga is far outside its 120-char window.
         assert kinds[0] == ReferenceKind.REPEALS
         assert kinds[-1] == ReferenceKind.CITES
+
+    def test_list_form_derogation_keeps_lead_in_context(self) -> None:
+        # #823: the "Quedan derogadas..." lead-in sits on the line before
+        # the "a)" list item — trimming at the newline right before "a)"
+        # must not drop that lead-in sentence.
+        text = (
+            "2. Quedan derogadas expresamente las siguientes disposiciones:\n"
+            "\n"
+            "a) Ley 30/1992, de 26 de noviembre, de Régimen Jurídico de las "
+            "Administraciones Públicas y del Procedimiento Administrativo Común.\n"
+            "\n"
+            "b) Ley 11/2007, de 22 de junio, de acceso electrónico de los "
+            "ciudadanos a los Servicios Públicos.\n"
+        )
+        kinds = _kinds(text)
+        assert kinds[0] == ReferenceKind.REPEALS
+
+    def test_numbered_lead_in_before_lettered_list_item(self) -> None:
+        # Edge case: a numbered lead-in ("1." / "2.") preceding lettered
+        # items must still surface the repeal marker for the first item.
+        text = "1. Quedan derogadas las siguientes normas:\n\na) Ley 5/2000, de 1 de enero."
+        assert _kinds(text) == [ReferenceKind.REPEALS]
+
+    def test_plain_cite_after_list_item_still_classifies_as_cites(self) -> None:
+        # No repeal marker anywhere nearby — list-marker handling must not
+        # invent a REPEALS classification out of thin air.
+        text = "Véanse las siguientes normas:\n\na) Ley 5/2000, de 1 de enero."
+        assert _kinds(text) == [ReferenceKind.CITES]

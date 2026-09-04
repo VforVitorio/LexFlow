@@ -10,7 +10,7 @@ from lexflow.core.registry import LawRegistry, get_registry
 from lexflow.graph.cache import load_or_build as _load_or_build_graph
 from lexflow.graph.model import LegalGraph
 from lexflow.search.semantic_index import SemanticIndex
-from lexflow.search.service import ensure_semantic_index
+from lexflow.search.service import get_ready_semantic_index
 from lexflow.utils.config import get_settings
 
 
@@ -65,16 +65,18 @@ def reset_graph_cache() -> None:
 
 
 def get_search_index(registry: LawRegistry = Depends(get_law_registry)) -> SemanticIndex:
-    """Provide the process-wide :class:`SemanticIndex`, building on first use.
+    """Provide the process-wide :class:`SemanticIndex`, READY only.
 
-    First call hydrates from the disk cache (via
-    :func:`lexflow.search.index_cache.load_or_build`) when a matching
-    corpus revision + embedder is cached, so a restart skips re-embedding
-    the whole corpus; otherwise it builds and saves. Mirrors
-    :func:`get_graph`: lazy, locked by the index itself, swappable via
-    ``app.dependency_overrides`` in tests.
+    Audit #871 S1.4: unlike :func:`get_graph`, this must NOT build inline —
+    a cold semantic index takes a full corpus parse + embed pass (minutes)
+    and blocking the request would freeze the whole event loop. If the
+    index isn't built yet, this kicks a background build (see
+    :func:`lexflow.search.service.get_ready_semantic_index`) and raises
+    ``SemanticIndexWarmingError``, which ``lexflow.api.error_handlers``
+    turns into a ``503 {"code": "semantic_warming"}`` response. Swappable
+    via ``app.dependency_overrides`` in tests, same as :func:`get_graph`.
     """
-    return ensure_semantic_index(registry)
+    return get_ready_semantic_index(registry)
 
 
 class PaginationParams:

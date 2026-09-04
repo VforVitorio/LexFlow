@@ -14,7 +14,8 @@ from lexflow.core.delta_sync import CorpusDiff
 
 @pytest.fixture()
 def client() -> TestClient:
-    return TestClient(app)
+    # CSRF boundary header (issue #885, S1.2) — required on `/sync`.
+    return TestClient(app, headers={"X-Lexflow-Client": "spa"})
 
 
 def _pull_result(stdout: str) -> object:
