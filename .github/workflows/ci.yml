@@ -236,7 +236,7 @@ jobs:
         if: steps.changes.outputs.frontend != 'true'
         run: echo "No frontend changes; skipping SPA lint+test+build."
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.changes.outputs.frontend == 'true'
         with:
           node-version: "20"
@@ -289,7 +289,7 @@ jobs:
         if: steps.changes.outputs.landing != 'true'
         run: echo "No landing changes; skipping landing build."
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.changes.outputs.landing == 'true'
         with:
           node-version: "20"
