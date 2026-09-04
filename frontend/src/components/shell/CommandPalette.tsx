@@ -162,7 +162,7 @@ export function CommandPalette() {
       role="dialog"
       aria-modal="true"
       aria-label="Paleta de comandos"
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] bg-black/35 backdrop-blur-[2px] animate-in"
+      className="fixed inset-0 z-overlay flex items-start justify-center pt-[12vh] bg-black/35 backdrop-blur-[2px] animate-in"
       onClick={() => setPaletteOpen(false)}
     >
       <div
@@ -215,7 +215,7 @@ export function CommandPalette() {
                         // Deslop #798: was a copy-pasted arbitrary HSL tint; now the
                         // shared --reference-soft(-fg) tokens (index.css), which already
                         // flip light/dark, so no `dark:` variant is needed.
-                        it.group === 'Comandos' && 'bg-[hsl(var(--reference-soft))] text-[hsl(var(--reference-soft-fg))]',
+                        it.group === 'Comandos' && 'bg-reference-soft text-reference-soft-fg',
                       )}>{it.icon}</span>
                       <div className="min-w-0 flex-1">
                         <div className="truncate font-medium">{it.title}</div>

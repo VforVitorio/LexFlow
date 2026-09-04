@@ -264,6 +264,19 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
 
   const onToggle = async (next: boolean) => {
     if (isBuiltin) return; // UI disables it; defensive.
+    // Security (issue #885, S1.1) — enabling a server is the FIRST
+    // moment its command can be spawned as a subprocess (the backend
+    // now persists every added/imported server disabled). Require an
+    // explicit, informed consent step before that first spawn.
+    if (next) {
+      const ok = await confirm({
+        title: t('mcp.consentTitle'),
+        message: t('mcp.consentMessage', { name: row.name, command: summary }),
+        confirmLabel: t('mcp.consentConfirm'),
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
     try {
       await liveMcpServersApi.toggle(row.name, next);
       await onChange();
@@ -309,6 +322,9 @@ function ServerRow({ row, onChange }: { row: McpServerView; onChange: () => Prom
           <div className="mt-0.5 text-[12px] text-muted">{row.description}</div>
         )}
         <div className="mt-1 truncate font-mono text-[11.5px] text-muted">{summary}</div>
+        {!isBuiltin && !row.enabled && (
+          <div className="mt-0.5 text-[11.5px] text-muted">{t('mcp.notConnectedHint')}</div>
+        )}
       </div>
       <Switch checked={row.enabled} onChange={onToggle} disabled={isBuiltin} />
       {!isBuiltin && (
@@ -438,7 +454,7 @@ function AddServerDialog({
       role="dialog"
       aria-modal="true"
       aria-label={t('mcp.dialogTitle')}
-      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
     >
       <div className="air-glass-strong w-full max-w-2xl p-6">
         <div className="mb-3 flex items-start justify-between gap-3">

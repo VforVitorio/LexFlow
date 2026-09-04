@@ -7,6 +7,7 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, Field, computed_field
 
+from lexflow.core.corpus_drift import CorpusDriftReport
 from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.models import Article, LawMetadata, Reference, Section
 
@@ -373,6 +374,14 @@ class WarmupStatusResponse(BaseModel):
     semantic_ready: bool = Field(
         default=False,
         description="Opt-in semantic index pre-built (#548). Not part of `ready` — semantic search is optional.",
+    )
+    drift_report: CorpusDriftReport | None = Field(
+        default=None,
+        description=(
+            "Corpus data-fidelity drift snapshot (#825): unknown enum values, "
+            "empty identifiers, zero-article laws. `None` until the drift "
+            "stage of warm-up completes."
+        ),
     )
     error: str | None = Field(
         default=None,

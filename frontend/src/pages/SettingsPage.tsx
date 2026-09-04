@@ -649,7 +649,7 @@ function SemanticExplainDialog({ onCancel, onConfirm }: { onCancel: () => void; 
       role="dialog"
       aria-modal="true"
       aria-label={t('settings.models.semanticExplainTitle')}
-      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-black/35 backdrop-blur-md p-4"
       onClick={onCancel}
     >
       <div

@@ -60,6 +60,14 @@ class TestGetLaw:
         assert result.get("metadata", {}).get("identifier") == law_id
         assert isinstance(result.get("articles"), list)
 
+    def test_payload_omits_raw_text_and_sections(self, patched_registry: LawRegistry) -> None:
+        """#871 S1.2: raw_text/sections duplicate articles, must not ship."""
+        law_id = patched_registry.law_ids[0]
+        result = _unwrap(mcp_server.get_law)(law_id=law_id)
+        assert "raw_text" not in result
+        assert "sections" not in result
+        assert result["article_count"] == len(result["articles"])
+
     def test_unknown_id_returns_error_dict(self, patched_registry: LawRegistry) -> None:
         del patched_registry
         result = _unwrap(mcp_server.get_law)(law_id="DOES-NOT-EXIST")
@@ -83,6 +91,21 @@ class TestGetArticle:
         result = _unwrap(mcp_server.get_article)(law_id="BOE-A-2000-323", article_number="9999")
         assert result["error"] == "article_not_found"
         assert result["article_number"] == "9999"
+
+    def test_occurrence_selects_duplicate_article(self, sample_law_dir: Path, monkeypatch: MonkeyPatch) -> None:
+        """#824: ``occurrence`` reaches the 2nd match of a duplicate article id."""
+        frontmatter = 'title: "Norma con anexos"\nidentifier: "TEST-DUP"\ncountry: "es"\nrank: "otro"\n'
+        body = "# Norma con anexos\n\n###### Articulo 2.\n\nPrimer anexo.\n\n###### Articulo 2.\n\nSegundo anexo.\n"
+        law_file = sample_law_dir / "es" / "TEST-DUP.md"
+        law_file.write_text(f"---\n{frontmatter}---\n{body}", encoding="utf-8")
+        registry = LawRegistry(sample_law_dir)
+        registry.preload_all_metadata()
+        monkeypatch.setattr(mcp_server, "get_registry", lambda: registry)
+
+        first = _unwrap(mcp_server.get_article)(law_id="TEST-DUP", article_number="2")
+        second = _unwrap(mcp_server.get_article)(law_id="TEST-DUP", article_number="2", occurrence=2)
+        assert "Primer anexo" in first["text"]
+        assert "Segundo anexo" in second["text"]
 
 
 class TestGetStats:

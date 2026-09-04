@@ -125,6 +125,47 @@ class TestModelsEndpoint:
             }
         ]
 
+    def test_unexpected_probe_error_returns_placeholder_not_500(
+        self,
+        client: TestClient,
+        monkeypatch: MonkeyPatch,
+    ) -> None:
+        """An SDK error type not special-cased by ``_probe`` must degrade to
+        a placeholder instead of escaping through ``asyncio.gather`` (#886 S2.2)."""
+        from lexflow.chat import provider_registry as registry_mod
+
+        class _BoomProvider:
+            def __init__(self, *args: object, **kwargs: object) -> None: ...
+
+            async def list_models(self) -> list[str]:
+                raise RuntimeError("unexpected SDK failure")
+
+        only_openai = registry_mod.ProviderSpec(
+            key="openai",
+            local=False,
+            factory=_BoomProvider,  # type: ignore[arg-type]
+            default_context=128_000,
+            env_key="OPENAI_API_KEY",
+        )
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+        monkeypatch.setattr(registry_mod, "PROVIDER_SPECS", [only_openai])
+        monkeypatch.setattr(registry_mod, "PROVIDERS_BY_KEY", {"openai": only_openai})
+
+        response = client.get("/api/v1/models")
+        assert response.status_code == 200
+        body = response.json()
+        assert body == [
+            {
+                "id": "openai:",
+                "provider": "openai",
+                "model": "",
+                "local": False,
+                "configured": False,
+                "context_window": None,
+                "error": "Probe failed",
+            }
+        ]
+
     def test_context_window_heuristics(
         self,
         client: TestClient,
