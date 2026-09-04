@@ -10,7 +10,7 @@
 
 import type { BackendModelInfo } from '../../api';
 import type { ApiClient, InstalledModel, Model, ModelPullEvent } from '../types';
-import { API_BASE, API_PREFIX, ApiError, http } from './http';
+import { API_BASE, API_PREFIX, ApiError, CSRF_HEADER_NAME, CSRF_HEADER_VALUE, http } from './http';
 
 interface BackendInstalledModel {
   name: string;
@@ -65,7 +65,11 @@ async function* streamPull(model: string): AsyncIterable<ModelPullEvent> {
   const url = `${API_BASE}${API_PREFIX}/models/pull`;
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE,
+    },
     body: JSON.stringify({ model }),
   });
   if (!response.ok) {

@@ -17,7 +17,7 @@ import type {
   BackendWhatsNewResponse,
 } from '../../api';
 import type { ApiClient, HealthSnapshot, SemanticInstallEvent, SemanticStatus } from '../types';
-import { API_BASE, API_PREFIX, ApiError, http } from './http';
+import { API_BASE, API_PREFIX, ApiError, CSRF_HEADER_NAME, CSRF_HEADER_VALUE, http } from './http';
 
 /**
  * Wire shape of ``GET /api/v1/system/health``. The Pydantic model is
@@ -124,7 +124,7 @@ async function* streamSemanticInstall(): AsyncIterable<SemanticInstallEvent> {
   const url = `${API_BASE}${API_PREFIX}/system/semantic-install`;
   const response = await fetch(url, {
     method: 'POST',
-    headers: { Accept: 'text/event-stream' },
+    headers: { Accept: 'text/event-stream', [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE },
   });
   if (!response.ok) {
     const detail = await response.text().catch(() => response.statusText);

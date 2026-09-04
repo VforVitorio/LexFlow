@@ -37,19 +37,28 @@ def _normalise_article_number(number: str) -> str:
     return number.strip().rstrip(".")
 
 
-def find_article(law: Law, article_number: str) -> Article | None:
-    """Return the article identified by *article_number* within *law*.
+def find_article(law: Law, article_number: str, occurrence: int = 1) -> Article | None:
+    """Return the *occurrence*-th article identified by *article_number*.
 
     Comparison is normalisation-tolerant on both sides — see
     :func:`_normalise_article_number`. Returns ``None`` when no article
-    matches; callers decide whether that maps to a 404, an MCP error
-    dict, or something else.
+    matches, or when *occurrence* is beyond the number of matches;
+    callers decide whether that maps to a 404, an MCP error dict, or
+    something else.
+
+    ``occurrence`` is 1-based and defaults to 1 (existing behaviour: the
+    first match wins), so callers unaware of duplicate ids keep working
+    unchanged. Laws with embedded annex statutes (e.g. river-basin plans
+    inside a single BOE norm, #824) can repeat an article number dozens of
+    times with unrelated content; without a selector, every one of those
+    duplicates was permanently shadowed by whichever came first.
     """
     target = _normalise_article_number(article_number)
-    for article in law.articles:
-        if _normalise_article_number(article.number) == target:
-            return article
-    return None
+    matches = [article for article in law.articles if _normalise_article_number(article.number) == target]
+    index = occurrence - 1
+    if index < 0 or index >= len(matches):
+        return None
+    return matches[index]
 
 
 def apply_law_filters(

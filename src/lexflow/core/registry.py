@@ -18,7 +18,7 @@ from lexflow.core.enums import LawRank, LawStatus, Scope
 from lexflow.core.exceptions import DataPathError, LawNotFoundError, LexFlowError
 from lexflow.core.law_aliases import expand_alias
 from lexflow.core.metadata_parser import parse_metadata_only
-from lexflow.core.models import Law, LawMetadata
+from lexflow.core.models import Law, LawMetadata, Section
 from lexflow.core.parser import parse_law_file
 from lexflow.core.schemas import LawSummary, PaginatedResponse, SearchResponse
 from lexflow.core.search import SearchIndex
@@ -44,6 +44,11 @@ class LawRegistry:
         self._metadata_cache: dict[str, LawMetadata] = {}
         self._search_index = SearchIndex()
         self._lock = Lock()
+        # Audit #871 S1.3: one lock per law id so two users opening
+        # different cold laws parse in parallel instead of serialising
+        # behind ``self._lock``. Created lazily, guarded by ``self._lock``
+        # itself — cheap (a dict insert), unlike the parse it protects.
+        self._parse_locks: dict[str, Lock] = {}
         # Audit #409 perf: cache the sorted id list and the summary list
         # so hot endpoints (``/laws`` pagination, ``/tags``, dashboards)
         # don't re-sort + re-materialise 12 k Pydantic models per
@@ -78,22 +83,46 @@ class LawRegistry:
     # Lazy parse + cache
     # ------------------------------------------------------------------
 
+    def _get_parse_lock(self, law_id: str) -> Lock:
+        """Return the per-law lock, creating it under ``self._lock`` if new.
+
+        Audit #871 S1.3: the lock dict itself needs guarding (concurrent
+        first-touches of the same new law must get the SAME lock object),
+        but that guard only covers a dict lookup/insert — never the parse
+        itself.
+        """
+        with self._lock:
+            lock = self._parse_locks.get(law_id)
+            if lock is None:
+                lock = Lock()
+                self._parse_locks[law_id] = lock
+            return lock
+
     def _ensure_parsed(self, law_id: str) -> Law:
-        """Parse a law file and store it in the cache.  Thread-safe."""
+        """Parse a law file and store it in the cache. Thread-safe.
+
+        Audit #871 S1.3: parsing runs under a PER-LAW lock, not the global
+        registry lock — two users opening different cold laws now parse
+        concurrently. Only the final cache write takes ``self._lock``,
+        and only briefly. A same-law race (two threads both missing the
+        cache) still serialises correctly: the second one blocks on the
+        per-law lock and finds the cache already warm when it wakes up.
+        """
         if law_id in self._cache:
             return self._cache[law_id]
 
-        with self._lock:
-            # Double-check after acquiring lock
+        path = self._index.get(law_id)
+        if path is None:
+            raise LawNotFoundError(law_id)
+
+        with self._get_parse_lock(law_id):
+            # Double-check after acquiring the per-law lock.
             if law_id in self._cache:
                 return self._cache[law_id]
 
-            path = self._index.get(law_id)
-            if path is None:
-                raise LawNotFoundError(law_id)
-
             law = parse_law_file(path)
-            self._cache[law_id] = law
+            with self._lock:
+                self._cache[law_id] = law
             return law
 
     def _ensure_metadata(self, law_id: str) -> LawMetadata:
@@ -149,6 +178,14 @@ class LawRegistry:
     def has_law(self, law_id: str) -> bool:
         """Whether *law_id* is currently in the index."""
         return law_id in self._index
+
+    def is_parsed(self, law_id: str) -> bool:
+        """Whether *law_id* has already been fully parsed and cached."""
+        return law_id in self._cache
+
+    def law_file_path(self, law_id: str) -> Path | None:
+        """The source ``.md`` path for *law_id*, or ``None`` if unindexed."""
+        return self._index.get(law_id)
 
     def list_laws(
         self,
@@ -456,7 +493,13 @@ class LawRegistry:
         logger.info("Search index built: %d entries", self._search_index.entry_count)
 
     def _index_law_for_search(self, law_id: str) -> None:
-        """Add one law's searchable entries (title + any parsed articles)."""
+        """Add one law's searchable entries (title, articles, non-article prose).
+
+        Non-article prose — preámbulos, section intros, anexo tables (#825) —
+        was invisible to search because only ``law.articles`` was indexed;
+        a query term that only occurred in a Constitución preámbulo or an
+        anexo table returned zero hits even though the text was parsed.
+        """
         meta = self._ensure_metadata(law_id)
         # Law-level entry (title is the primary searchable text).
         self._search_index.add_entry(
@@ -465,16 +508,38 @@ class LawRegistry:
             article_number=None,
             text=meta.title,
         )
-        # Article-level entries only if the law has been fully parsed.
-        if law_id in self._cache:
-            law = self._cache[law_id]
-            for article in law.articles:
+        # Body-level entries only if the law has been fully parsed.
+        if law_id not in self._cache:
+            return
+        law = self._cache[law_id]
+        for article in law.articles:
+            self._search_index.add_entry(
+                law_id=meta.identifier,
+                law_title=meta.title,
+                article_number=article.number,
+                text=article.text,
+            )
+        self._index_section_prose(meta.identifier, meta.title, law.sections)
+        for disposicion in law.disposiciones:
+            if disposicion.text.strip():
                 self._search_index.add_entry(
                     law_id=meta.identifier,
                     law_title=meta.title,
-                    article_number=article.number,
-                    text=article.text,
+                    article_number=disposicion.heading,
+                    text=disposicion.text,
                 )
+
+    def _index_section_prose(self, law_id: str, law_title: str, sections: list[Section]) -> None:
+        """Recursively add each section's own prose as a search entry (#825)."""
+        for section in sections:
+            if section.text.strip():
+                self._search_index.add_entry(
+                    law_id=law_id,
+                    law_title=law_title,
+                    article_number=section.heading,
+                    text=section.text,
+                )
+            self._index_section_prose(law_id, law_title, section.subsections)
 
 
 @lru_cache(maxsize=1)

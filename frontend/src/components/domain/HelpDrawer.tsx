@@ -209,7 +209,7 @@ export function HelpDrawer() {
 
       {open && (
         <div
-          className="fixed inset-0 z-[50] bg-black/30 backdrop-blur-[2px]"
+          className="fixed inset-0 z-overlay bg-black/30 backdrop-blur-[2px]"
           onClick={(e) => {
             // Click on the backdrop dismisses; click inside the panel
             // bubbles to the inner stopPropagation guard.

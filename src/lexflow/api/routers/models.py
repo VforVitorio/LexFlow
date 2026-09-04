@@ -119,6 +119,12 @@ async def _probe(spec: ProviderSpec) -> list[ModelInfo]:
     except ChatProviderError as exc:
         logger.info("%s probe failed: %s", spec.key, exc)
         return [_unconfigured_placeholder(spec, str(exc))]
+    except Exception:
+        # An SDK error type we don't special-case (e.g. APIConnectionError)
+        # must never escape into asyncio.gather and 500 the whole endpoint.
+        # Fixed message — never leak exception text from an unknown SDK error.
+        logger.exception("%s probe failed with an unexpected error", spec.key)
+        return [_unconfigured_placeholder(spec, "Probe failed")]
 
     if not models:
         return [_unconfigured_placeholder(spec, "No models available")]
