@@ -85,7 +85,16 @@ def _run_name_status_diff(data_path: Path, cached_commit: str) -> str | None:
     """
     try:
         result = subprocess.check_output(
-            ["git", "-C", str(data_path), "diff", "--name-status", "-M", f"{cached_commit}..HEAD"],
+            [
+                "git",
+                "-C",
+                str(data_path),
+                "diff",
+                "--name-status",
+                "-M",
+                "--end-of-options",
+                f"{cached_commit}..HEAD",
+            ],
             stderr=subprocess.DEVNULL,
             text=True,
         )

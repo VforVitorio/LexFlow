@@ -1,0 +1,373 @@
+# Autonomous agent loop: picks one eligible open issue, implements it with an
+# OpenCode worker (OpenCode Go models), verifies the full CI surface locally,
+# opens a PR and arms auto-merge. Fully unattended; Orca (local) supervises.
+#
+# Design notes (see .github/agent/README.md for the runbook):
+#   - Everything that writes to GitHub uses AGENT_GH_PAT (fine-grained PAT,
+#     contents+PRs+issues write, NO workflow scope). The default GITHUB_TOKEN
+#     would not trigger `pull_request` checks on the PRs we open, so the
+#     required contexts would never run and auto-merge would never fire.
+#   - The PAT is scoped to the steps that need it and the checkout uses
+#     persist-credentials:false — the worker (and any code it writes) must
+#     never be able to read a credential.
+#   - Exactly ONE agent PR in flight at a time: branch protection runs with
+#     strict:false, so two green agent PRs could land without revalidating
+#     against each other.
+#   - Auto-merge is the LAST git-affecting step; every agent PR carries
+#     `do-not-rebase` so auto-update-prs.yml never pushes to it after arming
+#     (lesson 2026-06-13: auto-merge fires on the first green commit).
+name: agent-loop
+
+on:
+  schedule:
+    - cron: "0 6,13,20 * * *" # 3 runs/day — pacing for the Go budget
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Force a specific issue # (still passes the safety filters)"
+        required: false
+
+concurrency:
+  group: agent-loop
+  cancel-in-progress: false
+
+permissions: {} # nothing via GITHUB_TOKEN; writes go through the PAT
+
+jobs:
+  run-one-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90 # hard cap so a stuck issue can't burn the $12/5h window
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+
+      - name: Guard — secrets configured, one agent PR in flight
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GH_PAT }}
+          OC_AUTH: ${{ secrets.OPENCODE_AUTH_JSON }}
+        run: |
+          if [ -z "$GH_TOKEN" ] || [ -z "$OC_AUTH" ]; then
+            echo "AGENT_GH_PAT / OPENCODE_AUTH_JSON not configured; loop disarmed."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          open=$(gh pr list --state open --label agent-pr --json number --jq 'length')
+          if [ "$open" != "0" ]; then
+            echo "An agent PR is already open; skipping this run."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pick issue
+        id: pick
+        if: steps.guard.outputs.proceed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GH_PAT }}
+          FORCED_ISSUE: ${{ inputs.issue }}
+        run: bash .github/agent/pick-issue.sh
+
+      - name: Claim issue
+        if: steps.guard.outputs.proceed == 'true' && steps.pick.outputs.empty == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GH_PAT }}
+        run: gh issue edit "${{ steps.pick.outputs.number }}" --add-label "agent:wip"
+
+      # ---- Full environment BEFORE the worker runs: it must be able to run
+      # ---- the complete verification suite itself.
+      - name: Resolve legalize-es gitlink SHA
+        id: legalize-sha
+        if: steps.pick.outputs.empty == 'false'
+        run: echo "sha=$(git ls-tree HEAD data/legalize-es | awk '{print $3}')" >> $GITHUB_OUTPUT
+
+      - name: Cache legalize-es submodule checkout
+        id: legalize-cache
+        if: steps.pick.outputs.empty == 'false'
+        uses: actions/cache@v6
+        with:
+          path: data/legalize-es
+          key: legalize-es-${{ runner.os }}-${{ steps.legalize-sha.outputs.sha }}
+
+      - name: Shallow + partial clone of legalize-es (cache miss only)
+        if: steps.pick.outputs.empty == 'false' && steps.legalize-cache.outputs.cache-hit != 'true'
+        run: |
+          git -c submodule.recurse=false \
+              -c protocol.version=2 \
+              submodule update --init --depth 1 --filter=blob:none data/legalize-es
+
+      - name: Install uv
+        if: steps.pick.outputs.empty == 'false'
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v6
+        if: steps.pick.outputs.empty == 'false'
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install backend dependencies (mirror of ci.yml)
+        if: steps.pick.outputs.empty == 'false'
+        run: uv sync --extra chat --extra dashboards --extra dev --frozen
+
+      - name: Install frontend dependencies
+        if: steps.pick.outputs.empty == 'false'
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install OpenCode (pinned)
+        if: steps.pick.outputs.empty == 'false'
+        run: npm install -g opencode-ai@1.18.3
+
+      - name: Install OpenCode credential
+        if: steps.pick.outputs.empty == 'false'
+        env:
+          OPENCODE_AUTH_JSON: ${{ secrets.OPENCODE_AUTH_JSON }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/ocdata/opencode"
+          printf '%s' "$OPENCODE_AUTH_JSON" | base64 -d > "$RUNNER_TEMP/ocdata/opencode/auth.json"
+          chmod 600 "$RUNNER_TEMP/ocdata/opencode/auth.json"
+          echo "XDG_DATA_HOME=$RUNNER_TEMP/ocdata" >> "$GITHUB_ENV"
+
+      - name: Git identity + work branch
+        if: steps.pick.outputs.empty == 'false'
+        env:
+          # Issue titles are third-party text; they reach the shell only
+          # through env vars, never through ${{ }} inline interpolation.
+          ISSUE_TITLE: ${{ steps.pick.outputs.title }}
+        run: |
+          git config user.name "lexflow-agent"
+          git config user.email "agent-loop@users.noreply.github.com"
+          slug=$(printf '%s' "$ISSUE_TITLE" \
+            | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//' | cut -c1-40)
+          git checkout -b "${{ steps.pick.outputs.branch_prefix }}/agent-issue-${{ steps.pick.outputs.number }}-$slug"
+
+      # ---- Implement. No credentials in this step's env: the issue body is
+      # ---- third-party data and the worker executes arbitrary code.
+      - name: Implement (OpenCode worker)
+        id: implement
+        if: steps.pick.outputs.empty == 'false'
+        env:
+          OPENCODE_CONFIG: ${{ github.workspace }}/.github/agent/opencode.json
+          ISSUE_TITLE: ${{ steps.pick.outputs.title }}
+        run: |
+          {
+            cat .github/agent/worker-prompt.md
+            echo
+            echo "<issue number=\"${{ steps.pick.outputs.number }}\">"
+            printf 'TITLE: %s\n' "$ISSUE_TITLE"
+            echo
+            echo "BODY:"
+            cat "$RUNNER_TEMP/issue-body.md"
+            echo "</issue>"
+          } > "$RUNNER_TEMP/prompt.txt"
+          set +e
+          opencode run --model "${{ steps.pick.outputs.model }}" "$(cat "$RUNNER_TEMP/prompt.txt")" \
+            | tee "$RUNNER_TEMP/worker-output.txt"
+          rc=${PIPESTATUS[0]}
+          set -e
+          result=$(grep -o 'AGENT_RESULT: [A-Z_]*' "$RUNNER_TEMP/worker-output.txt" | tail -1 | cut -d' ' -f2 || true)
+          commits=$(git rev-list --count origin/main..HEAD)
+          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
+          echo "result=${result:-NONE}" >> "$GITHUB_OUTPUT"
+          echo "commits=$commits" >> "$GITHUB_OUTPUT"
+          if [ "$rc" != "0" ]; then
+            echo "::error::opencode exited $rc (infra failure — not an attempt)"
+            exit 1
+          fi
+          case "$result" in
+            DONE)
+              # Empty-diff guard: headless opencode is known to exit silently
+              # with no work (anomalyco/opencode#28605).
+              if [ "$commits" = "0" ] || [ -n "$(git status --porcelain)" ]; then
+                echo "::error::Worker said DONE but the tree is not a clean set of new commits."
+                exit 1
+              fi ;;
+            ALREADY_DONE)
+              echo "Issue already implemented on main; will close it." ;;
+            BLOCKED)
+              echo "::error::Worker reported BLOCKED."
+              exit 1 ;;
+            *)
+              echo "::error::No AGENT_RESULT marker in worker output (infra failure — not an attempt)."
+              exit 1 ;;
+          esac
+
+      - name: Close already-done issue
+        if: steps.implement.outputs.result == 'ALREADY_DONE'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GH_PAT }}
+        run: |
+          tail -c 2000 "$RUNNER_TEMP/worker-output.txt" > "$RUNNER_TEMP/evidence.txt"
+          {
+            echo "Closed by the agent loop: verification found every checklist item already implemented on \`main\`."
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/evidence.txt"
+            echo '```'
+          } > "$RUNNER_TEMP/close-comment.md"
+          gh issue close "${{ steps.pick.outputs.number }}" --comment "$(cat "$RUNNER_TEMP/close-comment.md")"
+
+      # ---- Review: a second agent reviews the diff BEFORE the PR exists.
+      # ---- Post-PR inline review threads would deadlock the merge
+      # ---- (required_conversation_resolution), so all review happens here.
+      # ---- One fix round allowed; a second FIX verdict fails the run.
+      - name: Review (OpenCode reviewer)
+        if: steps.implement.outputs.result == 'DONE'
+        env:
+          OPENCODE_CONFIG: ${{ github.workspace }}/.github/agent/opencode.json
+          ISSUE_TITLE: ${{ steps.pick.outputs.title }}
+        run: |
+          compose_review_prompt() {
+            {
+              cat .github/agent/reviewer-prompt.md
+              echo
+              echo "<issue number=\"${{ steps.pick.outputs.number }}\">"
+              printf 'TITLE: %s\n\n' "$ISSUE_TITLE"
+              cat "$RUNNER_TEMP/issue-body.md"
+              echo "</issue>"
+              echo
+              echo "<diff>"
+              git diff origin/main..HEAD | head -c 200000
+              echo "</diff>"
+            } > "$RUNNER_TEMP/review-prompt.txt"
+          }
+          run_review() {
+            compose_review_prompt
+            # tee to stderr: this function's stdout must carry ONLY the verdict
+            # (it is captured with $(...)), while the log still shows the review.
+            opencode run --model "${{ steps.pick.outputs.model }}" "$(cat "$RUNNER_TEMP/review-prompt.txt")" \
+              | tee "$RUNNER_TEMP/review-output.txt" >&2
+            grep -o 'VERDICT: [A-Z]*' "$RUNNER_TEMP/review-output.txt" | tail -1 | cut -d' ' -f2
+          }
+          verdict=$(run_review)
+          if [ "$verdict" = "APPROVE" ]; then exit 0; fi
+          if [ "$verdict" != "FIX" ]; then
+            echo "::error::Reviewer emitted no parseable verdict (infra)."
+            exit 1
+          fi
+          echo "Reviewer requested fixes; running one fix round."
+          {
+            cat .github/agent/worker-prompt.md
+            echo
+            echo "A reviewer examined your diff for issue #${{ steps.pick.outputs.number }} and requires fixes."
+            echo "Address ONLY the numbered problems below, then commit. Same finish protocol."
+            echo
+            sed -n '/VERDICT: FIX/,$p' "$RUNNER_TEMP/review-output.txt"
+          } > "$RUNNER_TEMP/fix-prompt.txt"
+          opencode run --model "${{ steps.pick.outputs.model }}" "$(cat "$RUNNER_TEMP/fix-prompt.txt")"
+          verdict=$(run_review)
+          if [ "$verdict" != "APPROVE" ]; then
+            echo "::error::Reviewer still not satisfied after one fix round."
+            exit 1
+          fi
+
+      # ---- Verify: literal mirror of the required checks.
+      - name: Verify — backend
+        if: steps.implement.outputs.result == 'DONE'
+        run: |
+          uv run pytest -q -n auto --dist=loadfile
+          uvx ruff check .
+          uvx ruff format --check .
+          uv run mypy src/lexflow/
+
+      - name: Verify — frontend (only if touched)
+        if: steps.implement.outputs.result == 'DONE'
+        run: |
+          if git diff --name-only origin/main..HEAD | grep -q '^frontend/'; then
+            cd frontend && npm run lint && npm run test && npm run build
+          else
+            echo "Diff does not touch frontend/; skipping."
+          fi
+
+      - name: Verify — landing (only if touched)
+        if: steps.implement.outputs.result == 'DONE'
+        run: |
+          if git diff --name-only origin/main..HEAD | grep -q '^landing/'; then
+            cd landing && npm install --no-audit --no-fund && npm run typecheck && npm run build
+          else
+            echo "Diff does not touch landing/; skipping."
+          fi
+
+      # ---- Publish. Auto-merge is the LAST git-affecting step; nothing may
+      # ---- push to this branch afterwards (lesson 2026-06-13).
+      - name: Push, open PR, arm auto-merge
+        if: steps.implement.outputs.result == 'DONE'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GH_PAT }}
+          ISSUE_TITLE: ${{ steps.pick.outputs.title }}
+        run: |
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" HEAD
+          {
+            echo "## Descripción"
+            echo "Implementación autónoma del issue #${{ steps.pick.outputs.number }} por el agent loop (modelo \`${{ steps.pick.outputs.model }}\`)."
+            echo
+            echo "## Issue relacionado"
+            echo "closes #${{ steps.pick.outputs.number }}"
+            echo
+            echo "## Checklist"
+            echo "- [x] \`uv run pytest\` verde en el runner del loop"
+            echo "- [x] \`uvx ruff check .\` y \`uvx ruff format --check .\` repo-wide"
+            echo "- [x] \`uv run mypy src/lexflow/\`"
+            echo "- [x] Frontend lint+test+build si el diff toca \`frontend/\`"
+            echo
+            echo "_Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}_"
+          } > "$RUNNER_TEMP/pr-body.md"
+          gh pr create \
+            --title "${{ steps.pick.outputs.branch_prefix }}: resolve #${{ steps.pick.outputs.number }} — $ISSUE_TITLE" \
+            --body-file "$RUNNER_TEMP/pr-body.md" \
+            --label agent-pr --label do-not-rebase
+          gh pr merge --auto --merge
+
+      # ---- Cleanup runs on EVERY outcome (always(), not failure(): a
+      # ---- timeout CANCELS later steps, and cancelled steps skip
+      # ---- if:failure()). Distinguishes success / attempt-failure / infra.
+      - name: Cleanup and attempt accounting
+        if: always() && steps.pick.outputs.empty == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.AGENT_GH_PAT }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          n="${{ steps.pick.outputs.number }}"
+          gh issue edit "$n" --remove-label "agent:wip" || true
+
+          result="${{ steps.implement.outputs.result }}"
+          implement_outcome="${{ steps.implement.outcome }}"
+
+          # Success paths: PR armed, or issue closed as already done.
+          if [ "$result" = "ALREADY_DONE" ]; then exit 0; fi
+          if [ "$result" = "DONE" ] && [ "${{ job.status }}" = "success" ]; then exit 0; fi
+
+          # Infra failures don't count as attempts: opencode crashed, no
+          # marker, quota/gateway errors.
+          if [ "$implement_outcome" = "failure" ] && [ "$result" != "BLOCKED" ] && [ "$result" != "DONE" ]; then
+            gh issue comment "$n" --body "<!-- agent-infra --> Agent loop infra failure (not an attempt): $RUN_URL"
+            exit 0
+          fi
+
+          # Attempt failure: BLOCKED, verify red, publish red, or timeout.
+          attempts=$(gh issue view "$n" --json comments \
+            --jq '[.comments[].body | select(contains("<!-- agent-attempt -->"))] | length')
+          attempts=$((attempts + 1))
+          gh issue comment "$n" --body "<!-- agent-attempt --> Agent loop attempt $attempts failed: $RUN_URL"
+          if [ "$attempts" -ge 2 ]; then
+            gh issue edit "$n" --add-label "agent:blocked" --remove-label "agent:failed" || true
+          else
+            gh issue edit "$n" --add-label "agent:failed" || true
+          fi
+
+          # Close any half-open PR and delete the orphan branch.
+          branch=$(git branch --show-current)
+          if [ "$branch" != "main" ] && [ -n "$branch" ]; then
+            pr=$(gh pr list --state open --head "$branch" --json number --jq '.[0].number // empty' || true)
+            if [ -n "$pr" ]; then gh pr close "$pr" --delete-branch || true; fi
+          fi

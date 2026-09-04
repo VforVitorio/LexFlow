@@ -142,6 +142,20 @@ de verdad lo quieras global.
 
 ---
 
+## Seguridad: el bind a loopback es una frontera dura
+
+LexFlow no tiene capa de autenticación — es una app local de un solo
+usuario que confía en "quien pueda llegar a este puerto". Desde el
+issue #885 (S1.3), `main.py` se niega a arrancar con `LEXFLOW_HOST`
+apuntando fuera de loopback salvo que también se fije
+`LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1` — y aun así emite un warning
+alto en el log. No pongas ese flag en una red que no controles: expone
+la API completa (incluido cualquier comando de servidor MCP
+configurado) a quien alcance el puerto. Para un despliegue en red real,
+pon un proxy con auth real por delante.
+
+---
+
 ## Reportar bugs
 
 Usa la [plantilla de bug report](https://github.com/VforVitorio/LexFlow/issues/new?template=bug_report.yml) e incluye:

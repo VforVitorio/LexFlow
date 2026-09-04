@@ -60,7 +60,7 @@ export function WelcomeFlow({ children }: { children: React.ReactNode }) {
   if (phase === 'done') return <>{children}</>;
   if (phase === 'animating') {
     return (
-      <Suspense fallback={<div className="fixed inset-0 z-[60] bg-bg" aria-hidden />}>
+      <Suspense fallback={<div className="fixed inset-0 z-confirm bg-bg" aria-hidden />}>
         <WelcomeAnimation onContinue={() => setPhase('naming')} />
       </Suspense>
     );
@@ -98,7 +98,7 @@ function NamePromptModal({ onSubmit }: { onSubmit: (name: string | null) => void
       role="dialog"
       aria-modal="true"
       aria-label={t('welcome.nameTitle')}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 backdrop-blur-sm"
+      className="fixed inset-0 z-confirm flex items-center justify-center bg-black/30 backdrop-blur-sm"
     >
       <form
         onSubmit={submit}

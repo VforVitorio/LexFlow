@@ -84,14 +84,16 @@ Patrón:
 from fastmcp import Client
 from fastmcp.client.config import MCPConfig
 
-config = MCPConfig.from_dict({
-    "mcpServers": {
-        "fetch": {"command": "python", "args": ["-m", "mcp_server_fetch"]},
-        "filesystem": {"command": "npx", "args": ["@modelcontextprotocol/server-filesystem", "/path/to/scope"]},
-        "pandoc": {"command": "uvx", "args": ["mcp-pandoc"]},
-        "boe": {"command": "python", "args": ["-m", "boe_mcp"]},
+config = MCPConfig.from_dict(
+    {
+        "mcpServers": {
+            "fetch": {"command": "python", "args": ["-m", "mcp_server_fetch"]},
+            "filesystem": {"command": "npx", "args": ["@modelcontextprotocol/server-filesystem", "/path/to/scope"]},
+            "pandoc": {"command": "uvx", "args": ["mcp-pandoc"]},
+            "boe": {"command": "python", "args": ["-m", "boe_mcp"]},
+        }
     }
-})
+)
 
 async with Client(config) as client:
     tools = await client.list_tools()
@@ -175,7 +177,7 @@ Sigue las [best practices oficiales](https://modelcontextprotocol.io/docs/tutori
 
 1. **Local-first.** Preferir stdio (subproceso local) sobre remoto. Los 4 default son stdio.
 2. **Scope at connect time.** Filesystem recibe allow-list de paths como CLI args. El usuario elige la ruta con folder picker nativo — nunca tecleando.
-3. **Per-tool consent prompt** en primera invocación con opción "Recordar para esta sesión". Para tools destructive (write, delete, network POST) **nunca** silent-grant.
+3. **Per-tool consent prompt** en primera invocación con opción "Recordar para esta sesión". Para tools destructive (write, delete, network POST) **nunca** silent-grant. *(Implementado a nivel de servidor en #885 S1.1: un server añadido/importado se persiste `enabled: false` y el primer `enable` en Settings pasa por un diálogo de confirmación — el consent per-tool más granular de este punto sigue pendiente.)*
 4. **OAuth con scope tokens** para servers remotos. Nunca tokens en `localStorage` — siempre `keyring` (lib `python-keyring` ya recomendada en [`UX-ONBOARDING.md`](UX-ONBOARDING.md) §3 para API keys cloud).
 5. **Audit log.** Cada invocación de tool registra { timestamp, server, tool, args, result_size, duration } a `<config-dir>/mcp.log`. UI accesible en Ajustes → Logs.
 
