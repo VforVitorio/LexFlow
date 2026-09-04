@@ -13,6 +13,15 @@ uv run python main.py
 The FastAPI app is built in [`src/lexflow/api/app.py`](../../src/lexflow/api/app.py)
 and exposes:
 
+> **Loopback is a hard security boundary (issue #885, S1.3).** LexFlow has
+> no authentication layer, so binding off-loopback would expose the full
+> API — including anything a configured MCP server's `command` can do —
+> to your whole network. `main.py` refuses `LEXFLOW_HOST` values that
+> don't resolve to loopback unless `LEXFLOW_ALLOW_UNSAFE_NETWORK_BIND=1`
+> is also set, and logs a loud warning when it is. Don't set that
+> variable on an untrusted network; put a real auth layer / reverse proxy
+> in front instead.
+
 - Swagger UI — http://localhost:8000/docs
 - ReDoc — http://localhost:8000/redoc
 - OpenAPI JSON — http://localhost:8000/openapi.json

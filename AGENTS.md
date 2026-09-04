@@ -17,6 +17,10 @@ scanning cannot.
 
 Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 
+> **If the code-review-graph MCP tools are NOT available in your session**
+> (e.g. CI runners, the autonomous agent loop): skip this entire section and
+> use grep/glob/read directly — do not waste time probing for the tools.
+
 ### Key Tools
 
 | Tool | Use when |

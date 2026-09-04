@@ -85,6 +85,9 @@ def _settings(backend: str, *, model: str = "test-model", config_dir: Path = Pat
         embedder_model=model,
         rerank_backend="none",
         rerank_model="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        csrf_header_name="X-Lexflow-Client",
+        csrf_header_value="spa",
+        csrf_allowed_origins=(),
     )
 
 

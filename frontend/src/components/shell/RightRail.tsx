@@ -38,7 +38,6 @@ export function RightRail({ children, className }: { children: React.ReactNode; 
         className={cn(
           'relative hidden shrink-0 border-l border-border bg-surface md:block',
           'animate-in slide-in-from-right duration-200',
-          !dragging && 'transition-[width] duration-200',
         )}
       >
         <div className={cn('h-full overflow-auto p-5 scrollbar-thin', className)}>{children}</div>

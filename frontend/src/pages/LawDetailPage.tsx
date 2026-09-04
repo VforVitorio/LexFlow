@@ -12,9 +12,14 @@ import { Badge, Button, Chip, Tabs } from '@/components/ui';
 import { RightRail } from '@/components/shell/RightRail';
 import { useAddUserTag, useGraph, useLaw, useRemoveUserTag, useUserTags, useVersions } from '@/lib/queries';
 import { useUi } from '@/lib/store';
-import { formatDate } from '@/lib/utils';
+import { formatDate, cn } from '@/lib/utils';
 import type { Article, ArticleRef, GraphData, GraphNodeKind, LawDetail } from '@/lib/types';
 import { RelatedLaws } from './RelatedLaws';
+
+const VERSION_KIND_BADGE: Record<'publish' | 'default', string> = {
+  publish: 'bg-primary-soft text-indigo-700',
+  default: 'bg-amber-soft text-amber-700',
+};
 
 const ALL_GRAPH_KINDS: GraphNodeKind[] = ['law', 'article', 'reference', 'amendment', 'repealed'];
 
@@ -120,7 +125,7 @@ export function LawDetailPage() {
               </div>
               {[...versions].reverse().map((v, i) => (
                 <div key={v.tag} className="mb-2.5 flex items-center gap-3.5 rounded-xl border border-border bg-surface p-4">
-                  <span className={`inline-flex size-9 items-center justify-center rounded-md ${v.kind === 'publish' ? 'bg-primary-soft text-indigo-700' : 'bg-amber-soft text-amber-700'}`}>
+                  <span className={cn('inline-flex size-9 items-center justify-center rounded-md', VERSION_KIND_BADGE[v.kind === 'publish' ? 'publish' : 'default'])}>
                     {v.kind === 'publish' ? <Plus className="size-4" /> : <GitCompareArrows className="size-4" />}
                   </span>
                   <div className="flex-1">
