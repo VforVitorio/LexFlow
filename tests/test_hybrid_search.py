@@ -26,6 +26,7 @@ from lexflow.core.registry import LawRegistry
 from lexflow.core.schemas import SearchResponse, SearchResult
 from lexflow.search.hybrid import FULL_TEXT_SOURCE, SEMANTIC_SOURCE, hybrid_search
 from lexflow.search.semantic_index import SearchHit
+from lexflow.search.service import ensure_semantic_index, reset_semantic_warmup_state
 
 
 class _FakeRegistry:
@@ -129,24 +130,31 @@ def _isolated_index() -> Iterator[None]:
     from lexflow.search.semantic_index import reset_semantic_index
 
     reset_semantic_index()
+    reset_semantic_warmup_state()
     yield
     reset_semantic_index()
+    reset_semantic_warmup_state()
     app.dependency_overrides.pop(get_search_index, None)
 
 
+@pytest.fixture()
+def _warm_index(mock_registry: LawRegistry, _isolated_index: None) -> None:
+    """Pre-build the index (#871 S1.4 — cold-start 503 is a separate concern
+    from the fusion/wire-shape tests below).
+    """
+    del _isolated_index
+    ensure_semantic_index(mock_registry)
+
+
 class TestHybridSearchEndpoint:
-    def test_returns_query_and_items(
-        self, client: TestClient, mock_registry: LawRegistry, _isolated_index: None
-    ) -> None:
+    def test_returns_query_and_items(self, client: TestClient, mock_registry: LawRegistry, _warm_index: None) -> None:
         response = client.get("/api/v1/laws/search/hybrid", params={"q": "civil"})
         assert response.status_code == 200
         body = response.json()
         assert body["query"] == "civil"
         assert isinstance(body["items"], list)
 
-    def test_hit_fields_match_schema(
-        self, client: TestClient, mock_registry: LawRegistry, _isolated_index: None
-    ) -> None:
+    def test_hit_fields_match_schema(self, client: TestClient, mock_registry: LawRegistry, _warm_index: None) -> None:
         body = client.get("/api/v1/laws/search/hybrid", params={"q": "civil"}).json()
         for hit in body["items"]:
             assert set(hit.keys()) >= {"law_id", "article_number", "snippet", "score", "sources"}
@@ -154,17 +162,25 @@ class TestHybridSearchEndpoint:
             assert set(hit["sources"]) <= {"full_text", "semantic"}
             assert hit["sources"]
 
-    def test_too_short_query_rejected(
-        self, client: TestClient, mock_registry: LawRegistry, _isolated_index: None
-    ) -> None:
+    def test_too_short_query_rejected(self, client: TestClient, mock_registry: LawRegistry, _warm_index: None) -> None:
         # mock_registry keeps the search-index dependency on the tiny fixture
-        # corpus (FastAPI resolves it before raising the 422), so this stays
-        # fast + hermetic instead of building the real legalize-es index.
+        # corpus, so this stays fast + hermetic instead of building the real
+        # legalize-es index.
         del mock_registry
         assert client.get("/api/v1/laws/search/hybrid", params={"q": "x"}).status_code == 422
 
-    def test_too_large_limit_rejected(
-        self, client: TestClient, mock_registry: LawRegistry, _isolated_index: None
-    ) -> None:
+    def test_too_large_limit_rejected(self, client: TestClient, mock_registry: LawRegistry, _warm_index: None) -> None:
         response = client.get("/api/v1/laws/search/hybrid", params={"q": "civil", "limit": 1000})
         assert response.status_code == 422
+
+
+class TestHybridSearchWarmup:
+    """Cold-start 503 contract mirrors ``/laws/search/semantic`` (#871 S1.4)."""
+
+    def test_cold_index_returns_503(
+        self, client: TestClient, mock_registry: LawRegistry, _isolated_index: None
+    ) -> None:
+        del mock_registry
+        response = client.get("/api/v1/laws/search/hybrid", params={"q": "civil"})
+        assert response.status_code == 503
+        assert response.json()["code"] == "semantic_warming"

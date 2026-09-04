@@ -49,7 +49,7 @@ import type {
   ChatSource,
   ChatThread,
 } from '../types';
-import { API_BASE, API_PREFIX, ApiError, http } from './http';
+import { API_BASE, API_PREFIX, ApiError, CSRF_HEADER_NAME, CSRF_HEADER_VALUE, http } from './http';
 
 function threadFromWire(raw: BackendChatThreadRead): ChatThread {
   return {
@@ -229,6 +229,7 @@ export const liveChatApi: ApiClient['chat'] = {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
+        [CSRF_HEADER_NAME]: CSRF_HEADER_VALUE,
       },
       body: JSON.stringify({
         message: content,

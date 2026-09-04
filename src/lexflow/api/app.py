@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from lexflow import __version__
+from lexflow.api.csrf_boundary import CSRFBoundaryMiddleware
 from lexflow.api.error_handlers import register_error_handlers
 from lexflow.api.middleware import RequestIdMiddleware
 from lexflow.api.routers import (
@@ -124,6 +125,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CSRF boundary (#885, S1.2) added BEFORE RequestIdMiddleware so it ends
+# up as the inner layer — Starlette wraps middleware in reverse
+# registration order, and we want the request-id already bound (for
+# the access log line) by the time a request gets rejected here.
+app.add_middleware(CSRFBoundaryMiddleware)
 # Request-id correlation + access logging (#92). MUST be added BEFORE
 # error handlers so a 5xx still carries the request-id in the response.
 app.add_middleware(RequestIdMiddleware)
