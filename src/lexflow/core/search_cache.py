@@ -23,7 +23,14 @@ if TYPE_CHECKING:
     from lexflow.core.registry import LawRegistry
 
 logger = logging.getLogger(__name__)
-CACHE_VERSION = "1"
+# Bump whenever the INDEX BUILDER's output changes, not just the on-disk
+# shape: the cache is keyed by corpus revision only, so a logic change that
+# doesn't touch the corpus would otherwise keep serving a stale index.
+# v2 (#825 review): `registry._index_law_for_search` now also walks sections
+# and disposiciones (preambulo, anexo prose), not just articles — a v1 cache
+# with a matching corpus hash would load and hide that new content until the
+# cache file was deleted by hand.
+CACHE_VERSION = "2"
 CACHE_FILENAME = "search_index.json"
 
 

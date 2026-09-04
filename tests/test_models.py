@@ -7,10 +7,11 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from lexflow.core.enums import ConsolidationStatus, LawRank, LawStatus, Scope
+from lexflow.core.enums import ConsolidationStatus, DisposicionKind, LawRank, LawStatus, Scope
 from lexflow.core.models import (
     Article,
     DiffStats,
+    Disposicion,
     Law,
     LawDiff,
     LawMetadata,
@@ -133,6 +134,63 @@ def test_law_version_from_data() -> None:
     )
     assert version.commit_hash == "abc123"
     assert version.norma == "BOE-A-2024-5678"
+
+
+def test_disposicion_creation_with_number_and_title() -> None:
+    disposicion = Disposicion(
+        heading="Disposición derogatoria única. Derogación normativa.",
+        kind=DisposicionKind.DEROGATORIA,
+        number="única",
+        title="Derogación normativa",
+        text="Quedan derogadas las siguientes normas...",
+    )
+    assert disposicion.kind == DisposicionKind.DEROGATORIA
+    assert disposicion.number == "única"
+    assert disposicion.title == "Derogación normativa"
+    assert disposicion.references == []
+
+
+def test_disposicion_creation_bare_heading() -> None:
+    disposicion = Disposicion(
+        heading="Disposición final.",
+        kind=DisposicionKind.FINAL,
+        number=None,
+        title=None,
+        text="Esta Ley entrará en vigor...",
+    )
+    assert disposicion.number is None
+    assert disposicion.title is None
+
+
+def test_disposicion_rejects_missing_required() -> None:
+    with pytest.raises(ValidationError):
+        Disposicion(heading="Disposición final.", kind=DisposicionKind.FINAL)  # type: ignore[call-arg]
+
+
+def test_law_disposiciones_default_empty() -> None:
+    law = Law(
+        metadata=LawMetadata(identifier="TEST-1", title="Test"),
+        file_path="es/TEST-1.md",
+    )
+    assert law.disposiciones == []
+
+
+def test_law_disposiciones_explicit_population() -> None:
+    disposicion = Disposicion(
+        heading="Disposición adicional primera.",
+        kind=DisposicionKind.ADICIONAL,
+        number="primera",
+        title=None,
+        text="Texto de la disposición adicional.",
+    )
+    law = Law(
+        metadata=LawMetadata(identifier="TEST-1", title="Test"),
+        disposiciones=[disposicion],
+        file_path="es/TEST-1.md",
+    )
+    assert len(law.disposiciones) == 1
+    assert law.disposiciones[0].kind == DisposicionKind.ADICIONAL
+    assert law.article_count == 0
 
 
 def test_law_diff_stats() -> None:

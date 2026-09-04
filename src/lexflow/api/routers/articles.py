@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Query, Response
 
 from lexflow.api.dependencies import PaginationParams, get_law_registry
 from lexflow.core.exceptions import ArticleNotFoundError
@@ -72,10 +72,26 @@ def get_article(
     law_id: str,
     article_number: str,
     registry: Annotated[LawRegistry, Depends(get_law_registry)],
+    occurrence: Annotated[
+        int,
+        Query(
+            ge=1,
+            description=(
+                "1-based selector for laws with duplicate article numbers "
+                "(e.g. annex statutes embedded in the same norm, #824). "
+                "Defaults to the first match."
+            ),
+        ),
+    ] = 1,
 ) -> ArticleResponse:
-    """Return a single article by its number within a law."""
+    """Return a single article by its number within a law.
+
+    Some norms embed annex statutes that repeat article numbers (#824);
+    pass ``occurrence`` to reach the 2nd, 3rd, ... match instead of the
+    first.
+    """
     law = registry.get_law(law_id)
-    article = find_article(law, article_number)
+    article = find_article(law, article_number, occurrence=occurrence)
     if article is None:
         raise ArticleNotFoundError(law_id, article_number)
     return ArticleResponse(

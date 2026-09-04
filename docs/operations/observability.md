@@ -11,6 +11,7 @@ Every module uses the standard library `logging`:
 
 ```python
 import logging
+
 logger = logging.getLogger(__name__)
 ```
 
