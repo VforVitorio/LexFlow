@@ -47,7 +47,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       {children}
       {opts && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px] animate-in"
+          className="fixed inset-0 z-confirm flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px] animate-in"
           onClick={() => close(false)}
         >
           <div

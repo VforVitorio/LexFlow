@@ -5,7 +5,9 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from lexflow.core.delta_sync import REBUILD_THRESHOLD, CorpusDiff, diff_corpus_since
+import pytest
+
+from lexflow.core.delta_sync import REBUILD_THRESHOLD, CorpusDiff, _run_name_status_diff, diff_corpus_since
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -114,6 +116,27 @@ def test_no_changes_is_empty_not_none(tmp_path: Path) -> None:
     base = _commit(repo, "base")
     diff = diff_corpus_since(repo, base)
     assert diff == CorpusDiff(added=[], modified=[], removed=[])
+
+
+def test_name_status_diff_inserts_end_of_options_before_revspec(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A leading ``-`` in ``cached_commit`` must not be parsed as a git
+    option (#886 S2.1) — ``--end-of-options`` must sit right before the
+    revspec in the argv passed to ``subprocess.check_output``."""
+    captured: dict[str, list[str]] = {}
+
+    def _fake_check_output(argv: list[str], **kwargs: object) -> str:
+        captured["argv"] = argv
+        return ""
+
+    monkeypatch.setattr("lexflow.core.delta_sync.subprocess.check_output", _fake_check_output)
+    _run_name_status_diff(tmp_path, "-Rmalicious")
+
+    argv = captured["argv"]
+    assert "--end-of-options" in argv
+    end_index = argv.index("--end-of-options")
+    assert argv[end_index + 1] == "-Rmalicious..HEAD"
 
 
 def test_threshold_constant_is_sane() -> None:

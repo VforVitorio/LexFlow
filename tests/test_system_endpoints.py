@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lexflow.api.warmup import get_warmup_state, reset_warmup_state
+from lexflow.core.corpus_drift import CorpusDriftReport
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +34,7 @@ class TestSystemWarmupEndpoint:
             "search_ready": False,
             "graph_ready": False,
             "semantic_ready": False,
+            "drift_report": None,
             "error": None,
             "durations_seconds": {},
         }
@@ -105,6 +107,31 @@ class TestSemanticStatusEndpoint:
         assert body["active"] is False
 
 
+class TestWhatsNewEndpoint:
+    """``GET /system/whats-new`` — ``since`` must be a hex commit (#886 S2.1).
+
+    A leading ``-`` would otherwise be parsed by ``git diff`` as an option
+    instead of a revision; the Query boundary must reject it with 422
+    before it ever reaches :func:`diff_corpus_since`.
+    """
+
+    def test_valid_short_hex_since_returns_200(self, client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+        from lexflow.api.routers import system as system_mod
+
+        monkeypatch.setattr(system_mod, "submodule_hash", lambda path: "unknown")
+        response = client.get("/api/v1/system/whats-new", params={"since": "abc1234"})
+        assert response.status_code == 200
+
+    def test_missing_since_returns_200(self, client: TestClient) -> None:
+        response = client.get("/api/v1/system/whats-new")
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize("since", ["-R", "not-hex!!", "abc", "g" * 8])
+    def test_invalid_since_returns_422(self, client: TestClient, since: str) -> None:
+        response = client.get("/api/v1/system/whats-new", params={"since": since})
+        assert response.status_code == 422
+
+
 class TestWarmupStateInvariants:
     def test_reset_clears_every_flag(self) -> None:
         state = get_warmup_state()
@@ -163,6 +190,7 @@ class TestWarmupSemanticStage:
         monkeypatch.setattr(warmup, "load_or_preload_metadata", lambda *a, **k: None)
         monkeypatch.setattr(warmup, "load_or_build_search", lambda *a, **k: None)
         monkeypatch.setattr(warmup, "get_graph", lambda *a, **k: None)
+        monkeypatch.setattr(warmup, "compute_drift_report", lambda registry: CorpusDriftReport())
         return warmup
 
     async def test_prewarms_semantic_and_marks_ready(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -194,3 +222,40 @@ class TestWarmupSemanticStage:
         assert state.semantic_ready is False
         assert state.ready is True  # core stages unaffected
         assert state.error is None  # opt-in failure is logged, not surfaced as a global error
+
+
+class TestWarmupDriftStage:
+    """#825: the drift-report stage runs after graph and surfaces via /system/warmup."""
+
+    async def test_drift_report_populated_after_run(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        warmup = TestWarmupSemanticStage._stub_core_stages(monkeypatch)
+        monkeypatch.setattr(warmup, "ensure_semantic_index", lambda registry: None)
+        report = CorpusDriftReport(
+            total_laws=3,
+            unknown_status_count=1,
+            empty_identifier_count=0,
+            zero_article_count=0,
+            unknown_status_sample_ids=["BOE-A-2000-1"],
+        )
+        monkeypatch.setattr(warmup, "compute_drift_report", lambda registry: report)
+
+        reset_warmup_state()
+        await warmup._run_warmup()
+
+        state = warmup.get_warmup_state()
+        assert state.drift_report == report
+        assert state.ready is True
+
+    def test_drift_report_surfaced_via_warmup_endpoint(self, client: TestClient) -> None:
+        state = get_warmup_state()
+        state.drift_report = CorpusDriftReport(
+            total_laws=10,
+            unknown_status_count=0,
+            empty_identifier_count=0,
+            zero_article_count=2,
+            zero_article_sample_ids=["BOE-A-2020-1", "BOE-A-2020-2"],
+        )
+        body = client.get("/api/v1/system/warmup").json()
+        assert body["drift_report"]["total_laws"] == 10
+        assert body["drift_report"]["zero_article_count"] == 2
+        assert body["drift_report"]["zero_article_sample_ids"] == ["BOE-A-2020-1", "BOE-A-2020-2"]

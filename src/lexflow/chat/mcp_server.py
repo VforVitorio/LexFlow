@@ -36,6 +36,7 @@ from lexflow.chat.audit import (
     make_audit_request,
 )
 from lexflow.core.exceptions import LawNotFoundError
+from lexflow.core.models import Law
 from lexflow.core.registry import get_registry
 from lexflow.core.services import find_article
 from lexflow.search.service import ensure_semantic_index
@@ -202,33 +203,58 @@ def search_semantic_top_k(query: str, limit: int = 10) -> dict:  # type: ignore[
     return {"query": query, "items": items}
 
 
+def _summarize_law(law: Law) -> dict[str, Any]:
+    """Build the compact ``get_law`` payload sent to the model (#871 S1.2).
+
+    ``Law.model_dump()`` ships ``raw_text`` plus ``sections`` — both
+    duplicate content already present in ``articles`` — as JSON re-sent
+    to the provider on every agentic-loop iteration (up to
+    ``_MAX_TOOL_ITERATIONS`` in ``chat/streaming.py``). Dropping them
+    cuts the payload to roughly a third of its previous size without
+    losing anything the model can't already get from ``articles`` or a
+    follow-up ``get_article`` call for full detail.
+    """
+    return {
+        "metadata": law.metadata.model_dump(),
+        "articles": [article.model_dump() for article in law.articles],
+        "article_count": law.article_count,
+    }
+
+
 @mcp.tool()
 @_audited("get_law")
 def get_law(law_id: str) -> dict:  # type: ignore[type-arg]
-    """Retrieve the full content of a law by its BOE identifier.
+    """Retrieve a law's metadata and article list by its BOE identifier.
 
     Args:
         law_id: BOE identifier of the law (e.g. 'BOE-A-1978-31229').
 
     Returns:
-        Full law data including metadata, sections, articles and cross-references.
+        Metadata + the flat article list (number, title, text,
+        references). Omits ``raw_text`` and ``sections`` — both
+        duplicate content already in ``articles`` — to keep the
+        agentic-loop payload small; use ``get_article`` for a single
+        article's detail.
     """
     registry = get_registry()
     try:
         law = registry.get_law(law_id)
     except LawNotFoundError:
         return {"error": "not_found", "law_id": law_id}
-    return law.model_dump()
+    return _summarize_law(law)
 
 
 @mcp.tool()
 @_audited("get_article")
-def get_article(law_id: str, article_number: str) -> dict:  # type: ignore[type-arg]
+def get_article(law_id: str, article_number: str, occurrence: int = 1) -> dict:  # type: ignore[type-arg]
     """Retrieve a specific article from a law.
 
     Args:
         law_id: BOE identifier of the law.
         article_number: Article number string (e.g. '1', '2 bis').
+        occurrence: 1-based selector for laws with duplicate article
+            numbers, e.g. annex statutes embedded in the same norm (#824).
+            Defaults to the first match.
 
     Returns:
         Article data, or an error dict if the law or article is not found.
@@ -239,7 +265,7 @@ def get_article(law_id: str, article_number: str) -> dict:  # type: ignore[type-
     except LawNotFoundError:
         return {"error": "not_found", "law_id": law_id}
 
-    article = find_article(law, article_number)
+    article = find_article(law, article_number, occurrence=occurrence)
     if article is None:
         return {"error": "article_not_found", "law_id": law_id, "article_number": article_number}
     return article.model_dump()
@@ -309,7 +335,10 @@ TOOL_SPECS: list[dict[str, Any]] = [
     },
     {
         "name": "get_law",
-        "description": "Retrieve the full content of a law by its BOE identifier.",
+        "description": (
+            "Retrieve a law's metadata and table of contents by its BOE identifier "
+            "(compact payload — no full article text; use get_article for that)."
+        ),
         "parameters": {
             "type": "object",
             "properties": {"law_id": {"type": "string"}},
@@ -324,6 +353,14 @@ TOOL_SPECS: list[dict[str, Any]] = [
             "properties": {
                 "law_id": {"type": "string"},
                 "article_number": {"type": "string"},
+                "occurrence": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": (
+                        "1-based selector for laws with duplicate article numbers "
+                        "(e.g. annex statutes embedded in the same norm). Defaults to 1."
+                    ),
+                },
             },
             "required": ["law_id", "article_number"],
         },

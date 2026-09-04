@@ -192,7 +192,7 @@ export default function WelcomeAnimation({ onContinue }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label="Bienvenida"
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-10 bg-bg text-fg"
+      className="fixed inset-0 z-confirm flex flex-col items-center justify-center gap-10 bg-bg text-fg"
     >
       <div className="relative w-[min(86vw,720px)]" aria-label={WELCOME_TEXT}>
         {drawing ? (

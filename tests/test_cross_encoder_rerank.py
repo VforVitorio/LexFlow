@@ -73,6 +73,9 @@ def _settings(rerank_backend: str, *, model: str = "ce-model", config_dir: Path 
         embedder_model="m",
         rerank_backend=rerank_backend,
         rerank_model=model,
+        csrf_header_name="X-Lexflow-Client",
+        csrf_header_value="spa",
+        csrf_allowed_origins=(),
     )
 
 

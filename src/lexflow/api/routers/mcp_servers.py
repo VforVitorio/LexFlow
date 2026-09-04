@@ -110,6 +110,13 @@ def create_server(body: McpServerCreateRequest) -> McpServerView:
     Rejects names that collide with a built-in (409) or with an
     existing user entry (409). Built-in entries are never editable
     via this endpoint — they're a code-defined catalog.
+
+    Security (issue #885, S1.1): the new entry is persisted **disabled**.
+    An added server's ``command`` is only ever spawned as a subprocess
+    once it's enabled (``chat/mcp_client.py::_all_attached_servers``
+    skips disabled entries), so this is a no-auto-connect boundary —
+    the user must explicitly flip the toggle in Settings (with the
+    confirmation dialog) before the first spawn happens.
     """
     if body.name in _BUILTIN_NAMES:
         raise HTTPException(
@@ -132,7 +139,7 @@ def create_server(body: McpServerCreateRequest) -> McpServerView:
         name=body.name,
         description=body.description,
         command=body.command,
-        enabled=True,
+        enabled=False,
     )
     entries.append(new_entry)
     save_user_servers(entries)
