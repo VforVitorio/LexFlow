@@ -46,7 +46,7 @@
     "react-force-graph-2d": "^1.29.1",
     "react-i18next": "^17.0.9",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.18.0",
+    "react-router-dom": "^7.18.3",
     "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.6.0",
