@@ -39,7 +39,7 @@ jobs:
     # ``scan-args`` contract; ``--skip-git`` is dropped because the v2 source
     # scan doesn't walk git history in this mode. Dependabot (github-actions
     # ecosystem) bumps the pin from here.
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.6.0
     with:
       scan-args: |-
         --recursive
